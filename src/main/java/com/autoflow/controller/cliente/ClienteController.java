@@ -17,7 +17,7 @@ public class ClienteController {
     ClienteService clienteService;
 
 
-    @PostMapping("/cadastro")
+    @PostMapping
     public ResponseEntity<ClienteSaida> cadastrarCliente(@RequestBody ClienteEntrada entrada ){
         return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.cadastrar(entrada));
 
@@ -28,7 +28,7 @@ public class ClienteController {
             return ResponseEntity.ok(clienteService.listar(id));
     }
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<ClienteSaida>> listarTodosClientes(){
         return ResponseEntity.ok(clienteService.listarTodosClientes());
 

@@ -18,7 +18,7 @@ public class VeiculoController {
     VeiculoService veiculoService;
 
 
-    @PostMapping("/cadastro")
+    @PostMapping
     public ResponseEntity<VeiculoSaida> cadastrarVeiculo(@RequestBody VeiculoEntrada entrada ){
         return ResponseEntity.status(HttpStatus.CREATED).body(veiculoService.cadastrar(entrada));
 
@@ -29,7 +29,7 @@ public class VeiculoController {
         return ResponseEntity.ok(veiculoService.listar(id));
     }
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<VeiculoSaida>> listarTodosVeiculos(){
         return ResponseEntity.ok(veiculoService.listarTodosVeiculos());
 
