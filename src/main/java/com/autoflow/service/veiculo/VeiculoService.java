@@ -2,10 +2,10 @@ package com.autoflow.service.veiculo;
 
 import com.autoflow.controller.veiculo.VeiculoEntrada;
 import com.autoflow.controller.veiculo.VeiculoSaida;
-import com.autoflow.repository.cliente.ClienteEntity;
+import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.repository.cliente.ClienteRepository;
-import com.autoflow.repository.veiculo.VeiculoEntity;
-import com.autoflow.repository.veiculo.VeiculoMapper;
+import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.mapper.VeiculoMapper;
 import com.autoflow.repository.veiculo.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

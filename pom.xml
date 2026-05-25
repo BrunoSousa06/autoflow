@@ -48,6 +48,7 @@
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
 				<scope>provided</scope>
 			</dependency>
 		<dependency>
@@ -88,7 +89,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.36</version> <!-- Garanta uma versão recente compatível com Java 21/Spring Boot 4 -->
+							<version>${lombok.version}</version>
 						</path>
 						<!-- 2. MapStruct Processor em seguida (Defina a versão explicitamente aqui) -->
 						<path>

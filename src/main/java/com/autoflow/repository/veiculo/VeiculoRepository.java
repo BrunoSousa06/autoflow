@@ -1,6 +1,6 @@
 package com.autoflow.repository.veiculo;
 
-import com.autoflow.repository.cliente.ClienteEntity;
+import com.autoflow.domain.veiculo.VeiculoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
