@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS clientes (
+    id BIGSERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    telefone BIGINT NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+    );
+
+CREATE TABLE IF NOT EXISTS veiculos (
+    id BIGSERIAL PRIMARY KEY,
+    marca VARCHAR(100) NOT NULL,
+    modelo VARCHAR(100) NOT NULL,
+    ano BIGINT NOT NULL,
+    placa VARCHAR(10) NOT NULL UNIQUE,
+    cliente_id BIGINT NOT NULL,
+    CONSTRAINT fk_veiculos_clientes
+    FOREIGN KEY (cliente_id)
+    REFERENCES clientes(id)
+    ON DELETE CASCADE
+    );
