@@ -3,9 +3,13 @@ package com.autoflow.controller.ordemServico;
 import com.autoflow.domain.ordemServico.OrdemServicoEntity;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemServico.StatusOrdemServico;
+import com.autoflow.mapper.ServicoSolicitadoMapper;
 import com.autoflow.service.ordemServico.OrdemServicoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -13,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -21,16 +26,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(MockitoExtension.class)
 class OrdemServicoControllerTest {
 
     private MockMvc mockMvc;
+    @Mock
     private OrdemServicoService ordemServicoService;
-
+    @Mock
+    private ServicoSolicitadoMapper servicoSolicitadoMapper;
     @BeforeEach
     void setUp() {
-        ordemServicoService = mock(OrdemServicoService.class);
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new OrdemServicoController(ordemServicoService))
+                .standaloneSetup(new OrdemServicoController(ordemServicoService, servicoSolicitadoMapper))
                 .build();
     }
 
@@ -46,6 +53,7 @@ class OrdemServicoControllerTest {
         when(ordemServicoEntity.getNumeroOs()).thenReturn("OS-123");
         when(ordemServicoEntity.getStatus()).thenReturn(StatusOrdemServico.RECEBIDA);
         when(ordemServicoEntity.getDataAbertura()).thenReturn(java.time.LocalDateTime.of(2026, 5, 24, 10, 30));
+        when(servicoSolicitadoMapper.mapToEntities(anyList())).thenReturn(servicos);
         when(ordemServicoService.criar(clienteId, veiculoId, servicos)).thenReturn(ordemServicoEntity);
 
         mockMvc.perform(post("/ordens-servico")
@@ -57,7 +65,7 @@ class OrdemServicoControllerTest {
                                   "servicosSolicitados": [
                                     {
                                       "servicoId": "%s",
-                                      "nome": "Revisao"
+                                      "descricao": "Revisao"
                                     }
                                   ]
                                 }
@@ -70,4 +78,6 @@ class OrdemServicoControllerTest {
 
         verify(ordemServicoService).criar(eq(clienteId), eq(veiculoId), eq(servicos));
     }
+
+    //TODO CRIAR TESTE DO NOVO ENDPOINT
 }

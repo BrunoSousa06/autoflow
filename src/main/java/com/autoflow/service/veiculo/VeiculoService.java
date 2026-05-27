@@ -70,5 +70,12 @@ public class VeiculoService {
         }
         veiculoRepository.deleteById(id);
     }
+
+    public VeiculoEntity buscarPorId(Long id) {
+        return veiculoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Veiculo nao encontrado com o ID: " + id
+        ));
+    }
 }
 

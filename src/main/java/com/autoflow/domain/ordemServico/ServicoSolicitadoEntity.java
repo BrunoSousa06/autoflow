@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.lang.Long;
+import java.math.BigDecimal;
 
 
 @Embeddable
@@ -20,18 +21,21 @@ public class ServicoSolicitadoEntity {
     private Long servicoId;
 
     @Column(nullable = false)
-    private String nome;
+    private String descricao;
 
-    public ServicoSolicitadoEntity(Long servicoId, String nome) {
+    @Column(nullable = false)
+    private BigDecimal preco;
+
+    public ServicoSolicitadoEntity(Long servicoId, String descricao) {
         if (servicoId == null) {
             throw new IllegalArgumentException("Servico e obrigatorio.");
         }
 
-        if (nome == null || nome.isBlank()) {
+        if (descricao == null || descricao.isBlank()) {
             throw new IllegalArgumentException("Nome do servico e obrigatorio.");
         }
 
         this.servicoId = servicoId;
-        this.nome = nome;
+        this.descricao = descricao;
     }
 }

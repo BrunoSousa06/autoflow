@@ -4,6 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 
-
-public record ServicoSolicitadoRequest(@NotNull Long servicoId, @NotBlank String nome) {
+//TODO QUANDO TIVER ENTIDADE DE SERVICOS RECEBER SO O SERVICOID
+public record ServicoSolicitadoRequest(@NotNull Long servicoId, @NotBlank String descricao) {
 }

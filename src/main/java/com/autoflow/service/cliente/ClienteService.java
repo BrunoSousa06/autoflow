@@ -1,10 +1,10 @@
 package com.autoflow.service.cliente;
 
-import com.autoflow.mapper.ClienteMapper;
 import com.autoflow.controller.cliente.ClienteEntrada;
 import com.autoflow.controller.cliente.ClienteSaida;
-import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.mapper.ClienteMapper;
+import com.autoflow.repository.cliente.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,6 +20,12 @@ public class ClienteService {
 
     final ClienteMapper clienteMapper;
 
+    public ClienteEntity buscarPorId(Long id) {
+        return clienteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Cliente nao encontrado com o ID: " + id
+        ));
+    }
 
     public ClienteSaida cadastrar(ClienteEntrada entrada){
         ClienteEntity clienteEntity = clienteRepository.save(clienteMapper.mapToEntity(entrada));
