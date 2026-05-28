@@ -1,10 +1,10 @@
-package com.autoflow.repository.cliente;
+package com.autoflow.mapper;
 
 
 import com.autoflow.controller.cliente.ClienteEntrada;
 import com.autoflow.controller.cliente.ClienteSaida;
+import com.autoflow.domain.cliente.ClienteEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;

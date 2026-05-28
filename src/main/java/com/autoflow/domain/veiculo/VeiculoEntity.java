@@ -1,10 +1,8 @@
-package com.autoflow.repository.veiculo;
+package com.autoflow.domain.veiculo;
 
-import com.autoflow.repository.cliente.ClienteEntity;
+import com.autoflow.domain.cliente.ClienteEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.UUID;
 
 @Entity
 @Getter

@@ -1,9 +1,10 @@
-package com.autoflow.repository.veiculo;
+package com.autoflow.mapper;
 
 
 import com.autoflow.controller.veiculo.VeiculoEntrada;
 import com.autoflow.controller.veiculo.VeiculoSaida;
-import com.autoflow.repository.cliente.ClienteEntity;
+import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.veiculo.VeiculoEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
