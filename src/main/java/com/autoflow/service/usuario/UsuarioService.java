@@ -3,6 +3,7 @@ package com.autoflow.service.usuario;
 import com.autoflow.controller.usuario.request.LoginRequest;
 import com.autoflow.controller.usuario.request.RegistroRequest;
 import com.autoflow.config.security.service.JwtService;
+import com.autoflow.controller.usuario.response.UsuarioResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +32,7 @@ public class UsuarioService {
 
         UsuarioEntity usuarioEntity = usuarioRepository.save(usuarioMapper.mapToEntity(request));
 
-        if (RoleEnum.ROLE_CLIENTE.equals(request.role())){
+        if (RoleEnum.CLIENTE.equals(request.role())){
 
             ClienteEntity clienteEntity = usuarioMapper.mapToClienteEntity(request);
             clienteEntity.setUsuario(usuarioEntity);
@@ -57,5 +60,12 @@ public class UsuarioService {
                 usuarioEntity.getRole().name()
         );
 
+    }
+
+    public List<UsuarioResponse> listarUsuarios() {
+        List<UsuarioEntity> usuarios = usuarioRepository.findAll();
+        usuarioMapper.mapToResponse(usuarios);
+
+        return usuarioMapper.mapToResponse(usuarios);
     }
 }

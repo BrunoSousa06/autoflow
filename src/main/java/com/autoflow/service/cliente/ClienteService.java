@@ -27,7 +27,7 @@ public class ClienteService {
         ));
     }
 
-    public  ClienteResponse buscarPorCpfCnpj(Long cpfCnpj) {
+    public  ClienteResponse buscarPorCpfCnpj(String cpfCnpj) {
         ClienteEntity clienteEntity = clienteRepository.findByCpfCnpj(cpfCnpj).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
                 "Cliente nao encontrado com o CPF/CNPJ: " + cpfCnpj
@@ -41,8 +41,7 @@ public class ClienteService {
         String identificador =String.valueOf(documento).replaceAll("\\D", "");
 
         if (identificador.matches("\\d{11}|\\d{14}")) {
-            Long cpfCnpj = Long.valueOf(identificador);
-            return buscarPorCpfCnpj(cpfCnpj);
+            return buscarPorCpfCnpj(identificador);
         }
 
         ClienteEntity clienteEntity = clienteRepository.findById(documento).orElseThrow(() -> new ResponseStatusException(

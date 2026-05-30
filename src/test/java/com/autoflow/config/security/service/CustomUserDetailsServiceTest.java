@@ -38,7 +38,7 @@ class CustomUserDetailsServiceTest {
         usuario.setId(1L);
         usuario.setEmail("admin@email.com");
         usuario.setSenha("senhaCriptografada");
-        usuario.setRole(RoleEnum.ROLE_ADMIN);
+        usuario.setRole(RoleEnum.ADMIN);
     }
 
     @Test
@@ -69,7 +69,7 @@ class CustomUserDetailsServiceTest {
                         .stream()
                         .anyMatch(authority ->
                                 authority.getAuthority()
-                                        .equals("ROLE_ADMIN"))
+                                        .equals("ADMIN"))
         );
 
         verify(usuarioRepository)

@@ -40,7 +40,7 @@ class UsuarioControllerTest {
                 .standaloneSetup(new UsuarioController(usuarioService))
                 .build();
 
-        registroRequest = new RegistroRequest("Bruno","usuario@email.com", "321321123","32131221","senha123", RoleEnum.ROLE_ADMIN);
+        registroRequest = new RegistroRequest("Bruno","usuario@email.com", "321321123","32131221","senha123", RoleEnum.ADMIN);
         usuarioEntity = new UsuarioEntity();
 
         loginRequest = new LoginRequest("usuario@email.com", "senha123");
