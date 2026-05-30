@@ -16,7 +16,7 @@ class ServicoSolicitadoEntityTest {
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(servicoId, "Alinhamento");
 
         assertEquals(servicoId, servico.getServicoId());
-        assertEquals("Alinhamento", servico.getDescricao());
+        assertEquals("Alinhamento", servico.getNome());
     }
 
     @Test

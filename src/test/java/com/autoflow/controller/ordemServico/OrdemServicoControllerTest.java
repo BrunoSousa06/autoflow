@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -47,7 +48,7 @@ class OrdemServicoControllerTest {
         Long veiculoId = 1L;
         Long servicoId = 1L;
         Long ordemServicoId = 1L;
-        List<ServicoSolicitadoEntity> servicos = List.of(new ServicoSolicitadoEntity(servicoId, "Revisao"));
+        List<ServicoSolicitadoEntity> servicos = List.of(new ServicoSolicitadoEntity(servicoId, "Revisao", new BigDecimal("10.0")));
         OrdemServicoEntity ordemServicoEntity = mock(OrdemServicoEntity.class);
         when(ordemServicoEntity.getId()).thenReturn(ordemServicoId);
         when(ordemServicoEntity.getNumeroOs()).thenReturn("OS-123");
@@ -64,8 +65,7 @@ class OrdemServicoControllerTest {
                                   "veiculoId": "%s",
                                   "servicosSolicitados": [
                                     {
-                                      "servicoId": "%s",
-                                      "descricao": "Revisao"
+                                      "servicoId": "%s"
                                     }
                                   ]
                                 }

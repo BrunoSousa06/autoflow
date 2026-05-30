@@ -4,9 +4,11 @@ import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.ordemServico.OrdemServicoEntity;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemServico.StatusOrdemServico;
+import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
 import com.autoflow.service.cliente.ClienteService;
+import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.veiculo.VeiculoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.lang.Long;
 import java.util.List;
 import java.util.Optional;
@@ -46,27 +49,35 @@ class OrdemServicoServiceTest {
     @Mock
     VeiculoService veiculoService;
 
+    @Mock
+    ServicoService servicoService;
+
     @Test
     void deveCriarESalvarOrdemServico() {
         Long clienteId = 1L;
         Long veiculoId = 1L;
+        Long servicoId = 1L;
+        BigDecimal valor = new BigDecimal("100.00");
         ClienteEntity cliente = criarCliente(clienteId);
         VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
+        ServicoSolicitadoEntity servicoSolicitado = new ServicoSolicitadoEntity(servicoId);
+        ServicoSolicitadoEntity servicoComDados = new ServicoSolicitadoEntity(servicoId, "Revisao", valor);
+        ServicoEntity servico = criarServico(servicoId, "Revisao", valor);
 
         when(clienteService.buscarPorId(clienteId)).thenReturn(cliente);
         when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
+        when(servicoService.buscarEntityPorId(servicoId)).thenReturn(servico);
         when(repository.save(any(OrdemServicoEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        OrdemServicoEntity ordemServicoEntity = service.criar(clienteId, veiculoId, List.of(servico));
+        OrdemServicoEntity ordemServicoEntity = service.criar(clienteId, veiculoId, List.of(servicoSolicitado));
 
         assertEquals(clienteId, ordemServicoEntity.getClienteId());
         assertEquals(veiculoId, ordemServicoEntity.getVeiculoId());
         assertEquals(StatusOrdemServico.RECEBIDA, ordemServicoEntity.getStatus());
         assertTrue(ordemServicoEntity.getNumeroOs().startsWith("OS-"));
         assertNotNull(ordemServicoEntity.getDataAbertura());
-        assertEquals(List.of(servico), ordemServicoEntity.getServicosSolicitados());
+        assertEquals(List.of(servicoComDados), ordemServicoEntity.getServicosSolicitados());
 
         ArgumentCaptor<OrdemServicoEntity> captor = ArgumentCaptor.forClass(OrdemServicoEntity.class);
         verify(repository).save(captor.capture());
@@ -77,9 +88,10 @@ class OrdemServicoServiceTest {
         assertEquals(StatusOrdemServico.RECEBIDA, ordemServicoSalva.getStatus());
         assertTrue(ordemServicoSalva.getNumeroOs().startsWith("OS-"));
         assertNotNull(ordemServicoSalva.getDataAbertura());
-        assertEquals(List.of(servico), ordemServicoSalva.getServicosSolicitados());
+        assertEquals(List.of(servicoComDados), ordemServicoSalva.getServicosSolicitados());
         verify(clienteService).buscarPorId(clienteId);
         verify(veiculoService).buscarPorId(veiculoId);
+        verify(servicoService).buscarEntityPorId(servicoId);
     }
 
     @Test
@@ -187,10 +199,14 @@ class OrdemServicoServiceTest {
     @Test
     void deveIncluirServicosNaOrdemServico() {
         Long ordemServicoId = 1L;
+        Long novoServicoId = 2L;
+        BigDecimal valor = new BigDecimal("180.00");
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         ServicoSolicitadoEntity servicoInicial = new ServicoSolicitadoEntity(1L, "Revisao");
-        ServicoSolicitadoEntity novoServico = new ServicoSolicitadoEntity(2L, "Troca de oleo");
+        ServicoSolicitadoEntity novoServicoSolicitado = new ServicoSolicitadoEntity(novoServicoId);
+        ServicoSolicitadoEntity novoServicoComDados = new ServicoSolicitadoEntity(novoServicoId, "Troca de oleo", valor);
+        ServicoEntity servico = criarServico(novoServicoId, "Troca de oleo", valor);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
                 cliente,
                 veiculo,
@@ -198,13 +214,16 @@ class OrdemServicoServiceTest {
         );
 
         when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(servicoService.buscarEntityPorId(novoServicoId)).thenReturn(servico);
+        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
 
-        OrdemServicoEntity resultado = service.incluirServicos(ordemServicoId, List.of(novoServico));
+        OrdemServicoEntity resultado = service.incluirServicos(ordemServicoId, List.of(novoServicoSolicitado));
 
         assertEquals(ordemServicoEntity, resultado);
-        assertEquals(List.of(servicoInicial, novoServico), resultado.getServicosSolicitados());
+        assertEquals(List.of(servicoInicial, novoServicoComDados), resultado.getServicosSolicitados());
         verify(repository).findById(ordemServicoId);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
+        verify(servicoService).buscarEntityPorId(novoServicoId);
+        verify(repository).save(ordemServicoEntity);
     }
 
     @Test
@@ -287,5 +306,13 @@ class OrdemServicoServiceTest {
         veiculo.setModelo("modelo");
         veiculo.setCliente(cliente);
         return veiculo;
+    }
+
+    private ServicoEntity criarServico(Long servicoId, String nome, BigDecimal valor) {
+        ServicoEntity servico = new ServicoEntity();
+        servico.setId(servicoId);
+        servico.setNome(nome);
+        servico.setValor(valor);
+        return servico;
     }
 }

@@ -41,6 +41,13 @@ public class ServicoService {
         return servicoMapper.toResponse(buscarServicoPorId(id));
     }
 
+    public ServicoEntity buscarEntityPorId(Long id) {
+        return servicoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Servico nao encontrado com o ID: " + id
+                ));
+    }
     public ServicoResponse atualizar(ServicoRequest request, Long id) {
 
         ServicoEntity servico = buscarServicoPorId(id);

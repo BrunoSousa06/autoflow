@@ -1,7 +1,7 @@
 package com.autoflow.controller.ordemServico;
 
 import com.autoflow.controller.ordemServico.request.CriarOrdemServicoRequest;
-import com.autoflow.controller.ordemServico.request.IncluirOrdemServicoRequest;
+import com.autoflow.controller.ordemServico.request.ServicoSolicitadoRequest;
 import com.autoflow.controller.ordemServico.response.OrdemServicoResponse;
 import com.autoflow.domain.ordemServico.OrdemServicoEntity;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
@@ -43,9 +43,9 @@ public class OrdemServicoController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public OrdemServicoResponse incluirServico(
             @PathVariable Long ordemServicoId,
-            @Valid @RequestBody IncluirOrdemServicoRequest request
+            @Valid @RequestBody List<ServicoSolicitadoRequest> request
     ) {
-        List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request.servicosSolicitados());
+        List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request);
         OrdemServicoEntity ordemServicoEntity = ordemServicoService.incluirServicos(ordemServicoId, servicos);
         return OrdemServicoResponse.fromDomain(ordemServicoEntity);
     }

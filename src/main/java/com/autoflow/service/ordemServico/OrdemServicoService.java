@@ -3,12 +3,14 @@ package com.autoflow.service.ordemServico;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.ordemServico.OrdemServicoEntity;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
+import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
 import com.autoflow.service.cliente.ClienteService;
+import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.veiculo.VeiculoService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,6 +28,7 @@ public class OrdemServicoService {
 
     private final VeiculoService veiculoService;
 
+    private final ServicoService servicoService;
 
     public OrdemServicoEntity criar(
             Long clienteId,
@@ -36,16 +39,52 @@ public class OrdemServicoService {
         VeiculoEntity veiculo = veiculoService.buscarPorId(veiculoId);
         validarVeiculoDoCliente(veiculo, cliente);
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo, servicosSolicitados);
+        List<ServicoSolicitadoEntity> servicoComDados = preencherDadosDosServicos(servicosSolicitados);
+
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo, servicoComDados);
         return ordemServicoRepository.save(ordemServicoEntity);
     }
 
-    public OrdemServicoEntity incluirServicos(
-            Long ordemServicoId, List<ServicoSolicitadoEntity> servicos){
-        OrdemServicoEntity ordemServicoEntity = ordemServicoRepository.findById(ordemServicoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        //TODO QUANDO CRIAR O CRUD DE SERVICOS UTILIZAR AQUI PARA VALIDAR SE O SERVICO JA TA REGISTRADO e salvar os dados
-        ordemServicoEntity.adicionarServicos(servicos);
-        return ordemServicoEntity;
+    @Transactional
+    public OrdemServicoEntity incluirServicos(Long ordemServicoId, List<ServicoSolicitadoEntity> servicos){
+
+        OrdemServicoEntity ordemServico = ordemServicoRepository.findById(ordemServicoId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Ordem de servico nao encontrada."
+                ));
+        List<ServicoSolicitadoEntity> servicosComDados = preencherDadosDosServicos(servicos);
+
+        ordemServico.adicionarServicos(servicosComDados);
+
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+    private List<ServicoSolicitadoEntity> preencherDadosDosServicos(List<ServicoSolicitadoEntity> servicos) {
+        validarServicosSolicitados(servicos);
+
+        return servicos.stream()
+                .map(this::preencherDadosDoServico)
+                .toList();
+    }
+
+
+    private ServicoSolicitadoEntity preencherDadosDoServico(ServicoSolicitadoEntity servicoSolicitado) {
+        ServicoEntity servico = servicoService.buscarEntityPorId(
+                servicoSolicitado.getServicoId()
+        );
+
+        return new ServicoSolicitadoEntity(
+                servico.getId(),
+                servico.getNome(),
+                servico.getValor()
+        );
+    }
+
+    private static void validarServicosSolicitados(List<ServicoSolicitadoEntity> servicos) {
+        if (servicos == null || servicos.isEmpty()) {
+            throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
+        }
     }
 
     private static void validarVeiculoDoCliente(VeiculoEntity veiculo, ClienteEntity cliente) {
