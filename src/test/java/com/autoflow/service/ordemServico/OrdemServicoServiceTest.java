@@ -273,7 +273,7 @@ class OrdemServicoServiceTest {
     private ClienteEntity criarCliente(Long clienteId) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(clienteId);
-        cliente.setCpf("1223321123");
+        cliente.setCpfCnpj("1223321123");
         cliente.setEmail("email");
         cliente.setNome("descricao");
         return cliente;

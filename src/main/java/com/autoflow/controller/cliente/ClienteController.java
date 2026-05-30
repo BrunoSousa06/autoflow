@@ -1,47 +1,48 @@
 package com.autoflow.controller.cliente;
 
 
+import com.autoflow.controller.cliente.request.ClienteRequest;
+import com.autoflow.controller.cliente.response.ClienteResponse;
 import com.autoflow.service.cliente.ClienteService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/clientes")
+@RequiredArgsConstructor
 public class ClienteController {
 
-    @Autowired
-    ClienteService clienteService;
+    private final ClienteService clienteService;
 
-
-    @PostMapping
-    public ResponseEntity<ClienteSaida> cadastrarCliente(@RequestBody ClienteEntrada entrada ){
-        return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.cadastrar(entrada));
-
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ClienteSaida> listarCliente(@PathVariable Long id ){
-            return ResponseEntity.ok(clienteService.listar(id));
+    @GetMapping("/{documento}")
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
+    public ResponseEntity<ClienteResponse> listar(@PathVariable Long documento ){
+            return ResponseEntity.ok(clienteService.listar(documento));
     }
 
     @GetMapping
-    public ResponseEntity<List<ClienteSaida>> listarTodosClientes(){
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
+    public ResponseEntity<List<ClienteResponse>> listarTodosClientes(){
         return ResponseEntity.ok(clienteService.listarTodosClientes());
 
     }
 
+
     @PatchMapping("/{id}/atualizacao")
-    public ResponseEntity<ClienteSaida> atualizarCliente(@RequestBody ClienteEntrada entrada, @PathVariable Long id){
-        return ResponseEntity.ok(clienteService.atualizar(entrada, id));
+    public ResponseEntity<ClienteResponse> atualizar(@Valid @RequestBody ClienteRequest request, @PathVariable Long id){
+        return ResponseEntity.ok(clienteService.atualizar(request, id));
 
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletarCliente(@PathVariable Long id){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deletar(@PathVariable Long id){
         clienteService.deletar(id);
         return ResponseEntity.ok().body("cliente deletado com sucesso");
 

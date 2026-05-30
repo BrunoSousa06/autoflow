@@ -1,0 +1,23 @@
+package com.autoflow.mapper;
+
+import com.autoflow.controller.servico.request.ServicoRequest;
+import com.autoflow.controller.servico.response.ServicoResponse;
+import com.autoflow.domain.servico.ServicoEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring")
+public interface ServicoMapper {
+
+
+    ServicoResponse toResponse(ServicoEntity entity);
+
+    List<ServicoResponse> toResponseList(List<ServicoEntity> entityList);
+
+    ServicoEntity mapToEntity(ServicoRequest request);
+
+    void updateEntity(ServicoRequest request, @MappingTarget ServicoEntity entity);
+
+}

@@ -111,8 +111,8 @@ Este documento descreve os requisitos nao funcionais do sistema Autoflow, inclui
 | --- | --- |
 | Categoria | Governanca |
 | Prioridade | Obrigatoria |
-| Descricao | O projeto deve estar organizado em repositorio privado com acesso concedido ao usuario soat architecture. |
-| Criterios de aceite | O repositorio deve estar privado; o usuario ou grupo informado deve possuir acesso conforme solicitado para avaliacao. |
+| Descricao | O projeto deve estar organizado em repositorio privado com acesso concedido ao usuarioEntity soat architecture. |
+| Criterios de aceite | O repositorio deve estar privado; o usuarioEntity ou grupo informado deve possuir acesso conforme solicitado para avaliacao. |
 
 ## 3. Restricoes Tecnicas
 

@@ -1,10 +1,13 @@
 package com.autoflow.controller.veiculo;
 
 
+import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.service.veiculo.VeiculoService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,37 +15,38 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/veiculos")
+@RequiredArgsConstructor
 public class VeiculoController {
 
-    @Autowired
-    VeiculoService veiculoService;
+    private final VeiculoService veiculoService;
 
 
     @PostMapping
-    public ResponseEntity<VeiculoSaida> cadastrarVeiculo(@RequestBody VeiculoEntrada entrada ){
-        return ResponseEntity.status(HttpStatus.CREATED).body(veiculoService.cadastrar(entrada));
+    public ResponseEntity<VeiculoResponse> cadastrar(@RequestBody VeiculoRequest request ){
+        return ResponseEntity.status(HttpStatus.CREATED).body(veiculoService.cadastrar(request));
 
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VeiculoSaida> listarCliente(@PathVariable Long id ){
+    public ResponseEntity<VeiculoResponse> listar(@PathVariable Long id ){
         return ResponseEntity.ok(veiculoService.listar(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<VeiculoSaida>> listarTodosVeiculos(){
+    public ResponseEntity<List<VeiculoResponse>> listarTodosVeiculos(){
         return ResponseEntity.ok(veiculoService.listarTodosVeiculos());
 
     }
 
     @PatchMapping("/{id}/atualizacao")
-    public ResponseEntity<VeiculoSaida> atualizarCliente(@RequestBody VeiculoEntrada entrada, @PathVariable Long id){
-        return ResponseEntity.ok(veiculoService.atualizar(entrada, id));
+    public ResponseEntity<VeiculoResponse> atualizar(@RequestBody VeiculoRequest request, @PathVariable Long id){
+        return ResponseEntity.ok(veiculoService.atualizar(request, id));
 
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletarCliente(@PathVariable Long id){
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<?> deletar(@PathVariable Long id){
         veiculoService.deletar(id);
         return ResponseEntity.ok().body("veiculo deletado com sucesso");
 
