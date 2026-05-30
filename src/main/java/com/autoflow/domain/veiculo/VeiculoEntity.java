@@ -14,13 +14,12 @@ public class VeiculoEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ToString.Exclude            // <--- ISSO CORRIGE O STACKOVERFLOW NO TOSTRING
-    @EqualsAndHashCode.Exclude
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private ClienteEntity cliente;
     private String marca;
     private Long ano;
+    @Column(unique = true, nullable = false)
     private String placa;
     private String modelo;
 }

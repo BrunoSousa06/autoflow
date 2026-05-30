@@ -1,11 +1,11 @@
 package com.autoflow.service.veiculo;
 
-import com.autoflow.controller.veiculo.VeiculoEntrada;
-import com.autoflow.controller.veiculo.VeiculoSaida;
+import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.VeiculoMapper;
+import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.veiculo.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,64 +18,54 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VeiculoService {
 
+    private final VeiculoRepository veiculoRepository;
+    private final ClienteRepository clienteRepository;
+    private final VeiculoMapper veiculoMapper;
 
-    final VeiculoRepository veiculoRepository;
+    public VeiculoResponse cadastrar(VeiculoRequest request) {
 
-    final ClienteRepository clienteRepository;
+        ClienteEntity cliente =
+                clienteRepository.findById(request.idCliente())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "Cliente não encontrado com o ID: " + request.idCliente()));
 
-    final VeiculoMapper veiculoMapper;
+        VeiculoEntity veiculo = veiculoRepository.save(veiculoMapper.mapToEntity(request, cliente));
 
-
-    public VeiculoSaida cadastrar(VeiculoEntrada entrada){
-        ClienteEntity cliente = clienteRepository.findById(entrada.getIdCliente())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Cliente não encontrado com o ID: " + entrada.getIdCliente()
-                ));
-        VeiculoEntity veiculoEntity = veiculoRepository.save(veiculoMapper.mapToEntity(entrada, cliente));
-        return veiculoMapper.mapToSaida(veiculoEntity);
-
+        return veiculoMapper.mapToResponse(veiculo);
     }
 
-    public VeiculoSaida listar(Long id) {
-        VeiculoEntity veiculoEntity = veiculoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Veiculo não encontrado com o ID: " + id
-        ));
-
-        return veiculoMapper.mapToSaida(veiculoEntity);
-
+    public VeiculoResponse listar(Long id) {
+        return veiculoMapper.mapToResponse(buscarPorId(id));
     }
 
-    public List<VeiculoSaida> listarTodosVeiculos() {
-
-        List<VeiculoEntity> veiculos = veiculoRepository.findAll();
-
-        return veiculoMapper.mapToList(veiculos);
+    public List<VeiculoResponse> listarTodosVeiculos() {
+        return veiculoMapper.mapToList(veiculoRepository.findAll());
     }
 
-    public VeiculoSaida atualizar(VeiculoEntrada entrada, Long id) {
-        VeiculoEntity veiculoEntity = veiculoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "veiculo não encontrado com o ID: " + id
-        ));
+    public VeiculoResponse atualizar(VeiculoRequest request, Long id) {
 
-        veiculoMapper.updateEntity(entrada, veiculoEntity);
-        VeiculoEntity save = veiculoRepository.save(veiculoEntity);
-        return veiculoMapper.mapToSaida(save);
+        VeiculoEntity veiculo = buscarPorId(id);
+
+        veiculoMapper.updateEntity(request, veiculo);
+
+        VeiculoEntity atualizado = veiculoRepository.save(veiculo);
+
+        return veiculoMapper.mapToResponse(atualizado);
     }
 
     public void deletar(Long id) {
-        if(!veiculoRepository.existsById(id)){
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "veiculo não encontrado com o ID: " + id
+
+        if (!veiculoRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id
             );
         }
+
         veiculoRepository.deleteById(id);
     }
 
     public VeiculoEntity buscarPorId(Long id) {
-        return veiculoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Veiculo nao encontrado com o ID: " + id
-        ));
+        return veiculoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
     }
 }
 

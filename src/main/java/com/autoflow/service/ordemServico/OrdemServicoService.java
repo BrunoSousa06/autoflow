@@ -20,13 +20,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrdemServicoService {
 
-    @Autowired
     private final OrdemServicoRepository ordemServicoRepository;
 
-    @Autowired
     private final ClienteService clienteService;
 
-    @Autowired
     private final VeiculoService veiculoService;
 
 

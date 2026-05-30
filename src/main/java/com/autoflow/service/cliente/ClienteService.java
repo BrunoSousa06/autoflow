@@ -1,7 +1,7 @@
 package com.autoflow.service.cliente;
 
-import com.autoflow.controller.cliente.ClienteEntrada;
-import com.autoflow.controller.cliente.ClienteSaida;
+import com.autoflow.controller.cliente.request.ClienteRequest;
+import com.autoflow.controller.cliente.response.ClienteResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.mapper.ClienteMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
@@ -27,36 +27,49 @@ public class ClienteService {
         ));
     }
 
-    public ClienteSaida cadastrar(ClienteEntrada entrada){
-        ClienteEntity clienteEntity = clienteRepository.save(clienteMapper.mapToEntity(entrada));
-        return clienteMapper.mapToSaida(clienteEntity);
-
-    }
-
-    public ClienteSaida listar(Long id) {
-        ClienteEntity clienteEntity = clienteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "cliente não encontrado com o ID: " + id
+    public  ClienteResponse buscarPorCpfCnpj(Long cpfCnpj) {
+        ClienteEntity clienteEntity = clienteRepository.findByCpfCnpj(cpfCnpj).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Cliente nao encontrado com o CPF/CNPJ: " + cpfCnpj
         ));
 
-        return clienteMapper.mapToSaida(clienteEntity);
+        return clienteMapper.maptoResponse(clienteEntity);
+    }
+
+    public ClienteResponse listar(Long documento) {
+
+        String identificador =String.valueOf(documento).replaceAll("\\D", "");
+
+        if (identificador.matches("\\d{11}|\\d{14}")) {
+            Long cpfCnpj = Long.valueOf(identificador);
+            return buscarPorCpfCnpj(cpfCnpj);
+        }
+
+        ClienteEntity clienteEntity = clienteRepository.findById(documento).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "cliente não encontrado com o ID: " + documento
+        ));
+
+        return clienteMapper.maptoResponse(clienteEntity);
 
     }
 
-    public List<ClienteSaida> listarTodosClientes() {
+
+
+    public List<ClienteResponse> listarTodosClientes() {
 
         List<ClienteEntity> clientes = clienteRepository.findAll();
 
         return clienteMapper.mapToList(clientes);
     }
 
-    public ClienteSaida atualizar(ClienteEntrada entrada, Long id) {
+    public ClienteResponse atualizar(ClienteRequest request, Long id) {
         ClienteEntity clienteEntity = clienteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "cliente não encontrado com o ID: " + id
         ));
 
-        clienteMapper.updateEntity(entrada, clienteEntity);
+        clienteMapper.updateEntity(request, clienteEntity);
         ClienteEntity save = clienteRepository.save(clienteEntity);
-        return clienteMapper.mapToSaida(save);
+        return clienteMapper.maptoResponse(save);
     }
 
     public void deletar(Long id) {

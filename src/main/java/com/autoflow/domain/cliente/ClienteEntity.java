@@ -1,5 +1,6 @@
 package com.autoflow.domain.cliente;
 
+import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,11 +19,15 @@ public class ClienteEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
-    private String senha;
-    private String cpf;
-    private Long telefone;
+    @Column(unique = true, nullable = false)
+    private String cpfCnpj;
+    private String telefone;
+    @Column(unique = true, nullable = false)
     private String email;
     @OneToMany(mappedBy = "cliente")
     List<VeiculoEntity> veiculos;
+    @OneToOne
+    @JoinColumn(name = "usuario_id")
+    UsuarioEntity usuario;
 
 }

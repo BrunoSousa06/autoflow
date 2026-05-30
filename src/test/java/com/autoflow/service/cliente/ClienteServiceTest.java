@@ -1,0 +1,324 @@
+package com.autoflow.service.cliente;
+
+import com.autoflow.controller.cliente.request.ClienteRequest;
+import com.autoflow.controller.cliente.response.ClienteResponse;
+import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.mapper.ClienteMapper;
+import com.autoflow.repository.cliente.ClienteRepository;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class ClienteServiceTest {
+
+    @InjectMocks
+    private ClienteService clienteService;
+
+    @Mock
+    private ClienteRepository clienteRepository;
+
+    @Mock
+    private ClienteMapper clienteMapper;
+
+    private ClienteEntity clienteEntity;
+    private ClienteResponse clienteResponse;
+    private ClienteRequest clienteRequest;
+
+    @BeforeEach
+    void setup() {
+
+        clienteEntity = new ClienteEntity();
+        clienteEntity.setId(1L);
+        clienteEntity.setCpfCnpj("12345678901");
+
+        clienteResponse = new ClienteResponse(
+                1L,
+                "João",
+                "12345678901",
+                "11999999999", "bruno@hotmail.com", null
+        );
+
+        clienteRequest = new ClienteRequest(
+                "João Atualizado",
+                "12345678901",
+                "1188888888", "bruno@hotmail.com"
+        );
+    }
+
+    @Nested
+    class BuscarPorIdTests {
+
+        @Test
+        void deveBuscarClientePorId() {
+
+            when(clienteRepository.findById(1L))
+                    .thenReturn(Optional.of(clienteEntity));
+
+            ClienteEntity resultado =
+                    clienteService.buscarPorId(1L);
+
+            assertEquals(clienteEntity, resultado);
+
+            verify(clienteRepository).findById(1L);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoIdNaoExistir() {
+
+            when(clienteRepository.findById(1L))
+                    .thenReturn(Optional.empty());
+
+            ResponseStatusException exception =
+                    assertThrows(
+                            ResponseStatusException.class,
+                            () -> clienteService.buscarPorId(1L)
+                    );
+
+            assertEquals(
+                    HttpStatus.NOT_FOUND,
+                    exception.getStatusCode()
+            );
+
+            verify(clienteRepository).findById(1L);
+        }
+    }
+
+    @Nested
+    class BuscarPorCpfCnpjTests {
+
+        @Test
+        void deveBuscarClientePorCpfCnpj() {
+
+            when(clienteRepository.findByCpfCnpj(12345678901L))
+                    .thenReturn(Optional.of(clienteEntity));
+
+            when(clienteMapper.maptoResponse(clienteEntity))
+                    .thenReturn(clienteResponse);
+
+            ClienteResponse resultado =
+                    clienteService.buscarPorCpfCnpj(12345678901L);
+
+            assertEquals(clienteResponse, resultado);
+
+            verify(clienteRepository)
+                    .findByCpfCnpj(12345678901L);
+
+            verify(clienteMapper)
+                    .maptoResponse(clienteEntity);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoCpfNaoExistir() {
+
+            when(clienteRepository.findByCpfCnpj(12345678901L))
+                    .thenReturn(Optional.empty());
+
+            ResponseStatusException exception =
+                    assertThrows(
+                            ResponseStatusException.class,
+                            () -> clienteService.buscarPorCpfCnpj(12345678901L)
+                    );
+
+            assertEquals(
+                    HttpStatus.NOT_FOUND,
+                    exception.getStatusCode()
+            );
+
+            verify(clienteRepository)
+                    .findByCpfCnpj(12345678901L);
+        }
+    }
+
+    @Nested
+    class ListarTests {
+
+        @Test
+        void deveBuscarPorCpfQuandoDocumentoPossuir11Digitos() {
+
+            when(clienteRepository.findByCpfCnpj(12345678901L))
+                    .thenReturn(Optional.of(clienteEntity));
+
+            when(clienteMapper.maptoResponse(clienteEntity))
+                    .thenReturn(clienteResponse);
+
+            ClienteResponse resultado =
+                    clienteService.listar(12345678901L);
+
+            assertEquals(clienteResponse, resultado);
+
+            verify(clienteRepository)
+                    .findByCpfCnpj(12345678901L);
+        }
+
+        @Test
+        void deveBuscarPorIdQuandoDocumentoNaoForCpfOuCnpj() {
+
+            when(clienteRepository.findById(1L))
+                    .thenReturn(Optional.of(clienteEntity));
+
+            when(clienteMapper.maptoResponse(clienteEntity))
+                    .thenReturn(clienteResponse);
+
+            ClienteResponse resultado =
+                    clienteService.listar(1L);
+
+            assertEquals(clienteResponse, resultado);
+
+            verify(clienteRepository).findById(1L);
+            verify(clienteMapper).maptoResponse(clienteEntity);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoIdNaoExistir() {
+
+            when(clienteRepository.findById(1L))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(
+                    ResponseStatusException.class,
+                    () -> clienteService.listar(1L)
+            );
+
+            verify(clienteRepository).findById(1L);
+        }
+    }
+
+    @Nested
+    class ListarTodosTests {
+
+        @Test
+        void deveListarTodosClientes() {
+
+            List<ClienteEntity> entities =
+                    List.of(clienteEntity);
+
+            List<ClienteResponse> responses =
+                    List.of(clienteResponse);
+
+            when(clienteRepository.findAll())
+                    .thenReturn(entities);
+
+            when(clienteMapper.mapToList(entities))
+                    .thenReturn(responses);
+
+            List<ClienteResponse> resultado =
+                    clienteService.listarTodosClientes();
+
+            assertAll(
+                    () -> assertNotNull(resultado),
+                    () -> assertEquals(1, resultado.size())
+            );
+
+            verify(clienteRepository).findAll();
+            verify(clienteMapper).mapToList(entities);
+        }
+    }
+
+    @Nested
+    class AtualizarTests {
+
+        @Test
+        void deveAtualizarCliente() {
+
+            when(clienteRepository.findById(1L))
+                    .thenReturn(Optional.of(clienteEntity));
+
+            when(clienteRepository.save(clienteEntity))
+                    .thenReturn(clienteEntity);
+
+            when(clienteMapper.maptoResponse(clienteEntity))
+                    .thenReturn(clienteResponse);
+
+            ClienteResponse resultado =
+                    clienteService.atualizar(clienteRequest, 1L);
+
+            assertEquals(clienteResponse, resultado);
+
+            verify(clienteRepository).findById(1L);
+            verify(clienteMapper)
+                    .updateEntity(clienteRequest, clienteEntity);
+
+            verify(clienteRepository)
+                    .save(clienteEntity);
+
+            verify(clienteMapper)
+                    .maptoResponse(clienteEntity);
+        }
+
+        @Test
+        void deveLancarExcecaoAoAtualizarClienteInexistente() {
+
+            when(clienteRepository.findById(1L))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(
+                    ResponseStatusException.class,
+                    () -> clienteService.atualizar(clienteRequest, 1L)
+            );
+
+            verify(clienteRepository).findById(1L);
+
+            verify(clienteRepository, never())
+                    .save(any());
+        }
+    }
+
+    @Nested
+    class DeletarTests {
+
+        @Test
+        void deveDeletarCliente() {
+
+            when(clienteRepository.existsById(1L))
+                    .thenReturn(true);
+
+            clienteService.deletar(1L);
+
+            verify(clienteRepository).existsById(1L);
+            verify(clienteRepository).deleteById(1L);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoClienteNaoExistir() {
+
+            when(clienteRepository.existsById(1L))
+                    .thenReturn(false);
+
+            ResponseStatusException exception =
+                    assertThrows(
+                            ResponseStatusException.class,
+                            () -> clienteService.deletar(1L)
+                    );
+
+            assertEquals(
+                    HttpStatus.NOT_FOUND,
+                    exception.getStatusCode()
+            );
+
+            verify(clienteRepository).existsById(1L);
+
+            verify(clienteRepository, never())
+                    .deleteById(anyLong());
+        }
+    }
+}
