@@ -25,9 +25,9 @@ public class VeiculoService {
     public VeiculoResponse cadastrar(VeiculoRequest request) {
 
         ClienteEntity cliente =
-                clienteRepository.findById(request.idCliente())
+                clienteRepository.findByCpfCnpj(request.cpfCnpj())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "Cliente não encontrado com o ID: " + request.idCliente()));
+                                "Cliente não encontrado com o CPF/CNPJ: " + request.cpfCnpj()));
 
         VeiculoEntity veiculo = veiculoRepository.save(veiculoMapper.mapToEntity(request, cliente));
 

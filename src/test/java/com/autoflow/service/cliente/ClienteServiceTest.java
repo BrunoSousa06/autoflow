@@ -109,19 +109,19 @@ class ClienteServiceTest {
         @Test
         void deveBuscarClientePorCpfCnpj() {
 
-            when(clienteRepository.findByCpfCnpj(12345678901L))
+            when(clienteRepository.findByCpfCnpj("12345678901"))
                     .thenReturn(Optional.of(clienteEntity));
 
             when(clienteMapper.maptoResponse(clienteEntity))
                     .thenReturn(clienteResponse);
 
             ClienteResponse resultado =
-                    clienteService.buscarPorCpfCnpj(12345678901L);
+                    clienteService.buscarPorCpfCnpj("12345678901");
 
             assertEquals(clienteResponse, resultado);
 
             verify(clienteRepository)
-                    .findByCpfCnpj(12345678901L);
+                    .findByCpfCnpj("12345678901");
 
             verify(clienteMapper)
                     .maptoResponse(clienteEntity);
@@ -130,13 +130,13 @@ class ClienteServiceTest {
         @Test
         void deveLancarExcecaoQuandoCpfNaoExistir() {
 
-            when(clienteRepository.findByCpfCnpj(12345678901L))
+            when(clienteRepository.findByCpfCnpj("12345678901"))
                     .thenReturn(Optional.empty());
 
             ResponseStatusException exception =
                     assertThrows(
                             ResponseStatusException.class,
-                            () -> clienteService.buscarPorCpfCnpj(12345678901L)
+                            () -> clienteService.buscarPorCpfCnpj("12345678901")
                     );
 
             assertEquals(
@@ -145,7 +145,7 @@ class ClienteServiceTest {
             );
 
             verify(clienteRepository)
-                    .findByCpfCnpj(12345678901L);
+                    .findByCpfCnpj("12345678901");
         }
     }
 
@@ -155,7 +155,7 @@ class ClienteServiceTest {
         @Test
         void deveBuscarPorCpfQuandoDocumentoPossuir11Digitos() {
 
-            when(clienteRepository.findByCpfCnpj(12345678901L))
+            when(clienteRepository.findByCpfCnpj("12345678901"))
                     .thenReturn(Optional.of(clienteEntity));
 
             when(clienteMapper.maptoResponse(clienteEntity))
@@ -167,7 +167,7 @@ class ClienteServiceTest {
             assertEquals(clienteResponse, resultado);
 
             verify(clienteRepository)
-                    .findByCpfCnpj(12345678901L);
+                    .findByCpfCnpj("12345678901");
         }
 
         @Test

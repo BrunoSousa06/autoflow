@@ -8,11 +8,12 @@ import lombok.NoArgsConstructor;
 
 public record VeiculoResponse(
          Long id,
-         ClienteVeiculoResponse cliente,
          String marca,
          int ano,
          String placa,
-         String modelo) {
+         String modelo,
+         ClienteVeiculoResponse cliente
+         ) {
 
 
 }

@@ -50,15 +50,15 @@ class VeiculoServiceTest {
 
     @BeforeEach
     void setup() {
-        request = new VeiculoRequest(1L,"Honda", 2020,"HXS-53454", "Civic");
+        request = new VeiculoRequest("12345632451","Honda", 2020,"HXS-53454", "Civic");
         clienteEntity = new ClienteEntity();
         veiculoEntity = new VeiculoEntity();
-        response = new VeiculoResponse(1L, null, "Honda", 2020,"HXS-53454", "Civic");
+        response = new VeiculoResponse(1L, "Honda", 2020,"HXS-53454", "Civic", null);
     }
 
     @Test
     void deveCadastrarVeiculoComSucesso() {
-        when(clienteRepository.findById(request.idCliente())).thenReturn(Optional.of(clienteEntity));
+        when(clienteRepository.findByCpfCnpj(request.cpfCnpj())).thenReturn(Optional.of(clienteEntity));
         when(veiculoMapper.mapToEntity(request, clienteEntity)).thenReturn(veiculoEntity);
         when(veiculoRepository.save(veiculoEntity)).thenReturn(veiculoEntity);
         when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
@@ -66,20 +66,20 @@ class VeiculoServiceTest {
         VeiculoResponse resultado = veiculoService.cadastrar(request);
 
         assertNotNull(resultado);
-        verify(clienteRepository).findById(request.idCliente());
+        verify(clienteRepository).findByCpfCnpj(request.cpfCnpj());
         verify(veiculoRepository).save(veiculoEntity);
     }
 
     @Test
     void deveLancarExcecaoAoCadastrarVeiculoComClienteInexistente() {
-        when(clienteRepository.findById(request.idCliente())).thenReturn(Optional.empty());
+        when(clienteRepository.findByCpfCnpj(request.cpfCnpj())).thenReturn(Optional.empty());
 
         ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
             veiculoService.cadastrar(request);
         });
 
         assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
-        assertEquals("Cliente não encontrado com o ID: " + request.idCliente(), excecao.getReason());
+        assertEquals("Cliente não encontrado com o CPF/CNPJ: " + request.cpfCnpj(), excecao.getReason());
         verify(veiculoRepository, never()).save(any());
     }
 

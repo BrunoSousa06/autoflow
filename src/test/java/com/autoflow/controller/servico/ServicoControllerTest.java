@@ -62,7 +62,7 @@ class ServicoControllerTest {
 
         String jsonBody = objectMapper.writeValueAsString(request);
 
-        mockMvc.perform(post("/servicos")
+        mockMvc.perform(post("/servico")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonBody))
                 .andExpect(status().isCreated());
@@ -72,7 +72,7 @@ class ServicoControllerTest {
     void deveListarServicoPorId() throws Exception {
         when(servicoService.buscarPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/servicos/1"))
+        mockMvc.perform(get("/servico/1"))
                 .andExpect(status().isOk());
     }
 
@@ -80,7 +80,7 @@ class ServicoControllerTest {
     void deveListarTodosServicos() throws Exception {
         when(servicoService.listar()).thenReturn(responses);
 
-        mockMvc.perform(get("/servicos"))
+        mockMvc.perform(get("/servico"))
                 .andExpect(status().isOk());
     }
 
@@ -90,7 +90,7 @@ class ServicoControllerTest {
 
         String jsonBody = objectMapper.writeValueAsString(request);
 
-        mockMvc.perform(patch("/servicos/1/atualizacao")
+        mockMvc.perform(patch("/servico/1/atualizacao")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonBody))
                 .andExpect(status().isOk());
@@ -100,7 +100,7 @@ class ServicoControllerTest {
     void deveDeletarServico() throws Exception {
         doNothing().when(servicoService).deletar(1L);
 
-        mockMvc.perform(delete("/servicos/1"))
+        mockMvc.perform(delete("/servico/1"))
                 .andExpect(status().isOk());
 
         verify(servicoService).deletar(1L);

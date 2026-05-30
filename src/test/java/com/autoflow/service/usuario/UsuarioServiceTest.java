@@ -61,13 +61,13 @@ class UsuarioServiceTest {
     @BeforeEach
     void setup() {
         // Ajuste os construtores dos Records conforme a estrutura real do seu projeto
-        registroClienteRequest = new RegistroRequest("cliente@email.com", "bruno@hotmail.com", "432523432","321321321", "teste21321", RoleEnum.ROLE_CLIENTE);
-        registroAdminRequest = new RegistroRequest("admin@email.com", "bruno@hotmail.com", "432523432","321321321", "teste21321", RoleEnum.ROLE_ADMIN);
+        registroClienteRequest = new RegistroRequest("cliente@email.com", "bruno@hotmail.com", "432523432","321321321", "teste21321", RoleEnum.CLIENTE);
+        registroAdminRequest = new RegistroRequest("admin@email.com", "bruno@hotmail.com", "432523432","321321321", "teste21321", RoleEnum.ADMIN);
         loginRequest = new LoginRequest("usuario@email.com", "senha123");
 
         usuarioEntity = new UsuarioEntity();
         usuarioEntity.setEmail("usuario@email.com");
-        usuarioEntity.setRole(RoleEnum.ROLE_CLIENTE); // Exemplo de atribuição de ENUM
+        usuarioEntity.setRole(RoleEnum.CLIENTE); // Exemplo de atribuição de ENUM
 
         clienteEntity = new ClienteEntity();
     }
