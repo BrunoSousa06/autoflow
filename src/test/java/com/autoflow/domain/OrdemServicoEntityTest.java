@@ -1,13 +1,12 @@
 package com.autoflow.domain;
 
 import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.domain.ordemServico.OrdemServicoEntity;
-import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemServico.StatusOrdemServico;
+import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import org.junit.jupiter.api.Test;
 
-import java.lang.Long;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,12 +38,14 @@ class OrdemServicoEntityTest {
     void deveValidarCamposObrigatorios() {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        List<ServicoSolicitadoEntity> servicos = List.of(new ServicoSolicitadoEntity(1L, "Revisao"));
+        List<ServicoSolicitadoEntity> servicos = List.of(new ServicoSolicitadoEntity(1L, "Revisão"));
+        List<ServicoSolicitadoEntity> servicosVazios = List.of();
+        VeiculoEntity veiculoSemCliente = new VeiculoEntity();
 
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, servicos)),
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(veiculo, List.of())),
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(new VeiculoEntity(), servicos))
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(veiculo, servicosVazios)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(veiculoSemCliente, servicos))
         );
     }
 
@@ -59,8 +60,10 @@ class OrdemServicoEntityTest {
 
         servicos.clear();
 
-        assertEquals(1, ordemServicoEntity.getServicosSolicitados().size());
-        assertThrows(UnsupportedOperationException.class, () -> ordemServicoEntity.getServicosSolicitados().clear());
+        List<ServicoSolicitadoEntity> servicosSolicitados = ordemServicoEntity.getServicosSolicitados();
+
+        assertEquals(1, servicosSolicitados.size());
+        assertThrows(UnsupportedOperationException.class, servicosSolicitados::clear);
     }
 
     private ClienteEntity criarCliente(Long clienteId) {

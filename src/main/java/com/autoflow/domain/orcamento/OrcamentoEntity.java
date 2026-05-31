@@ -50,6 +50,21 @@ public class OrcamentoEntity {
     @Column(name = "total_geral", nullable = false)
     private BigDecimal totalGeral;
 
+    @Column(name = "public_token_hash", nullable = true)
+    private String publicTokenHash;
+
+    @Column(name = "aprovado_em")
+    private LocalDateTime aprovadoEm;
+
+    @Column(name = "reprovado_em")
+    private LocalDateTime reprovadoEm;
+
+    @Column(name = "assinatura_nome")
+    private String assinaturaNome;
+
+    @Column(name = "recusa_motivo")
+    private String recusaMotivo;
+
     @ElementCollection
     @CollectionTable(
             name = "orcamento_servico_item",

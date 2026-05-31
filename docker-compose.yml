@@ -12,6 +12,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       JWT_SECRET: 8aF3mK9pQ2xV7nRt5YcW1zLb4DsH6jTe0UrN8gXp3CvM7qAz9FkP2hYs6BwLd4Xe
       JWT_EXPIRATION: 3600000
+      APP_PUBLIC_BASE_URL: "http://localhost:8080"
+      APP_PUBLIC_TOKEN_SECRET: "dev-local-secret"
     depends_on:
       - db
     networks:

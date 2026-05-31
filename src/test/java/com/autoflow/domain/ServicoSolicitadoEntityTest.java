@@ -1,6 +1,6 @@
 package com.autoflow.domain;
 
-import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import org.junit.jupiter.api.Test;
 
 
