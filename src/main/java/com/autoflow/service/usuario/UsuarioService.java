@@ -10,9 +10,11 @@ import com.autoflow.mapper.UsuarioMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +58,28 @@ public class UsuarioService {
                 usuarioEntity.getEmail(),
                 usuarioEntity.getRole().name()
         );
+    }
 
+    public UsuarioEntity buscarMecanicoPorId(Long mecanicoId){
+        UsuarioEntity usuario = usuarioRepository.findById(mecanicoId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Mecânico não encontrado."
+                ));
+        if (!RoleEnum.ROLE_MECANICO.equals(usuario.getRole())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Usuário informado não é um mecânico."
+            );
+        }
+        return usuario;
+    }
+
+    public UsuarioEntity buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuário autenticado não encontrado."
+                ));
     }
 }

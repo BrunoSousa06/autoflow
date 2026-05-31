@@ -1,12 +1,10 @@
 package com.autoflow.domain.pecaInsumo;
 
-import com.autoflow.domain.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Entity
 @Getter
@@ -21,5 +19,9 @@ public class PecaInsumoEntity {
     private String nome;
     private int quantidade;
     private BigDecimal valor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CategoriaPecaInsumo tipo;
 
 }

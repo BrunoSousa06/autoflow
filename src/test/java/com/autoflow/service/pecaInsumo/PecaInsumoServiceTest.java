@@ -2,6 +2,7 @@ package com.autoflow.service.pecaInsumo;
 
 import com.autoflow.controller.pecaInsumo.request.PecaInsumoRequest;
 import com.autoflow.controller.pecaInsumo.response.PecaInsumoResponse;
+import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
 import com.autoflow.mapper.PecaInsumoMapper;
 import com.autoflow.repository.PecaInsumo.PecaInsumoRepository;
@@ -43,16 +44,17 @@ class PecaInsumoServiceTest {
     void setup() {
 
         request = new PecaInsumoRequest(
-                "Filtro de Oleo", BigDecimal.valueOf(50.00),2
+                "Filtro de Oleo", BigDecimal.valueOf(50.00),2, CategoriaPecaInsumo.PECA
         );
 
         entity = new PecaInsumoEntity();
         entity.setId(1L);
         entity.setNome("Filtro de Oleo");
+        entity.setTipo(CategoriaPecaInsumo.PECA);
 
         response = new PecaInsumoResponse(
                 1L,
-                "Filtro de Oleo", BigDecimal.valueOf(50.00),2
+                "Filtro de Oleo", BigDecimal.valueOf(50.00),2, CategoriaPecaInsumo.PECA
         );
     }
 
@@ -153,7 +155,7 @@ class PecaInsumoServiceTest {
             assertAll(
                     () -> assertNotNull(resultado),
                     () -> assertEquals(1, resultado.size()),
-                    () -> assertEquals(response, resultado.get(0))
+                    () -> assertEquals(response, resultado.getFirst())
             );
 
             verify(repository).findAll();

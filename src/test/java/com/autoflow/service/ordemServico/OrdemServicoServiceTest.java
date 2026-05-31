@@ -1,14 +1,18 @@
 package com.autoflow.service.ordemServico;
 
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.ordemServico.DiagnosticoEntity;
 import com.autoflow.domain.ordemServico.OrdemServicoEntity;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemServico.StatusOrdemServico;
 import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.domain.usuario.RoleEnum;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
 import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.servico.ServicoService;
+import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.service.veiculo.VeiculoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +55,9 @@ class OrdemServicoServiceTest {
 
     @Mock
     ServicoService servicoService;
+
+    @Mock
+    UsuarioService usuarioService;
 
     @Test
     void deveCriarESalvarOrdemServico() {
@@ -289,6 +296,251 @@ class OrdemServicoServiceTest {
         verify(repository, never()).save(any(OrdemServicoEntity.class));
     }
 
+    @Test
+    void deveAtribuirMecanicoNaOrdemServico() {
+        Long ordemServicoId = 1L;
+        Long mecanicoId = 2L;
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanico = criarUsuarioMecanico(mecanicoId, "Maria");
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarMecanicoPorId(mecanicoId)).thenReturn(mecanico);
+        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+
+        OrdemServicoEntity resultado = service.atribuirMecanico(ordemServicoId, mecanicoId);
+
+        assertEquals(ordemServicoEntity, resultado);
+        assertNotNull(resultado.getDiagnostico());
+        assertEquals(mecanico, resultado.getDiagnostico().getMecanico());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarMecanicoPorId(mecanicoId);
+        verify(repository).save(ordemServicoEntity);
+    }
+
+    @Test
+    void deveAtualizarMecanicoQuandoOrdemServicoJaPossuiDiagnostico() {
+        Long ordemServicoId = 1L;
+        Long mecanicoId = 3L;
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanicoAntigo = criarUsuarioMecanico(2L, "Joao");
+        UsuarioEntity novoMecanico = criarUsuarioMecanico(mecanicoId, "Maria");
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        DiagnosticoEntity diagnosticoExistente = new DiagnosticoEntity();
+        diagnosticoExistente.setMecanico(mecanicoAntigo);
+        diagnosticoExistente.setLaudo("Laudo inicial");
+        ordemServicoEntity.setDiagnostico(diagnosticoExistente);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarMecanicoPorId(mecanicoId)).thenReturn(novoMecanico);
+        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+
+        OrdemServicoEntity resultado = service.atribuirMecanico(ordemServicoId, mecanicoId);
+
+        assertEquals(ordemServicoEntity, resultado);
+        assertEquals(diagnosticoExistente, resultado.getDiagnostico());
+        assertEquals(novoMecanico, resultado.getDiagnostico().getMecanico());
+        assertEquals("Laudo inicial", resultado.getDiagnostico().getLaudo());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarMecanicoPorId(mecanicoId);
+        verify(repository).save(ordemServicoEntity);
+    }
+
+    @Test
+    void devePropagarExcecaoQuandoMecanicoNaoForValidoAoAtribuirMecanico() {
+        Long ordemServicoId = 1L;
+        Long mecanicoId = 2L;
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        ResponseStatusException exception = new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Usuario informado nao e um mecanico."
+        );
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarMecanicoPorId(mecanicoId)).thenThrow(exception);
+
+        ResponseStatusException resultado = assertThrows(
+                ResponseStatusException.class,
+                () -> service.atribuirMecanico(ordemServicoId, mecanicoId)
+        );
+
+        assertEquals(exception, resultado);
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarMecanicoPorId(mecanicoId);
+        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoOrdemServicoNaoForEncontradaAoAtribuirMecanico() {
+        Long ordemServicoId = 1L;
+        Long mecanicoId = 2L;
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.atribuirMecanico(ordemServicoId, mecanicoId)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService, never()).buscarMecanicoPorId(any());
+        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    }
+
+    @Test
+    void deveIniciarDiagnosticoQuandoUsuarioLogadoForAdmin() {
+        Long ordemServicoId = 1L;
+        String emailAdmin = "admin@autoflow.com";
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanico = criarUsuarioMecanico(2L, "Maria");
+        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ROLE_ADMIN);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanico);
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
+        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+
+        OrdemServicoEntity resultado = service.iniciarDiagnostico(ordemServicoId, emailAdmin);
+
+        assertEquals(ordemServicoEntity, resultado);
+        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
+        assertNotNull(resultado.getDiagnostico().getIniciadoEm());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailAdmin);
+        verify(repository).save(ordemServicoEntity);
+    }
+
+    @Test
+    void deveIniciarDiagnosticoQuandoUsuarioLogadoForMecanicoAtribuido() {
+        Long ordemServicoId = 1L;
+        String emailMecanico = "maria@autoflow.com";
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.ROLE_MECANICO);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanico);
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
+        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+
+        OrdemServicoEntity resultado = service.iniciarDiagnostico(ordemServicoId, emailMecanico);
+
+        assertEquals(ordemServicoEntity, resultado);
+        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
+        assertNotNull(resultado.getDiagnostico().getIniciadoEm());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailMecanico);
+        verify(repository).save(ordemServicoEntity);
+    }
+
+    @Test
+    void deveLancarForbiddenQuandoUsuarioLogadoNaoForMecanicoAtribuido() {
+        Long ordemServicoId = 1L;
+        String emailMecanicoLogado = "joao@autoflow.com";
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
+        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.ROLE_MECANICO);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanicoAtribuido);
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.iniciarDiagnostico(ordemServicoId, emailMecanicoLogado)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailMecanicoLogado);
+        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    }
+
+    @Test
+    void deveLancarBadRequestQuandoIniciarDiagnosticoSemMecanicoAtribuido() {
+        Long ordemServicoId = 1L;
+        String emailMecanico = "maria@autoflow.com";
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.ROLE_MECANICO);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.iniciarDiagnostico(ordemServicoId, emailMecanico)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailMecanico);
+        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoOrdemServicoNaoForEncontradaAoIniciarDiagnostico() {
+        Long ordemServicoId = 1L;
+        String emailMecanico = "maria@autoflow.com";
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.iniciarDiagnostico(ordemServicoId, emailMecanico)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService, never()).buscarPorEmail(any());
+        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    }
+
     private ClienteEntity criarCliente(Long clienteId) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(clienteId);
@@ -314,5 +566,18 @@ class OrdemServicoServiceTest {
         servico.setNome(nome);
         servico.setValor(valor);
         return servico;
+    }
+
+    private UsuarioEntity criarUsuarioMecanico(Long usuarioId, String nome) {
+        return criarUsuario(usuarioId, nome, nome.toLowerCase() + "@autoflow.com", RoleEnum.ROLE_MECANICO);
+    }
+
+    private UsuarioEntity criarUsuario(Long usuarioId, String nome, String email, RoleEnum role) {
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setId(usuarioId);
+        usuario.setNome(nome);
+        usuario.setEmail(email);
+        usuario.setRole(role);
+        return usuario;
     }
 }
