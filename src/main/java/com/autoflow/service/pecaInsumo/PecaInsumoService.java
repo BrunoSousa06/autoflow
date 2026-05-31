@@ -41,6 +41,9 @@ public class PecaInsumoService {
         return pecaInsumoMapper.toResponse(buscarEntidadePorId(id));
     }
 
+    public PecaInsumoEntity buscarEntityPorId(Long id) {
+        return pecaInsumoRepository.findById(id).orElse(null);
+    }
     public PecaInsumoResponse atualizar(PecaInsumoRequest request, Long id
     ) {
 

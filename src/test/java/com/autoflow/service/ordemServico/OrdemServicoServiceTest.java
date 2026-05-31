@@ -2,15 +2,20 @@ package com.autoflow.service.ordemServico;
 
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.ordemServico.DiagnosticoEntity;
+import com.autoflow.domain.ordemServico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemServico.OrdemServicoEntity;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemServico.StatusItemNecessario;
 import com.autoflow.domain.ordemServico.StatusOrdemServico;
+import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
 import com.autoflow.service.cliente.ClienteService;
+import com.autoflow.service.pecaInsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.service.veiculo.VeiculoService;
@@ -58,6 +63,9 @@ class OrdemServicoServiceTest {
 
     @Mock
     UsuarioService usuarioService;
+
+    @Mock
+    PecaInsumoService pecaInsumoService;
 
     @Test
     void deveCriarESalvarOrdemServico() {
@@ -541,6 +549,144 @@ class OrdemServicoServiceTest {
         verify(repository, never()).save(any(OrdemServicoEntity.class));
     }
 
+    @Test
+    void deveRegistrarItemNecessarioDisponivelQuandoHouverEstoque() {
+        Long ordemServicoId = 1L;
+        String emailAdmin = "admin@autoflow.com";
+        Long pecaInsumoId = 10L;
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ROLE_ADMIN);
+        PecaInsumoEntity itemEstoque = criarPecaInsumo(
+                pecaInsumoId,
+                "Filtro de Oleo",
+                CategoriaPecaInsumo.PECA,
+                new BigDecimal("50.00"),
+                5
+        );
+        ItemNecessarioEntity itemSolicitado = criarItemNecessarioSolicitado(pecaInsumoId, 2);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
+        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(itemEstoque);
+        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+
+        OrdemServicoEntity resultado = service.registrarItemNecessario(
+                ordemServicoId,
+                emailAdmin,
+                List.of(itemSolicitado)
+        );
+
+        assertEquals(ordemServicoEntity, resultado);
+        assertEquals(1, resultado.getItemNecessario().size());
+        ItemNecessarioEntity itemRegistrado = resultado.getItemNecessario().getFirst();
+        assertEquals(pecaInsumoId, itemRegistrado.getPecaInsumoId());
+        assertEquals("Filtro de Oleo", itemRegistrado.getNome());
+        assertEquals(CategoriaPecaInsumo.PECA, itemRegistrado.getTipo());
+        assertEquals(new BigDecimal("50.00"), itemRegistrado.getValorUnitario());
+        assertEquals(2, itemRegistrado.getQuantidade());
+        assertEquals(new BigDecimal("100.00"), itemRegistrado.getValorTotal());
+        assertEquals(StatusItemNecessario.DISPONIVEL, itemRegistrado.getStatus());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailAdmin);
+        verify(pecaInsumoService).buscarEntityPorId(pecaInsumoId);
+        verify(repository).save(ordemServicoEntity);
+    }
+
+    @Test
+    void deveRegistrarItemNecessarioPendenteQuandoNaoHouverEstoque() {
+        Long ordemServicoId = 1L;
+        String emailMecanico = "maria@autoflow.com";
+        Long pecaInsumoId = 10L;
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.ROLE_MECANICO);
+        PecaInsumoEntity itemEstoque = criarPecaInsumo(
+                pecaInsumoId,
+                "Oleo 5W30",
+                CategoriaPecaInsumo.INSUMO,
+                new BigDecimal("49.90"),
+                1
+        );
+        ItemNecessarioEntity itemSolicitado = criarItemNecessarioSolicitado(pecaInsumoId, 3);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanico);
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
+        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(itemEstoque);
+        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+
+        OrdemServicoEntity resultado = service.registrarItemNecessario(
+                ordemServicoId,
+                emailMecanico,
+                List.of(itemSolicitado)
+        );
+
+        assertEquals(ordemServicoEntity, resultado);
+        assertEquals(1, resultado.getItemNecessario().size());
+        ItemNecessarioEntity itemRegistrado = resultado.getItemNecessario().getFirst();
+        assertEquals(pecaInsumoId, itemRegistrado.getPecaInsumoId());
+        assertEquals("Oleo 5W30", itemRegistrado.getNome());
+        assertEquals(CategoriaPecaInsumo.INSUMO, itemRegistrado.getTipo());
+        assertEquals(new BigDecimal("49.90"), itemRegistrado.getValorUnitario());
+        assertEquals(3, itemRegistrado.getQuantidade());
+        assertEquals(new BigDecimal("149.70"), itemRegistrado.getValorTotal());
+        assertEquals(StatusItemNecessario.PENDENTE, itemRegistrado.getStatus());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailMecanico);
+        verify(pecaInsumoService).buscarEntityPorId(pecaInsumoId);
+        verify(repository).save(ordemServicoEntity);
+    }
+
+    @Test
+    void deveLancarForbiddenQuandoMecanicoNaoAtribuidoRegistrarItemNecessario() {
+        Long ordemServicoId = 1L;
+        String emailMecanicoLogado = "joao@autoflow.com";
+        Long pecaInsumoId = 10L;
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
+        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.ROLE_MECANICO);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                cliente,
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanicoAtribuido);
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.registrarItemNecessario(
+                        ordemServicoId,
+                        emailMecanicoLogado,
+                        List.of(criarItemNecessarioSolicitado(pecaInsumoId, 1))
+                )
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailMecanicoLogado);
+        verify(pecaInsumoService, never()).buscarEntityPorId(any());
+        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    }
+
     private ClienteEntity criarCliente(Long clienteId) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(clienteId);
@@ -579,5 +725,32 @@ class OrdemServicoServiceTest {
         usuario.setEmail(email);
         usuario.setRole(role);
         return usuario;
+    }
+
+    private PecaInsumoEntity criarPecaInsumo(
+            Long pecaInsumoId,
+            String nome,
+            CategoriaPecaInsumo tipo,
+            BigDecimal valor,
+            int quantidade
+    ) {
+        PecaInsumoEntity pecaInsumo = new PecaInsumoEntity();
+        pecaInsumo.setId(pecaInsumoId);
+        pecaInsumo.setNome(nome);
+        pecaInsumo.setTipo(tipo);
+        pecaInsumo.setValor(valor);
+        pecaInsumo.setQuantidade(quantidade);
+        return pecaInsumo;
+    }
+
+    private ItemNecessarioEntity criarItemNecessarioSolicitado(Long pecaInsumoId, int quantidade) {
+        return ItemNecessarioEntity.criar(
+                pecaInsumoId,
+                "Item solicitado",
+                CategoriaPecaInsumo.PECA,
+                BigDecimal.ZERO,
+                quantidade,
+                null
+        );
     }
 }

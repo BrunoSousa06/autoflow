@@ -56,6 +56,14 @@ public class OrdemServicoEntity {
     @Embedded
     private DiagnosticoEntity diagnostico;
 
+    @ElementCollection
+    @CollectionTable(
+            name = "ordem_servico_item_necessario",
+            joinColumns = @JoinColumn(name = "ordem_servico_id")
+    )
+    @OrderColumn(name = "ordem")
+    private List<ItemNecessarioEntity> itemNecessario = new ArrayList<>();
+
     private OrdemServicoEntity(
             String numeroOs,
             ClienteEntity cliente,
@@ -96,6 +104,9 @@ public class OrdemServicoEntity {
         this.servicosSolicitados.addAll(servicosSolicitados);
     }
 
+    public void adicionarItensNecessarios(List<ItemNecessarioEntity> itemNecessarios) {
+        this.itemNecessario.addAll(itemNecessarios);
+    }
 
     private static void validarCliente(ClienteEntity cliente) {
         if (cliente == null) {

@@ -1,10 +1,12 @@
 package com.autoflow.controller.ordemServico;
 
+import com.autoflow.controller.ordemServico.request.ItensNecessariosRequest;
 import com.autoflow.controller.ordemServico.request.CriarOrdemServicoRequest;
 import com.autoflow.controller.ordemServico.request.IncluirMecanicoRequest;
 import com.autoflow.controller.ordemServico.request.ServicoSolicitadoRequest;
 import com.autoflow.controller.ordemServico.response.OrdemServicoResponse;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
+import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.mapper.ServicoSolicitadoMapper;
 import com.autoflow.service.ordemServico.OrdemServicoService;
 import jakarta.validation.Valid;
@@ -22,10 +24,12 @@ public class OrdemServicoController {
 
     private final OrdemServicoService ordemServicoService;
     private final ServicoSolicitadoMapper servicoSolicitadoMapper;
+    private final ItensNecessariosMapper itensNecessariosMapper;
 
-    public OrdemServicoController(OrdemServicoService ordemServicoService, ServicoSolicitadoMapper servicoSolicitadoMapper) {
+    public OrdemServicoController(OrdemServicoService ordemServicoService, ServicoSolicitadoMapper servicoSolicitadoMapper, ItensNecessariosMapper itensNecessariosMapper) {
         this.ordemServicoService = ordemServicoService;
         this.servicoSolicitadoMapper = servicoSolicitadoMapper;
+        this.itensNecessariosMapper = itensNecessariosMapper;
     }
 
     @PostMapping
@@ -57,13 +61,33 @@ public class OrdemServicoController {
     public OrdemServicoResponse atribuirMecanico(
             @PathVariable Long ordemServicoId,
             @Valid @RequestBody IncluirMecanicoRequest request){
-        return OrdemServicoResponse.fromDomain(ordemServicoService.atribuirMecanico(ordemServicoId,request.mecanicoId()));
+        return OrdemServicoResponse.fromDomain(ordemServicoService.atribuirMecanico(
+                ordemServicoId,
+                request.mecanicoId()));
     }
 
     @PatchMapping("/{ordemServicoId}/diagnostico/iniciar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse iniciarDiagnostico(@PathVariable Long ordemServicoId, @AuthenticationPrincipal UserDetails userDetails){
-        return OrdemServicoResponse.fromDomain(ordemServicoService.iniciarDiagnostico(ordemServicoId, userDetails.getUsername()));
+        return OrdemServicoResponse.fromDomain(ordemServicoService.iniciarDiagnostico(
+                ordemServicoId,
+                userDetails.getUsername()));
     }
+
+    @PatchMapping("/{ordemServicoId}/itens-necessarios")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse atualizarDiagnostico(
+            @PathVariable Long ordemServicoId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody List<ItensNecessariosRequest> itensNecessariosRequests
+    ){
+        return OrdemServicoResponse.fromDomain(ordemServicoService.registrarItemNecessario(
+                ordemServicoId,
+                userDetails.getUsername(),
+                itensNecessariosMapper.mapToEntities(itensNecessariosRequests)
+        ));
+    }
+
 }

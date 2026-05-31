@@ -1,16 +1,15 @@
 package com.autoflow.service.ordemServico;
 
 import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.domain.ordemServico.DiagnosticoEntity;
-import com.autoflow.domain.ordemServico.OrdemServicoEntity;
-import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemServico.StatusOrdemServico;
+import com.autoflow.domain.ordemServico.*;
+import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
 import com.autoflow.service.cliente.ClienteService;
+import com.autoflow.service.pecaInsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.service.veiculo.VeiculoService;
@@ -34,6 +33,7 @@ public class OrdemServicoService {
     private final VeiculoService veiculoService;
     private final ServicoService servicoService;
     private final UsuarioService usuarioService;
+    private final PecaInsumoService pecaInsumoService;
 
     public OrdemServicoEntity criar(Long clienteId, Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
         ClienteEntity cliente = clienteService.buscarPorId(clienteId);
@@ -130,4 +130,32 @@ public class OrdemServicoService {
     }
 
 
+    public OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+
+        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+
+        if (!RoleEnum.ROLE_ADMIN.equals(usuarioLogado.getRole())) {
+            validarMecanicoAtribuido(ordemServico, usuarioLogado);
+        }
+
+        List<ItemNecessarioEntity> itemNecessarios = itensNecessarios.stream()
+                .map(itemNecessario -> {
+                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
+                    StatusItemNecessario status = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade() ?
+                            StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE;
+
+                    return ItemNecessarioEntity.criar(
+                            itemEstoque.getId(),
+                            itemEstoque.getNome(),
+                            itemEstoque.getTipo(),
+                            itemEstoque.getValor(),
+                            itemNecessario.getQuantidade(),
+                            status
+                    );
+        }).toList();
+
+        ordemServico.adicionarItensNecessarios(itemNecessarios);
+        return ordemServicoRepository.save(ordemServico);
+    }
 }

@@ -3,9 +3,11 @@ package com.autoflow.controller.ordemServico;
 import com.autoflow.config.security.service.CustomUserDetailsService;
 import com.autoflow.config.security.service.JwtService;
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.ordemServico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemServico.OrdemServicoEntity;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemServico.StatusOrdemServico;
+import com.autoflow.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.ServicoSolicitadoMapperImpl;
 import com.autoflow.service.ordemServico.OrdemServicoService;
@@ -53,6 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = OrdemServicoController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import({
+        ItensNecessariosMapperImpl.class,
         ServicoSolicitadoMapperImpl.class,
         OrdemServicoControllerWebMvcTest.MethodSecurityTestConfig.class,
         OrdemServicoControllerWebMvcTest.SecurityExceptionHandler.class
@@ -213,6 +216,46 @@ class OrdemServicoControllerWebMvcTest {
     }
 
     @Test
+    @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
+    void deveRegistrarItensNecessariosComoMecanico() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
+
+        when(ordemServicoService.registrarItemNecessario(eq(1L), eq("mecanico@autoflow.com"), anyList()))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/itens-necessarios", 1L)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                [
+                                  {
+                                    "pecaInsumoId": 10,
+                                    "quantidade": 2
+                                  }
+                                ]
+                                """))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
+                .andExpect(jsonPath("$.status").value("RECEBIDA"))
+                .andExpect(jsonPath("$.dataAbertura").exists());
+
+        ArgumentCaptor<List<ItemNecessarioEntity>> itensCaptor =
+                ArgumentCaptor.forClass(List.class);
+
+        verify(ordemServicoService).registrarItemNecessario(
+                eq(1L),
+                eq("mecanico@autoflow.com"),
+                itensCaptor.capture()
+        );
+
+        List<ItemNecessarioEntity> itens = itensCaptor.getValue();
+        assertEquals(1, itens.size());
+        assertEquals(10L, itens.getFirst().getPecaInsumoId());
+        assertEquals(2, itens.getFirst().getQuantidade());
+    }
+
+    @Test
     @WithMockUser(roles = "MECANICO")
     void deveRetornarForbiddenQuandoMecanicoTentarCriarOrdemServico() throws Exception {
         mockMvc.perform(post("/ordens-servico")
@@ -292,6 +335,25 @@ class OrdemServicoControllerWebMvcTest {
                 .andExpect(status().isForbidden());
 
         verify(ordemServicoService, never()).iniciarDiagnostico(eq(1L), anyString());
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveRetornarForbiddenQuandoAtendenteTentarRegistrarItensNecessarios() throws Exception {
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/itens-necessarios", 1L)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                [
+                                  {
+                                    "pecaInsumoId": 10,
+                                    "quantidade": 2
+                                  }
+                                ]
+                                """))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).registrarItemNecessario(eq(1L), anyString(), anyList());
     }
 
     @Test
