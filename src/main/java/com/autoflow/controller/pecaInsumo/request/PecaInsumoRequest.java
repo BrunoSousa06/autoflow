@@ -1,5 +1,6 @@
 package com.autoflow.controller.pecaInsumo.request;
 
+import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -7,6 +8,7 @@ import java.math.BigDecimal;
 public record PecaInsumoRequest(
         @NotNull(message = "O nome da peça/insumo é obrigatório") String nome,
         BigDecimal valor,
-        int quantidade
+        int quantidade,
+        @NotNull(message = "A categoria da peca/insumo e obrigatoria") CategoriaPecaInsumo tipo
 ) {
 }

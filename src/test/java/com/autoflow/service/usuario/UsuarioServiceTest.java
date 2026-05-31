@@ -15,9 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -131,11 +133,82 @@ class UsuarioServiceTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authMock);
         when(usuarioRepository.findByEmail(loginRequest.email())).thenReturn(Optional.empty());
 
-        assertThrows(Exception.class, () -> {
-            usuarioService.login(loginRequest);
-        });
+        assertThrows(Exception.class, () -> usuarioService.login(loginRequest));
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtService, never()).gerarToken(any(), any());
+    }
+
+    @Test
+    void deveBuscarMecanicoPorId() {
+        Long mecanicoId = 1L;
+        UsuarioEntity mecanico = new UsuarioEntity();
+        mecanico.setId(mecanicoId);
+        mecanico.setRole(RoleEnum.ROLE_MECANICO);
+
+        when(usuarioRepository.findById(mecanicoId)).thenReturn(Optional.of(mecanico));
+
+        UsuarioEntity resultado = usuarioService.buscarMecanicoPorId(mecanicoId);
+
+        assertEquals(mecanico, resultado);
+        verify(usuarioRepository).findById(mecanicoId);
+    }
+
+    @Test
+    void deveLancarNotFoundQuandoMecanicoNaoForEncontrado() {
+        Long mecanicoId = 1L;
+
+        when(usuarioRepository.findById(mecanicoId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.buscarMecanicoPorId(mecanicoId)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        verify(usuarioRepository).findById(mecanicoId);
+    }
+
+    @Test
+    void deveLancarBadRequestQuandoUsuarioNaoForMecanico() {
+        Long mecanicoId = 1L;
+        usuarioEntity.setRole(RoleEnum.ROLE_CLIENTE);
+
+        when(usuarioRepository.findById(mecanicoId)).thenReturn(Optional.of(usuarioEntity));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.buscarMecanicoPorId(mecanicoId)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verify(usuarioRepository).findById(mecanicoId);
+    }
+
+    @Test
+    void deveBuscarUsuarioPorEmail() {
+        String email = "usuario@email.com";
+
+        when(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuarioEntity));
+
+        UsuarioEntity resultado = usuarioService.buscarPorEmail(email);
+
+        assertEquals(usuarioEntity, resultado);
+        verify(usuarioRepository).findByEmail(email);
+    }
+
+    @Test
+    void deveLancarNotFoundQuandoUsuarioAutenticadoNaoForEncontradoPorEmail() {
+        String email = "usuario@email.com";
+
+        when(usuarioRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.buscarPorEmail(email)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        verify(usuarioRepository).findByEmail(email);
     }
 }

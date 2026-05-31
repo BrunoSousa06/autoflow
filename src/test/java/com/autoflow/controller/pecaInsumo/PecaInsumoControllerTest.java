@@ -2,6 +2,7 @@ package com.autoflow.controller.pecaInsumo;
 
 import com.autoflow.controller.pecaInsumo.request.PecaInsumoRequest;
 import com.autoflow.controller.pecaInsumo.response.PecaInsumoResponse;
+import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
 import com.autoflow.service.pecaInsumo.PecaInsumoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,8 +43,8 @@ class PecaInsumoControllerTest {
                 .standaloneSetup(new PecaInsumoController(pecaInsumoService))
                 .build();
 
-        request = new PecaInsumoRequest("Óleo 5W30", BigDecimal.valueOf(49.90), 10);
-        response = new PecaInsumoResponse(1L,"Óleo 5W30", BigDecimal.valueOf(49.90), 10);
+        request = new PecaInsumoRequest("Óleo 5W30", BigDecimal.valueOf(49.90), 10, CategoriaPecaInsumo.INSUMO);
+        response = new PecaInsumoResponse(1L,"Óleo 5W30", BigDecimal.valueOf(49.90), 10, CategoriaPecaInsumo.INSUMO);
         responses = List.of(response);
     }
 

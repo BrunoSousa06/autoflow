@@ -1,18 +1,25 @@
 package com.autoflow.service.ordemServico;
 
 import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.domain.ordemServico.OrdemServicoEntity;
-import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemServico.*;
+import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
+import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.domain.usuario.RoleEnum;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
 import com.autoflow.service.cliente.ClienteService;
+import com.autoflow.service.pecaInsumo.PecaInsumoService;
+import com.autoflow.service.servico.ServicoService;
+import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.service.veiculo.VeiculoService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -23,29 +30,97 @@ public class OrdemServicoService {
     private final OrdemServicoRepository ordemServicoRepository;
 
     private final ClienteService clienteService;
-
     private final VeiculoService veiculoService;
+    private final ServicoService servicoService;
+    private final UsuarioService usuarioService;
+    private final PecaInsumoService pecaInsumoService;
 
-
-    public OrdemServicoEntity criar(
-            Long clienteId,
-            Long veiculoId,
-            List<ServicoSolicitadoEntity> servicosSolicitados
-    ) {
+    public OrdemServicoEntity criar(Long clienteId, Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
         ClienteEntity cliente = clienteService.buscarPorId(clienteId);
         VeiculoEntity veiculo = veiculoService.buscarPorId(veiculoId);
         validarVeiculoDoCliente(veiculo, cliente);
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo, servicosSolicitados);
+        List<ServicoSolicitadoEntity> servicoComDados = preencherDadosDosServicos(servicosSolicitados);
+
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo, servicoComDados);
         return ordemServicoRepository.save(ordemServicoEntity);
     }
 
-    public OrdemServicoEntity incluirServicos(
-            Long ordemServicoId, List<ServicoSolicitadoEntity> servicos){
-        OrdemServicoEntity ordemServicoEntity = ordemServicoRepository.findById(ordemServicoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        //TODO QUANDO CRIAR O CRUD DE SERVICOS UTILIZAR AQUI PARA VALIDAR SE O SERVICO JA TA REGISTRADO e salvar os dados
-        ordemServicoEntity.adicionarServicos(servicos);
-        return ordemServicoEntity;
+    @Transactional
+    public OrdemServicoEntity incluirServicos(Long ordemServicoId, List<ServicoSolicitadoEntity> servicos) {
+
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+
+        List<ServicoSolicitadoEntity> servicosComDados = preencherDadosDosServicos(servicos);
+
+        ordemServico.adicionarServicos(servicosComDados);
+
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+    public OrdemServicoEntity atribuirMecanico(Long ordemServicoId, Long mecanicoId) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+
+        UsuarioEntity mecanico = usuarioService.buscarMecanicoPorId(mecanicoId);
+
+        if (ordemServico.getDiagnostico() == null) {
+            ordemServico.setDiagnostico(new DiagnosticoEntity());
+        }
+
+        ordemServico.getDiagnostico().setMecanico(mecanico);
+
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+    public OrdemServicoEntity iniciarDiagnostico(Long ordemServicoId, String emailUsuarioLogado) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        if (!RoleEnum.ROLE_ADMIN.equals(usuarioLogado.getRole())) {
+            validarMecanicoAtribuido(ordemServico, usuarioLogado);
+        }
+        ordemServico.getDiagnostico().setIniciadoEm(LocalDateTime.now());
+        ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+    private void validarMecanicoAtribuido(OrdemServicoEntity ordemServico, UsuarioEntity usuarioLogado) {
+        DiagnosticoEntity diagnostico = ordemServico.getDiagnostico();
+        if (diagnostico == null || diagnostico.getMecanico() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A ordem de serviço ainda não possui mecânico atribuído."
+            );
+        }
+        Long mecanicoAtribuidoId = diagnostico.getMecanico().getId();
+        if(!mecanicoAtribuidoId.equals(usuarioLogado.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente o mecânico atribuído pode iniciar o diagnóstico."
+            );
+        }
+    }
+
+    private List<ServicoSolicitadoEntity> preencherDadosDosServicos(List<ServicoSolicitadoEntity> servicos) {
+        validarServicosSolicitados(servicos);
+
+        return servicos.stream().map(this::preencherDadosDoServico).toList();
+    }
+
+    public OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId) {
+        return ordemServicoRepository.findById(ordemServicoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
+    }
+
+    private ServicoSolicitadoEntity preencherDadosDoServico(ServicoSolicitadoEntity servicoSolicitado) {
+        ServicoEntity servico = servicoService.buscarEntityPorId(servicoSolicitado.getServicoId());
+
+        return new ServicoSolicitadoEntity(servico.getId(), servico.getNome(), servico.getValor());
+    }
+
+    private static void validarServicosSolicitados(List<ServicoSolicitadoEntity> servicos) {
+        if (servicos == null || servicos.isEmpty()) {
+            throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
+        }
     }
 
     private static void validarVeiculoDoCliente(VeiculoEntity veiculo, ClienteEntity cliente) {
@@ -54,4 +129,33 @@ public class OrdemServicoService {
         }
     }
 
+
+    public OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+
+        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+
+        if (!RoleEnum.ROLE_ADMIN.equals(usuarioLogado.getRole())) {
+            validarMecanicoAtribuido(ordemServico, usuarioLogado);
+        }
+
+        List<ItemNecessarioEntity> itemNecessarios = itensNecessarios.stream()
+                .map(itemNecessario -> {
+                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
+                    StatusItemNecessario status = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade() ?
+                            StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE;
+
+                    return ItemNecessarioEntity.criar(
+                            itemEstoque.getId(),
+                            itemEstoque.getNome(),
+                            itemEstoque.getTipo(),
+                            itemEstoque.getValor(),
+                            itemNecessario.getQuantidade(),
+                            status
+                    );
+        }).toList();
+
+        ordemServico.adicionarItensNecessarios(itemNecessarios);
+        return ordemServicoRepository.save(ordemServico);
+    }
 }

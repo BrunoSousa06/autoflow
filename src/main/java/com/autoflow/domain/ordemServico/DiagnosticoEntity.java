@@ -1,5 +1,6 @@
 package com.autoflow.domain.ordemServico;
 
+import com.autoflow.domain.usuario.UsuarioEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,8 +12,9 @@ import java.time.LocalDateTime;
 @Embeddable
 public class DiagnosticoEntity {
 
-    @Column
-    private String mecanico;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "diagnostico_mecanico_id")
+    private UsuarioEntity mecanico;
 
     @Column(name = "diagnostico_iniciado_em")
     private LocalDateTime iniciadoEm;
