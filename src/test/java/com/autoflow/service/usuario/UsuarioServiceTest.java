@@ -218,7 +218,7 @@ class UsuarioServiceTest {
         List<UsuarioEntity> usuariosEntity = List.of(usuario);
 
         List<UsuarioResponse> usuariosResponse = List.of(
-                new UsuarioResponse(1L, "João", "joao@hotmail.com","12332112342","1123453242",RoleEnum.CLIENTE
+                new UsuarioResponse(1L, "João", "joao@hotmail.com",RoleEnum.CLIENTE
                 )
         );
 

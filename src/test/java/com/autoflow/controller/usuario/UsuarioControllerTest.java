@@ -48,7 +48,7 @@ class UsuarioControllerTest {
 
         registroRequest = new RegistroRequest("Bruno","usuario@email.com", "321321123","32131221","senha123", RoleEnum.ADMIN);
         usuarioEntity = new UsuarioEntity();
-        usuarioResponse = new UsuarioResponse(1L, "Bruno1", "usuario@email.com", "321321123","32131221", RoleEnum.ADMIN);
+        usuarioResponse = new UsuarioResponse(1L, "Bruno1", "usuario@email.com", RoleEnum.ADMIN);
         usuarioResponses = List.of(usuarioResponse);
 
 
