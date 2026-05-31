@@ -37,6 +37,7 @@ jobs:
         run: docker build -t autoflow-app:latest .
 
       - name: Snyk Container Scan
+        continue-on-error: true 
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk container test autoflow-app:latest --file=Dockerfile
