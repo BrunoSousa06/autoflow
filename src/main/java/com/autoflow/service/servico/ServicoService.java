@@ -45,7 +45,7 @@ public class ServicoService {
         return servicoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Servico nao encontrado com o ID: " + id
+                        "Serviço não encontrado com o ID: " + id
                 ));
     }
     public ServicoResponse atualizar(ServicoRequest request, Long id) {

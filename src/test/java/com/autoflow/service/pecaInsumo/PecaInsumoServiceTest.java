@@ -212,6 +212,22 @@ class PecaInsumoServiceTest {
             verify(mapper, never())
                     .toResponse(any());
         }
+
+        @Test
+        void deveBuscarEntityPorIdComSucesso() {
+
+            when(repository.findById(1L))
+                    .thenReturn(Optional.of(entity));
+
+
+            PecaInsumoEntity resultado =
+                    service.buscarEntityPorId(1L);
+
+            assertEquals(entity, resultado);
+
+            verify(repository).findById(1L);
+        }
+
     }
 
     @Nested
