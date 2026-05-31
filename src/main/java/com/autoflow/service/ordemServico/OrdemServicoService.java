@@ -1,14 +1,16 @@
 package com.autoflow.service.ordemServico;
 
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemServico.*;
 import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
-import com.autoflow.service.cliente.ClienteService;
+import com.autoflow.service.orcamento.OrcamentoFactory;
+import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.pecaInsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
@@ -33,6 +35,10 @@ public class OrdemServicoService {
     private final ServicoService servicoService;
     private final UsuarioService usuarioService;
     private final PecaInsumoService pecaInsumoService;
+    private final OrdemServicoAccessPolicy ordemServicoAccessPolicy;
+    private final OrcamentoFactory orcamentoFactory;
+    private final OrcamentoVersioningService orcamentoVersioningService;
+    private final OrcamentoRepository orcamentoRepository;
 
     public OrdemServicoEntity criar(Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
         VeiculoEntity veiculo = veiculoService.buscarPorId(veiculoId);
@@ -76,28 +82,64 @@ public class OrdemServicoService {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
-            validarMecanicoAtribuido(ordemServico, usuarioLogado);
+            ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
         ordemServico.getDiagnostico().setIniciadoEm(LocalDateTime.now());
         ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         return ordemServicoRepository.save(ordemServico);
     }
 
-    private void validarMecanicoAtribuido(OrdemServicoEntity ordemServico, UsuarioEntity usuarioLogado) {
-        DiagnosticoEntity diagnostico = ordemServico.getDiagnostico();
-        if (diagnostico == null || diagnostico.getMecanico() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "A ordem de serviço ainda não possui mecânico atribuído."
-            );
+    public OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+
+        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+
+        if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
+            ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
-        Long mecanicoAtribuidoId = diagnostico.getMecanico().getId();
-        if(!mecanicoAtribuidoId.equals(usuarioLogado.getId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente o mecânico atribuído pode iniciar o diagnóstico."
-            );
+
+        List<ItemNecessarioEntity> itemNecessarios = itensNecessarios.stream()
+                .map(itemNecessario -> {
+                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
+                    StatusItemNecessario status = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade() ?
+                            StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE;
+
+                    return ItemNecessarioEntity.criar(
+                            itemEstoque.getId(),
+                            itemEstoque.getNome(),
+                            itemEstoque.getTipo(),
+                            itemEstoque.getValor(),
+                            itemNecessario.getQuantidade(),
+                            status
+                    );
+                }).toList();
+
+        ordemServico.adicionarItensNecessarios(itemNecessarios);
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+
+    public OrdemServicoEntity registrarLaudo(Long ordemServicoId, String emailUsuarioLogado, String laudo){
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
+        ordemServico.registrarLaudo(laudo);
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+    public OrdemServicoEntity finalizarDiagnostico(Long ordemServicoId, String emailUsuarioLogado){
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+
+        if(!RoleEnum.ADMIN.equals(usuarioLogado.getRole())){
+            ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
+        ordemServico.finalizarDiagnostico();
+        int versao = orcamentoVersioningService.proximaVersaoPrincipal(ordemServicoId);
+        OrcamentoEntity orcamento = orcamentoFactory.criarPrincipalDisponivel(ordemServico, versao, LocalDateTime.now());
+        ordemServico.aguardarAprovacao();
+        orcamentoRepository.save(orcamento);
+        return ordemServicoRepository.save(ordemServico);
     }
 
     private List<ServicoSolicitadoEntity> preencherDadosDosServicos(List<ServicoSolicitadoEntity> servicos) {
@@ -121,35 +163,5 @@ public class OrdemServicoService {
         if (servicos == null || servicos.isEmpty()) {
             throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
         }
-    }
-
-
-    public OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
-
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
-
-        if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
-            validarMecanicoAtribuido(ordemServico, usuarioLogado);
-        }
-
-        List<ItemNecessarioEntity> itemNecessarios = itensNecessarios.stream()
-                .map(itemNecessario -> {
-                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
-                    StatusItemNecessario status = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade() ?
-                            StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE;
-
-                    return ItemNecessarioEntity.criar(
-                            itemEstoque.getId(),
-                            itemEstoque.getNome(),
-                            itemEstoque.getTipo(),
-                            itemEstoque.getValor(),
-                            itemNecessario.getQuantidade(),
-                            status
-                    );
-        }).toList();
-
-        ordemServico.adicionarItensNecessarios(itemNecessarios);
-        return ordemServicoRepository.save(ordemServico);
     }
 }

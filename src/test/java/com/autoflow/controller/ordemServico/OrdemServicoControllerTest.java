@@ -336,6 +336,62 @@ class OrdemServicoControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "MECANICO", username = "mecanico@autoflow.com")
+    void deveFinalizarDiagnosticoComoMecanico() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
+        ordemServico.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
+
+        when(ordemServicoService.finalizarDiagnostico(eq(1L), eq("mecanico@autoflow.com")))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 1L)
+                        .with(csrf()))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
+                .andExpect(jsonPath("$.status").value("AGUARDANDO_APROVACAO"))
+                .andExpect(jsonPath("$.dataAbertura").exists());
+
+        verify(ordemServicoService).finalizarDiagnostico(1L, "mecanico@autoflow.com");
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN", username = "admin@autoflow.com")
+    void deveFinalizarDiagnosticoComoAdmin() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
+        ordemServico.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
+
+        when(ordemServicoService.finalizarDiagnostico(eq(1L), eq("admin@autoflow.com")))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 1L)
+                        .with(csrf()))
+                .andExpect(status().isAccepted());
+
+        verify(ordemServicoService).finalizarDiagnostico(1L, "admin@autoflow.com");
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveRetornarForbiddenQuandoAtendenteTentarFinalizarDiagnostico() throws Exception {
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 1L)
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).finalizarDiagnostico(eq(1L), anyString());
+    }
+
+    @Test
+    @WithMockUser(roles = "CLIENTE")
+    void deveRetornarForbiddenQuandoClienteTentarFinalizarDiagnostico() throws Exception {
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 1L)
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).finalizarDiagnostico(eq(1L), anyString());
+    }
+
+    @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveRetornarForbiddenQuandoAtendenteTentarRegistrarItensNecessarios() throws Exception {
         mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/itens-necessarios", 1L)
