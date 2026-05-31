@@ -13,8 +13,11 @@ import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemServico.OrdemServicoRepository;
-import com.autoflow.service.cliente.ClienteService;
+import com.autoflow.service.orcamento.OrcamentoFactory;
+import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.pecaInsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
@@ -40,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,9 +57,6 @@ class OrdemServicoServiceTest {
     OrdemServicoRepository repository;
 
     @Mock
-    ClienteService clienteService;
-
-    @Mock
     VeiculoService veiculoService;
 
     @Mock
@@ -66,6 +67,18 @@ class OrdemServicoServiceTest {
 
     @Mock
     PecaInsumoService pecaInsumoService;
+
+    @Mock
+    OrdemServicoAccessPolicy ordemServicoAccessPolicy;
+
+    @Mock
+    OrcamentoFactory orcamentoFactory;
+
+    @Mock
+    OrcamentoVersioningService orcamentoVersioningService;
+
+    @Mock
+    OrcamentoRepository orcamentoRepository;
 
     @Test
     void deveCriarESalvarOrdemServico() {
@@ -450,6 +463,8 @@ class OrdemServicoServiceTest {
 
         when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
         when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
+                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanicoLogado);
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -476,6 +491,8 @@ class OrdemServicoServiceTest {
 
         when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
         when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
+        doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "A ordem de serviço ainda não possui mecânico atribuído."))
+                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanico);
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -503,6 +520,117 @@ class OrdemServicoServiceTest {
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         verify(repository).findById(ordemServicoId);
         verify(usuarioService, never()).buscarPorEmail(any());
+        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    }
+
+    @Test
+    void deveFinalizarDiagnosticoComoAdminSemValidarMecanico() {
+        Long ordemServicoId = 1L;
+        String emailAdmin = "admin@autoflow.com";
+
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        ordemServicoEntity.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+
+        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanicoAtribuido);
+        diagnostico.setLaudo("Laudo");
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        UsuarioEntity admin = criarUsuario(99L, "Admin", emailAdmin, RoleEnum.ADMIN);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
+        when(orcamentoVersioningService.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
+        when(orcamentoFactory.criarPrincipalDisponivel(any(OrdemServicoEntity.class), org.mockito.ArgumentMatchers.anyInt(), any()))
+                .thenReturn(new OrcamentoEntity());
+        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrdemServicoEntity resultado = service.finalizarDiagnostico(ordemServicoId, emailAdmin);
+
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.getStatus());
+        assertNotNull(resultado.getDiagnostico());
+        assertNotNull(resultado.getDiagnostico().getConcluidoEm());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailAdmin);
+        verify(repository).save(any(OrdemServicoEntity.class));
+    }
+
+    @Test
+    void deveFinalizarDiagnosticoComoMecanicoAtribuido() {
+        Long ordemServicoId = 1L;
+        String emailMecanico = "maria@autoflow.com";
+
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        ordemServicoEntity.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+
+        UsuarioEntity mecanicoAtribuido = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanicoAtribuido);
+        diagnostico.setLaudo("Laudo");
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanicoAtribuido);
+        when(orcamentoVersioningService.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
+        when(orcamentoFactory.criarPrincipalDisponivel(any(OrdemServicoEntity.class), org.mockito.ArgumentMatchers.anyInt(), any()))
+                .thenReturn(new OrcamentoEntity());
+        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrdemServicoEntity resultado = service.finalizarDiagnostico(ordemServicoId, emailMecanico);
+
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.getStatus());
+        assertNotNull(resultado.getDiagnostico().getConcluidoEm());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailMecanico);
+        verify(repository).save(any(OrdemServicoEntity.class));
+    }
+
+    @Test
+    void deveRetornarForbiddenQuandoMecanicoNaoAtribuidoFinalizarDiagnostico() {
+        Long ordemServicoId = 1L;
+        String emailMecanicoLogado = "joao@autoflow.com";
+
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+        ordemServicoEntity.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+
+        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanicoAtribuido);
+        ordemServicoEntity.setDiagnostico(diagnostico);
+
+        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.MECANICO);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
+                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanicoLogado);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.finalizarDiagnostico(ordemServicoId, emailMecanicoLogado)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        verify(repository).findById(ordemServicoId);
+        verify(usuarioService).buscarPorEmail(emailMecanicoLogado);
         verify(repository, never()).save(any(OrdemServicoEntity.class));
     }
 
@@ -624,6 +752,8 @@ class OrdemServicoServiceTest {
 
         when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
         when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
+                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanicoLogado);
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,

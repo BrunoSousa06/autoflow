@@ -95,6 +95,32 @@ public class OrdemServicoEntity {
         return ordemServico;
     }
 
+    public void registrarLaudo(
+            String laudo
+    ){
+        if(this.status != StatusOrdemServico.EM_DIAGNOSTICO){
+            throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
+        }
+        this.diagnostico.setLaudo(laudo);
+    }
+
+    public void finalizarDiagnostico(){
+        validaSePodeFinalizarDiagnostico();
+        this.diagnostico.setConcluidoEm(LocalDateTime.now());
+    }
+
+    private void validaSePodeFinalizarDiagnostico() {
+        if(this.status != StatusOrdemServico.EM_DIAGNOSTICO){
+            throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
+        }
+        if(this.diagnostico == null){
+            throw new IllegalArgumentException("OS deve ter um diagnostico para finalizar diagnostico.");
+        }
+        if(this.diagnostico.getLaudo() == null){
+            throw new IllegalArgumentException("Diagnostico deve possuir um laudo para finalizar diagnostico.");
+        }
+    }
+
     public void adicionarServicos(List<ServicoSolicitadoEntity> servicosSolicitados) {
         validarServicos(servicosSolicitados);
         this.servicosSolicitados.addAll(servicosSolicitados);
@@ -104,6 +130,9 @@ public class OrdemServicoEntity {
         this.itemNecessario.addAll(itemNecessarios);
     }
 
+    public void aguardarAprovacao(){
+        this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
+    }
     private static void validarVeiculo(VeiculoEntity veiculo) {
         if (veiculo == null) {
             throw new IllegalArgumentException("Veiculo e obrigatorio.");
