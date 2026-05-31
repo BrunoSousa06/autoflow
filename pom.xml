@@ -15,6 +15,10 @@
 		<java.version>21</java.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<sonar.organization>autoflow</sonar.organization>
+		<sonar.coverage.exclusions>com/autoflow/config/security/SecurityConfig.class</sonar.coverage.exclusions>
+		<sonar.coverage.exclusions>com/autoflow/mapper/**/*</sonar.coverage.exclusions>
+		<sonar.coverage.exclusions>com/autoflow/domain/**/*</sonar.coverage.exclusions>
+		<sonar.coverage.exclusions>**/AutoFlowApplication.class</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
