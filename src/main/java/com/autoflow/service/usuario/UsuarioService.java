@@ -69,7 +69,7 @@ public class UsuarioService {
                         HttpStatus.NOT_FOUND,
                         "Mecânico não encontrado."
                 ));
-        if (!RoleEnum.ROLE_MECANICO.equals(usuario.getRole())) {
+        if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Usuário informado não é um mecânico."

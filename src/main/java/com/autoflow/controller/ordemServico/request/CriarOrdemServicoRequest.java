@@ -8,7 +8,6 @@ import java.lang.Long;
 import java.util.List;
 
 public record CriarOrdemServicoRequest(
-        @NotNull Long clienteId,
         @NotNull Long veiculoId,
         @NotEmpty List<@Valid ServicoSolicitadoRequest> servicosSolicitados
 ) {

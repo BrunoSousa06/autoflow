@@ -1,6 +1,5 @@
 package com.autoflow.domain.ordemServico;
 
-import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,10 +27,8 @@ public class OrdemServicoEntity {
     @Column(name = "numero_os", nullable = false, unique = true)
     private String numeroOs;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente_id", nullable = false)
-    @ToString.Exclude
-    private ClienteEntity cliente;
+    @Embedded
+    ClienteOsEntity cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veiculo_id", nullable = false)
@@ -66,14 +63,12 @@ public class OrdemServicoEntity {
 
     private OrdemServicoEntity(
             String numeroOs,
-            ClienteEntity cliente,
             VeiculoEntity veiculo,
             StatusOrdemServico status,
             LocalDateTime dataAbertura,
             List<ServicoSolicitadoEntity> servicosSolicitados
     ) {
         this.numeroOs = numeroOs;
-        this.cliente = cliente;
         this.veiculo = veiculo;
         this.status = status;
         this.dataAbertura = dataAbertura;
@@ -81,22 +76,49 @@ public class OrdemServicoEntity {
     }
 
     public static OrdemServicoEntity criar(
-            ClienteEntity cliente,
             VeiculoEntity veiculo,
             List<ServicoSolicitadoEntity> servicosSolicitados
     ) {
-        validarCliente(cliente);
         validarVeiculo(veiculo);
         validarServicos(servicosSolicitados);
 
-        return new OrdemServicoEntity(
+        if(veiculo.getCliente() == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
+
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity(
                 gerarNumeroOs(),
-                cliente,
                 veiculo,
                 StatusOrdemServico.RECEBIDA,
                 LocalDateTime.now(),
                 servicosSolicitados
         );
+        ordemServico.cliente = ClienteOsEntity.fromCliente(veiculo.getCliente());
+        return ordemServico;
+    }
+
+    public void registrarLaudo(
+            String laudo
+    ){
+        if(this.status != StatusOrdemServico.EM_DIAGNOSTICO){
+            throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
+        }
+        this.diagnostico.setLaudo(laudo);
+    }
+
+    public void finalizarDiagnostico(){
+        validaSePodeFinalizarDiagnostico();
+        this.diagnostico.setConcluidoEm(LocalDateTime.now());
+    }
+
+    private void validaSePodeFinalizarDiagnostico() {
+        if(this.status != StatusOrdemServico.EM_DIAGNOSTICO){
+            throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
+        }
+        if(this.diagnostico == null){
+            throw new IllegalArgumentException("OS deve ter um diagnostico para finalizar diagnostico.");
+        }
+        if(this.diagnostico.getLaudo() == null){
+            throw new IllegalArgumentException("Diagnostico deve possuir um laudo para finalizar diagnostico.");
+        }
     }
 
     public void adicionarServicos(List<ServicoSolicitadoEntity> servicosSolicitados) {
@@ -108,12 +130,9 @@ public class OrdemServicoEntity {
         this.itemNecessario.addAll(itemNecessarios);
     }
 
-    private static void validarCliente(ClienteEntity cliente) {
-        if (cliente == null) {
-            throw new IllegalArgumentException("Cliente e obrigatorio.");
-        }
+    public void aguardarAprovacao(){
+        this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
     }
-
     private static void validarVeiculo(VeiculoEntity veiculo) {
         if (veiculo == null) {
             throw new IllegalArgumentException("Veiculo e obrigatorio.");
