@@ -1,9 +1,6 @@
 package com.autoflow.controller.ordemServico;
 
-import com.autoflow.controller.ordemServico.request.ItensNecessariosRequest;
-import com.autoflow.controller.ordemServico.request.CriarOrdemServicoRequest;
-import com.autoflow.controller.ordemServico.request.IncluirMecanicoRequest;
-import com.autoflow.controller.ordemServico.request.ServicoSolicitadoRequest;
+import com.autoflow.controller.ordemServico.request.*;
 import com.autoflow.controller.ordemServico.response.OrdemServicoResponse;
 import com.autoflow.domain.ordemServico.ServicoSolicitadoEntity;
 import com.autoflow.mapper.ItensNecessariosMapper;
@@ -38,7 +35,6 @@ public class OrdemServicoController {
     public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request.servicosSolicitados());
         return OrdemServicoResponse.fromDomain(ordemServicoService.criar(
-                request.clienteId(),
                 request.veiculoId(),
                 servicos
         ));
@@ -90,4 +86,31 @@ public class OrdemServicoController {
         ));
     }
 
+    @PatchMapping("/{ordemServicoId}/diagnostico/laudo")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse atualizarDiagnostico(
+            @PathVariable Long ordemServicoId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody RegistrarLaudoRequest request
+    ){
+        return OrdemServicoResponse.fromDomain(ordemServicoService.registrarLaudo(
+                ordemServicoId,
+                userDetails.getUsername(),
+                request.laudo()
+        ));
+    }
+
+    @PatchMapping("/{ordemServicoId}/diagnostico/finalizar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse finalizarDiagnostico(
+            @PathVariable Long ordemServicoId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ){
+        return OrdemServicoResponse.fromDomain(ordemServicoService.finalizarDiagnostico(
+                ordemServicoId,
+                userDetails.getUsername()
+        ));
+    }
 }
