@@ -10,7 +10,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Runtime
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:26.0.1_8-jdk
 
 WORKDIR /autoflow
 
