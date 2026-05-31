@@ -7,14 +7,14 @@ on:
     types: [opened, synchronize, reopened]
     branches: [ "develop", "main" ]
 
-permissions:
-  contents: read
-  security-events: write
-
 jobs:
    snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
+    permissions:
+      actions: read       # Resolve o erro de acesso ao workflow-runs
+      contents: read      # Permite ler o código para análise
+      security-events: write
     steps:
       - uses: actions/checkout@v4
 
