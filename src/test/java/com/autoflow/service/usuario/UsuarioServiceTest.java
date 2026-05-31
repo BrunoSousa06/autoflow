@@ -3,6 +3,7 @@ package com.autoflow.service.usuario;
 import com.autoflow.config.security.service.JwtService;
 import com.autoflow.controller.usuario.request.LoginRequest;
 import com.autoflow.controller.usuario.request.RegistroRequest;
+import com.autoflow.controller.usuario.response.UsuarioResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
@@ -21,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,7 +64,6 @@ class UsuarioServiceTest {
 
     @BeforeEach
     void setup() {
-        // Ajuste os construtores dos Records conforme a estrutura real do seu projeto
         registroClienteRequest = new RegistroRequest("cliente@email.com", "bruno@hotmail.com", "432523432","321321321", "teste21321", RoleEnum.CLIENTE);
         registroAdminRequest = new RegistroRequest("admin@email.com", "bruno@hotmail.com", "432523432","321321321", "teste21321", RoleEnum.ADMIN);
         loginRequest = new LoginRequest("usuario@email.com", "senha123");
@@ -73,10 +74,6 @@ class UsuarioServiceTest {
 
         clienteEntity = new ClienteEntity();
     }
-
-    // ==========================================
-    // TESTES DO MÉTODO: cadastrar
-    // ==========================================
 
     @Test
     void deveCadastrarUsuarioComRoleClienteESalvarNaTabelaCliente() {
@@ -92,14 +89,12 @@ class UsuarioServiceTest {
         verify(usuarioMapper).mapToEntity(registroClienteRequest);
         verify(usuarioMapper).mapToClienteEntity(registroClienteRequest);
         verify(clienteRepository).save(clienteEntity);
-        // Garante que o usuarioRepository.save foi chamado duas vezes (linha 16 e linha 23 do seu Service)
         verify(usuarioRepository, times(1)).save(usuarioEntity);
     }
 
     @Test
     void deveCadastrarUsuarioComOutraRoleENaoSalvarNaTabelaCliente() {
         when(usuarioMapper.mapToEntity(registroAdminRequest)).thenReturn(usuarioEntity);
-        // Nesse fluxo, o primeiro save e o retorno final utilizam a mesma chamada/mock
         when(usuarioRepository.save(usuarioEntity)).thenReturn(usuarioEntity);
 
         UsuarioEntity resultado = usuarioService.cadastrar(registroAdminRequest);
@@ -210,5 +205,33 @@ class UsuarioServiceTest {
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         verify(usuarioRepository).findByEmail(email);
+    }
+
+    @Test
+    void deveListarUsuariosComSucesso() {
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setId(1L);
+        usuario.setNome("João");
+        usuario.setEmail("admin@email.com");
+        usuario.setSenha("senhaCriptografada");
+        usuario.setRole(RoleEnum.CLIENTE);
+        List<UsuarioEntity> usuariosEntity = List.of(usuario);
+
+        List<UsuarioResponse> usuariosResponse = List.of(
+                new UsuarioResponse(1L, "João", "joao@hotmail.com",RoleEnum.CLIENTE
+                )
+        );
+
+        when(usuarioRepository.findAll()).thenReturn(usuariosEntity);
+        when(usuarioMapper.mapToResponse(usuariosEntity)).thenReturn(usuariosResponse);
+
+        List<UsuarioResponse> resultado = usuarioService.listarUsuarios();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals("João", resultado.getFirst().nome());
+
+        verify(usuarioRepository).findAll();
+        verify(usuarioMapper).mapToResponse(usuariosEntity);
     }
 }

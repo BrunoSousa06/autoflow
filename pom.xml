@@ -15,10 +15,13 @@
 		<java.version>21</java.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<sonar.organization>autoflow</sonar.organization>
-		<sonar.coverage.exclusions>com/autoflow/config/security/SecurityConfig.class</sonar.coverage.exclusions>
-		<sonar.coverage.exclusions>com/autoflow/mapper/**/*</sonar.coverage.exclusions>
-		<sonar.coverage.exclusions>com/autoflow/domain/**/*</sonar.coverage.exclusions>
-		<sonar.coverage.exclusions>**/AutoFlowApplication.class</sonar.coverage.exclusions>
+		<sonar.coverage.exclusions>
+			**/SecurityConfig.java,
+			com/autoflow/mapper/**,
+			com/autoflow/domain/**,
+			**/*Application.java
+		</sonar.coverage.exclusions>
+		<sonar.exclusions>**/SecurityConfig.java</sonar.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -58,6 +61,7 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+			<version>42.7.11</version>
 		</dependency>
 			<dependency>
 				<groupId>org.projectlombok</groupId>
@@ -150,9 +154,9 @@
 				<configuration>
 					<excludes>
 						<exclude>com/autoflow/config/security/SecurityConfig.class</exclude>
-						<exclude>com/autoflow/mapper/**/*</exclude>
-						<exclude>com/autoflow/domain/**/*</exclude>
-						<exclude>**/AutoFlowApplication.class</exclude>
+						<exclude>com/autoflow/mapper/**</exclude>
+						<exclude>com/autoflow/domain/**</exclude>
+						<exclude>**/*Application.java</exclude>
 					</excludes>
 				</configuration>
 				<executions>

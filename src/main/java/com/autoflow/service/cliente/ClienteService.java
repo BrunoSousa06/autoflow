@@ -3,6 +3,7 @@ package com.autoflow.service.cliente;
 import com.autoflow.controller.cliente.request.ClienteRequest;
 import com.autoflow.controller.cliente.response.ClienteResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.mapper.ClienteMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +68,16 @@ public class ClienteService {
         ));
 
         clienteMapper.updateEntity(request, clienteEntity);
+
+        UsuarioEntity usuario = clienteEntity.getUsuario();
+
+        if (usuario != null) {
+            usuario.setNome(request.nome());
+            usuario.setEmail(request.email());
+        }
+
         ClienteEntity save = clienteRepository.save(clienteEntity);
+
         return clienteMapper.maptoResponse(save);
     }
 

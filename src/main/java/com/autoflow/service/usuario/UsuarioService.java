@@ -88,7 +88,6 @@ public class UsuarioService {
 
     public List<UsuarioResponse> listarUsuarios() {
         List<UsuarioEntity> usuarios = usuarioRepository.findAll();
-        usuarioMapper.mapToResponse(usuarios);
 
         return usuarioMapper.mapToResponse(usuarios);
     }

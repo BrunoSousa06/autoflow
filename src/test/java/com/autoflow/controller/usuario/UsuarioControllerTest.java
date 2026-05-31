@@ -2,6 +2,7 @@ package com.autoflow.controller.usuario;
 
 import com.autoflow.controller.usuario.request.LoginRequest;
 import com.autoflow.controller.usuario.request.RegistroRequest;
+import com.autoflow.controller.usuario.response.UsuarioResponse;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.service.usuario.UsuarioService;
@@ -15,9 +16,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +37,8 @@ class UsuarioControllerTest {
     private RegistroRequest registroRequest;
     private UsuarioEntity usuarioEntity;
     private LoginRequest loginRequest;
+    private List<UsuarioResponse> usuarioResponses;
+    private UsuarioResponse usuarioResponse;
 
     @BeforeEach
     void setup() {
@@ -42,6 +48,9 @@ class UsuarioControllerTest {
 
         registroRequest = new RegistroRequest("Bruno","usuario@email.com", "321321123","32131221","senha123", RoleEnum.ADMIN);
         usuarioEntity = new UsuarioEntity();
+        usuarioResponse = new UsuarioResponse(1L, "Bruno1", "usuario@email.com", RoleEnum.ADMIN);
+        usuarioResponses = List.of(usuarioResponse);
+
 
         loginRequest = new LoginRequest("usuario@email.com", "senha123");
     }
@@ -65,6 +74,18 @@ class UsuarioControllerTest {
         String jsonBody = objectMapper.writeValueAsString(loginRequest);
 
         mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void deveListarUsuarios() throws Exception {
+        when(usuarioService.listarUsuarios()).thenReturn(usuarioResponses);
+
+        String jsonBody = objectMapper.writeValueAsString(loginRequest);
+
+        mockMvc.perform(get("/auth/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonBody))
                 .andExpect(status().isOk());

@@ -3,6 +3,7 @@ package com.autoflow.service.cliente;
 import com.autoflow.controller.cliente.request.ClienteRequest;
 import com.autoflow.controller.cliente.response.ClienteResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.mapper.ClienteMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -240,6 +241,12 @@ class ClienteServiceTest {
         @Test
         void deveAtualizarCliente() {
 
+            UsuarioEntity usuario = new UsuarioEntity();
+            usuario.setNome("Nome Antigo");
+            usuario.setEmail("antigo@email.com");
+
+            clienteEntity.setUsuario(usuario);
+
             when(clienteRepository.findById(1L))
                     .thenReturn(Optional.of(clienteEntity));
 
@@ -254,7 +261,11 @@ class ClienteServiceTest {
 
             assertEquals(clienteResponse, resultado);
 
+            assertEquals(clienteRequest.nome(), usuario.getNome());
+            assertEquals(clienteRequest.email(), usuario.getEmail());
+
             verify(clienteRepository).findById(1L);
+
             verify(clienteMapper)
                     .updateEntity(clienteRequest, clienteEntity);
 
@@ -319,6 +330,31 @@ class ClienteServiceTest {
 
             verify(clienteRepository, never())
                     .deleteById(anyLong());
+        }
+
+        @Test
+        void deveAtualizarClienteSemUsuarioAssociado() {
+
+            clienteEntity.setUsuario(null);
+
+            when(clienteRepository.findById(1L))
+                    .thenReturn(Optional.of(clienteEntity));
+
+            when(clienteRepository.save(clienteEntity))
+                    .thenReturn(clienteEntity);
+
+            when(clienteMapper.maptoResponse(clienteEntity))
+                    .thenReturn(clienteResponse);
+
+            ClienteResponse resultado =
+                    clienteService.atualizar(clienteRequest, 1L);
+
+            assertEquals(clienteResponse, resultado);
+
+            verify(clienteRepository).findById(1L);
+            verify(clienteMapper).updateEntity(clienteRequest, clienteEntity);
+            verify(clienteRepository).save(clienteEntity);
+            verify(clienteMapper).maptoResponse(clienteEntity);
         }
     }
 }

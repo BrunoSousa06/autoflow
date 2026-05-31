@@ -127,12 +127,35 @@ class ServicoServiceTest {
     }
 
     @Test
+    void deveBuscarServicoEntityPorIdComSucesso() {
+        Long id = 1L;
+        when(servicoRepository.findById(id)).thenReturn(Optional.of(entity));
+        ServicoEntity resultado = servicoService.buscarEntityPorId(id);
+
+        assertNotNull(resultado);
+        verify(servicoRepository).findById(id);
+    }
+
+    @Test
     void deveLancarExcecaoAoBuscarIdInexistente() {
         Long id = 1L;
         when(servicoRepository.findById(id)).thenReturn(Optional.empty());
 
         ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
             servicoService.buscarPorId(id);
+        });
+
+        assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
+        assertEquals("Serviço não encontrado com o ID: " + id, excecao.getReason());
+    }
+
+    @Test
+    void deveLancarExcecaoAoBuscarServicoEntityIdInexistente() {
+        Long id = 1L;
+        when(servicoRepository.findById(id)).thenReturn(Optional.empty());
+
+        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
+            servicoService.buscarEntityPorId(id);
         });
 
         assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
