@@ -79,13 +79,12 @@ class OrdemServicoServiceTest {
         ServicoSolicitadoEntity servicoComDados = new ServicoSolicitadoEntity(servicoId, "Revisao", valor);
         ServicoEntity servico = criarServico(servicoId, "Revisao", valor);
 
-        when(clienteService.buscarPorId(clienteId)).thenReturn(cliente);
         when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
         when(servicoService.buscarEntityPorId(servicoId)).thenReturn(servico);
         when(repository.save(any(OrdemServicoEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        OrdemServicoEntity ordemServicoEntity = service.criar(clienteId, veiculoId, List.of(servicoSolicitado));
+        OrdemServicoEntity ordemServicoEntity = service.criar(veiculoId, List.of(servicoSolicitado));
 
         assertEquals(clienteId, ordemServicoEntity.getClienteId());
         assertEquals(veiculoId, ordemServicoEntity.getVeiculoId());
@@ -104,66 +103,39 @@ class OrdemServicoServiceTest {
         assertTrue(ordemServicoSalva.getNumeroOs().startsWith("OS-"));
         assertNotNull(ordemServicoSalva.getDataAbertura());
         assertEquals(List.of(servicoComDados), ordemServicoSalva.getServicosSolicitados());
-        verify(clienteService).buscarPorId(clienteId);
         verify(veiculoService).buscarPorId(veiculoId);
         verify(servicoService).buscarEntityPorId(servicoId);
     }
 
     @Test
-    void deveLancarExcecaoQuandoClienteNaoForEncontrado() {
-        Long clienteId = 1L;
-        Long veiculoId = 1L;
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
-        IllegalArgumentException exception = new IllegalArgumentException("Cliente nao encontrado");
-
-        when(clienteService.buscarPorId(clienteId)).thenThrow(exception);
-
-        IllegalArgumentException resultado = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.criar(clienteId, veiculoId, List.of(servico))
-        );
-
-        assertEquals(exception, resultado);
-        verify(clienteService).buscarPorId(clienteId);
-        verify(veiculoService, never()).buscarPorId(veiculoId);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
     void deveLancarExcecaoQuandoVeiculoNaoForEncontrado() {
-        Long clienteId = 1L;
         Long veiculoId = 1L;
-        ClienteEntity cliente = criarCliente(clienteId);
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
         IllegalArgumentException exception = new IllegalArgumentException("Veiculo nao encontrado");
 
-        when(clienteService.buscarPorId(clienteId)).thenReturn(cliente);
         when(veiculoService.buscarPorId(veiculoId)).thenThrow(exception);
 
         IllegalArgumentException resultado = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.criar(clienteId, veiculoId, List.of(servico))
+                () -> service.criar(veiculoId, List.of(servico))
         );
 
         assertEquals(exception, resultado);
-        verify(clienteService).buscarPorId(clienteId);
         verify(veiculoService).buscarPorId(veiculoId);
         verify(repository, never()).save(any(OrdemServicoEntity.class));
     }
 
     @Test
     void deveLancarExcecaoQuandoListaDeServicosEstiverVazia() {
-        Long clienteId = 1L;
         Long veiculoId = 1L;
-        ClienteEntity cliente = criarCliente(clienteId);
+        ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
 
-        when(clienteService.buscarPorId(clienteId)).thenReturn(cliente);
         when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.criar(clienteId, veiculoId, List.of())
+                () -> service.criar(veiculoId, List.of())
         );
 
         assertEquals("A ordem de servico deve ter ao menos um servico solicitado.", exception.getMessage());
@@ -172,17 +144,15 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveLancarExcecaoQuandoListaDeServicosForNula() {
-        Long clienteId = 1L;
         Long veiculoId = 1L;
-        ClienteEntity cliente = criarCliente(clienteId);
+        ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
 
-        when(clienteService.buscarPorId(clienteId)).thenReturn(cliente);
         when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.criar(clienteId, veiculoId, null)
+                () -> service.criar(veiculoId, null)
         );
 
         assertEquals("A ordem de servico deve ter ao menos um servico solicitado.", exception.getMessage());
@@ -190,24 +160,21 @@ class OrdemServicoServiceTest {
     }
 
     @Test
-    void deveLancarExcecaoQuandoVeiculoNaoPertencerAoCliente() {
-        Long clienteId = 1L;
+    void deveLancarBadRequestQuandoVeiculoSemClienteVinculado() {
         Long veiculoId = 1L;
-        ClienteEntity cliente = criarCliente(clienteId);
-        ClienteEntity outroCliente = criarCliente(2L);
-        VeiculoEntity veiculo = criarVeiculo(veiculoId, outroCliente);
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setId(veiculoId);
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
 
-        when(clienteService.buscarPorId(clienteId)).thenReturn(cliente);
         when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> service.criar(clienteId, veiculoId, List.of(servico))
+                () -> service.criar(veiculoId, List.of(servico))
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Veiculo nao pertence ao cliente informado.", exception.getReason());
+        assertEquals("Veiculo sem cliente vinculado.", exception.getReason());
         verify(repository, never()).save(any(OrdemServicoEntity.class));
     }
 
@@ -223,7 +190,6 @@ class OrdemServicoServiceTest {
         ServicoSolicitadoEntity novoServicoComDados = new ServicoSolicitadoEntity(novoServicoId, "Troca de oleo", valor);
         ServicoEntity servico = criarServico(novoServicoId, "Troca de oleo", valor);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(servicoInicial)
         );
@@ -264,7 +230,6 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -287,7 +252,6 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -312,7 +276,6 @@ class OrdemServicoServiceTest {
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         UsuarioEntity mecanico = criarUsuarioMecanico(mecanicoId, "Maria");
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -340,7 +303,6 @@ class OrdemServicoServiceTest {
         UsuarioEntity mecanicoAntigo = criarUsuarioMecanico(2L, "Joao");
         UsuarioEntity novoMecanico = criarUsuarioMecanico(mecanicoId, "Maria");
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -371,7 +333,6 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -419,9 +380,8 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         UsuarioEntity mecanico = criarUsuarioMecanico(2L, "Maria");
-        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ROLE_ADMIN);
+        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ADMIN);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -449,9 +409,8 @@ class OrdemServicoServiceTest {
         String emailMecanico = "maria@autoflow.com";
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.ROLE_MECANICO);
+        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -480,9 +439,8 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
-        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.ROLE_MECANICO);
+        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.MECANICO);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -510,9 +468,8 @@ class OrdemServicoServiceTest {
         String emailMecanico = "maria@autoflow.com";
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.ROLE_MECANICO);
+        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -556,7 +513,7 @@ class OrdemServicoServiceTest {
         Long pecaInsumoId = 10L;
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ROLE_ADMIN);
+        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ADMIN);
         PecaInsumoEntity itemEstoque = criarPecaInsumo(
                 pecaInsumoId,
                 "Filtro de Oleo",
@@ -566,7 +523,6 @@ class OrdemServicoServiceTest {
         );
         ItemNecessarioEntity itemSolicitado = criarItemNecessarioSolicitado(pecaInsumoId, 2);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -605,7 +561,7 @@ class OrdemServicoServiceTest {
         Long pecaInsumoId = 10L;
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.ROLE_MECANICO);
+        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
         PecaInsumoEntity itemEstoque = criarPecaInsumo(
                 pecaInsumoId,
                 "Oleo 5W30",
@@ -615,7 +571,6 @@ class OrdemServicoServiceTest {
         );
         ItemNecessarioEntity itemSolicitado = criarItemNecessarioSolicitado(pecaInsumoId, 3);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -658,9 +613,8 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
-        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.ROLE_MECANICO);
+        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.MECANICO);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
         );
@@ -715,7 +669,7 @@ class OrdemServicoServiceTest {
     }
 
     private UsuarioEntity criarUsuarioMecanico(Long usuarioId, String nome) {
-        return criarUsuario(usuarioId, nome, nome.toLowerCase() + "@autoflow.com", RoleEnum.ROLE_MECANICO);
+        return criarUsuario(usuarioId, nome, nome.toLowerCase() + "@autoflow.com", RoleEnum.MECANICO);
     }
 
     private UsuarioEntity criarUsuario(Long usuarioId, String nome, String email, RoleEnum role) {

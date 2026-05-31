@@ -29,20 +29,20 @@ public class OrdemServicoService {
 
     private final OrdemServicoRepository ordemServicoRepository;
 
-    private final ClienteService clienteService;
     private final VeiculoService veiculoService;
     private final ServicoService servicoService;
     private final UsuarioService usuarioService;
     private final PecaInsumoService pecaInsumoService;
 
-    public OrdemServicoEntity criar(Long clienteId, Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
-        ClienteEntity cliente = clienteService.buscarPorId(clienteId);
+    public OrdemServicoEntity criar(Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
         VeiculoEntity veiculo = veiculoService.buscarPorId(veiculoId);
-        validarVeiculoDoCliente(veiculo, cliente);
+        if(veiculo.getCliente() == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Veiculo sem cliente vinculado.");
+        }
 
         List<ServicoSolicitadoEntity> servicoComDados = preencherDadosDosServicos(servicosSolicitados);
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo, servicoComDados);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(veiculo, servicoComDados);
         return ordemServicoRepository.save(ordemServicoEntity);
     }
 
@@ -75,7 +75,7 @@ public class OrdemServicoService {
     public OrdemServicoEntity iniciarDiagnostico(Long ordemServicoId, String emailUsuarioLogado) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
-        if (!RoleEnum.ROLE_ADMIN.equals(usuarioLogado.getRole())) {
+        if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             validarMecanicoAtribuido(ordemServico, usuarioLogado);
         }
         ordemServico.getDiagnostico().setIniciadoEm(LocalDateTime.now());
@@ -123,19 +123,13 @@ public class OrdemServicoService {
         }
     }
 
-    private static void validarVeiculoDoCliente(VeiculoEntity veiculo, ClienteEntity cliente) {
-        if (veiculo.getCliente() == null || !veiculo.getCliente().getId().equals(cliente.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Veiculo nao pertence ao cliente informado.");
-        }
-    }
-
 
     public OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
 
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
 
-        if (!RoleEnum.ROLE_ADMIN.equals(usuarioLogado.getRole())) {
+        if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             validarMecanicoAtribuido(ordemServico, usuarioLogado);
         }
 

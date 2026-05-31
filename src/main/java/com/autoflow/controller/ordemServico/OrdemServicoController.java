@@ -38,7 +38,6 @@ public class OrdemServicoController {
     public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request.servicosSolicitados());
         return OrdemServicoResponse.fromDomain(ordemServicoService.criar(
-                request.clienteId(),
                 request.veiculoId(),
                 servicos
         ));

@@ -144,7 +144,7 @@ class UsuarioServiceTest {
         Long mecanicoId = 1L;
         UsuarioEntity mecanico = new UsuarioEntity();
         mecanico.setId(mecanicoId);
-        mecanico.setRole(RoleEnum.ROLE_MECANICO);
+        mecanico.setRole(RoleEnum.MECANICO);
 
         when(usuarioRepository.findById(mecanicoId)).thenReturn(Optional.of(mecanico));
 
@@ -172,7 +172,7 @@ class UsuarioServiceTest {
     @Test
     void deveLancarBadRequestQuandoUsuarioNaoForMecanico() {
         Long mecanicoId = 1L;
-        usuarioEntity.setRole(RoleEnum.ROLE_CLIENTE);
+        usuarioEntity.setRole(RoleEnum.CLIENTE);
 
         when(usuarioRepository.findById(mecanicoId)).thenReturn(Optional.of(usuarioEntity));
 

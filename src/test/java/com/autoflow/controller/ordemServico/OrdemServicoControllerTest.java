@@ -57,10 +57,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         ItensNecessariosMapperImpl.class,
         ServicoSolicitadoMapperImpl.class,
-        OrdemServicoControllerWebMvcTest.MethodSecurityTestConfig.class,
-        OrdemServicoControllerWebMvcTest.SecurityExceptionHandler.class
+        OrdemServicoControllerTest.MethodSecurityTestConfig.class,
+        OrdemServicoControllerTest.SecurityExceptionHandler.class
 })
-class OrdemServicoControllerWebMvcTest {
+class OrdemServicoControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -79,7 +79,7 @@ class OrdemServicoControllerWebMvcTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
 
-        when(ordemServicoService.criar(eq(1L), eq(2L), anyList()))
+        when(ordemServicoService.criar(eq(2L), anyList()))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(post("/ordens-servico")
@@ -87,7 +87,6 @@ class OrdemServicoControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "clienteId": 1,
                                   "veiculoId": 2,
                                   "servicosSolicitados": [
                                     {
@@ -105,7 +104,7 @@ class OrdemServicoControllerWebMvcTest {
         ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor =
                 ArgumentCaptor.forClass(List.class);
 
-        verify(ordemServicoService).criar(eq(1L), eq(2L), servicosCaptor.capture());
+        verify(ordemServicoService).criar(eq(2L), servicosCaptor.capture());
 
         List<ServicoSolicitadoEntity> servicos = servicosCaptor.getValue();
         assertEquals(1, servicos.size());
@@ -263,7 +262,6 @@ class OrdemServicoControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "clienteId": 1,
                                   "veiculoId": 2,
                                   "servicosSolicitados": [
                                     {
@@ -274,7 +272,7 @@ class OrdemServicoControllerWebMvcTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).criar(eq(1L), eq(2L), anyList());
+        verify(ordemServicoService, never()).criar(eq(2L), anyList());
     }
 
     @Test
@@ -364,7 +362,6 @@ class OrdemServicoControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "clienteId": 1,
                                   "veiculoId": 2,
                                   "servicosSolicitados": []
                                 }
@@ -377,13 +374,16 @@ class OrdemServicoControllerWebMvcTest {
     private OrdemServicoEntity criarOrdemServico(Long id, String numeroOs) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(1L);
+        cliente.setNome("Cliente 1");
+        cliente.setCpfCnpj("12345678901");
+        cliente.setEmail("cliente1@exemplo.com");
+        cliente.setTelefone("11999999999");
 
         VeiculoEntity veiculo = new VeiculoEntity();
         veiculo.setId(2L);
         veiculo.setCliente(cliente);
 
         OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(
-                cliente,
                 veiculo,
                 List.of(new ServicoSolicitadoEntity(10L, "Revisao", new BigDecimal("100.00")))
         );

@@ -24,7 +24,7 @@ class OrdemServicoEntityTest {
         VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo, List.of(servico));
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(veiculo, List.of(servico));
 
         assertNull(ordemServicoEntity.getId());
         assertTrue(ordemServicoEntity.getNumeroOs().startsWith("OS-"));
@@ -42,9 +42,9 @@ class OrdemServicoEntityTest {
         List<ServicoSolicitadoEntity> servicos = List.of(new ServicoSolicitadoEntity(1L, "Revisao"));
 
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, veiculo, servicos)),
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(cliente, null, servicos)),
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(cliente, veiculo, List.of()))
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, servicos)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(veiculo, List.of())),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(new VeiculoEntity(), servicos))
         );
     }
 
@@ -55,7 +55,7 @@ class OrdemServicoEntityTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo, servicos);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(veiculo, servicos);
 
         servicos.clear();
 
@@ -66,6 +66,10 @@ class OrdemServicoEntityTest {
     private ClienteEntity criarCliente(Long clienteId) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(clienteId);
+        cliente.setNome("Cliente " + clienteId);
+        cliente.setCpfCnpj("12345678901");
+        cliente.setEmail("cliente" + clienteId + "@exemplo.com");
+        cliente.setTelefone("11999999999");
         return cliente;
     }
 
