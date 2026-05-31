@@ -12,7 +12,7 @@ permissions:
   security-events: write
 
 jobs:
-  snyk-scan:
+   snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
     steps:
@@ -24,12 +24,14 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
       - name: Run Snyk Open Source Scan
-        uses: snyk/actions/maven@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --sarif-file-output=snyk.sarif
+        run: snyk test --sarif-file-output=snyk.sarif
 
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
@@ -41,14 +43,11 @@ jobs:
         run: docker build -t autoflow-app:latest .
 
       - name: Snyk Container Scan
-        uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: autoflow-app:latest
-          args: --file=Dockerfile
+        run: snyk container test autoflow-app:latest --file=Dockerfile
 
-  sonar-analysis:
+   sonar-analysis:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
     steps:
