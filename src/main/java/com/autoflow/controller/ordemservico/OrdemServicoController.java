@@ -24,7 +24,9 @@ public class OrdemServicoController {
     private final ServicoSolicitadoMapper servicoSolicitadoMapper;
     private final ItensNecessariosMapper itensNecessariosMapper;
 
-    public OrdemServicoController(OrdemServicoServiceImpl ordemServicoService, ServicoSolicitadoMapper servicoSolicitadoMapper, ItensNecessariosMapper itensNecessariosMapper) {
+    public OrdemServicoController(OrdemServicoServiceImpl ordemServicoService,
+                                  ServicoSolicitadoMapper servicoSolicitadoMapper,
+                                  ItensNecessariosMapper itensNecessariosMapper) {
         this.ordemServicoService = ordemServicoService;
         this.servicoSolicitadoMapper = servicoSolicitadoMapper;
         this.itensNecessariosMapper = itensNecessariosMapper;
@@ -72,19 +74,23 @@ public class OrdemServicoController {
                 userDetails.getUsername()));
     }
 
-    @PatchMapping("/{ordemServicoId}/itens-necessarios")
+    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/itens-necessarios")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
-    public OrdemServicoResponse atualizarDiagnostico(
+    public OrdemServicoResponse registrarItensDoServico(
             @PathVariable Long ordemServicoId,
+            @PathVariable Long servicoOsId,
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody List<ItensNecessariosRequest> itensNecessariosRequests
-    ){
-        return OrdemServicoResponse.fromDomain(ordemServicoService.registrarItemNecessario(
-                ordemServicoId,
-                userDetails.getUsername(),
-                itensNecessariosMapper.mapToEntities(itensNecessariosRequests)
-        ));
+            @Valid @RequestBody List<ItensNecessariosRequest> request
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.registrarItemNecessario(
+                        ordemServicoId,
+                        servicoOsId,
+                        userDetails.getUsername(),
+                        itensNecessariosMapper.mapToEntities(request)
+                )
+        );
     }
 
     @PatchMapping("/{ordemServicoId}/diagnostico/laudo")
@@ -113,5 +119,29 @@ public class OrdemServicoController {
                 ordemServicoId,
                 userDetails.getUsername()
         ));
+    }
+
+    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/iniciar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO', 'ATENDENTE')")
+    public OrdemServicoResponse iniciarServico(
+            @PathVariable Long ordemServicoId,
+            @PathVariable Long servicoOsId
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.iniciarServico(ordemServicoId, servicoOsId)
+        );
+    }
+
+    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/finalizar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse finalizarServico(
+            @PathVariable Long ordemServicoId,
+            @PathVariable Long servicoOsId
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.finalizarServico(ordemServicoId, servicoOsId)
+        );
     }
 }

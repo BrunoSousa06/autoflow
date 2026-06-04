@@ -28,7 +28,7 @@ public class OrdemServicoEntity {
     private String numeroOs;
 
     @Embedded
-    ClienteOsEntity cliente;
+    private ClienteOsEntity cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veiculo_id", nullable = false)
@@ -42,45 +42,39 @@ public class OrdemServicoEntity {
     @Column(name = "data_abertura", nullable = false)
     private LocalDateTime dataAbertura;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "ordem_servico_servico_solicitado",
-            joinColumns = @JoinColumn(name = "ordem_servico_id")
+    @Embedded
+    private DiagnosticoEntity diagnostico;
+
+    @OneToMany(
+            mappedBy = "ordemServico",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
     @OrderColumn(name = "ordem")
     private List<ServicoSolicitadoEntity> servicosSolicitados = new ArrayList<>();
 
-    @Embedded
-    private DiagnosticoEntity diagnostico;
+    @Column(name = "execucao_iniciada_em")
+    private LocalDateTime execucaoIniciadaEm;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "ordem_servico_item_necessario",
-            joinColumns = @JoinColumn(name = "ordem_servico_id")
-    )
-    @OrderColumn(name = "ordem")
-    private List<ItemNecessarioEntity> itemNecessario = new ArrayList<>();
+    @Column(name = "finalizada_em")
+    private LocalDateTime finalizadaEm;
 
     private OrdemServicoEntity(
             String numeroOs,
             VeiculoEntity veiculo,
             StatusOrdemServico status,
-            LocalDateTime dataAbertura,
-            List<ServicoSolicitadoEntity> servicosSolicitados
+            LocalDateTime dataAbertura
     ) {
         this.numeroOs = numeroOs;
         this.veiculo = veiculo;
         this.status = status;
         this.dataAbertura = dataAbertura;
-        this.servicosSolicitados = new ArrayList<>(servicosSolicitados);
     }
 
     public static OrdemServicoEntity criar(
-            VeiculoEntity veiculo,
-            List<ServicoSolicitadoEntity> servicosSolicitados
+            VeiculoEntity veiculo
     ) {
         validarVeiculo(veiculo);
-        validarServicos(servicosSolicitados);
 
         if(veiculo.getCliente() == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
 
@@ -88,10 +82,18 @@ public class OrdemServicoEntity {
                 gerarNumeroOs(),
                 veiculo,
                 StatusOrdemServico.RECEBIDA,
-                LocalDateTime.now(),
-                servicosSolicitados
+                LocalDateTime.now()
         );
         ordemServico.cliente = ClienteOsEntity.fromCliente(veiculo.getCliente());
+        return ordemServico;
+    }
+
+    public static OrdemServicoEntity criar(
+            VeiculoEntity veiculo,
+            List<ServicoSolicitadoEntity> servicosSolicitados
+    ) {
+        OrdemServicoEntity ordemServico = criar(veiculo);
+        ordemServico.adicionarServicos(servicosSolicitados);
         return ordemServico;
     }
 
@@ -123,11 +125,18 @@ public class OrdemServicoEntity {
 
     public void adicionarServicos(List<ServicoSolicitadoEntity> servicosSolicitados) {
         validarServicos(servicosSolicitados);
-        this.servicosSolicitados.addAll(servicosSolicitados);
+
+        servicosSolicitados.forEach(servico -> {
+            servico.setOrdemServico(this);
+            this.servicosSolicitados.add(servico);
+        });
     }
 
-    public void adicionarItensNecessarios(List<ItemNecessarioEntity> itemNecessarios) {
-        this.itemNecessario.addAll(itemNecessarios);
+    public ServicoSolicitadoEntity buscarServicoSolicitado(Long servicoOsId) {
+        return servicosSolicitados.stream()
+                .filter(servico -> Objects.equals(servico.getId(), servicoOsId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado na OS."));
     }
 
     public void aguardarAprovacao(){
@@ -177,5 +186,22 @@ public class OrdemServicoEntity {
         return this instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
+    public void iniciarExecucaoSeNecessario() {
+        if (this.execucaoIniciadaEm == null) {
+            this.execucaoIniciadaEm = LocalDateTime.now();
+        }
+
+        this.status = StatusOrdemServico.EM_EXECUCAO;
+    }
+
+    public void finalizarSeTodosServicosFinalizados() {
+        boolean todosFinalizados = servicosSolicitados.stream()
+                .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO);
+
+        if (todosFinalizados) {
+            this.status = StatusOrdemServico.FINALIZADA;
+            this.finalizadaEm = LocalDateTime.now();
+        }
+    }
 
 }

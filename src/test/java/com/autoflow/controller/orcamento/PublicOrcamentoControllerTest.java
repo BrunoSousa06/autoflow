@@ -60,12 +60,12 @@ class PublicOrcamentoControllerTest {
     }
 
     @Test
-    void deveAceitarOrcamentoPublico() throws Exception {
+    void deveAprovarOrcamentoPublico() throws Exception {
         OrcamentoEntity orc = baseOrcamento();
         orc.setStatus(StatusOrcamento.APROVADO);
-        when(publicOrcamentoService.aceitar(10L, "tok", "Maria")).thenReturn(orc);
+        when(publicOrcamentoService.aprovar(10L, "tok", "Maria")).thenReturn(orc);
 
-        mockMvc.perform(post("/public/orcamentos/{id}/aceitar", 10L)
+        mockMvc.perform(post("/public/orcamentos/{id}/aprovar", 10L)
                         .param("token", "tok")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -74,7 +74,7 @@ class PublicOrcamentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APROVADO"));
 
-        verify(publicOrcamentoService).aceitar(10L, "tok", "Maria");
+        verify(publicOrcamentoService).aprovar(10L, "tok", "Maria");
     }
 
     @Test

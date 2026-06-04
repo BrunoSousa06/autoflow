@@ -1,4 +1,4 @@
-package com.autoflow.domain.pecaInsumo;
+package com.autoflow.domain.pecainsumo;
 
 public enum CategoriaPecaInsumo {
     PECA,

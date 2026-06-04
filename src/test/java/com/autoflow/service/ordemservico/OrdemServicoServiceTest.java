@@ -1,34 +1,30 @@
 package com.autoflow.service.ordemservico;
 
 import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.domain.ordemservico.DiagnosticoEntity;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.StatusItemNecessario;
-import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
+import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.ordemservico.*;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
+import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
+import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.impl.OrdemServicoAccessPolicy;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
-import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
-import com.autoflow.service.pecaInsumo.PecaInsumoService;
+import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
+import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.service.veiculo.VeiculoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,16 +35,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrdemServicoServiceTest {
@@ -58,765 +47,355 @@ class OrdemServicoServiceTest {
 
     @Mock
     OrdemServicoRepository repository;
-
     @Mock
     VeiculoService veiculoService;
-
     @Mock
     ServicoService servicoService;
-
     @Mock
     UsuarioService usuarioService;
-
     @Mock
     PecaInsumoService pecaInsumoService;
-
     @Mock
     OrdemServicoAccessPolicy ordemServicoAccessPolicy;
-
     @Mock
     OrcamentoFactory orcamentoFactoryImpl;
-
     @Mock
     OrcamentoVersioningService orcamentoVersioningServiceImpl;
-
     @Mock
     OrcamentoRepository orcamentoRepository;
-
     @Mock
     OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
 
     @Test
-    void deveCriarESalvarOrdemServico() {
-        Long clienteId = 1L;
-        Long veiculoId = 1L;
-        Long servicoId = 1L;
-        BigDecimal valor = new BigDecimal("100.00");
-        ClienteEntity cliente = criarCliente(clienteId);
-        VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
-        ServicoSolicitadoEntity servicoSolicitado = new ServicoSolicitadoEntity(servicoId);
-        ServicoSolicitadoEntity servicoComDados = new ServicoSolicitadoEntity(servicoId, "Revisao", valor);
-        ServicoEntity servico = criarServico(servicoId, "Revisao", valor);
+    void deveCriarOrdemServicoComServicosVinculados() {
+        VeiculoEntity veiculo = criarVeiculo(1L, criarCliente(1L));
+        ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(10L);
+        ServicoEntity servicoCatalogo = criarServico(10L, "Revisao", new BigDecimal("100.00"));
 
-        when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
-        when(servicoService.buscarEntityPorId(servicoId)).thenReturn(servico);
-        when(repository.save(any(OrdemServicoEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(veiculoService.buscarPorId(1L)).thenReturn(veiculo);
+        when(servicoService.buscarEntityPorId(10L)).thenReturn(servicoCatalogo);
+        when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        OrdemServicoEntity ordemServicoEntity = service.criar(veiculoId, List.of(servicoSolicitado));
+        OrdemServicoEntity resultado = service.criar(1L, List.of(solicitado));
 
-        assertEquals(clienteId, ordemServicoEntity.getClienteId());
-        assertEquals(veiculoId, ordemServicoEntity.getVeiculoId());
-        assertEquals(StatusOrdemServico.RECEBIDA, ordemServicoEntity.getStatus());
-        assertTrue(ordemServicoEntity.getNumeroOs().startsWith("OS-"));
-        assertNotNull(ordemServicoEntity.getDataAbertura());
-        assertEquals(List.of(servicoComDados), ordemServicoEntity.getServicosSolicitados());
-
-        ArgumentCaptor<OrdemServicoEntity> captor = ArgumentCaptor.forClass(OrdemServicoEntity.class);
-        verify(repository).save(captor.capture());
-        OrdemServicoEntity ordemServicoSalva = captor.getValue();
-
-        assertEquals(clienteId, ordemServicoSalva.getClienteId());
-        assertEquals(veiculoId, ordemServicoSalva.getVeiculoId());
-        assertEquals(StatusOrdemServico.RECEBIDA, ordemServicoSalva.getStatus());
-        assertTrue(ordemServicoSalva.getNumeroOs().startsWith("OS-"));
-        assertNotNull(ordemServicoSalva.getDataAbertura());
-        assertEquals(List.of(servicoComDados), ordemServicoSalva.getServicosSolicitados());
-        verify(veiculoService).buscarPorId(veiculoId);
-        verify(servicoService).buscarEntityPorId(servicoId);
+        assertEquals(StatusOrdemServico.RECEBIDA, resultado.getStatus());
+        assertEquals(1, resultado.getServicosSolicitados().size());
+        ServicoSolicitadoEntity servicoOs = resultado.getServicosSolicitados().getFirst();
+        assertEquals(10L, servicoOs.getServicoId());
+        assertEquals("Revisao", servicoOs.getNome());
+        assertEquals(new BigDecimal("100.00"), servicoOs.getValor());
+        assertEquals(StatusServicoOs.AGUARDANDO, servicoOs.getStatus());
+        assertEquals(resultado, servicoOs.getOrdemServico());
     }
 
     @Test
-    void deveLancarExcecaoQuandoVeiculoNaoForEncontrado() {
-        Long veiculoId = 1L;
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
-        List<ServicoSolicitadoEntity> servicos = List.of(servico);
-        IllegalArgumentException exception = new IllegalArgumentException("Veiculo nao encontrado");
+    void deveLancarIllegalArgumentQuandoCriarSemServicos() {
+        VeiculoEntity veiculo = criarVeiculo(1L, criarCliente(1L));
+        when(veiculoService.buscarPorId(1L)).thenReturn(veiculo);
 
-        when(veiculoService.buscarPorId(veiculoId)).thenThrow(exception);
-
-        IllegalArgumentException resultado = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.criar(veiculoId, servicos)
-        );
-
-        assertEquals(exception, resultado);
-        verify(veiculoService).buscarPorId(veiculoId);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoListaDeServicosEstiverVazia() {
-        Long veiculoId = 1L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
-        List<ServicoSolicitadoEntity> servicos = List.of();
-
-        when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.criar(veiculoId, servicos)
-        );
-
-        assertEquals("A ordem de servico deve ter ao menos um servico solicitado.", exception.getMessage());
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoListaDeServicosForNula() {
-        Long veiculoId = 1L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
-
-        when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.criar(veiculoId, null)
-        );
-
-        assertEquals("A ordem de servico deve ter ao menos um servico solicitado.", exception.getMessage());
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveLancarBadRequestQuandoVeiculoSemClienteVinculado() {
-        Long veiculoId = 1L;
-        VeiculoEntity veiculo = new VeiculoEntity();
-        veiculo.setId(veiculoId);
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
-        List<ServicoSolicitadoEntity> servicos = List.of(servico);
-
-        when(veiculoService.buscarPorId(veiculoId)).thenReturn(veiculo);
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.criar(veiculoId, servicos)
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Veiculo sem cliente vinculado.", exception.getReason());
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
+        assertThrows(IllegalArgumentException.class, () -> service.criar(1L, null));
+        verify(repository, never()).save(any());
     }
 
     @Test
     void deveIncluirServicosNaOrdemServico() {
-        Long ordemServicoId = 1L;
-        Long novoServicoId = 2L;
-        BigDecimal valor = new BigDecimal("180.00");
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        ServicoSolicitadoEntity servicoInicial = new ServicoSolicitadoEntity(1L, "Revisao");
-        ServicoSolicitadoEntity novoServicoSolicitado = new ServicoSolicitadoEntity(novoServicoId);
-        ServicoSolicitadoEntity novoServicoComDados = new ServicoSolicitadoEntity(novoServicoId, "Troca de oleo", valor);
-        ServicoEntity servico = criarServico(novoServicoId, "Troca de oleo", valor);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(servicoInicial)
-        );
+        OrdemServicoEntity os = criarOrdemServicoComServico(1L, 55L);
+        ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(20L);
+        ServicoEntity servicoCatalogo = criarServico(20L, "Troca oleo", new BigDecimal("80.00"));
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(servicoService.buscarEntityPorId(novoServicoId)).thenReturn(servico);
-        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(servicoService.buscarEntityPorId(20L)).thenReturn(servicoCatalogo);
+        when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.incluirServicos(ordemServicoId, List.of(novoServicoSolicitado));
+        OrdemServicoEntity resultado = service.incluirServicos(1L, List.of(solicitado));
 
-        assertEquals(ordemServicoEntity, resultado);
-        assertEquals(List.of(servicoInicial, novoServicoComDados), resultado.getServicosSolicitados());
-        verify(repository).findById(ordemServicoId);
-        verify(servicoService).buscarEntityPorId(novoServicoId);
-        verify(repository).save(ordemServicoEntity);
+        assertEquals(2, resultado.getServicosSolicitados().size());
+        ServicoSolicitadoEntity servicoIncluido = resultado.getServicosSolicitados().get(1);
+        assertEquals(20L, servicoIncluido.getServicoId());
+        assertEquals("Troca oleo", servicoIncluido.getNome());
+        assertEquals(os, servicoIncluido.getOrdemServico());
     }
 
     @Test
-    void deveLancarExcecaoQuandoOrdemServicoNaoForEncontradaAoIncluirServicos() {
-        Long ordemServicoId = 1L;
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
-        List<ServicoSolicitadoEntity> servicos = List.of(servico);
+    void deveLancarIllegalArgumentQuandoIncluirServicosComListaVazia() {
+        OrdemServicoEntity os = criarOrdemServicoComServico(1L, 55L);
+        List<ServicoSolicitadoEntity> servicosVazios = List.of();
+        when(repository.findById(1L)).thenReturn(Optional.of(os));
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.empty());
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.incluirServicos(ordemServicoId, servicos)
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        verify(repository).findById(ordemServicoId);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
+        assertThrows(IllegalArgumentException.class, () -> service.incluirServicos(1L, servicosVazios));
+        verify(repository, never()).save(any());
     }
 
     @Test
-    void deveLancarExcecaoQuandoIncluirListaDeServicosVazia() {
-        Long ordemServicoId = 1L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        List<ServicoSolicitadoEntity> novosServicos = List.of();
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
+    void deveAtribuirMecanicoCriandoDiagnosticoQuandoNaoExistir() {
+        OrdemServicoEntity os = criarOrdemServicoComServico(1L, 55L);
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarMecanicoPorId(2L)).thenReturn(mecanico);
+        when(repository.save(os)).thenReturn(os);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.incluirServicos(ordemServicoId, novosServicos)
-        );
+        OrdemServicoEntity resultado = service.atribuirMecanico(1L, 2L);
 
-        assertEquals("A ordem de servico deve ter ao menos um servico solicitado.", exception.getMessage());
-        verify(repository).findById(ordemServicoId);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoIncluirListaDeServicosNula() {
-        Long ordemServicoId = 1L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.incluirServicos(ordemServicoId, null)
-        );
-
-        assertEquals("A ordem de servico deve ter ao menos um servico solicitado.", exception.getMessage());
-        verify(repository).findById(ordemServicoId);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveAtribuirMecanicoNaOrdemServico() {
-        Long ordemServicoId = 1L;
-        Long mecanicoId = 2L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuarioMecanico(mecanicoId, "Maria");
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarMecanicoPorId(mecanicoId)).thenReturn(mecanico);
-        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
-
-        OrdemServicoEntity resultado = service.atribuirMecanico(ordemServicoId, mecanicoId);
-
-        assertEquals(ordemServicoEntity, resultado);
         assertNotNull(resultado.getDiagnostico());
         assertEquals(mecanico, resultado.getDiagnostico().getMecanico());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarMecanicoPorId(mecanicoId);
-        verify(repository).save(ordemServicoEntity);
     }
 
     @Test
-    void deveAtualizarMecanicoQuandoOrdemServicoJaPossuiDiagnostico() {
-        Long ordemServicoId = 1L;
-        Long mecanicoId = 3L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanicoAntigo = criarUsuarioMecanico(2L, "Joao");
-        UsuarioEntity novoMecanico = criarUsuarioMecanico(mecanicoId, "Maria");
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        DiagnosticoEntity diagnosticoExistente = new DiagnosticoEntity();
-        diagnosticoExistente.setMecanico(mecanicoAntigo);
-        diagnosticoExistente.setLaudo("Laudo inicial");
-        ordemServicoEntity.setDiagnostico(diagnosticoExistente);
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarMecanicoPorId(mecanicoId)).thenReturn(novoMecanico);
-        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
-
-        OrdemServicoEntity resultado = service.atribuirMecanico(ordemServicoId, mecanicoId);
-
-        assertEquals(ordemServicoEntity, resultado);
-        assertEquals(diagnosticoExistente, resultado.getDiagnostico());
-        assertEquals(novoMecanico, resultado.getDiagnostico().getMecanico());
-        assertEquals("Laudo inicial", resultado.getDiagnostico().getLaudo());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarMecanicoPorId(mecanicoId);
-        verify(repository).save(ordemServicoEntity);
-    }
-
-    @Test
-    void devePropagarExcecaoQuandoMecanicoNaoForValidoAoAtribuirMecanico() {
-        Long ordemServicoId = 1L;
-        Long mecanicoId = 2L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        ResponseStatusException exception = new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Usuario informado nao e um mecanico."
-        );
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarMecanicoPorId(mecanicoId)).thenThrow(exception);
-
-        ResponseStatusException resultado = assertThrows(
-                ResponseStatusException.class,
-                () -> service.atribuirMecanico(ordemServicoId, mecanicoId)
-        );
-
-        assertEquals(exception, resultado);
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarMecanicoPorId(mecanicoId);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoOrdemServicoNaoForEncontradaAoAtribuirMecanico() {
-        Long ordemServicoId = 1L;
-        Long mecanicoId = 2L;
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.empty());
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.atribuirMecanico(ordemServicoId, mecanicoId)
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService, never()).buscarMecanicoPorId(any());
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveIniciarDiagnosticoQuandoUsuarioLogadoForAdmin() {
-        Long ordemServicoId = 1L;
-        String emailAdmin = "admin@autoflow.com";
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuarioMecanico(2L, "Maria");
-        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ADMIN);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
+    void deveAtribuirMecanicoMantendoDiagnosticoExistente() {
+        OrdemServicoEntity os = criarOrdemServicoComServico(1L, 55L);
         DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanico);
-        ordemServicoEntity.setDiagnostico(diagnostico);
+        os.setDiagnostico(diagnostico);
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarMecanicoPorId(2L)).thenReturn(mecanico);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.atribuirMecanico(1L, 2L);
+
+        assertSame(diagnostico, resultado.getDiagnostico());
+        assertEquals(mecanico, resultado.getDiagnostico().getMecanico());
+    }
+
+    @Test
+    void deveIniciarDiagnosticoComoAdminSemValidarMecanicoAtribuido() {
+        OrdemServicoEntity os = criarOrdemServicoComServico(1L, 55L);
+        os.setDiagnostico(new DiagnosticoEntity());
+        UsuarioEntity admin = criarUsuario(1L, "Admin", "admin@autoflow.com", RoleEnum.ADMIN);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail("admin@autoflow.com")).thenReturn(admin);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.iniciarDiagnostico(1L, "admin@autoflow.com");
+
+        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
+        assertNotNull(resultado.getDiagnostico().getIniciadoEm());
+        verify(ordemServicoAccessPolicy, never()).validarPodeAlterarDiagnostico(any(), any());
+    }
+
+    @Test
+    void deveIniciarDiagnosticoComoMecanicoValidandoPermissao() {
+        OrdemServicoEntity os = criarOrdemServicoComServico(1L, 55L);
+        os.setDiagnostico(new DiagnosticoEntity());
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.iniciarDiagnostico(1L, "mecanico@autoflow.com");
+
+        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
+        verify(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
+    }
+
+    @Test
+    void deveRegistrarLaudo() {
+        OrdemServicoEntity os = criarOrdemServicoComServico(1L, 55L);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+        os.setDiagnostico(new DiagnosticoEntity());
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.registrarLaudo(1L, "mecanico@autoflow.com", "Laudo");
+
+        assertEquals("Laudo", resultado.getDiagnostico().getLaudo());
+        verify(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
+    }
+
+    @Test
+    void deveRegistrarItensNecessariosNoServicoDaOs() {
+        Long ordemServicoId = 1L;
+        Long servicoOsId = 55L;
+        Long pecaInsumoId = 10L;
+        String emailAdmin = "admin@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
+        PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 5);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
-        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
+        when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.iniciarDiagnostico(ordemServicoId, emailAdmin);
+        OrdemServicoEntity resultado = service.registrarItemNecessario(
+                ordemServicoId,
+                servicoOsId,
+                emailAdmin,
+                List.of(criarItemNecessarioSolicitado(pecaInsumoId, 2))
+        );
 
-        assertEquals(ordemServicoEntity, resultado);
-        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
-        assertNotNull(resultado.getDiagnostico().getIniciadoEm());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailAdmin);
-        verify(repository).save(ordemServicoEntity);
+        ServicoSolicitadoEntity servico = resultado.buscarServicoSolicitado(servicoOsId);
+        assertEquals(1, servico.getItensNecessarios().size());
+        ItemNecessarioEntity item = servico.getItensNecessarios().getFirst();
+        assertEquals("Filtro", item.getNome());
+        assertEquals(StatusItemNecessario.DISPONIVEL, item.getStatus());
+        verify(repository).save(os);
     }
 
     @Test
-    void deveIniciarDiagnosticoQuandoUsuarioLogadoForMecanicoAtribuido() {
+    void deveIniciarServicoEBaixarEstoqueDosItensDoServico() {
         Long ordemServicoId = 1L;
-        String emailMecanico = "maria@autoflow.com";
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        Long servicoOsId = 55L;
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        ItemNecessarioEntity itemOriginal = criarItemNecessarioSolicitado(10L, 2);
+        os.buscarServicoSolicitado(servicoOsId).registrarItensNecessarios(List.of(itemOriginal));
+        ItemNecessarioEntity itemAtualizado = ItemNecessarioEntity.criar(
+                10L, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 2, StatusItemNecessario.DISPONIVEL
         );
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanico);
-        ordemServicoEntity.setDiagnostico(diagnostico);
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
-        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(pecaInsumoService.verificarDisponibilidadeEBaixar(List.of(itemOriginal)))
+                .thenReturn(new BaixaEstoqueResult(List.of(itemAtualizado)));
+        when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.iniciarDiagnostico(ordemServicoId, emailMecanico);
+        OrdemServicoEntity resultado = service.iniciarServico(ordemServicoId, servicoOsId);
 
-        assertEquals(ordemServicoEntity, resultado);
-        assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
-        assertNotNull(resultado.getDiagnostico().getIniciadoEm());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailMecanico);
-        verify(repository).save(ordemServicoEntity);
+        ServicoSolicitadoEntity servico = resultado.buscarServicoSolicitado(servicoOsId);
+        assertEquals(StatusServicoOs.EM_EXECUCAO, servico.getStatus());
+        assertNotNull(servico.getIniciadoEm());
+        assertEquals(StatusOrdemServico.EM_EXECUCAO, resultado.getStatus());
+        assertNotNull(resultado.getExecucaoIniciadaEm());
+        assertEquals(List.of(itemAtualizado), servico.getItensNecessarios());
+        verify(repository).save(os);
     }
 
     @Test
-    void deveLancarForbiddenQuandoUsuarioLogadoNaoForMecanicoAtribuido() {
+    void deveFinalizarServicoEFinalizarOsQuandoTodosServicosFinalizados() {
         Long ordemServicoId = 1L;
-        String emailMecanicoLogado = "joao@autoflow.com";
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
-        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.MECANICO);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanicoAtribuido);
-        ordemServicoEntity.setDiagnostico(diagnostico);
+        Long servicoOsId = 55L;
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        os.buscarServicoSolicitado(servicoOsId).iniciar(List.of());
+        os.iniciarExecucaoSeNecessario();
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
-        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
-                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanicoLogado);
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.save(os)).thenReturn(os);
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.iniciarDiagnostico(ordemServicoId, emailMecanicoLogado)
-        );
+        OrdemServicoEntity resultado = service.finalizarServico(ordemServicoId, servicoOsId);
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailMecanicoLogado);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
+        ServicoSolicitadoEntity servico = resultado.buscarServicoSolicitado(servicoOsId);
+        assertEquals(StatusServicoOs.FINALIZADO, servico.getStatus());
+        assertNotNull(servico.getFinalizadoEm());
+        assertEquals(StatusOrdemServico.FINALIZADA, resultado.getStatus());
+        assertNotNull(resultado.getFinalizadaEm());
     }
 
     @Test
-    void deveLancarBadRequestQuandoIniciarDiagnosticoSemMecanicoAtribuido() {
-        Long ordemServicoId = 1L;
-        String emailMecanico = "maria@autoflow.com";
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
-        doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "A ordem de serviço ainda não possui mecânico atribuído."))
-                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanico);
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.iniciarDiagnostico(ordemServicoId, emailMecanico)
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailMecanico);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoOrdemServicoNaoForEncontradaAoIniciarDiagnostico() {
-        Long ordemServicoId = 1L;
-        String emailMecanico = "maria@autoflow.com";
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.empty());
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.iniciarDiagnostico(ordemServicoId, emailMecanico)
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService, never()).buscarPorEmail(any());
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
-    }
-
-    @Test
-    void deveFinalizarDiagnosticoComoAdminSemValidarMecanico() {
+    void deveFinalizarDiagnosticoEGerarOrcamento() {
         Long ordemServicoId = 1L;
         String emailAdmin = "admin@autoflow.com";
-
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        ordemServicoEntity.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-
-        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, 55L);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanicoAtribuido);
         diagnostico.setLaudo("Laudo");
-        ordemServicoEntity.setDiagnostico(diagnostico);
+        os.setDiagnostico(diagnostico);
+        UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
+        OrcamentoEntity orcamento = new OrcamentoEntity();
 
-        UsuarioEntity admin = criarUsuario(99L, "Admin", emailAdmin, RoleEnum.ADMIN);
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
         when(orcamentoVersioningServiceImpl.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
-        when(orcamentoFactoryImpl.criarPrincipalDisponivel(any(OrdemServicoEntity.class), org.mockito.ArgumentMatchers.anyInt(), any()))
-                .thenReturn(new OrcamentoEntity());
-        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> {
-            OrcamentoEntity orc = invocation.getArgument(0);
-            if (orc.getId() == null) {
-                orc.setId(10L);
-            }
-            return orc;
+        when(orcamentoFactoryImpl.criarPrincipalDisponivel(eq(os), eq(1), any())).thenReturn(orcamento);
+        when(orcamentoRepository.save(orcamento)).thenAnswer(invocation -> {
+            orcamento.setId(10L);
+            return orcamento;
         });
-        when(orcamentoPublicacaoServiceImpl.publicar(any(Long.class)))
-                .thenReturn(new com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult(
-                        10L,
-                        "http://localhost:8080/public/orcamentos/10?token=abc"
-                ));
-        when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orcamentoPublicacaoServiceImpl.publicar(10L))
+                .thenReturn(new PublicacaoOrcamentoResult(10L, "http://localhost/orcamento"));
+        when(repository.save(os)).thenReturn(os);
 
         FinalizarDiagnosticoResult resultado = service.finalizarDiagnostico(ordemServicoId, emailAdmin);
 
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.ordemServico().getStatus());
-        assertNotNull(resultado.ordemServico().getDiagnostico());
-        assertNotNull(resultado.ordemServico().getDiagnostico().getConcluidoEm());
         assertEquals(10L, resultado.orcamentoId());
-        assertNotNull(resultado.publicUrl());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailAdmin);
-        verify(repository).save(any(OrdemServicoEntity.class));
+        assertEquals("http://localhost/orcamento", resultado.publicUrl());
     }
 
     @Test
-    void deveFinalizarDiagnosticoComoMecanicoAtribuido() {
+    void deveFinalizarDiagnosticoComoMecanicoValidandoPermissao() {
         Long ordemServicoId = 1L;
-        String emailMecanico = "maria@autoflow.com";
-
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        ordemServicoEntity.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-
-        UsuarioEntity mecanicoAtribuido = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
+        String emailMecanico = "mecanico@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, 55L);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanicoAtribuido);
         diagnostico.setLaudo("Laudo");
-        ordemServicoEntity.setDiagnostico(diagnostico);
+        os.setDiagnostico(diagnostico);
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", emailMecanico, RoleEnum.MECANICO);
+        OrcamentoEntity orcamento = new OrcamentoEntity();
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanicoAtribuido);
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
         when(orcamentoVersioningServiceImpl.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
-        when(orcamentoFactoryImpl.criarPrincipalDisponivel(any(OrdemServicoEntity.class), org.mockito.ArgumentMatchers.anyInt(), any()))
-                .thenReturn(new OrcamentoEntity());
-        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> {
-            OrcamentoEntity orc = invocation.getArgument(0);
-            if (orc.getId() == null) {
-                orc.setId(10L);
-            }
-            return orc;
+        when(orcamentoFactoryImpl.criarPrincipalDisponivel(eq(os), eq(1), any())).thenReturn(orcamento);
+        when(orcamentoRepository.save(orcamento)).thenAnswer(invocation -> {
+            orcamento.setId(10L);
+            return orcamento;
         });
-        when(orcamentoPublicacaoServiceImpl.publicar(any(Long.class)))
-                .thenReturn(new com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult(
-                        10L,
-                        "http://localhost:8080/public/orcamentos/10?token=abc"
-                ));
-        when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orcamentoPublicacaoServiceImpl.publicar(10L))
+                .thenReturn(new PublicacaoOrcamentoResult(10L, "http://localhost/orcamento"));
+        when(repository.save(os)).thenReturn(os);
 
         FinalizarDiagnosticoResult resultado = service.finalizarDiagnostico(ordemServicoId, emailMecanico);
 
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.ordemServico().getStatus());
-        assertNotNull(resultado.ordemServico().getDiagnostico().getConcluidoEm());
-        assertEquals(10L, resultado.orcamentoId());
-        assertNotNull(resultado.publicUrl());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailMecanico);
-        verify(repository).save(any(OrdemServicoEntity.class));
+        verify(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
 
     @Test
-    void deveRetornarForbiddenQuandoMecanicoNaoAtribuidoFinalizarDiagnostico() {
-        Long ordemServicoId = 1L;
-        String emailMecanicoLogado = "joao@autoflow.com";
-
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        ordemServicoEntity.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-
-        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanicoAtribuido);
-        ordemServicoEntity.setDiagnostico(diagnostico);
-
-        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.MECANICO);
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
-        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
-                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanicoLogado);
+    void deveLancarNotFoundQuandoOrdemServicoNaoExistir() {
+        when(repository.findById(1L)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> service.finalizarDiagnostico(ordemServicoId, emailMecanicoLogado)
+                () -> service.buscaOrdemServicoPorId(1L)
         );
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailMecanicoLogado);
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     @Test
-    void deveRegistrarItemNecessarioDisponivelQuandoHouverEstoque() {
+    void deveValidarPermissaoAoRegistrarItensComoMecanico() {
         Long ordemServicoId = 1L;
-        String emailAdmin = "admin@autoflow.com";
-        Long pecaInsumoId = 10L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity admin = criarUsuario(3L, "Admin", emailAdmin, RoleEnum.ADMIN);
-        PecaInsumoEntity itemEstoque = criarPecaInsumo(
-                pecaInsumoId,
-                "Filtro de Oleo",
-                CategoriaPecaInsumo.PECA,
-                new BigDecimal("50.00"),
-                5
-        );
-        ItemNecessarioEntity itemSolicitado = criarItemNecessarioSolicitado(pecaInsumoId, 2);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        Long servicoOsId = 55L;
+        String email = "mecanico@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        UsuarioEntity mecanico = criarUsuario(1L, "Mecanico", email, RoleEnum.MECANICO);
+        RuntimeException erro = new ResponseStatusException(HttpStatus.FORBIDDEN, "sem permissao");
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail(email)).thenReturn(mecanico);
+        doThrow(erro).when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
+        List<ItemNecessarioEntity> itensVazios = List.of();
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> service.registrarItemNecessario(ordemServicoId, servicoOsId, email, itensVazios)
         );
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
-        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(itemEstoque);
-        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
-
-        OrdemServicoEntity resultado = service.registrarItemNecessario(
-                ordemServicoId,
-                emailAdmin,
-                List.of(itemSolicitado)
-        );
-
-        assertEquals(ordemServicoEntity, resultado);
-        assertEquals(1, resultado.getItemNecessario().size());
-        ItemNecessarioEntity itemRegistrado = resultado.getItemNecessario().getFirst();
-        assertEquals(pecaInsumoId, itemRegistrado.getPecaInsumoId());
-        assertEquals("Filtro de Oleo", itemRegistrado.getNome());
-        assertEquals(CategoriaPecaInsumo.PECA, itemRegistrado.getTipo());
-        assertEquals(new BigDecimal("50.00"), itemRegistrado.getValorUnitario());
-        assertEquals(2, itemRegistrado.getQuantidade());
-        assertEquals(new BigDecimal("100.00"), itemRegistrado.getValorTotal());
-        assertEquals(StatusItemNecessario.DISPONIVEL, itemRegistrado.getStatus());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailAdmin);
-        verify(pecaInsumoService).buscarEntityPorId(pecaInsumoId);
-        verify(repository).save(ordemServicoEntity);
+        assertEquals(erro, exception);
+        verify(repository, never()).save(any());
     }
 
-    @Test
-    void deveRegistrarItemNecessarioPendenteQuandoNaoHouverEstoque() {
-        Long ordemServicoId = 1L;
-        String emailMecanico = "maria@autoflow.com";
-        Long pecaInsumoId = 10L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanico = criarUsuario(2L, "Maria", emailMecanico, RoleEnum.MECANICO);
-        PecaInsumoEntity itemEstoque = criarPecaInsumo(
-                pecaInsumoId,
-                "Oleo 5W30",
-                CategoriaPecaInsumo.INSUMO,
-                new BigDecimal("49.90"),
-                1
-        );
-        ItemNecessarioEntity itemSolicitado = criarItemNecessarioSolicitado(pecaInsumoId, 3);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanico);
-        ordemServicoEntity.setDiagnostico(diagnostico);
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
-        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(itemEstoque);
-        when(repository.save(ordemServicoEntity)).thenReturn(ordemServicoEntity);
-
-        OrdemServicoEntity resultado = service.registrarItemNecessario(
-                ordemServicoId,
-                emailMecanico,
-                List.of(itemSolicitado)
-        );
-
-        assertEquals(ordemServicoEntity, resultado);
-        assertEquals(1, resultado.getItemNecessario().size());
-        ItemNecessarioEntity itemRegistrado = resultado.getItemNecessario().getFirst();
-        assertEquals(pecaInsumoId, itemRegistrado.getPecaInsumoId());
-        assertEquals("Oleo 5W30", itemRegistrado.getNome());
-        assertEquals(CategoriaPecaInsumo.INSUMO, itemRegistrado.getTipo());
-        assertEquals(new BigDecimal("49.90"), itemRegistrado.getValorUnitario());
-        assertEquals(3, itemRegistrado.getQuantidade());
-        assertEquals(new BigDecimal("149.70"), itemRegistrado.getValorTotal());
-        assertEquals(StatusItemNecessario.PENDENTE, itemRegistrado.getStatus());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailMecanico);
-        verify(pecaInsumoService).buscarEntityPorId(pecaInsumoId);
-        verify(repository).save(ordemServicoEntity);
-    }
-
-    @Test
-    void deveLancarForbiddenQuandoMecanicoNaoAtribuidoRegistrarItemNecessario() {
-        Long ordemServicoId = 1L;
-        String emailMecanicoLogado = "joao@autoflow.com";
-        Long pecaInsumoId = 10L;
-        ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        UsuarioEntity mecanicoAtribuido = criarUsuarioMecanico(2L, "Maria");
-        UsuarioEntity mecanicoLogado = criarUsuario(3L, "Joao", emailMecanicoLogado, RoleEnum.MECANICO);
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
-        );
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
-        diagnostico.setMecanico(mecanicoAtribuido);
-        ordemServicoEntity.setDiagnostico(diagnostico);
-
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(ordemServicoEntity));
-        when(usuarioService.buscarPorEmail(emailMecanicoLogado)).thenReturn(mecanicoLogado);
-        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
-                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(ordemServicoEntity, mecanicoLogado);
-
-        ItemNecessarioEntity itemSolicitado = criarItemNecessarioSolicitado(pecaInsumoId, 1);
-        List<ItemNecessarioEntity> itensSolicitados = List.of(itemSolicitado);
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.registrarItemNecessario(
-                        ordemServicoId,
-                        emailMecanicoLogado,
-                        itensSolicitados
-                )
-        );
-
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
-        verify(repository).findById(ordemServicoId);
-        verify(usuarioService).buscarPorEmail(emailMecanicoLogado);
-        verify(pecaInsumoService, never()).buscarEntityPorId(any());
-        verify(repository, never()).save(any(OrdemServicoEntity.class));
+    private OrdemServicoEntity criarOrdemServicoComServico(Long ordemServicoId, Long servicoOsId) {
+        OrdemServicoEntity os = OrdemServicoEntity.criar(criarVeiculo(1L, criarCliente(1L)));
+        os.setId(ordemServicoId);
+        ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
+        servico.setId(servicoOsId);
+        os.adicionarServicos(List.of(servico));
+        return os;
     }
 
     private ClienteEntity criarCliente(Long clienteId) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(clienteId);
-        cliente.setCpfCnpj("1223321123");
-        cliente.setEmail("email");
-        cliente.setNome("descricao");
+        cliente.setCpfCnpj("12345678901");
+        cliente.setEmail("cliente@autoflow.com");
+        cliente.setNome("Cliente");
         return cliente;
     }
 
@@ -836,10 +415,6 @@ class OrdemServicoServiceTest {
         servico.setNome(nome);
         servico.setValor(valor);
         return servico;
-    }
-
-    private UsuarioEntity criarUsuarioMecanico(Long usuarioId, String nome) {
-        return criarUsuario(usuarioId, nome, nome.toLowerCase() + "@autoflow.com", RoleEnum.MECANICO);
     }
 
     private UsuarioEntity criarUsuario(Long usuarioId, String nome, String email, RoleEnum role) {

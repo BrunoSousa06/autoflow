@@ -2,7 +2,7 @@ package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
-import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
+import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
@@ -14,7 +14,8 @@ import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
-import com.autoflow.service.pecaInsumo.PecaInsumoService;
+import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
+import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.service.veiculo.VeiculoService;
@@ -44,17 +45,19 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OrcamentoRepository orcamentoRepository;
     private final OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
 
-    @Override
     public OrdemServicoEntity criar(Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
         VeiculoEntity veiculo = veiculoService.buscarPorId(veiculoId);
-        if(veiculo.getCliente() == null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Veiculo sem cliente vinculado.");
-        }
+        validarServicosSolicitados(servicosSolicitados);
 
-        List<ServicoSolicitadoEntity> servicoComDados = preencherDadosDosServicos(servicosSolicitados);
+        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(veiculo);
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(veiculo, servicoComDados);
-        return ordemServicoRepository.save(ordemServicoEntity);
+        List<ServicoSolicitadoEntity> servicosComDados = servicosSolicitados.stream()
+                .map(servico -> preencherDadosDoServico(ordemServico, servico))
+                .toList();
+
+        ordemServico.adicionarServicos(servicosComDados);
+
+        return ordemServicoRepository.save(ordemServico);
     }
 
     @Transactional
@@ -63,7 +66,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
 
-        List<ServicoSolicitadoEntity> servicosComDados = preencherDadosDosServicos(servicos);
+        List<ServicoSolicitadoEntity> servicosComDados =
+                preencherDadosDosServicos(ordemServico, servicos);
 
         ordemServico.adicionarServicos(servicosComDados);
 
@@ -94,8 +98,13 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         return ordemServicoRepository.save(ordemServico);
     }
-    @Override
-    public OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios) {
+
+    public OrdemServicoEntity registrarItemNecessario(
+            Long ordemServicoId,
+            Long servicoOsId,
+            String emailUsuarioLogado,
+            List<ItemNecessarioEntity> itensNecessarios
+    ) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
 
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
@@ -104,25 +113,15 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
 
-        List<ItemNecessarioEntity> itemNecessarios = itensNecessarios.stream()
-                .map(itemNecessario -> {
-                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
-                    StatusItemNecessario status = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade() ?
-                            StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE;
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
 
-                    return ItemNecessarioEntity.criar(
-                            itemEstoque.getId(),
-                            itemEstoque.getNome(),
-                            itemEstoque.getTipo(),
-                            itemEstoque.getValor(),
-                            itemNecessario.getQuantidade(),
-                            status
-                    );
-                }).toList();
+        List<ItemNecessarioEntity> itensComDados = verificaItensNecessarios(itensNecessarios);
 
-        ordemServico.adicionarItensNecessarios(itemNecessarios);
+        servico.registrarItensNecessarios(itensComDados);
+
         return ordemServicoRepository.save(ordemServico);
     }
+
 
     @Override
     public OrdemServicoEntity registrarLaudo(Long ordemServicoId, String emailUsuarioLogado, String laudo){
@@ -157,21 +156,87 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return new FinalizarDiagnosticoResult(ordemServicoSalvo, orcamentoSalvo.getId(), publicUrl);
     }
 
-    private List<ServicoSolicitadoEntity> preencherDadosDosServicos(List<ServicoSolicitadoEntity> servicos) {
+    private List<ServicoSolicitadoEntity> preencherDadosDosServicos(
+            OrdemServicoEntity ordemServico,
+            List<ServicoSolicitadoEntity> servicos
+    ) {
         validarServicosSolicitados(servicos);
 
-        return servicos.stream().map(this::preencherDadosDoServico).toList();
+        return servicos.stream()
+                .map(servico -> preencherDadosDoServico(ordemServico, servico))
+                .toList();
     }
+
     @Override
     public OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId) {
         return ordemServicoRepository.findById(ordemServicoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
     }
 
-    private ServicoSolicitadoEntity preencherDadosDoServico(ServicoSolicitadoEntity servicoSolicitado) {
+    @Transactional
+    @Override
+    public OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoOsId) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+
+        BaixaEstoqueResult baixaEstoqueResult =
+                pecaInsumoService.verificarDisponibilidadeEBaixar(servico.getItensNecessarios());
+
+        servico.iniciar(baixaEstoqueResult.itensAtualizados());
+
+        ordemServico.iniciarExecucaoSeNecessario();
+
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+    @Transactional
+    @Override
+    public OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoOsId) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+
+        servico.finalizar();
+
+        ordemServico.finalizarSeTodosServicosFinalizados();
+
+        return ordemServicoRepository.save(ordemServico);
+    }
+
+
+    private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
+        return itensNecessarios.stream()
+                .map(itemNecessario -> {
+                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
+                    StatusItemNecessario status = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade() ?
+                            StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE;
+
+                    return ItemNecessarioEntity.criar(
+                            itemEstoque.getId(),
+                            itemEstoque.getNome(),
+                            itemEstoque.getTipo(),
+                            itemEstoque.getValor(),
+                            itemNecessario.getQuantidade(),
+                            status
+                    );
+                }).toList();
+    }
+
+    private ServicoSolicitadoEntity preencherDadosDoServico(
+            OrdemServicoEntity ordemServico,
+            ServicoSolicitadoEntity servicoSolicitado
+    ) {
         ServicoEntity servico = servicoService.buscarEntityPorId(servicoSolicitado.getServicoId());
 
-        return new ServicoSolicitadoEntity(servico.getId(), servico.getNome(), servico.getValor());
+        ServicoSolicitadoEntity servicoOs = new ServicoSolicitadoEntity();
+        servicoOs.setServicoId(servico.getId());
+        servicoOs.setNome(servico.getNome());
+        servicoOs.setValor(servico.getValor());
+        servicoOs.setStatus(StatusServicoOs.AGUARDANDO);
+        servicoOs.setOrdemServico(ordemServico);
+
+        return servicoOs;
     }
 
     private static void validarServicosSolicitados(List<ServicoSolicitadoEntity> servicos) {

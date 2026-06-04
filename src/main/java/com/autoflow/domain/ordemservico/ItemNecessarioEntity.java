@@ -1,6 +1,6 @@
 package com.autoflow.domain.ordemservico;
 
-import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;

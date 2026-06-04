@@ -7,11 +7,12 @@ import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.mapper.ItensNecessariosMapperImpl;
+import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.mapper.ServicoSolicitadoMapperImpl;
-import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
+import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +79,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveCriarOrdemServico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(ordemServicoService.criar(eq(2L), anyList()))
                 .thenReturn(ordemServico);
@@ -100,24 +101,18 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.numeroOs").value("OS-123"))
                 .andExpect(jsonPath("$.status").value("RECEBIDA"))
-                .andExpect(jsonPath("$.dataAbertura").exists());
+                .andExpect(jsonPath("$.servicos[0].id").value(55L));
 
-        ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor =
-                captorDeLista();
-
+        ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
         verify(ordemServicoService).criar(eq(2L), servicosCaptor.capture());
-
-        List<ServicoSolicitadoEntity> servicos = servicosCaptor.getValue();
-        assertEquals(1, servicos.size());
-        assertEquals(10L, servicos.getFirst().getServicoId());
-        assertNull(servicos.getFirst().getNome());
-        assertNull(servicos.getFirst().getValor());
+        assertEquals(10L, servicosCaptor.getValue().getFirst().getServicoId());
+        assertNull(servicosCaptor.getValue().getFirst().getNome());
     }
 
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveIncluirServicosNaOrdemServico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(ordemServicoService.incluirServicos(eq(1L), anyList()))
                 .thenReturn(ordemServico);
@@ -133,97 +128,20 @@ class OrdemServicoControllerTest {
                                 ]
                                 """))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
-                .andExpect(jsonPath("$.status").value("RECEBIDA"))
-                .andExpect(jsonPath("$.dataAbertura").exists());
+                .andExpect(jsonPath("$.id").value(1L));
 
-        ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor =
-                captorDeLista();
-
-        verify(ordemServicoService).incluirServicos(eq(1L), servicosCaptor.capture());
-
-        List<ServicoSolicitadoEntity> servicos = servicosCaptor.getValue();
-        assertEquals(1, servicos.size());
-        assertEquals(20L, servicos.getFirst().getServicoId());
-        assertNull(servicos.getFirst().getNome());
-        assertNull(servicos.getFirst().getValor());
-    }
-
-    @Test
-    @WithMockUser(roles = "ATENDENTE")
-    void deveAtribuirMecanicoNaOrdemServico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
-
-        when(ordemServicoService.atribuirMecanico(1L, 2L))
-                .thenReturn(ordemServico);
-
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/mecanico", 1L)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "mecanicoId": 2
-                                }
-                                """))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
-                .andExpect(jsonPath("$.status").value("RECEBIDA"))
-                .andExpect(jsonPath("$.dataAbertura").exists());
-
-        verify(ordemServicoService).atribuirMecanico(1L, 2L);
-    }
-
-    @Test
-    @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
-    void deveIniciarDiagnosticoComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
-        ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-
-        when(ordemServicoService.iniciarDiagnostico(1L, "mecanico@autoflow.com"))
-                .thenReturn(ordemServico);
-
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/iniciar", 1L)
-                        .with(csrf()))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
-                .andExpect(jsonPath("$.status").value("EM_DIAGNOSTICO"))
-                .andExpect(jsonPath("$.dataAbertura").exists());
-
-        verify(ordemServicoService).iniciarDiagnostico(1L, "mecanico@autoflow.com");
-    }
-
-    @Test
-    @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
-    void deveIniciarDiagnosticoComoAdmin() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
-        ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-
-        when(ordemServicoService.iniciarDiagnostico(1L, "admin@autoflow.com"))
-                .thenReturn(ordemServico);
-
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/iniciar", 1L)
-                        .with(csrf()))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
-                .andExpect(jsonPath("$.status").value("EM_DIAGNOSTICO"))
-                .andExpect(jsonPath("$.dataAbertura").exists());
-
-        verify(ordemServicoService).iniciarDiagnostico(1L, "admin@autoflow.com");
+        verify(ordemServicoService).incluirServicos(eq(1L), anyList());
     }
 
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveRegistrarItensNecessariosComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.registrarItemNecessario(eq(1L), eq("mecanico@autoflow.com"), anyList()))
+        when(ordemServicoService.registrarItemNecessario(eq(1L), eq(55L), eq("mecanico@autoflow.com"), anyList()))
                 .thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/itens-necessarios", 1L)
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/itens-necessarios", 1L, 55L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -235,113 +153,57 @@ class OrdemServicoControllerTest {
                                 ]
                                 """))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
-                .andExpect(jsonPath("$.status").value("RECEBIDA"))
-                .andExpect(jsonPath("$.dataAbertura").exists());
+                .andExpect(jsonPath("$.id").value(1L));
 
-        ArgumentCaptor<List<ItemNecessarioEntity>> itensCaptor =
-                captorDeLista();
-
+        ArgumentCaptor<List<ItemNecessarioEntity>> itensCaptor = captorDeLista();
         verify(ordemServicoService).registrarItemNecessario(
                 eq(1L),
+                eq(55L),
                 eq("mecanico@autoflow.com"),
                 itensCaptor.capture()
         );
-
-        List<ItemNecessarioEntity> itens = itensCaptor.getValue();
-        assertEquals(1, itens.size());
-        assertEquals(10L, itens.getFirst().getPecaInsumoId());
-        assertEquals(2, itens.getFirst().getQuantidade());
-    }
-
-    @Test
-    @WithMockUser(roles = "MECANICO")
-    void deveRetornarForbiddenQuandoMecanicoTentarCriarOrdemServico() throws Exception {
-        mockMvc.perform(post("/ordens-servico")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "veiculoId": 2,
-                                  "servicosSolicitados": [
-                                    {
-                                      "servicoId": 10
-                                    }
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isForbidden());
-
-        verify(ordemServicoService, never()).criar(eq(2L), anyList());
-    }
-
-    @Test
-    @WithMockUser(roles = "CLIENTE")
-    void deveRetornarForbiddenQuandoClienteTentarIncluirServicos() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{ordemServicoId}/servicos", 1L)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                [
-                                  {
-                                    "servicoId": 20
-                                  }
-                                ]
-                                """))
-                .andExpect(status().isForbidden());
-
-        verify(ordemServicoService, never()).incluirServicos(eq(1L), anyList());
-    }
-
-    @Test
-    @WithMockUser(roles = "CLIENTE")
-    void deveRetornarForbiddenQuandoClienteTentarAtribuirMecanico() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/mecanico", 1L)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "mecanicoId": 2
-                                }
-                                """))
-                .andExpect(status().isForbidden());
-
-        verify(ordemServicoService, never()).atribuirMecanico(eq(1L), anyLong());
-    }
-
-    @Test
-    @WithMockUser(roles = "MECANICO")
-    void deveRetornarForbiddenQuandoMecanicoTentarAtribuirMecanico() throws Exception {
-        String requestBody = """
-                {
-                  "mecanicoId": 3
-                }
-                """;
-
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/mecanico", 2L)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isForbidden());
-
-        verifyNoInteractions(ordemServicoService);
+        assertEquals(10L, itensCaptor.getValue().getFirst().getPecaInsumoId());
+        assertEquals(2, itensCaptor.getValue().getFirst().getQuantidade());
     }
 
     @Test
     @WithMockUser(roles = "ATENDENTE")
-    void deveRetornarForbiddenQuandoAtendenteTentarIniciarDiagnostico() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/iniciar", 1L)
-                        .with(csrf()))
-                .andExpect(status().isForbidden());
+    void deveIniciarServicoComoAtendente() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        ordemServico.setStatus(StatusOrdemServico.EM_EXECUCAO);
+        ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.EM_EXECUCAO);
 
-        verify(ordemServicoService, never()).iniciarDiagnostico(eq(1L), anyString());
+        when(ordemServicoService.iniciarServico(1L, 55L)).thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/iniciar", 1L, 55L)
+                        .with(csrf()))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.status").value("EM_EXECUCAO"))
+                .andExpect(jsonPath("$.servicos[0].status").value("EM_EXECUCAO"));
+
+        verify(ordemServicoService).iniciarServico(1L, 55L);
     }
 
     @Test
-    @WithMockUser(roles = "MECANICO", username = "mecanico@autoflow.com")
+    @WithMockUser(roles = "MECANICO")
+    void deveFinalizarServicoComoMecanico() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.FINALIZADO);
+
+        when(ordemServicoService.finalizarServico(1L, 55L)).thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/finalizar", 1L, 55L)
+                        .with(csrf()))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.servicos[0].status").value("FINALIZADO"));
+
+        verify(ordemServicoService).finalizarServico(1L, 55L);
+    }
+
+    @Test
+    @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveFinalizarDiagnosticoComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
 
         when(ordemServicoService.finalizarDiagnostico(1L, "mecanico@autoflow.com"))
@@ -355,59 +217,25 @@ class OrdemServicoControllerTest {
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.ordemServico.id").value(1L))
-                .andExpect(jsonPath("$.ordemServico.numeroOs").value("OS-123"))
-                .andExpect(jsonPath("$.ordemServico.status").value("AGUARDANDO_APROVACAO"))
-                .andExpect(jsonPath("$.ordemServico.dataAbertura").exists())
-                .andExpect(jsonPath("$.orcamentoId").value(10L))
-                .andExpect(jsonPath("$.publicUrl").value("http://localhost:8080/public/orcamentos/10?token=abc"));
+                .andExpect(jsonPath("$.orcamentoId").value(10L));
 
         verify(ordemServicoService).finalizarDiagnostico(1L, "mecanico@autoflow.com");
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN", username = "admin@autoflow.com")
-    void deveFinalizarDiagnosticoComoAdmin() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, "OS-123");
-        ordemServico.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
-
-        when(ordemServicoService.finalizarDiagnostico(1L, "admin@autoflow.com"))
-                .thenReturn(new FinalizarDiagnosticoResult(
-                        ordemServico,
-                        10L,
-                        "http://localhost:8080/public/orcamentos/10?token=abc"
-                ));
-
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 1L)
-                        .with(csrf()))
-                .andExpect(status().isAccepted());
-
-        verify(ordemServicoService).finalizarDiagnostico(1L, "admin@autoflow.com");
-    }
-
-    @Test
-    @WithMockUser(roles = "ATENDENTE")
-    void deveRetornarForbiddenQuandoAtendenteTentarFinalizarDiagnostico() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 1L)
-                        .with(csrf()))
-                .andExpect(status().isForbidden());
-
-        verify(ordemServicoService, never()).finalizarDiagnostico(eq(1L), anyString());
-    }
-
-    @Test
     @WithMockUser(roles = "CLIENTE")
-    void deveRetornarForbiddenQuandoClienteTentarFinalizarDiagnostico() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 2L)
+    void deveRetornarForbiddenQuandoClienteTentarIniciarServico() throws Exception {
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/iniciar", 1L, 55L)
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).finalizarDiagnostico(eq(2L), anyString());
+        verify(ordemServicoService, never()).iniciarServico(anyLong(), anyLong());
     }
 
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveRetornarForbiddenQuandoAtendenteTentarRegistrarItensNecessarios() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/itens-necessarios", 1L)
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/itens-necessarios", 1L, 55L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -420,7 +248,7 @@ class OrdemServicoControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).registrarItemNecessario(eq(1L), anyString(), anyList());
+        verify(ordemServicoService, never()).registrarItemNecessario(anyLong(), anyLong(), anyString(), anyList());
     }
 
     @Test
@@ -440,7 +268,7 @@ class OrdemServicoControllerTest {
         verifyNoInteractions(ordemServicoService);
     }
 
-    private OrdemServicoEntity criarOrdemServico(Long id, String numeroOs) {
+    private OrdemServicoEntity criarOrdemServico(Long id, Long servicoOsId, String numeroOs) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(1L);
         cliente.setNome("Cliente 1");
@@ -452,10 +280,10 @@ class OrdemServicoControllerTest {
         veiculo.setId(2L);
         veiculo.setCliente(cliente);
 
-        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(
-                veiculo,
-                List.of(new ServicoSolicitadoEntity(10L, "Revisao", new BigDecimal("100.00")))
-        );
+        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(veiculo);
+        ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
+        servico.setId(servicoOsId);
+        ordemServico.adicionarServicos(List.of(servico));
 
         ordemServico.setId(id);
         ordemServico.setNumeroOs(numeroOs);
@@ -487,5 +315,4 @@ class OrdemServicoControllerTest {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
-
 }

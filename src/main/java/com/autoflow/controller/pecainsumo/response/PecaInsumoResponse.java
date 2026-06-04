@@ -1,6 +1,6 @@
-package com.autoflow.controller.pecaInsumo.response;
+package com.autoflow.controller.pecainsumo.response;
 
-import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 
 import java.math.BigDecimal;
 

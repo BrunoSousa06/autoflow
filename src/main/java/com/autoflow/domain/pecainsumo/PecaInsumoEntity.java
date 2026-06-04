@@ -1,4 +1,4 @@
-package com.autoflow.domain.pecaInsumo;
+package com.autoflow.domain.pecainsumo;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -24,4 +24,7 @@ public class PecaInsumoEntity {
     @Column(nullable = false)
     private CategoriaPecaInsumo tipo;
 
+    public void baixarDoEstoque(PecaInsumoEntity pecaInsumo) {
+        this.quantidade = this.quantidade - pecaInsumo.getQuantidade();
+    }
 }

@@ -1,6 +1,6 @@
 package com.autoflow.controller.orcamento;
 
-import com.autoflow.controller.orcamento.request.AceitarOrcamentoRequest;
+import com.autoflow.controller.orcamento.request.AprovarOrcamentoRequest;
 import com.autoflow.controller.orcamento.request.RecusarOrcamentoRequest;
 import com.autoflow.controller.orcamento.response.OrcamentoPublicoResponse;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
@@ -22,11 +22,11 @@ public class PublicOrcamentoController {
         return OrcamentoPublicoResponse.from(publicOrcamentoService.consultar(orcamentoId, token));
     }
 
-    @PostMapping("/{orcamentoId}/aceitar")
-    public OrcamentoPublicoResponse aceitar(@PathVariable Long orcamentoId,
+    @PostMapping("/{orcamentoId}/aprovar")
+    public OrcamentoPublicoResponse aprovar(@PathVariable Long orcamentoId,
                                             @RequestParam String token,
-                                            @RequestBody AceitarOrcamentoRequest req) {
-        return OrcamentoPublicoResponse.from(publicOrcamentoService.aceitar(orcamentoId, token, req.nome()));
+                                            @RequestBody AprovarOrcamentoRequest req) {
+        return OrcamentoPublicoResponse.from(publicOrcamentoService.aprovar(orcamentoId, token, req.nome()));
     }
 
     @PostMapping("/{orcamentoId}/recusar")

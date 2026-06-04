@@ -1,6 +1,6 @@
-package com.autoflow.controller.pecaInsumo.request;
+package com.autoflow.controller.pecainsumo.request;
 
-import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;

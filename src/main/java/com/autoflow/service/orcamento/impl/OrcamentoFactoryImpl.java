@@ -17,17 +17,19 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
     public OrcamentoEntity criarPrincipalDisponivel(OrdemServicoEntity ordemServico, int versao, LocalDateTime now) {
         List<OrcamentoServicoEntity> orcamentoServicoEntities = ordemServico.getServicosSolicitados().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).toList();
 
-        List<OrcamentoItemNecessarioEntity> itemNecessarioEntities = ordemServico.getItemNecessario()
-                .stream()
-                .map(itemNecessario -> OrcamentoItemNecessarioEntity.builder()
-                        .tipo(itemNecessario.getTipo())
-                        .pecaInsumoId(itemNecessario.getPecaInsumoId())
-                        .quantidade(itemNecessario.getQuantidade())
-                        .valorUnitario(itemNecessario.getValorUnitario())
-                        .valorTotal(itemNecessario.getValorTotal())
-                        .nome(itemNecessario.getNome())
-                        .build())
-                .toList();
+        List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
+                ordemServico.getServicosSolicitados().stream()
+                        .flatMap(servico -> servico.getItensNecessarios().stream()
+                                .map(item -> OrcamentoItemNecessarioEntity.builder()
+                                        .servicoOsId(servico.getId())
+                                        .tipo(item.getTipo())
+                                        .pecaInsumoId(item.getPecaInsumoId())
+                                        .quantidade(item.getQuantidade())
+                                        .valorUnitario(item.getValorUnitario())
+                                        .valorTotal(item.getValorTotal())
+                                        .nome(item.getNome())
+                                        .build()))
+                        .toList();
 
         BigDecimal totalServicos = totalServicos(orcamentoServicoEntities);
         BigDecimal totalItens = totalItens(itemNecessarioEntities);

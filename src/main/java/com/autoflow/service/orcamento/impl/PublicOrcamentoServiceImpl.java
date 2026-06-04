@@ -31,7 +31,7 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
     }
 
     @Override
-    public OrcamentoEntity aceitar(Long orcamentoId, String token, String nome) {
+    public OrcamentoEntity aprovar(Long orcamentoId, String token, String nome) {
         OrcamentoEntity orcamento = getOrcamento(orcamentoId);
         validarToken(orcamento, token);
         if (orcamento.getStatus() == StatusOrcamento.APROVADO || orcamento.getStatus() == StatusOrcamento.REPROVADO) {
@@ -47,14 +47,8 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
         orcamento.setStatus(StatusOrcamento.APROVADO);
         orcamento.setAssinaturaNome(nome.trim());
         orcamento.setAprovadoEm(LocalDateTime.now());
-        orcamentoRepository.save(orcamento);
 
-        OrdemServicoEntity ordemServico = ordemServicoRepository.findById(orcamento.getOrdemServicoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS não encontrada"));
-
-        ordemServico.setStatus(StatusOrdemServico.EM_EXECUCAO);
-        ordemServicoRepository.save(ordemServico);
-        return orcamento;
+        return orcamentoRepository.save(orcamento);
     }
 
     @Override

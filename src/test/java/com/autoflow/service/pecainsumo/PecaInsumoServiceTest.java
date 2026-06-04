@@ -1,11 +1,13 @@
-package com.autoflow.service.pecaInsumo;
+package com.autoflow.service.pecainsumo;
 
-import com.autoflow.controller.pecaInsumo.request.PecaInsumoRequest;
-import com.autoflow.controller.pecaInsumo.response.PecaInsumoResponse;
-import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
+import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
+import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
+import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.StatusItemNecessario;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.mapper.PecaInsumoMapper;
-import com.autoflow.repository.PecaInsumo.PecaInsumoRepository;
+import com.autoflow.repository.pecainsumo.PecaInsumoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -332,5 +334,112 @@ class PecaInsumoServiceTest {
             verify(repository, never())
                     .deleteById(anyLong());
         }
+    }
+
+    @Nested
+    class VerificarDisponibilidadeEBaixarTests {
+
+        @Test
+        void deveMarcarDisponivelEBaixarEstoqueQuandoHouverQuantidade() {
+            PecaInsumoEntity filtro = criarPecaInsumo(
+                    1L,
+                    "Filtro de Oleo",
+                    CategoriaPecaInsumo.PECA,
+                    new BigDecimal("50.00"),
+                    10
+            );
+            List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 2));
+
+            when(repository.findAllById(List.of(1L)))
+                    .thenReturn(List.of(filtro));
+
+            BaixaEstoqueResult resultado = service.verificarDisponibilidadeEBaixar(itens);
+
+            ItemNecessarioEntity itemAtualizado = resultado.itensAtualizados().getFirst();
+            assertAll(
+                    () -> assertEquals(8, filtro.getQuantidade()),
+                    () -> assertEquals(1L, itemAtualizado.getPecaInsumoId()),
+                    () -> assertEquals("Filtro de Oleo", itemAtualizado.getNome()),
+                    () -> assertEquals(CategoriaPecaInsumo.PECA, itemAtualizado.getTipo()),
+                    () -> assertEquals(new BigDecimal("50.00"), itemAtualizado.getValorUnitario()),
+                    () -> assertEquals(2, itemAtualizado.getQuantidade()),
+                    () -> assertEquals(new BigDecimal("100.00"), itemAtualizado.getValorTotal()),
+                    () -> assertEquals(StatusItemNecessario.DISPONIVEL, itemAtualizado.getStatus())
+            );
+            verify(repository).findAllById(List.of(1L));
+            verify(repository).saveAll(List.of(filtro));
+        }
+
+        @Test
+        void deveMarcarPendenteENaoBaixarEstoqueQuandoNaoHouverQuantidade() {
+            PecaInsumoEntity filtro = criarPecaInsumo(
+                    1L,
+                    "Filtro de Oleo",
+                    CategoriaPecaInsumo.PECA,
+                    new BigDecimal("50.00"),
+                    2
+            );
+            List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 3));
+
+            when(repository.findAllById(List.of(1L)))
+                    .thenReturn(List.of(filtro));
+
+            BaixaEstoqueResult resultado = service.verificarDisponibilidadeEBaixar(itens);
+
+            ItemNecessarioEntity itemAtualizado = resultado.itensAtualizados().getFirst();
+            assertAll(
+                    () -> assertEquals(2, filtro.getQuantidade()),
+                    () -> assertEquals(1L, itemAtualizado.getPecaInsumoId()),
+                    () -> assertEquals("Filtro de Oleo", itemAtualizado.getNome()),
+                    () -> assertEquals(3, itemAtualizado.getQuantidade()),
+                    () -> assertEquals(StatusItemNecessario.PENDENTE, itemAtualizado.getStatus())
+            );
+            verify(repository).findAllById(List.of(1L));
+            verify(repository).saveAll(List.of());
+        }
+
+        @Test
+        void deveLancarNotFoundQuandoItemNaoExistirNoEstoque() {
+            List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 3));
+
+            when(repository.findAllById(List.of(1L)))
+                    .thenReturn(List.of());
+
+            ResponseStatusException exception = assertThrows(
+                    ResponseStatusException.class,
+                    () -> service.verificarDisponibilidadeEBaixar(itens)
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+            verify(repository).findAllById(List.of(1L));
+            verify(repository, never()).saveAll(any());
+        }
+    }
+
+    private PecaInsumoEntity criarPecaInsumo(
+            Long id,
+            String nome,
+            CategoriaPecaInsumo tipo,
+            BigDecimal valor,
+            int quantidade
+    ) {
+        PecaInsumoEntity pecaInsumo = new PecaInsumoEntity();
+        pecaInsumo.setId(id);
+        pecaInsumo.setNome(nome);
+        pecaInsumo.setTipo(tipo);
+        pecaInsumo.setValor(valor);
+        pecaInsumo.setQuantidade(quantidade);
+        return pecaInsumo;
+    }
+
+    private ItemNecessarioEntity criarItemNecessarioSolicitado(Long pecaInsumoId, int quantidade) {
+        return ItemNecessarioEntity.criar(
+                pecaInsumoId,
+                "Item solicitado",
+                CategoriaPecaInsumo.PECA,
+                BigDecimal.ZERO,
+                quantidade,
+                null
+        );
     }
 }

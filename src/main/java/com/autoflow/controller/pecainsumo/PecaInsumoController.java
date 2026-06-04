@@ -1,8 +1,8 @@
-package com.autoflow.controller.pecaInsumo;
+package com.autoflow.controller.pecainsumo;
 
-import com.autoflow.controller.pecaInsumo.request.PecaInsumoRequest;
-import com.autoflow.controller.pecaInsumo.response.PecaInsumoResponse;
-import com.autoflow.service.pecaInsumo.PecaInsumoService;
+import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
+import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
+import com.autoflow.service.pecainsumo.PecaInsumoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -49,7 +49,7 @@ public class PecaInsumoController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public ResponseEntity<?> deletar(@PathVariable Long id){
+    public ResponseEntity<String> deletar(@PathVariable Long id){
         pecaInsumoService.deletar(id);
         return ResponseEntity.ok().body("peca/insumo deletado com sucesso");
 

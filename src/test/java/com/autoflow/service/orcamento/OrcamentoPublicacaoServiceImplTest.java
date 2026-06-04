@@ -53,6 +53,35 @@ class OrcamentoPublicacaoServiceImplTest {
     }
 
     @Test
+    void publicar_deveManterDisponibilizadoEmQuandoJaExistir() {
+        OrcamentoEntity orc = new OrcamentoEntity();
+        orc.setId(10L);
+        orc.setStatus(StatusOrcamento.DISPONIVEL);
+        var disponibilizadoEm = java.time.LocalDateTime.of(2026, 6, 4, 10, 0);
+        orc.setDisponibilizadoEm(disponibilizadoEm);
+
+        when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
+        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ReflectionTestUtils.setField(service, "publicBaseUrl", "http://localhost:8080");
+        ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
+
+        service.publicar(10L);
+
+        assertEquals(disponibilizadoEm, orc.getDisponibilizadoEm());
+        verify(orcamentoRepository).save(orc);
+    }
+
+    @Test
+    void publicar_deveDarNotFoundQuandoOrcamentoNaoExistir() {
+        when(orcamentoRepository.findById(10L)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.publicar(10L));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
     void publicar_deveDarBadRequestQuandoOrcamentoNaoDisponivel() {
         OrcamentoEntity orc = new OrcamentoEntity();
         orc.setId(10L);
