@@ -1,5 +1,6 @@
 package com.autoflow.domain.ordemservico;
 
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,6 +52,10 @@ public class ServicoSolicitadoEntity {
     )
     @OrderColumn(name = "ordem")
     private List<ItemNecessarioEntity> itensNecessarios = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "reparo_adicional_id")
+    private ReparoAdicionalEntity reparoAdicional;
 
     public ServicoSolicitadoEntity(Long servicoId) {
         validarServicoId(servicoId);

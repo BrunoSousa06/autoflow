@@ -6,6 +6,7 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
+import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -34,7 +36,9 @@ class PublicOrcamentoControllerTest {
     @MockitoBean
     private PublicOrcamentoService publicOrcamentoService;
 
-    // Mantem o mesmo padrao dos outros WebMvcTest no projeto: mocks de security beans.
+    @MockitoBean
+    private ReparoAdicionalService reparoAdicionalService;
+
     @MockitoBean
     private JwtService jwtService;
 
@@ -75,6 +79,28 @@ class PublicOrcamentoControllerTest {
                 .andExpect(jsonPath("$.status").value("APROVADO"));
 
         verify(publicOrcamentoService).aprovar(10L, "tok", "Maria");
+        verify(reparoAdicionalService, never()).aprovarPorOrcamentoId(10L);
+    }
+
+    @Test
+    void deveAprovarOrcamentoAdicionalEAplicarReparoNaOs() throws Exception {
+        OrcamentoEntity orc = baseOrcamento();
+        orc.setTipo(TipoOrcamento.ADICIONAL);
+        orc.setStatus(StatusOrcamento.APROVADO);
+        when(publicOrcamentoService.aprovar(10L, "tok", "Maria")).thenReturn(orc);
+
+        mockMvc.perform(post("/public/orcamentos/{id}/aprovar", 10L)
+                        .param("token", "tok")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome":"Maria"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tipo").value("ADICIONAL"))
+                .andExpect(jsonPath("$.status").value("APROVADO"));
+
+        verify(publicOrcamentoService).aprovar(10L, "tok", "Maria");
+        verify(reparoAdicionalService).aprovarPorOrcamentoId(10L);
     }
 
     @Test

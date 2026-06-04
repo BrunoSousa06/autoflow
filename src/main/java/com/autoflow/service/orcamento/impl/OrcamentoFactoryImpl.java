@@ -2,6 +2,7 @@ package com.autoflow.service.orcamento.impl;
 
 import com.autoflow.domain.orcamento.*;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +49,41 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                 .build();
     }
 
+    @Override
+    public OrcamentoEntity criarAdicionalDisponivel(OrdemServicoEntity ordemServico, ReparoAdicionalEntity reparoSalvo, int versao, LocalDateTime now) {
+        List<OrcamentoServicoEntity> orcamentoServicoEntities = reparoSalvo.getServicos().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).toList();
+
+        List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
+                reparoSalvo.getServicos().stream()
+                        .flatMap(servico -> servico.getItensNecessarios().stream()
+                                .map(item -> OrcamentoItemNecessarioEntity.builder()
+                                        .servicoOsId(servico.getId())
+                                        .tipo(item.getTipo())
+                                        .pecaInsumoId(item.getPecaInsumoId())
+                                        .quantidade(item.getQuantidade())
+                                        .valorUnitario(item.getValorUnitario())
+                                        .valorTotal(item.getValorTotal())
+                                        .nome(item.getNome())
+                                        .build()))
+                        .toList();
+
+        BigDecimal totalServicos = totalServicos(orcamentoServicoEntities);
+        BigDecimal totalItens = totalItens(itemNecessarioEntities);
+        BigDecimal totalGeral = totalGeral(totalServicos, totalItens);
+
+        return OrcamentoEntity.builder()
+                .ordemServicoId(ordemServico.getId())
+                .tipo(TipoOrcamento.ADICIONAL).versao(versao)
+                .status(StatusOrcamento.DISPONIVEL).criadoEm(now)
+                .disponibilizadoEm(now)
+                .servicos(orcamentoServicoEntities)
+                .itens(itemNecessarioEntities)
+                .totalServicos(totalServicos)
+                .totalItens(totalItens)
+                .totalGeral(totalGeral)
+                .build();
+    }
+
     private BigDecimal totalGeral(BigDecimal totalServicos, BigDecimal totalItens) {
         return totalServicos.add(totalItens);
     }
@@ -67,5 +103,4 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
 }

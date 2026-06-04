@@ -7,6 +7,7 @@ import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.service.orcamento.impl.OrcamentoFactoryImpl;
@@ -113,6 +114,73 @@ class OrcamentoFactoryImplTest {
 
         OrcamentoEntity orc = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.of(2026, 5, 31, 10, 0));
 
+        assertEquals(BigDecimal.ZERO, orc.getTotalServicos());
+        assertEquals(BigDecimal.ZERO, orc.getTotalItens());
+        assertEquals(BigDecimal.ZERO, orc.getTotalGeral());
+    }
+
+    @Test
+    void deveGerarOrcamentoAdicionalComServicosDoReparo() {
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setId(10L);
+        veiculo.setCliente(criarCliente());
+
+        ServicoSolicitadoEntity servicoOriginal = new ServicoSolicitadoEntity(1L, "Servico original", new BigDecimal("100.00"));
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo, List.of(servicoOriginal));
+        os.setId(99L);
+
+        ServicoSolicitadoEntity servicoAdicional = new ServicoSolicitadoEntity(2L, "Servico adicional", new BigDecimal("80.00"));
+        servicoAdicional.setId(202L);
+        servicoAdicional.registrarItensNecessarios(List.of(
+                ItemNecessarioEntity.criar(
+                        7L,
+                        "Peca adicional",
+                        CategoriaPecaInsumo.PECA,
+                        new BigDecimal("15.00"),
+                        2,
+                        null
+                )
+        ));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(99L, 20L, List.of(servicoAdicional));
+        reparo.setId(55L);
+
+        LocalDateTime now = LocalDateTime.of(2026, 6, 4, 10, 0);
+
+        OrcamentoEntity orc = factory.criarAdicionalDisponivel(os, reparo, 3, now);
+
+        assertEquals(99L, orc.getOrdemServicoId());
+        assertEquals(TipoOrcamento.ADICIONAL, orc.getTipo());
+        assertEquals(StatusOrcamento.DISPONIVEL, orc.getStatus());
+        assertEquals(3, orc.getVersao());
+        assertEquals(now, orc.getCriadoEm());
+        assertEquals(now, orc.getDisponibilizadoEm());
+
+        assertEquals(1, orc.getServicos().size());
+        assertEquals(2L, orc.getServicos().getFirst().getServicoId());
+        assertEquals("Servico adicional", orc.getServicos().getFirst().getNome());
+
+        assertEquals(1, orc.getItens().size());
+        assertEquals(202L, orc.getItens().getFirst().getServicoOsId());
+        assertEquals(7L, orc.getItens().getFirst().getPecaInsumoId());
+
+        assertEquals(new BigDecimal("80.00"), orc.getTotalServicos());
+        assertEquals(new BigDecimal("30.00"), orc.getTotalItens());
+        assertEquals(new BigDecimal("110.00"), orc.getTotalGeral());
+    }
+
+    @Test
+    void deveGerarOrcamentoAdicionalComTotaisZeradosQuandoReparoNaoTemServicos() {
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setId(10L);
+        veiculo.setCliente(criarCliente());
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo);
+        os.setId(99L);
+
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(99L, 20L, List.of());
+
+        OrcamentoEntity orc = factory.criarAdicionalDisponivel(os, reparo, 1, LocalDateTime.of(2026, 6, 4, 10, 0));
+
+        assertEquals(TipoOrcamento.ADICIONAL, orc.getTipo());
         assertEquals(BigDecimal.ZERO, orc.getTotalServicos());
         assertEquals(BigDecimal.ZERO, orc.getTotalItens());
         assertEquals(BigDecimal.ZERO, orc.getTotalGeral());

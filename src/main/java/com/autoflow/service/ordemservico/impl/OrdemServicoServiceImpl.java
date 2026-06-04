@@ -204,7 +204,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return ordemServicoRepository.save(ordemServico);
     }
 
-
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
         return itensNecessarios.stream()
                 .map(itemNecessario -> {
