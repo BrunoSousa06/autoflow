@@ -32,6 +32,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -263,21 +264,6 @@ class OrdemServicoServiceTest {
         assertNotNull(resultado.getExecucaoIniciadaEm());
         assertEquals(List.of(itemAtualizado), servico.getItensNecessarios());
         verify(repository).save(os);
-    }
-
-    @Test
-    void deveIniciarServicoERetornarServicosVazios() {
-        Long ordemServicoId = 1L;
-        Long servicoOsId = 55L;
-        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
-        os.buscarServicoSolicitado(servicoOsId).registrarItensNecessarios(List.of());
-        
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> service.iniciarServico(ordemServicoId, servicoOsId)
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     @Test

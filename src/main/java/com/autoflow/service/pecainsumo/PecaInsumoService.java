@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -78,6 +79,10 @@ public class PecaInsumoService {
 
 
     public BaixaEstoqueResult verificarDisponibilidadeEBaixar(List<ItemNecessarioEntity> itensNecessarios) {
+        if (itensNecessarios == null || itensNecessarios.isEmpty()) {
+            return new BaixaEstoqueResult(Collections.emptyList());
+        }
+
 
         List<Long> ids = itensNecessarios.stream()
                 .map(ItemNecessarioEntity::getPecaInsumoId)

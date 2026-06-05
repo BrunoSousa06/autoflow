@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -413,6 +414,14 @@ class PecaInsumoServiceTest {
             assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
             verify(repository).findAllById(List.of(1L));
             verify(repository, never()).saveAll(any());
+        }
+
+        @Test
+        void deveRetornarResultadoVazioQuandoListaForVazia() {
+            BaixaEstoqueResult result = service.verificarDisponibilidadeEBaixar(Collections.emptyList());
+
+            assertNotNull(result);
+            assertTrue(result.itensAtualizados().isEmpty());
         }
     }
 
