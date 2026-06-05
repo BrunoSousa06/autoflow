@@ -34,13 +34,13 @@ public class UsuarioService {
     public UsuarioEntity cadastrar(RegistroRequest request) {
 
         if (usuarioRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Email já cadastrado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
 
         }
 
         if (RoleEnum.CLIENTE.equals(request.role())
                 && clienteRepository.existsByCpfCnpj(request.cpfCnpj())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"CPF/CNPJ já cadastrado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF/CNPJ já cadastrado");
         }
 
         UsuarioEntity usuarioEntity =
@@ -94,7 +94,7 @@ public class UsuarioService {
 
     public UsuarioEntity buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Usuário autenticado não encontrado."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário autenticado não encontrado."));
     }
 
     public List<UsuarioResponse> listarUsuarios() {

@@ -67,7 +67,7 @@ public class VeiculoService {
 
     public VeiculoEntity buscarPorId(Long id) {
         return veiculoRepository.findById(id)
-                .orElseThrow(() -> new  ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
     }
 }
 

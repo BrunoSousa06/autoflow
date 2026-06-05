@@ -59,13 +59,14 @@ public class PecaInsumoService {
     public void deletar(Long id) {
 
         if (!pecaInsumoRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Peça/Insumo não encontrado com o ID: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Peça/Insumo não encontrado com o ID: " + id);
         }
 
         pecaInsumoRepository.deleteById(id);
     }
 
     private PecaInsumoEntity buscarEntidadePorId(Long id) {
-        return pecaInsumoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Peça/Insumo não encontrado com o ID: " + id));
+        return pecaInsumoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Peça/Insumo não encontrado com o ID: " + id));
     }
 }
