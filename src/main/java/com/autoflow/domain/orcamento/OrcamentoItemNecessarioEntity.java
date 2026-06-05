@@ -1,6 +1,6 @@
 package com.autoflow.domain.orcamento;
 
-import com.autoflow.domain.pecaInsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +16,9 @@ public class OrcamentoItemNecessarioEntity {
 
     @Column(name = "peca_insumo_id", nullable = false)
     private Long pecaInsumoId;
+
+    @Column(name = "servico_os_id", nullable = false)
+    private Long servicoOsId;
 
     @Column(name = "nome", nullable = false)
     private String nome;

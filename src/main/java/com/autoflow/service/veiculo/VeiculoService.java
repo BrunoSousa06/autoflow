@@ -69,5 +69,6 @@ public class VeiculoService {
         return veiculoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
     }
+
 }
 

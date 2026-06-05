@@ -1,0 +1,6 @@
+ALTER TABLE orcamento
+    ADD COLUMN IF NOT EXISTS public_token_hash VARCHAR(128),
+    ADD COLUMN IF NOT EXISTS aprovado_em TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS reprovado_em TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS assinatura_nome VARCHAR(120),
+    ADD COLUMN IF NOT EXISTS recusa_motivo VARCHAR(500);

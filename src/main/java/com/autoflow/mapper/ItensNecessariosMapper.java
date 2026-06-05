@@ -1,7 +1,7 @@
 package com.autoflow.mapper;
 
-import com.autoflow.controller.ordemServico.request.ItensNecessariosRequest;
-import com.autoflow.domain.ordemServico.ItemNecessarioEntity;
+import com.autoflow.controller.ordemservico.request.ItensNecessariosRequest;
+import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
