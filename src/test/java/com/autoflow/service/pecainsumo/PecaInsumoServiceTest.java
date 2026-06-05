@@ -414,23 +414,6 @@ class PecaInsumoServiceTest {
             verify(repository).findAllById(List.of(1L));
             verify(repository, never()).saveAll(any());
         }
-
-        @Test
-        void deveRetornarListaVazia() {
-            List<ItemNecessarioEntity> itens = List.of();
-
-            when(repository.findAllById(List.of(1L)))
-                    .thenReturn(List.of());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> service.verificarDisponibilidadeEBaixar(itens)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(repository).findAllById(List.of(1L));
-            verify(repository, never()).saveAll(any());
-        }
     }
 
     private PecaInsumoEntity criarPecaInsumo(

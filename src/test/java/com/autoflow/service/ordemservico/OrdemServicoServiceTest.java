@@ -266,6 +266,21 @@ class OrdemServicoServiceTest {
     }
 
     @Test
+    void deveIniciarServicoERetornarServicosVazios() {
+        Long ordemServicoId = 1L;
+        Long servicoOsId = 55L;
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        os.buscarServicoSolicitado(servicoOsId).registrarItensNecessarios(List.of());
+        
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.iniciarServico(ordemServicoId, servicoOsId)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
+
+    @Test
     void deveFinalizarServicoEFinalizarOsQuandoTodosServicosFinalizados() {
         Long ordemServicoId = 1L;
         Long servicoOsId = 55L;

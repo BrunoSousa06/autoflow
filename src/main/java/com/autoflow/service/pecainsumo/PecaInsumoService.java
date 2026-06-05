@@ -78,9 +78,6 @@ public class PecaInsumoService {
 
 
     public BaixaEstoqueResult verificarDisponibilidadeEBaixar(List<ItemNecessarioEntity> itensNecessarios) {
-        if (itensNecessarios == null || itensNecessarios.isEmpty()) {
-            return new BaixaEstoqueResult(List.of());
-        }
 
         List<Long> ids = itensNecessarios.stream()
                 .map(ItemNecessarioEntity::getPecaInsumoId)

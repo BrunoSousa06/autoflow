@@ -180,8 +180,13 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
 
+        if (servico.getItensNecessarios()== null || servico.getItensNecessarios().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Não possui itens para serem verificados.");
+
+        }
         BaixaEstoqueResult baixaEstoqueResult =
                 pecaInsumoService.verificarDisponibilidadeEBaixar(servico.getItensNecessarios());
+
 
         servico.iniciar(baixaEstoqueResult.itensAtualizados());
 
