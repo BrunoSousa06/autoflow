@@ -783,7 +783,7 @@ class OrdemServicoServiceTest {
     private VeiculoEntity criarVeiculo(Long veiculoId, ClienteEntity cliente) {
         VeiculoEntity veiculo = new VeiculoEntity();
         veiculo.setId(veiculoId);
-        veiculo.setAno(2014L);
+        veiculo.setAno(2014);
         veiculo.setMarca("marca");
         veiculo.setModelo("modelo");
         veiculo.setCliente(cliente);

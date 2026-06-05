@@ -26,9 +26,11 @@ public class VeiculoService {
 
         ClienteEntity cliente =
                 clienteRepository.findByCpfCnpj(request.cpfCnpj())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "Cliente não encontrado com o CPF/CNPJ: " + request.cpfCnpj()));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado com o CPF/CNPJ: " + request.cpfCnpj()));
 
+        if(veiculoRepository.existsByPlaca(request.placa())){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe um veiculo cadastrado com a placa:" + request.placa());
+        }
         VeiculoEntity veiculo = veiculoRepository.save(veiculoMapper.mapToEntity(request, cliente));
 
         return veiculoMapper.mapToResponse(veiculo);
@@ -65,7 +67,7 @@ public class VeiculoService {
 
     public VeiculoEntity buscarPorId(Long id) {
         return veiculoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
+                .orElseThrow(() -> new  ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
     }
 }
 

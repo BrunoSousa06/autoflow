@@ -23,9 +23,7 @@ public class ServicoService {
     public ServicoResponse cadastrar(ServicoRequest request) {
 
         if (servicoRepository.findByNomeIgnoreCase(request.nome()).isPresent()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Serviço já foi cadastrado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Serviço já foi cadastrado");
         }
 
         ServicoEntity entity = servicoRepository.save(servicoMapper.mapToEntity(request));
@@ -43,10 +41,7 @@ public class ServicoService {
 
     public ServicoEntity buscarEntityPorId(Long id) {
         return servicoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Serviço não encontrado com o ID: " + id
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado com o ID: " + id));
     }
     public ServicoResponse atualizar(ServicoRequest request, Long id) {
 
@@ -62,7 +57,7 @@ public class ServicoService {
     public void deletar(Long id) {
 
         if (!servicoRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "ID informado para exclusão não existe: " + id);
+            throw new  ResponseStatusException(HttpStatus.NOT_FOUND, "ID informado para exclusão não existe: " + id);
         }
 
         servicoRepository.deleteById(id);
@@ -70,7 +65,6 @@ public class ServicoService {
 
     private ServicoEntity buscarServicoPorId(Long id) {
         return servicoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado com o ID: " + id)
-                );
+                .orElseThrow(() -> new  ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado com o ID: " + id));
     }
 }

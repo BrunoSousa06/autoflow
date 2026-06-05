@@ -4,6 +4,7 @@ package com.autoflow.controller.veiculo;
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.service.veiculo.VeiculoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class VeiculoController {
 
 
     @PostMapping
-    public ResponseEntity<VeiculoResponse> cadastrar(@RequestBody VeiculoRequest request ){
+    public ResponseEntity<VeiculoResponse> cadastrar(@Valid @RequestBody VeiculoRequest request ){
         return ResponseEntity.status(HttpStatus.CREATED).body(veiculoService.cadastrar(request));
 
     }
@@ -39,7 +40,7 @@ public class VeiculoController {
     }
 
     @PatchMapping("/{id}/atualizacao")
-    public ResponseEntity<VeiculoResponse> atualizar(@RequestBody VeiculoRequest request, @PathVariable Long id){
+    public ResponseEntity<VeiculoResponse> atualizar(@Valid @RequestBody VeiculoRequest request, @PathVariable Long id){
         return ResponseEntity.ok(veiculoService.atualizar(request, id));
 
     }

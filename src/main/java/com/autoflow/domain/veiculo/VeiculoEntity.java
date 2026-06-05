@@ -13,12 +13,11 @@ public class VeiculoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private ClienteEntity cliente;
     private String marca;
-    private Long ano;
+    private int ano;
     @Column(unique = true, nullable = false)
     private String placa;
     private String modelo;
