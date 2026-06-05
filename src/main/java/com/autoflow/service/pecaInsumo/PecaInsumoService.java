@@ -67,6 +67,6 @@ public class PecaInsumoService {
 
     private PecaInsumoEntity buscarEntidadePorId(Long id) {
         return pecaInsumoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Peça/Insumo não encontrado com o ID: " + id));
+                                "Peça/Insumo não encontrado com o ID: " + id));
     }
 }
