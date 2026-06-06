@@ -9,8 +9,8 @@ import com.autoflow.service.orcamento.PublicOrcamentoService;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,7 +48,9 @@ class PublicOrcamentoControllerTest {
     @Test
     void deveConsultarOrcamentoPublico() throws Exception {
         OrcamentoEntity orc = baseOrcamento();
-        when(publicOrcamentoService.consultar(10L, "tok")).thenReturn(orc);
+
+        when(publicOrcamentoService.consultar(10L, "tok"))
+                .thenReturn(orc);
 
         mockMvc.perform(get("/public/orcamentos/{id}", 10L)
                         .param("token", "tok"))
@@ -67,7 +69,9 @@ class PublicOrcamentoControllerTest {
     void deveAprovarOrcamentoPublico() throws Exception {
         OrcamentoEntity orc = baseOrcamento();
         orc.setStatus(StatusOrcamento.APROVADO);
-        when(publicOrcamentoService.aprovar(10L, "tok", "Maria")).thenReturn(orc);
+
+        when(publicOrcamentoService.aprovar(10L, "tok", "Maria"))
+                .thenReturn(orc);
 
         mockMvc.perform(post("/public/orcamentos/{id}/aprovar", 10L)
                         .param("token", "tok")
@@ -87,7 +91,9 @@ class PublicOrcamentoControllerTest {
         OrcamentoEntity orc = baseOrcamento();
         orc.setTipo(TipoOrcamento.ADICIONAL);
         orc.setStatus(StatusOrcamento.APROVADO);
-        when(publicOrcamentoService.aprovar(10L, "tok", "Maria")).thenReturn(orc);
+
+        when(publicOrcamentoService.aprovar(10L, "tok", "Maria"))
+                .thenReturn(orc);
 
         mockMvc.perform(post("/public/orcamentos/{id}/aprovar", 10L)
                         .param("token", "tok")
@@ -107,7 +113,9 @@ class PublicOrcamentoControllerTest {
     void deveRecusarOrcamentoPublicoComMotivo() throws Exception {
         OrcamentoEntity orc = baseOrcamento();
         orc.setStatus(StatusOrcamento.REPROVADO);
-        when(publicOrcamentoService.recusar(10L, "tok", "Nao quero")).thenReturn(orc);
+
+        when(publicOrcamentoService.recusar(10L, "tok", "Nao quero"))
+                .thenReturn(orc);
 
         mockMvc.perform(post("/public/orcamentos/{id}/recusar", 10L)
                         .param("token", "tok")
@@ -125,7 +133,9 @@ class PublicOrcamentoControllerTest {
     void deveRecusarOrcamentoPublicoSemBody() throws Exception {
         OrcamentoEntity orc = baseOrcamento();
         orc.setStatus(StatusOrcamento.REPROVADO);
-        when(publicOrcamentoService.recusar(10L, "tok", null)).thenReturn(orc);
+
+        when(publicOrcamentoService.recusar(10L, "tok", null))
+                .thenReturn(orc);
 
         mockMvc.perform(post("/public/orcamentos/{id}/recusar", 10L)
                         .param("token", "tok"))
@@ -150,4 +160,3 @@ class PublicOrcamentoControllerTest {
                 .build();
     }
 }
-

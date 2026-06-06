@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +48,14 @@ public class VeiculoService {
     public VeiculoResponse atualizar(VeiculoRequest request, Long id) {
 
         VeiculoEntity veiculo = buscarPorId(id);
+
+        Optional<VeiculoEntity> veiculoPlaca =
+                veiculoRepository.findByPlaca(request.placa());
+
+        if (veiculoPlaca.isPresent()
+                && !veiculoPlaca.get().getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Placa já cadastrada");
+        }
 
         veiculoMapper.updateEntity(request, veiculo);
 
