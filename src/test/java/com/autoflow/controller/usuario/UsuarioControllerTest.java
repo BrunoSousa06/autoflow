@@ -46,7 +46,7 @@ class UsuarioControllerTest {
                 .standaloneSetup(new UsuarioController(usuarioService))
                 .build();
 
-        registroRequest = new RegistroRequest("Bruno","usuario@email.com", "321321123","32131221","senha123", RoleEnum.ADMIN);
+        registroRequest = new RegistroRequest("Bruno","usuario@email.com", "12332132141","32131221","senha123", RoleEnum.ADMIN);
         usuarioEntity = new UsuarioEntity();
         usuarioResponse = new UsuarioResponse(1L, "Bruno1", "usuario@email.com", RoleEnum.ADMIN);
         usuarioResponses = List.of(usuarioResponse);
@@ -57,7 +57,7 @@ class UsuarioControllerTest {
 
     @Test
     void deveCadastrarUsuario() throws Exception {
-        when(usuarioService.cadastrar(any(RegistroRequest.class))).thenReturn(usuarioEntity);
+        when(usuarioService.cadastrar(registroRequest)).thenReturn(usuarioEntity);
 
         String jsonBody = objectMapper.writeValueAsString(registroRequest);
 

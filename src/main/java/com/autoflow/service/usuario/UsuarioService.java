@@ -10,6 +10,7 @@ import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.mapper.UsuarioMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.usuario.UsuarioRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,17 +30,32 @@ public class UsuarioService {
     private final JwtService jwtService;
     private final UsuarioMapper usuarioMapper;
 
-
+    @Transactional
     public UsuarioEntity cadastrar(RegistroRequest request) {
 
-        UsuarioEntity usuarioEntity = usuarioRepository.save(usuarioMapper.mapToEntity(request));
+        if (usuarioRepository.existsByEmail(request.email())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
 
-        if (RoleEnum.CLIENTE.equals(request.role())){
+        }
 
-            ClienteEntity clienteEntity = usuarioMapper.mapToClienteEntity(request);
+        if (RoleEnum.CLIENTE.equals(request.role())
+                && clienteRepository.existsByCpfCnpj(request.cpfCnpj())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF/CNPJ já cadastrado");
+        }
+
+        UsuarioEntity usuarioEntity =
+                usuarioRepository.save(usuarioMapper.mapToEntity(request));
+
+        if (RoleEnum.CLIENTE.equals(request.role())) {
+
+            ClienteEntity clienteEntity =
+                    usuarioMapper.mapToClienteEntity(request);
+
             clienteEntity.setUsuario(usuarioEntity);
+
             clienteRepository.save(clienteEntity);
         }
+
         return usuarioEntity;
     }
 
@@ -65,10 +81,8 @@ public class UsuarioService {
 
     public UsuarioEntity buscarMecanicoPorId(Long mecanicoId){
         UsuarioEntity usuario = usuarioRepository.findById(mecanicoId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Mecânico não encontrado."
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mecânico não encontrado."));
+
         if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -80,10 +94,7 @@ public class UsuarioService {
 
     public UsuarioEntity buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Usuário autenticado não encontrado."
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário autenticado não encontrado."));
     }
 
     public List<UsuarioResponse> listarUsuarios() {

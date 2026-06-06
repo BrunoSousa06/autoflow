@@ -42,14 +42,14 @@ class VeiculoControllerTest {
                 .build();
 
         // Ajuste os parâmetros do construtor conforme os campos reais de VeiculoRequest/Response
-        request = new VeiculoRequest("43243242432","Honda",2020,"ABC-1234", "Civic");
-        response = new VeiculoResponse(1L,"Honda",2020,"ABC-1234", "Civic", null);
+        request = new VeiculoRequest("43243242432","Honda",2020,"ABC1234", "Civic");
+        response = new VeiculoResponse(1L,"Honda",2020,"ABC1234", "Civic", null);
         responses = List.of(response);
     }
 
     @Test
     void deveCadastrarVeiculo() throws Exception {
-        when(veiculoService.cadastrar(any(VeiculoRequest.class))).thenReturn(response);
+        when(veiculoService.cadastrar(request)).thenReturn(response);
 
         String jsonBody = objectMapper.writeValueAsString(request);
 

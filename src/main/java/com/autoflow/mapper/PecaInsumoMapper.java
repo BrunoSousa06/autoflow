@@ -1,8 +1,8 @@
 package com.autoflow.mapper;
 
-import com.autoflow.controller.pecaInsumo.request.PecaInsumoRequest;
-import com.autoflow.controller.pecaInsumo.response.PecaInsumoResponse;
-import com.autoflow.domain.pecaInsumo.PecaInsumoEntity;
+import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
+import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
+import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 

@@ -94,7 +94,7 @@ class ServicoServiceTest {
             servicoService.cadastrar(request);
         });
 
-        assertEquals(HttpStatus.BAD_REQUEST, excecao.getStatusCode());
+        assertEquals(HttpStatus.CONFLICT, excecao.getStatusCode());
         assertEquals("Serviço já foi cadastrado", excecao.getReason());
         verify(servicoRepository, never()).save(any());
     }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,9 +27,11 @@ public class VeiculoService {
 
         ClienteEntity cliente =
                 clienteRepository.findByCpfCnpj(request.cpfCnpj())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "Cliente não encontrado com o CPF/CNPJ: " + request.cpfCnpj()));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado com o CPF/CNPJ: " + request.cpfCnpj()));
 
+        if(veiculoRepository.existsByPlaca(request.placa())){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe um veiculo cadastrado com a placa:" + request.placa());
+        }
         VeiculoEntity veiculo = veiculoRepository.save(veiculoMapper.mapToEntity(request, cliente));
 
         return veiculoMapper.mapToResponse(veiculo);
@@ -45,6 +48,14 @@ public class VeiculoService {
     public VeiculoResponse atualizar(VeiculoRequest request, Long id) {
 
         VeiculoEntity veiculo = buscarPorId(id);
+
+        Optional<VeiculoEntity> veiculoPlaca =
+                veiculoRepository.findByPlaca(request.placa());
+
+        if (veiculoPlaca.isPresent()
+                && !veiculoPlaca.get().getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Placa já cadastrada");
+        }
 
         veiculoMapper.updateEntity(request, veiculo);
 
@@ -67,5 +78,6 @@ public class VeiculoService {
         return veiculoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
     }
+
 }
 

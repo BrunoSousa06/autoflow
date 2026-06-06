@@ -1,0 +1,219 @@
+package com.autoflow.controller.ordemservico;
+
+import com.autoflow.controller.ordemservico.request.*;
+import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
+import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.mapper.ItensNecessariosMapper;
+import com.autoflow.mapper.ServicoSolicitadoMapper;
+import com.autoflow.service.ordemservico.OrdemServicoService;
+import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/ordens-servico")
+@Tag(name = "ordens de serviço", description = "Endpoints para gerenciamento das ordens de serviços")
+public class OrdemServicoController {
+
+    private final OrdemServicoService ordemServicoService;
+    private final ServicoSolicitadoMapper servicoSolicitadoMapper;
+    private final ItensNecessariosMapper itensNecessariosMapper;
+
+    public OrdemServicoController(OrdemServicoServiceImpl ordemServicoService,
+                                  ServicoSolicitadoMapper servicoSolicitadoMapper,
+                                  ItensNecessariosMapper itensNecessariosMapper) {
+        this.ordemServicoService = ordemServicoService;
+        this.servicoSolicitadoMapper = servicoSolicitadoMapper;
+        this.itensNecessariosMapper = itensNecessariosMapper;
+    }
+
+    @Operation(summary = "Criar a ordem de serviço", description = "Cria uma nova ordem de serviço para um veículo e associa os serviços solicitados")
+    @ApiResponse(responseCode = "200", description = "Ordem de serviço criada com sucesso")
+    @ApiResponse(responseCode = "404", description = "Veiculo da ordem de serviço não foi encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
+    public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
+        List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request.servicosSolicitados());
+        return OrdemServicoResponse.fromDomain(ordemServicoService.criar(
+                request.veiculoId(),
+                servicos
+        ));
+    }
+
+    @Operation(summary = "Incluir serviço na ordem de serviço", description = "Adiciona novos serviços a uma ordem de serviço existente")
+    @ApiResponse(responseCode = "200", description = "Ordem de serviço criada com sucesso")
+    @ApiResponse(responseCode = "404", description = "Veiculo pertencente a ordem de serviço não foi encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PostMapping("/{ordemServicoId}/servicos")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
+    public OrdemServicoResponse incluirServico(
+            @PathVariable Long ordemServicoId,
+            @Valid @RequestBody List<ServicoSolicitadoRequest> request
+    ) {
+        List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request);
+        return OrdemServicoResponse.fromDomain(ordemServicoService.incluirServicos(ordemServicoId, servicos));
+    }
+
+    @Operation(
+            summary = "Atribuir mecânico à ordem de serviço",
+            description = "Define o mecânico responsável pela execução da ordem de serviço."
+    )
+    @ApiResponse(responseCode = "202", description = "Mecânico atribuído com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço ou mecânico não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/mecanico")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
+    public OrdemServicoResponse atribuirMecanico(
+            @PathVariable Long ordemServicoId,
+            @Valid @RequestBody IncluirMecanicoRequest request){
+        return OrdemServicoResponse.fromDomain(ordemServicoService.atribuirMecanico(
+                ordemServicoId,
+                request.mecanicoId()));
+    }
+
+    @Operation(
+            summary = "Iniciar diagnóstico",
+            description = "Inicia a etapa de diagnóstico da ordem de serviço."
+    )
+    @ApiResponse(responseCode = "202", description = "Diagnóstico iniciado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/diagnostico/iniciar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse iniciarDiagnostico(@PathVariable Long ordemServicoId, @AuthenticationPrincipal UserDetails userDetails){
+        return OrdemServicoResponse.fromDomain(ordemServicoService.iniciarDiagnostico(
+                ordemServicoId,
+                userDetails.getUsername()));
+    }
+
+    @Operation(
+            summary = "Registrar itens necessários",
+            description = "Registra os itens, peças e materiais necessários para execução de um serviço da ordem de serviço."
+    )
+    @ApiResponse(responseCode = "202", description = "Itens registrados com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/itens-necessarios")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse registrarItensDoServico(
+            @PathVariable Long ordemServicoId,
+            @PathVariable Long servicoOsId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody List<ItensNecessariosRequest> request
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.registrarItemNecessario(
+                        ordemServicoId,
+                        servicoOsId,
+                        userDetails.getUsername(),
+                        itensNecessariosMapper.mapToEntities(request)
+                )
+        );
+    }
+
+    @Operation(
+            summary = "Registrar laudo do diagnóstico",
+            description = "Registra ou atualiza o laudo técnico produzido durante o diagnóstico da ordem de serviço."
+    )
+    @ApiResponse(responseCode = "202", description = "Laudo registrado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/diagnostico/laudo")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse atualizarDiagnostico(
+            @PathVariable Long ordemServicoId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody RegistrarLaudoRequest request
+    ){
+        return OrdemServicoResponse.fromDomain(ordemServicoService.registrarLaudo(
+                ordemServicoId,
+                userDetails.getUsername(),
+                request.laudo()
+        ));
+    }
+
+
+    @Operation(
+            summary = "Finalizar diagnóstico",
+            description = "Finaliza a etapa de diagnóstico e retorna o resultado consolidado do diagnóstico."
+    )
+    @ApiResponse(responseCode = "202", description = "Diagnóstico finalizado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/diagnostico/finalizar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public FinalizarDiagnosticoResponse finalizarDiagnostico(
+            @PathVariable Long ordemServicoId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ){
+        return FinalizarDiagnosticoResponse.from(ordemServicoService.finalizarDiagnostico(
+                ordemServicoId,
+                userDetails.getUsername()
+        ));
+    }
+
+    @Operation(
+            summary = "Iniciar serviço",
+            description = "Altera o status de um serviço da ordem de serviço para EM_EXECUCAO."
+    )
+    @ApiResponse(responseCode = "202", description = "Serviço iniciado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/iniciar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO', 'ATENDENTE')")
+    public OrdemServicoResponse iniciarServico(
+            @PathVariable Long ordemServicoId,
+            @PathVariable Long servicoOsId
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.iniciarServico(ordemServicoId, servicoOsId)
+        );
+    }
+
+    @Operation(
+            summary = "Finalizar serviço",
+            description = "Conclui a execução de um serviço da ordem de serviço e altera seu status para FINALIZADO."
+    )
+    @ApiResponse(responseCode = "202", description = "Serviço finalizado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/finalizar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
+    public OrdemServicoResponse finalizarServico(
+            @PathVariable Long ordemServicoId,
+            @PathVariable Long servicoOsId
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.finalizarServico(ordemServicoId, servicoOsId)
+        );
+    }
+
+}
