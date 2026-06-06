@@ -1,0 +1,1362 @@
+{
+  "vulnerabilities": [
+    {
+      "id": "SNYK-JAVA-ORGAPACHECOMMONS-10734078",
+      "title": "Uncontrolled Recursion",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H",
+      "credit": [
+        "Unknown"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[3.0, 3.18.0)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "3.18.0"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "high",
+      "cvssScore": 8.8,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.commons:commons-lang3",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/bgv0lpswokgol11tloxnjfzdl7yrc1g1",
+          "title": "Apache Pony Mail"
+        },
+        {
+          "url": "https://github.com/apache/commons-lang/commit/b424803abdb2bec818e4fbcb251ce031c22aca53",
+          "title": "GitHub Commit"
+        }
+      ],
+      "cvssDetails": [
+        {
+          "assigner": "Red Hat",
+          "severity": "low",
+          "cvssV3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+          "cvssV3BaseScore": 3.7,
+          "modificationTime": "2025-07-12T06:33:52.830274Z"
+        },
+        {
+          "assigner": "SUSE",
+          "severity": "medium",
+          "cvssV3Vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:N/I:N/A:H",
+          "cvssV3BaseScore": 4.7,
+          "modificationTime": "2025-08-14T11:02:13.905724Z"
+        }
+      ],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:H/SC:N/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "high",
+          "baseScore": 8.8,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-06-02T14:03:53.004459Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H",
+          "assigner": "Snyk",
+          "severity": "high",
+          "baseScore": 8.2,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-06-02T14:03:53.004459Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+          "assigner": "Red Hat",
+          "severity": "low",
+          "baseScore": 3.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2025-07-12T06:33:52.830274Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:N/I:N/A:H",
+          "assigner": "SUSE",
+          "severity": "medium",
+          "baseScore": 4.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2025-08-14T11:02:13.905724Z"
+        }
+      ],
+      "description": "## Overview\n\nAffected versions of this package are vulnerable to Uncontrolled Recursion via the `ClassUtils.getClass` function. An attacker can cause the application to terminate unexpectedly by providing excessively long input values.\n## Remediation\nUpgrade `org.apache.commons:commons-lang3` to version 3.18.0 or higher.\n## References\n- [Apache Pony Mail](https://lists.apache.org/thread/bgv0lpswokgol11tloxnjfzdl7yrc1g1)\n- [GitHub Commit](https://github.com/apache/commons-lang/commit/b424803abdb2bec818e4fbcb251ce031c22aca53)\n",
+      "epssDetails": {
+        "percentile": "0.27219",
+        "probability": "0.00099",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2025-48924"
+        ],
+        "CWE": [
+          "CWE-674"
+        ],
+        "GHSA": [
+          "GHSA-j288-q9x7-2f5v"
+        ]
+      },
+      "packageName": "org.apache.commons:commons-lang3",
+      "proprietary": false,
+      "creationTime": "2025-07-13T07:58:53.086065Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2025-07-11T15:31:37Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.commons",
+        "artifactId": "commons-lang3"
+      },
+      "publicationTime": "2025-07-13T09:08:38.832136Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-06-02T14:03:53.004459Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "high",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springdoc:springdoc-openapi-starter-webmvc-ui@2.8.13",
+        "org.springdoc:springdoc-openapi-starter-webmvc-api@2.8.13",
+        "org.springdoc:springdoc-openapi-starter-common@2.8.13",
+        "io.swagger.core.v3:swagger-core-jakarta@2.2.36",
+        "org.apache.commons:commons-lang3@3.17.0"
+      ],
+      "upgradePath": [
+        false,
+        "org.springdoc:springdoc-openapi-starter-webmvc-ui@2.8.13",
+        "org.springdoc:springdoc-openapi-starter-webmvc-api@2.8.13",
+        "org.springdoc:springdoc-openapi-starter-common@2.8.13",
+        "io.swagger.core.v3:swagger-core-jakarta@2.2.36",
+        "org.apache.commons:commons-lang3@3.18.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.commons:commons-lang3",
+      "version": "3.17.0"
+    },
+    {
+      "id": "SNYK-JAVA-ORGAPACHETOMCATEMBED-16643259",
+      "title": "Allocation of Resources Without Limits or Throttling",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "credit": [
+        "Dariusz Gońda"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[9.0.0.M1,9.0.118)",
+          "[10.1.0-M1,10.1.55)",
+          "[11.0.0-M1,11.0.22)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "9.0.118",
+        "10.1.55",
+        "11.0.22"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "high",
+      "cvssScore": 8.7,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/2nvqjr7ovjmvx2vbhb7s61ycd5msc8qc",
+          "title": "Apache Mailing List"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/7fd8c2845e38cf7745fb5c15c81806807f39ea39",
+          "title": "GitHub Commit"
+        }
+      ],
+      "cvssDetails": [],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "high",
+          "baseScore": 8.7,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-06-05T14:17:10.071288Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "assigner": "Snyk",
+          "severity": "high",
+          "baseScore": 7.5,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-06-05T14:17:10.071288Z"
+        }
+      ],
+      "description": "## Overview\n[org.apache.tomcat.embed:tomcat-embed-core](https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core) is a Core Tomcat implementation.\n\nAffected versions of this package are vulnerable to Allocation of Resources Without Limits or Throttling via the WebDAV `LOCK` and `PROPFIND` XML request bodies. An attacker can cause excessive resource consumption by sending specially crafted requests that trigger unbounded reads.\n## Remediation\nUpgrade `org.apache.tomcat.embed:tomcat-embed-core` to version 9.0.118, 10.1.55, 11.0.22 or higher.\n## References\n- [Apache Mailing List](https://lists.apache.org/thread/2nvqjr7ovjmvx2vbhb7s61ycd5msc8qc)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/7fd8c2845e38cf7745fb5c15c81806807f39ea39)\n",
+      "epssDetails": {
+        "percentile": "0.20725",
+        "probability": "0.00066",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2026-41284"
+        ],
+        "CWE": [
+          "CWE-770"
+        ]
+      },
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "proprietary": false,
+      "creationTime": "2026-05-13T07:44:13.619529Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2026-05-12T17:22:23.310000Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.tomcat.embed",
+        "artifactId": "tomcat-embed-core"
+      },
+      "publicationTime": "2026-05-13T07:44:13.837390Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-06-05T14:17:10.071288Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "high",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springframework.boot:spring-boot-starter-web@3.5.14",
+        "org.springframework.boot:spring-boot-starter-tomcat@3.5.14",
+        "org.apache.tomcat.embed:tomcat-embed-core@10.1.54"
+      ],
+      "upgradePath": [
+        false,
+        "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "org.springframework.boot:spring-boot-starter-tomcat@4.0.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.tomcat.embed:tomcat-embed-core",
+      "version": "10.1.54"
+    },
+    {
+      "id": "SNYK-JAVA-ORGAPACHETOMCATEMBED-16643276",
+      "title": "Timing Attack",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+      "credit": [
+        "Unknown"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[,9.0.118)",
+          "[10.1.0-M1,10.1.55)",
+          "[11.0.0-M1,11.0.22)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "9.0.118",
+        "10.1.55",
+        "11.0.22"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "medium",
+      "cvssScore": 6.3,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/2k654v5cq123npfsd1b2kk1y30owqb1m",
+          "title": "Apache Mailing List"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/6771e06aee1e6da82b36d528a3f6a9969c682748",
+          "title": "GitHub Commit"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/ebdce4eed4c2a7ba1334902973c4b320e414c481",
+          "title": "GitHub Commit"
+        }
+      ],
+      "cvssDetails": [],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 6.3,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-05-21T02:01:27.121929Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+          "assigner": "Snyk",
+          "severity": "low",
+          "baseScore": 3.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-05-21T02:01:27.121929Z"
+        }
+      ],
+      "description": "## Overview\n[org.apache.tomcat.embed:tomcat-embed-core](https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core) is a Core Tomcat implementation.\n\nAffected versions of this package are vulnerable to Timing Attack via AJP secret comparison. An attacker can perform a timing side-channel attack to determine whether a guessed secret is correct by sending many authentication attempts directly to the connector and measuring the time taken to compare secrets.\n## Remediation\nUpgrade `org.apache.tomcat.embed:tomcat-embed-core` to version 9.0.118, 10.1.55, 11.0.22 or higher.\n## References\n- [Apache Mailing List](https://lists.apache.org/thread/2k654v5cq123npfsd1b2kk1y30owqb1m)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/6771e06aee1e6da82b36d528a3f6a9969c682748)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/ebdce4eed4c2a7ba1334902973c4b320e414c481)\n",
+      "epssDetails": {
+        "percentile": "0.27135",
+        "probability": "0.00100",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2026-43514"
+        ],
+        "CWE": [
+          "CWE-208"
+        ]
+      },
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "proprietary": false,
+      "creationTime": "2026-05-13T10:17:14.748869Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2026-05-12T17:22:14Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.tomcat.embed",
+        "artifactId": "tomcat-embed-core"
+      },
+      "publicationTime": "2026-05-13T10:17:14.929242Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-05-21T02:01:27.121929Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "medium",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springframework.boot:spring-boot-starter-web@3.5.14",
+        "org.springframework.boot:spring-boot-starter-tomcat@3.5.14",
+        "org.apache.tomcat.embed:tomcat-embed-core@10.1.54"
+      ],
+      "upgradePath": [
+        false,
+        "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "org.springframework.boot:spring-boot-starter-tomcat@4.0.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.tomcat.embed:tomcat-embed-core",
+      "version": "10.1.54"
+    },
+    {
+      "id": "SNYK-JAVA-ORGAPACHETOMCATEMBED-16690888",
+      "title": "Improper Authorization",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "credit": [
+        "Unknown"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[,9.0.118)",
+          "[10.0.0-M1,10.1.55)",
+          "[11.0.0-M1,11.0.22)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "9.0.118",
+        "10.1.55",
+        "11.0.22"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "medium",
+      "cvssScore": 5.3,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/746nxfxod0wsocxtmv8pb8nkgmwpc6bb",
+          "title": "Apache Mailing List"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/db919ff9912b4d61d1b702a1342b8bde39270031",
+          "title": "GitHub Commit"
+        }
+      ],
+      "cvssDetails": [],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 5.3,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-05-21T02:01:27.122373Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 5.4,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-05-21T02:01:27.122373Z"
+        }
+      ],
+      "description": "## Overview\n[org.apache.tomcat.embed:tomcat-embed-core](https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core) is a Core Tomcat implementation.\n\nAffected versions of this package are vulnerable to Improper Authorization in the processing of security constraints when multiple method constraints define an HTTP method for the same extension. An attacker can gain unauthorized access to protected resources by crafting requests that exploit the improper application of these constraints.\n## Remediation\nUpgrade `org.apache.tomcat.embed:tomcat-embed-core` to version 9.0.118, 10.1.55, 11.0.22 or higher.\n## References\n- [Apache Mailing List](https://lists.apache.org/thread/746nxfxod0wsocxtmv8pb8nkgmwpc6bb)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/db919ff9912b4d61d1b702a1342b8bde39270031)\n",
+      "epssDetails": {
+        "percentile": "0.26144",
+        "probability": "0.00095",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2026-43515"
+        ],
+        "CWE": [
+          "CWE-285"
+        ]
+      },
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "proprietary": false,
+      "creationTime": "2026-05-14T14:20:25.065488Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2026-05-12T17:22:14Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.tomcat.embed",
+        "artifactId": "tomcat-embed-core"
+      },
+      "publicationTime": "2026-05-14T14:20:28.290343Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-05-21T02:01:27.122373Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "medium",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springframework.boot:spring-boot-starter-web@3.5.14",
+        "org.springframework.boot:spring-boot-starter-tomcat@3.5.14",
+        "org.apache.tomcat.embed:tomcat-embed-core@10.1.54"
+      ],
+      "upgradePath": [
+        false,
+        "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "org.springframework.boot:spring-boot-starter-tomcat@4.0.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.tomcat.embed:tomcat-embed-core",
+      "version": "10.1.54"
+    },
+    {
+      "id": "SNYK-JAVA-ORGAPACHETOMCATEMBED-16691220",
+      "title": "Improper Validation of Syntactic Correctness of Input",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+      "credit": [
+        "Dawit Jeong"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[,9.0.118)",
+          "[10.0.0-M1,10.1.55)",
+          "[11.0.0-M1,11.0.22)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "9.0.118",
+        "10.1.55",
+        "11.0.22"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "medium",
+      "cvssScore": 6.9,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/qwg0q16z7xkb2qrr853wdll5531mvl1r",
+          "title": "Apache Mailing List"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/1c70480466572c9192ed412ebefcd43fc63137fd",
+          "title": "GitHub Commit"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/57c2b3bfd62792631e1df24cf4237b990a0b36fa",
+          "title": "GitHub Commit"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/cf9452443bcbf3b1a4b435ef7d624364f1b65ca3",
+          "title": "GitHub Commit"
+        }
+      ],
+      "cvssDetails": [],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 6.9,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-05-21T02:01:27.122804Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 5.3,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-05-21T02:01:27.122804Z"
+        }
+      ],
+      "description": "## Overview\n[org.apache.tomcat.embed:tomcat-embed-core](https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core) is a Core Tomcat implementation.\n\nAffected versions of this package are vulnerable to Improper Validation of Syntactic Correctness of Input in the processing of HTTP/2 request headers. An attacker can cause unexpected behavior or potentially compromise the application by sending specially crafted HTTP/2 request headers.\n## Remediation\nUpgrade `org.apache.tomcat.embed:tomcat-embed-core` to version 9.0.118, 10.1.55, 11.0.22 or higher.\n## References\n- [Apache Mailing List](https://lists.apache.org/thread/qwg0q16z7xkb2qrr853wdll5531mvl1r)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/1c70480466572c9192ed412ebefcd43fc63137fd)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/57c2b3bfd62792631e1df24cf4237b990a0b36fa)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/cf9452443bcbf3b1a4b435ef7d624364f1b65ca3)\n",
+      "epssDetails": {
+        "percentile": "0.48610",
+        "probability": "0.00253",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2026-41293"
+        ],
+        "CWE": [
+          "CWE-1286"
+        ]
+      },
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "proprietary": false,
+      "creationTime": "2026-05-14T14:34:44.154308Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2026-05-12T17:22:23.026000Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.tomcat.embed",
+        "artifactId": "tomcat-embed-core"
+      },
+      "publicationTime": "2026-05-14T14:34:46.323689Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-05-21T02:01:27.122804Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "medium",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springframework.boot:spring-boot-starter-web@3.5.14",
+        "org.springframework.boot:spring-boot-starter-tomcat@3.5.14",
+        "org.apache.tomcat.embed:tomcat-embed-core@10.1.54"
+      ],
+      "upgradePath": [
+        false,
+        "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "org.springframework.boot:spring-boot-starter-tomcat@4.0.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.tomcat.embed:tomcat-embed-core",
+      "version": "10.1.54"
+    },
+    {
+      "id": "SNYK-JAVA-ORGAPACHETOMCATEMBED-16691224",
+      "title": "Improper Handling of Case Sensitivity",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N",
+      "credit": [
+        "Unknown"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[,9.0.118)",
+          "[10.0.0-M1,10.1.55)",
+          "[11.0.0-M1,11.0.22)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "9.0.118",
+        "10.1.55",
+        "11.0.22"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "medium",
+      "cvssScore": 5.3,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/ytjcgldshj73lcnd1sh95od5hrghwogp",
+          "title": "Apache Mailing List"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/6dd75beb55bd42fc5f78e929596b25018cd17717",
+          "title": "GitHub Commit"
+        }
+      ],
+      "cvssDetails": [],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 5.3,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-05-21T02:01:27.123253Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 4.3,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-05-21T02:01:27.123253Z"
+        }
+      ],
+      "description": "## Overview\n[org.apache.tomcat.embed:tomcat-embed-core](https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core) is a Core Tomcat implementation.\n\nAffected versions of this package are vulnerable to Improper Handling of Case Sensitivity in the `LockOutRealm` function. An attacker can bypass account lockout protections by submitting usernames with different letter casing.\n## Remediation\nUpgrade `org.apache.tomcat.embed:tomcat-embed-core` to version 9.0.118, 10.1.55, 11.0.22 or higher.\n## References\n- [Apache Mailing List](https://lists.apache.org/thread/ytjcgldshj73lcnd1sh95od5hrghwogp)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/6dd75beb55bd42fc5f78e929596b25018cd17717)\n",
+      "epssDetails": {
+        "percentile": "0.23806",
+        "probability": "0.00082",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2026-43513"
+        ],
+        "CWE": [
+          "CWE-178"
+        ]
+      },
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "proprietary": false,
+      "creationTime": "2026-05-14T14:38:53.164932Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2026-05-12T17:21:42Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.tomcat.embed",
+        "artifactId": "tomcat-embed-core"
+      },
+      "publicationTime": "2026-05-14T14:38:55.527805Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-05-21T02:01:27.123253Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "medium",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springframework.boot:spring-boot-starter-web@3.5.14",
+        "org.springframework.boot:spring-boot-starter-tomcat@3.5.14",
+        "org.apache.tomcat.embed:tomcat-embed-core@10.1.54"
+      ],
+      "upgradePath": [
+        false,
+        "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "org.springframework.boot:spring-boot-starter-tomcat@4.0.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.tomcat.embed:tomcat-embed-core",
+      "version": "10.1.54"
+    },
+    {
+      "id": "SNYK-JAVA-ORGAPACHETOMCATEMBED-16691231",
+      "title": "Improper Authentication",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+      "credit": [
+        "Unknown"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[,9.0.118)",
+          "[10.0.0-M1,10.1.55)",
+          "[11.0.0-M1,11.0.22)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "9.0.118",
+        "10.1.55",
+        "11.0.22"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "critical",
+      "cvssScore": 9.1,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/7x09x7o12solvclslw3sz0288xc8wx73",
+          "title": "Apache Mailing List"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/6565a6cb6499e56fe2f34457cec99f9d1c4f39e9",
+          "title": "GitHub Commit"
+        }
+      ],
+      "cvssDetails": [
+        {
+          "assigner": "Red Hat",
+          "severity": "medium",
+          "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+          "cvssV3BaseScore": 6.5,
+          "modificationTime": "2026-05-29T13:32:19.179365Z"
+        }
+      ],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "critical",
+          "baseScore": 9.1,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-05-29T13:32:19.573158Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+          "assigner": "Snyk",
+          "severity": "high",
+          "baseScore": 7.4,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-05-29T13:32:19.573158Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+          "assigner": "Red Hat",
+          "severity": "medium",
+          "baseScore": 6.5,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-05-29T13:32:19.179365Z"
+        }
+      ],
+      "description": "## Overview\n[org.apache.tomcat.embed:tomcat-embed-core](https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core) is a Core Tomcat implementation.\n\nAffected versions of this package are vulnerable to Improper Authentication when DIGEST authentication is configured. An attacker can gain unauthorized access by providing any unknown username, as the system will incorrectly authenticate the user.\n## Remediation\nUpgrade `org.apache.tomcat.embed:tomcat-embed-core` to version 9.0.118, 10.1.55, 11.0.22 or higher.\n## References\n- [Apache Mailing List](https://lists.apache.org/thread/7x09x7o12solvclslw3sz0288xc8wx73)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/6565a6cb6499e56fe2f34457cec99f9d1c4f39e9)\n",
+      "epssDetails": {
+        "percentile": "0.33422",
+        "probability": "0.00139",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2026-43512"
+        ],
+        "CWE": [
+          "CWE-287"
+        ]
+      },
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-core",
+      "proprietary": false,
+      "creationTime": "2026-05-14T14:45:46.352902Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2026-05-12T17:22:18Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.tomcat.embed",
+        "artifactId": "tomcat-embed-core"
+      },
+      "publicationTime": "2026-05-14T14:45:51.670841Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-05-29T13:32:19.573158Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "critical",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springframework.boot:spring-boot-starter-web@3.5.14",
+        "org.springframework.boot:spring-boot-starter-tomcat@3.5.14",
+        "org.apache.tomcat.embed:tomcat-embed-core@10.1.54"
+      ],
+      "upgradePath": [
+        false,
+        "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "org.springframework.boot:spring-boot-starter-tomcat@4.0.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.tomcat.embed:tomcat-embed-core",
+      "version": "10.1.54"
+    },
+    {
+      "id": "SNYK-JAVA-ORGAPACHETOMCATEMBED-16643269",
+      "title": "Exposure of Private Personal Information to an Unauthorized Actor",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N",
+      "credit": [
+        "lokerxx"
+      ],
+      "semver": {
+        "vulnerable": [
+          "[7.0.83,8.0.1)",
+          "[8.5.24,9.0.0.M1)",
+          "[9.0.2,9.0.118)",
+          "[10.1.0-M1,10.1.55)",
+          "[11.0.0-M1,11.0.22)"
+        ]
+      },
+      "exploit": "Not Defined",
+      "fixedIn": [
+        "8.0.1",
+        "9.0.0.M1",
+        "9.0.118",
+        "10.1.55",
+        "11.0.22"
+      ],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "java",
+      "severity": "medium",
+      "cvssScore": 6.9,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "org.apache.tomcat.embed:tomcat-embed-websocket",
+      "references": [
+        {
+          "url": "https://lists.apache.org/thread/n61zwf75jrv09rz90j4jssncm244bwdb",
+          "title": "Apache Mailing List"
+        },
+        {
+          "url": "https://github.com/apache/tomcat/commit/b288a7a92d1dfe85c90bb1f485bcbbc66f4de1af",
+          "title": "GitHub Commit"
+        },
+        {
+          "url": "https://www.openwall.com/lists/oss-security/2026/05/12/14",
+          "title": "OSS Security Advisory"
+        }
+      ],
+      "cvssDetails": [],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:N/SA:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 6.9,
+          "cvssVersion": "4.0",
+          "modificationTime": "2026-05-22T14:05:30.172391Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N",
+          "assigner": "Snyk",
+          "severity": "medium",
+          "baseScore": 6.8,
+          "cvssVersion": "3.1",
+          "modificationTime": "2026-05-22T14:05:30.172391Z"
+        }
+      ],
+      "description": "## Overview\n\nAffected versions of this package are vulnerable to Exposure of Private Personal Information to an Unauthorized Actor in WebSocket client during authentication. An attacker can obtain sensitive HTTP authentication headers by initiating a WebSocket handshake with a malicious host.\n## Remediation\nUpgrade `org.apache.tomcat.embed:tomcat-embed-websocket` to version 8.0.1, 9.0.0.M1, 9.0.118, 10.1.55, 11.0.22 or higher.\n## References\n- [Apache Mailing List](https://lists.apache.org/thread/n61zwf75jrv09rz90j4jssncm244bwdb)\n- [GitHub Commit](https://github.com/apache/tomcat/commit/b288a7a92d1dfe85c90bb1f485bcbbc66f4de1af)\n- [OSS Security Advisory](https://www.openwall.com/lists/oss-security/2026/05/12/14)\n",
+      "epssDetails": {
+        "percentile": "0.15657",
+        "probability": "0.00050",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2026-42498"
+        ],
+        "CWE": [
+          "CWE-359"
+        ]
+      },
+      "packageName": "org.apache.tomcat.embed:tomcat-embed-websocket",
+      "proprietary": false,
+      "creationTime": "2026-05-13T10:04:41.850101Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2026-05-12T17:22:20.196000Z",
+      "exploitDetails": {
+        "sources": [],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Not Defined",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Not Defined",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "maven",
+      "mavenModuleName": {
+        "groupId": "org.apache.tomcat.embed",
+        "artifactId": "tomcat-embed-websocket"
+      },
+      "publicationTime": "2026-05-13T10:04:42.055970Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2026-05-22T14:05:30.172391Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "medium",
+      "from": [
+        "com:autoflow@0.0.1-SNAPSHOT",
+        "org.springframework.boot:spring-boot-starter-web@3.5.14",
+        "org.springframework.boot:spring-boot-starter-tomcat@3.5.14",
+        "org.apache.tomcat.embed:tomcat-embed-websocket@10.1.54"
+      ],
+      "upgradePath": [
+        false,
+        "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "org.springframework.boot:spring-boot-starter-tomcat@4.0.0"
+      ],
+      "isUpgradable": true,
+      "isPatchable": false,
+      "name": "org.apache.tomcat.embed:tomcat-embed-websocket",
+      "version": "10.1.54"
+    }
+  ],
+  "ok": false,
+  "dependencyCount": 92,
+  "org": "brunosousa06",
+  "policy": "# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.\nversion: v1.25.1\nignore: {}\npatch: {}\n",
+  "isPrivate": true,
+  "licensesPolicy": {
+    "severities": {},
+    "orgLicenseRules": {
+      "AGPL-1.0": {
+        "licenseType": "AGPL-1.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "AGPL-3.0": {
+        "licenseType": "AGPL-3.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "Artistic-1.0": {
+        "licenseType": "Artistic-1.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "Artistic-2.0": {
+        "licenseType": "Artistic-2.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "CDDL-1.0": {
+        "licenseType": "CDDL-1.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "CPOL-1.02": {
+        "licenseType": "CPOL-1.02",
+        "severity": "high",
+        "instructions": ""
+      },
+      "EPL-1.0": {
+        "licenseType": "EPL-1.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "GPL-2.0": {
+        "licenseType": "GPL-2.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "GPL-3.0": {
+        "licenseType": "GPL-3.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "LGPL-2.0": {
+        "licenseType": "LGPL-2.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "LGPL-2.1": {
+        "licenseType": "LGPL-2.1",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "LGPL-3.0": {
+        "licenseType": "LGPL-3.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "MPL-1.1": {
+        "licenseType": "MPL-1.1",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "MPL-2.0": {
+        "licenseType": "MPL-2.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "MS-RL": {
+        "licenseType": "MS-RL",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "SimPL-2.0": {
+        "licenseType": "SimPL-2.0",
+        "severity": "high",
+        "instructions": ""
+      }
+    }
+  },
+  "packageManager": "maven",
+  "ignoreSettings": {
+    "adminOnly": false,
+    "reasonRequired": false,
+    "disregardFilesystemIgnores": false
+  },
+  "summary": "8 vulnerable dependency paths",
+  "remediation": {
+    "unresolved": [
+      {
+        "id": "SNYK-JAVA-ORGAPACHECOMMONS-10734078",
+        "title": "Uncontrolled Recursion",
+        "CVSSv3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H",
+        "credit": [
+          "Unknown"
+        ],
+        "semver": {
+          "vulnerable": [
+            "[3.0, 3.18.0)"
+          ]
+        },
+        "exploit": "Not Defined",
+        "fixedIn": [
+          "3.18.0"
+        ],
+        "patches": [],
+        "insights": {
+          "triageAdvice": null
+        },
+        "language": "java",
+        "severity": "high",
+        "cvssScore": 8.8,
+        "functions": [],
+        "malicious": false,
+        "isDisputed": false,
+        "moduleName": "org.apache.commons:commons-lang3",
+        "references": [
+          {
+            "url": "https://lists.apache.org/thread/bgv0lpswokgol11tloxnjfzdl7yrc1g1",
+            "title": "Apache Pony Mail"
+          },
+          {
+            "url": "https://github.com/apache/commons-lang/commit/b424803abdb2bec818e4fbcb251ce031c22aca53",
+            "title": "GitHub Commit"
+          }
+        ],
+        "cvssDetails": [
+          {
+            "assigner": "Red Hat",
+            "severity": "low",
+            "cvssV3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+            "cvssV3BaseScore": 3.7,
+            "modificationTime": "2025-07-12T06:33:52.830274Z"
+          },
+          {
+            "assigner": "SUSE",
+            "severity": "medium",
+            "cvssV3Vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:N/I:N/A:H",
+            "cvssV3BaseScore": 4.7,
+            "modificationTime": "2025-08-14T11:02:13.905724Z"
+          }
+        ],
+        "cvssSources": [
+          {
+            "type": "primary",
+            "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:H/SC:N/SI:N/SA:N",
+            "assigner": "Snyk",
+            "severity": "high",
+            "baseScore": 8.8,
+            "cvssVersion": "4.0",
+            "modificationTime": "2026-06-02T14:03:53.004459Z"
+          },
+          {
+            "type": "secondary",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H",
+            "assigner": "Snyk",
+            "severity": "high",
+            "baseScore": 8.2,
+            "cvssVersion": "3.1",
+            "modificationTime": "2026-06-02T14:03:53.004459Z"
+          },
+          {
+            "type": "secondary",
+            "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+            "assigner": "Red Hat",
+            "severity": "low",
+            "baseScore": 3.7,
+            "cvssVersion": "3.1",
+            "modificationTime": "2025-07-12T06:33:52.830274Z"
+          },
+          {
+            "type": "secondary",
+            "vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:N/I:N/A:H",
+            "assigner": "SUSE",
+            "severity": "medium",
+            "baseScore": 4.7,
+            "cvssVersion": "3.1",
+            "modificationTime": "2025-08-14T11:02:13.905724Z"
+          }
+        ],
+        "description": "## Overview\n\nAffected versions of this package are vulnerable to Uncontrolled Recursion via the `ClassUtils.getClass` function. An attacker can cause the application to terminate unexpectedly by providing excessively long input values.\n## Remediation\nUpgrade `org.apache.commons:commons-lang3` to version 3.18.0 or higher.\n## References\n- [Apache Pony Mail](https://lists.apache.org/thread/bgv0lpswokgol11tloxnjfzdl7yrc1g1)\n- [GitHub Commit](https://github.com/apache/commons-lang/commit/b424803abdb2bec818e4fbcb251ce031c22aca53)\n",
+        "epssDetails": {
+          "percentile": "0.27219",
+          "probability": "0.00099",
+          "modelVersion": "v2025.03.14"
+        },
+        "identifiers": {
+          "CVE": [
+            "CVE-2025-48924"
+          ],
+          "CWE": [
+            "CWE-674"
+          ],
+          "GHSA": [
+            "GHSA-j288-q9x7-2f5v"
+          ]
+        },
+        "packageName": "org.apache.commons:commons-lang3",
+        "proprietary": false,
+        "creationTime": "2025-07-13T07:58:53.086065Z",
+        "functions_new": [],
+        "alternativeIds": [],
+        "disclosureTime": "2025-07-11T15:31:37Z",
+        "exploitDetails": {
+          "sources": [],
+          "maturityLevels": [
+            {
+              "type": "secondary",
+              "level": "Not Defined",
+              "format": "CVSSv3"
+            },
+            {
+              "type": "primary",
+              "level": "Not Defined",
+              "format": "CVSSv4"
+            }
+          ]
+        },
+        "packageManager": "maven",
+        "mavenModuleName": {
+          "groupId": "org.apache.commons",
+          "artifactId": "commons-lang3"
+        },
+        "publicationTime": "2025-07-13T09:08:38.832136Z",
+        "severityBasedOn": "CVSS",
+        "modificationTime": "2026-06-02T14:03:53.004459Z",
+        "socialTrendAlert": false,
+        "packagePopularityRank": 99,
+        "from": [
+          "com:autoflow@0.0.1-SNAPSHOT",
+          "org.springdoc:springdoc-openapi-starter-webmvc-ui@2.8.13",
+          "org.springdoc:springdoc-openapi-starter-webmvc-api@2.8.13",
+          "org.springdoc:springdoc-openapi-starter-common@2.8.13",
+          "io.swagger.core.v3:swagger-core-jakarta@2.2.36",
+          "org.apache.commons:commons-lang3@3.17.0"
+        ],
+        "upgradePath": [
+          false,
+          "org.springdoc:springdoc-openapi-starter-webmvc-ui@2.8.13",
+          "org.springdoc:springdoc-openapi-starter-webmvc-api@2.8.13",
+          "org.springdoc:springdoc-openapi-starter-common@2.8.13",
+          "io.swagger.core.v3:swagger-core-jakarta@2.2.36",
+          "org.apache.commons:commons-lang3@3.18.0"
+        ],
+        "isUpgradable": true,
+        "isPatchable": false,
+        "isPinnable": false,
+        "isRuntime": false,
+        "name": "org.apache.commons:commons-lang3",
+        "version": "3.17.0",
+        "severityWithCritical": "high"
+      }
+    ],
+    "upgrade": {
+      "org.springframework.boot:spring-boot-starter-web@3.5.14": {
+        "upgradeTo": "org.springframework.boot:spring-boot-starter-web@4.0.0",
+        "upgrades": [
+          "org.apache.tomcat.embed:tomcat-embed-core@10.1.54",
+          "org.apache.tomcat.embed:tomcat-embed-core@10.1.54",
+          "org.apache.tomcat.embed:tomcat-embed-core@10.1.54",
+          "org.apache.tomcat.embed:tomcat-embed-core@10.1.54",
+          "org.apache.tomcat.embed:tomcat-embed-core@10.1.54",
+          "org.apache.tomcat.embed:tomcat-embed-core@10.1.54",
+          "org.apache.tomcat.embed:tomcat-embed-websocket@10.1.54"
+        ],
+        "vulns": [
+          "SNYK-JAVA-ORGAPACHETOMCATEMBED-16643259",
+          "SNYK-JAVA-ORGAPACHETOMCATEMBED-16643276",
+          "SNYK-JAVA-ORGAPACHETOMCATEMBED-16690888",
+          "SNYK-JAVA-ORGAPACHETOMCATEMBED-16691220",
+          "SNYK-JAVA-ORGAPACHETOMCATEMBED-16691224",
+          "SNYK-JAVA-ORGAPACHETOMCATEMBED-16691231",
+          "SNYK-JAVA-ORGAPACHETOMCATEMBED-16643269"
+        ]
+      }
+    },
+    "patch": {},
+    "ignore": {},
+    "pin": {}
+  },
+  "filesystemPolicy": false,
+  "filtered": {
+    "ignore": [],
+    "patch": []
+  },
+  "uniqueCount": 8,
+  "projectName": "com:autoflow",
+  "displayTargetFile": "pom.xml",
+  "hasUnknownVersions": false,
+  "path": "C:\\Users\\Bruno\\Documents\\Autoflow\\autoflow"
+}
