@@ -18,6 +18,7 @@ import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.impl.OrdemServicoAccessPolicy;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
+import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
@@ -65,20 +66,25 @@ class OrdemServicoServiceTest {
     OrcamentoRepository orcamentoRepository;
     @Mock
     OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
+    @Mock
+    ClienteService clienteService;
 
     @Test
     void deveCriarOrdemServicoComServicosVinculados() {
-        VeiculoEntity veiculo = criarVeiculo(1L, criarCliente(1L));
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(10L);
         ServicoEntity servicoCatalogo = criarServico(10L, "Revisao", new BigDecimal("100.00"));
 
+        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
         when(veiculoService.buscarPorId(1L)).thenReturn(veiculo);
         when(servicoService.buscarEntityPorId(10L)).thenReturn(servicoCatalogo);
         when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        OrdemServicoEntity resultado = service.criar(1L, List.of(solicitado));
+        OrdemServicoEntity resultado = service.criar("12345678901", 1L, List.of(solicitado));
 
         assertEquals(StatusOrdemServico.RECEBIDA, resultado.getStatus());
+        assertEquals("12345678901", resultado.getCliente().getCpfCnpj());
         assertEquals(1, resultado.getServicosSolicitados().size());
         ServicoSolicitadoEntity servicoOs = resultado.getServicosSolicitados().getFirst();
         assertEquals(10L, servicoOs.getServicoId());
@@ -90,11 +96,27 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveLancarIllegalArgumentQuandoCriarSemServicos() {
-        VeiculoEntity veiculo = criarVeiculo(1L, criarCliente(1L));
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
         when(veiculoService.buscarPorId(1L)).thenReturn(veiculo);
 
-        assertThrows(IllegalArgumentException.class, () -> service.criar(1L, null));
+        assertThrows(IllegalArgumentException.class, () -> service.criar("12345678901", 1L, null));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void devePropagarNotFoundQuandoClienteNaoExistirAoCriarOrdemServico() {
+        ResponseStatusException erro = new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente nao encontrado");
+        when(clienteService.buscarPorCpfCnpj("12345678901")).thenThrow(erro);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.criar("12345678901", 1L, List.of(new ServicoSolicitadoEntity(10L)))
+        );
+
+        assertSame(erro, exception);
+        verifyNoInteractions(veiculoService, servicoService, repository);
     }
 
     @Test
@@ -398,7 +420,8 @@ class OrdemServicoServiceTest {
     }
 
     private OrdemServicoEntity criarOrdemServicoComServico(Long ordemServicoId, Long servicoOsId) {
-        OrdemServicoEntity os = OrdemServicoEntity.criar(criarVeiculo(1L, criarCliente(1L)));
+        ClienteEntity cliente = criarCliente(1L);
+        OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, criarVeiculo(1L, cliente));
         os.setId(ordemServicoId);
         ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);

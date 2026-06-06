@@ -1,5 +1,6 @@
 package com.autoflow.service.ordemservico.impl;
 
+import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
@@ -9,6 +10,7 @@ import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
+import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
@@ -44,19 +46,20 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OrcamentoVersioningService orcamentoVersioningServiceImpl;
     private final OrcamentoRepository orcamentoRepository;
     private final OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
+    private final ClienteService clienteService;
 
-    public OrdemServicoEntity criar(Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
+    public OrdemServicoEntity criar(String cpfCnpj, Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
+        ClienteEntity cliente = clienteService.buscarPorCpfCnpj(cpfCnpj);
         VeiculoEntity veiculo = veiculoService.buscarPorId(veiculoId);
         validarServicosSolicitados(servicosSolicitados);
 
-        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(veiculo);
+        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
 
         List<ServicoSolicitadoEntity> servicosComDados = servicosSolicitados.stream()
                 .map(servico -> preencherDadosDoServico(ordemServico, servico))
                 .toList();
 
         ordemServico.adicionarServicos(servicosComDados);
-
         return ordemServicoRepository.save(ordemServico);
     }
 

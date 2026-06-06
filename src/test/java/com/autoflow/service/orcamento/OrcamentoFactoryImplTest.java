@@ -53,7 +53,8 @@ class OrcamentoFactoryImplTest {
         ServicoSolicitadoEntity servico2 = new ServicoSolicitadoEntity(2L, "S2", new BigDecimal("50.00"));
         servico2.setId(102L);
 
-        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo, List.of(servico1, servico2));
+        OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, veiculo);
+        os.adicionarServicos(List.of(servico1, servico2));
         os.setId(99L);
 
         LocalDateTime now = LocalDateTime.of(2026, 5, 31, 10, 0);
@@ -78,7 +79,7 @@ class OrcamentoFactoryImplTest {
         VeiculoEntity veiculo = new VeiculoEntity();
         veiculo.setId(10L);
         veiculo.setCliente(criarCliente());
-        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo);
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
         os.setId(99L);
 
         OrcamentoEntity orc = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.of(2026, 5, 31, 10, 0));
@@ -109,7 +110,8 @@ class OrcamentoFactoryImplTest {
         item.setValorTotal(null);
         servico.registrarItensNecessarios(List.of(item));
 
-        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo, List.of(servico));
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
+        os.adicionarServicos(List.of(servico));
         os.setId(99L);
 
         OrcamentoEntity orc = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.of(2026, 5, 31, 10, 0));
@@ -126,7 +128,8 @@ class OrcamentoFactoryImplTest {
         veiculo.setCliente(criarCliente());
 
         ServicoSolicitadoEntity servicoOriginal = new ServicoSolicitadoEntity(1L, "Servico original", new BigDecimal("100.00"));
-        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo, List.of(servicoOriginal));
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
+        os.adicionarServicos(List.of(servicoOriginal));
         os.setId(99L);
 
         ServicoSolicitadoEntity servicoAdicional = new ServicoSolicitadoEntity(2L, "Servico adicional", new BigDecimal("80.00"));
@@ -173,7 +176,7 @@ class OrcamentoFactoryImplTest {
         VeiculoEntity veiculo = new VeiculoEntity();
         veiculo.setId(10L);
         veiculo.setCliente(criarCliente());
-        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo);
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
         os.setId(99L);
 
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(99L, 20L, List.of());
@@ -196,4 +199,3 @@ class OrcamentoFactoryImplTest {
         return cliente;
     }
 }
-

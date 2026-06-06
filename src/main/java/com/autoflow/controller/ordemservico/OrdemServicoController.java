@@ -46,7 +46,7 @@ public class OrdemServicoController {
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
     public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request.servicosSolicitados());
-        return OrdemServicoResponse.fromDomain(ordemServicoService.criar(
+        return OrdemServicoResponse.fromDomain(ordemServicoService.criar(request.cpfCnpj(),
                 request.veiculoId(),
                 servicos
         ));

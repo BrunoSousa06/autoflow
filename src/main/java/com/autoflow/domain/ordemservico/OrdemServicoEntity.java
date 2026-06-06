@@ -1,5 +1,6 @@
 package com.autoflow.domain.ordemservico;
 
+import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -76,11 +77,12 @@ public class OrdemServicoEntity {
     }
 
     public static OrdemServicoEntity criar(
+            ClienteEntity cliente,
             VeiculoEntity veiculo
     ) {
         validarVeiculo(veiculo);
 
-        if(veiculo.getCliente() == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
+        if(cliente == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
 
         OrdemServicoEntity ordemServico = new OrdemServicoEntity(
                 gerarNumeroOs(),
@@ -88,16 +90,7 @@ public class OrdemServicoEntity {
                 StatusOrdemServico.RECEBIDA,
                 LocalDateTime.now()
         );
-        ordemServico.cliente = ClienteOsEntity.fromCliente(veiculo.getCliente());
-        return ordemServico;
-    }
-
-    public static OrdemServicoEntity criar(
-            VeiculoEntity veiculo,
-            List<ServicoSolicitadoEntity> servicosSolicitados
-    ) {
-        OrdemServicoEntity ordemServico = criar(veiculo);
-        ordemServico.adicionarServicos(servicosSolicitados);
+        ordemServico.cliente = ClienteOsEntity.fromCliente(cliente);
         return ordemServico;
     }
 

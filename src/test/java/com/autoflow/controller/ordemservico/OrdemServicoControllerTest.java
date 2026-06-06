@@ -81,7 +81,7 @@ class OrdemServicoControllerTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.criar(eq(2L), anyList()))
+        when(ordemServicoService.criar(eq("12345678901"), eq(2L), anyList()))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(post("/ordens-servico")
@@ -89,6 +89,7 @@ class OrdemServicoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "cpfCnpj": "12345678901",
                                   "veiculoId": 2,
                                   "servicosSolicitados": [
                                     {
@@ -104,7 +105,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.servicos[0].id").value(55L));
 
         ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
-        verify(ordemServicoService).criar(eq(2L), servicosCaptor.capture());
+        verify(ordemServicoService).criar(eq("12345678901"), eq(2L), servicosCaptor.capture());
         assertEquals(10L, servicosCaptor.getValue().getFirst().getServicoId());
         assertNull(servicosCaptor.getValue().getFirst().getNome());
     }
@@ -287,6 +288,7 @@ class OrdemServicoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "cpfCnpj": "12345678901",
                                   "veiculoId": 2,
                                   "servicosSolicitados": []
                                 }
@@ -308,7 +310,7 @@ class OrdemServicoControllerTest {
         veiculo.setId(2L);
         veiculo.setCliente(cliente);
 
-        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(veiculo);
+        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
         ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
         ordemServico.adicionarServicos(List.of(servico));
