@@ -4,6 +4,7 @@ package com.autoflow.service.pecainsumo;
 import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
 import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.mapper.PecaInsumoMapper;
@@ -49,8 +50,9 @@ public class PecaInsumoService {
     }
 
     public PecaInsumoEntity buscarEntityPorId(Long id) {
-        return pecaInsumoRepository.findById(id).orElse(null);
+        return buscarEntidadePorId(id);
     }
+
     public PecaInsumoResponse atualizar(PecaInsumoRequest request, Long id
     ) {
 
@@ -121,7 +123,9 @@ public class PecaInsumoService {
                             itemEstoque.getTipo(),
                             itemEstoque.getValor(),
                             item.getQuantidade(),
-                            disponivel ? StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE
+                            disponivel ? StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE,
+                            itemEstoque.getQuantidade(),
+                            disponivel ? null : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE
                     );
                 })
                 .toList();

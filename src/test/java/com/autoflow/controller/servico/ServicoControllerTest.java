@@ -51,8 +51,8 @@ class ServicoControllerTest {
                 .standaloneSetup(servicoController)
                 .build();
 
-        request = new ServicoRequest("Troca de Óleo", BigDecimal.valueOf(150.00));
-        response = new ServicoResponse(1L, "Troca de Óleo", BigDecimal.valueOf(150.00));
+        request = new ServicoRequest("Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(150.00));
+        response = new ServicoResponse(1L, "Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(150.00));
         responses = List.of(response);
     }
 

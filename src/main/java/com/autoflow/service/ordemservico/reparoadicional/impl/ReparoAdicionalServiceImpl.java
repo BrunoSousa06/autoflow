@@ -8,6 +8,7 @@ import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.reparoadicional.ReparoAdicionalRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
+import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
@@ -16,6 +17,7 @@ import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import com.autoflow.service.usuario.UsuarioService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +25,7 @@ import java.util.List;
 
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
 
@@ -34,6 +37,7 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
     private final OrcamentoVersioningService orcamentoVersioningService;
     private final OrcamentoRepository orcamentoRepository;
     private final OrcamentoPublicacaoService orcamentoPublicacaoService;
+    private final OrcamentoNotificacaoService orcamentoNotificacaoService;
 
     @Transactional
     @Override
@@ -62,7 +66,15 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
 
         PublicacaoOrcamentoResult publicacao =
                 orcamentoPublicacaoService.publicar(orcamentoSalvo.getId());
-
+        try {
+            orcamentoNotificacaoService.enviarLinkOrcamentoParaCliente(
+                    orcamentoSalvo,
+                    ordemServico,
+                    publicacao.url()
+            );
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
         reparoAdicionalRepository.save(reparoSalvo);
 
         return new CriarReparoAdicionalResult(

@@ -3,14 +3,21 @@ package com.autoflow.controller.ordemservico;
 import com.autoflow.config.security.service.CustomUserDetailsService;
 import com.autoflow.config.security.service.JwtService;
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.StatusOrcamento;
+import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.mapper.ServicoSolicitadoMapperImpl;
+import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -43,12 +50,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -81,7 +90,7 @@ class OrdemServicoControllerTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.criar(eq("12345678901"), eq(2L), anyList()))
+        when(ordemServicoService.criar(eq("12345678901"), any(VeiculoOrdemServicoRequest.class), anyList()))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(post("/ordens-servico")
@@ -90,7 +99,12 @@ class OrdemServicoControllerTest {
                         .content("""
                                 {
                                   "cpfCnpj": "12345678901",
-                                  "veiculoId": 2,
+                                  "veiculo": {
+                                    "placa": "abc-1d23",
+                                    "marca": "Honda",
+                                    "modelo": "Civic",
+                                    "ano": 2020
+                                  },
                                   "servicosSolicitados": [
                                     {
                                       "servicoId": 10
@@ -104,8 +118,13 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.status").value("RECEBIDA"))
                 .andExpect(jsonPath("$.servicos[0].id").value(55L));
 
+        ArgumentCaptor<VeiculoOrdemServicoRequest> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoRequest.class);
         ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
-        verify(ordemServicoService).criar(eq("12345678901"), eq(2L), servicosCaptor.capture());
+        verify(ordemServicoService).criar(eq("12345678901"), veiculoCaptor.capture(), servicosCaptor.capture());
+        assertEquals("abc-1d23", veiculoCaptor.getValue().placa());
+        assertEquals("Honda", veiculoCaptor.getValue().marca());
+        assertEquals("Civic", veiculoCaptor.getValue().modelo());
+        assertEquals(2020, veiculoCaptor.getValue().ano());
         assertEquals(10L, servicosCaptor.getValue().getFirst().getServicoId());
         assertNull(servicosCaptor.getValue().getFirst().getNome());
     }
@@ -172,7 +191,18 @@ class OrdemServicoControllerTest {
     void deveIniciarServicoComoAtendente() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.EM_EXECUCAO);
-        ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.EM_EXECUCAO);
+        ServicoSolicitadoEntity servico = ordemServico.getServicosSolicitados().getFirst();
+        servico.setStatus(StatusServicoOs.EM_EXECUCAO);
+        servico.registrarItensNecessarios(List.of(ItemNecessarioEntity.criar(
+                10L,
+                "Filtro",
+                CategoriaPecaInsumo.PECA,
+                new BigDecimal("50.00"),
+                2,
+                StatusItemNecessario.PENDENTE,
+                1,
+                MotivoPendenciaItem.ESTOQUE_INSUFICIENTE
+        )));
 
         when(ordemServicoService.iniciarServico(1L, 55L)).thenReturn(ordemServico);
 
@@ -180,7 +210,12 @@ class OrdemServicoControllerTest {
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.status").value("EM_EXECUCAO"))
-                .andExpect(jsonPath("$.servicos[0].status").value("EM_EXECUCAO"));
+                .andExpect(jsonPath("$.servicos[0].status").value("EM_EXECUCAO"))
+                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].status").value("PENDENTE"))
+                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].motivoPendencia").value("ESTOQUE_INSUFICIENTE"))
+                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].quantidadeDisponivel").value(1))
+                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].mensagemStatus")
+                        .value("Estoque insuficiente. Solicitado: 2, disponivel: 1."));
 
         verify(ordemServicoService).iniciarServico(1L, 55L);
     }
@@ -217,6 +252,81 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.entregueEm").exists());
 
         verify(ordemServicoService).entregar(1L);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void deveListarOrdensServicoComoAdmin() throws Exception {
+        OrdemServicoEntity primeiraOrdem = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServicoEntity segundaOrdem = criarOrdemServico(2L, 66L, "OS-456");
+
+        when(ordemServicoService.listar()).thenReturn(List.of(primeiraOrdem, segundaOrdem));
+
+        mockMvc.perform(get("/ordens-servico"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].numeroOs").value("OS-123"))
+                .andExpect(jsonPath("$[0].status").value("RECEBIDA"))
+                .andExpect(jsonPath("$[0].servicos[0].id").value(55L))
+                .andExpect(jsonPath("$[1].id").value(2L))
+                .andExpect(jsonPath("$[1].numeroOs").value("OS-456"))
+                .andExpect(jsonPath("$[1].servicos[0].id").value(66L));
+
+        verify(ordemServicoService).listar();
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveDetalharOrdemServicoComoAtendente() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getId());
+
+        when(ordemServicoService.buscaOrdemServicoPorId(1L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscarOrcamentoAtual(1L)).thenReturn(orcamento);
+
+        mockMvc.perform(get("/ordens-servico/{ordemServicoId}", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
+                .andExpect(jsonPath("$.status").value("RECEBIDA"))
+                .andExpect(jsonPath("$.cliente.id").value(1L))
+                .andExpect(jsonPath("$.cliente.nome").value("Cliente 1"))
+                .andExpect(jsonPath("$.cliente.cpfCnpj").value("12345678901"))
+                .andExpect(jsonPath("$.cliente.email").value("cliente1@exemplo.com"))
+                .andExpect(jsonPath("$.cliente.telefone").value("11999999999"))
+                .andExpect(jsonPath("$.veiculo.id").value(2L))
+                .andExpect(jsonPath("$.veiculo.placa").value("ABC1D23"))
+                .andExpect(jsonPath("$.veiculo.marca").value("Honda"))
+                .andExpect(jsonPath("$.veiculo.modelo").value("Civic"))
+                .andExpect(jsonPath("$.veiculo.ano").value(2020))
+                .andExpect(jsonPath("$.servicos[0].id").value(55L))
+                .andExpect(jsonPath("$.servicos[0].servicoId").value(10L))
+                .andExpect(jsonPath("$.servicos[0].nome").value("Revisao"))
+                .andExpect(jsonPath("$.orcamentoAtual.id").value(10L))
+                .andExpect(jsonPath("$.orcamentoAtual.status").value("DISPONIVEL"))
+                .andExpect(jsonPath("$.orcamentoAtual.totalGeral").value(100.00));
+
+        verify(ordemServicoService).buscaOrdemServicoPorId(1L);
+        verify(ordemServicoService).buscarOrcamentoAtual(1L);
+    }
+
+    @Test
+    @WithMockUser(roles = "CLIENTE")
+    void deveRetornarForbiddenQuandoClienteTentarListarOrdensServico() throws Exception {
+        mockMvc.perform(get("/ordens-servico"))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).listar();
+    }
+
+    @Test
+    @WithMockUser(roles = "CLIENTE")
+    void deveRetornarForbiddenQuandoClienteTentarDetalharOrdemServico() throws Exception {
+        mockMvc.perform(get("/ordens-servico/{ordemServicoId}", 1L))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).buscaOrdemServicoPorId(anyLong());
+        verify(ordemServicoService, never()).buscarOrcamentoAtual(anyLong());
     }
 
     @Test
@@ -289,8 +399,31 @@ class OrdemServicoControllerTest {
                         .content("""
                                 {
                                   "cpfCnpj": "12345678901",
-                                  "veiculoId": 2,
+                                  "veiculo": {
+                                    "placa": "ABC1D23"
+                                  },
                                   "servicosSolicitados": []
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(ordemServicoService);
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveRetornarBadRequestQuandoCriarOrdemSemVeiculo() throws Exception {
+        mockMvc.perform(post("/ordens-servico")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cpfCnpj": "12345678901",
+                                  "servicosSolicitados": [
+                                    {
+                                      "servicoId": 10
+                                    }
+                                  ]
                                 }
                                 """))
                 .andExpect(status().isBadRequest());
@@ -309,6 +442,10 @@ class OrdemServicoControllerTest {
         VeiculoEntity veiculo = new VeiculoEntity();
         veiculo.setId(2L);
         veiculo.setCliente(cliente);
+        veiculo.setPlaca("ABC1D23");
+        veiculo.setMarca("Honda");
+        veiculo.setModelo("Civic");
+        veiculo.setAno(2020);
 
         OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
         ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
@@ -320,6 +457,21 @@ class OrdemServicoControllerTest {
         ordemServico.setDataAbertura(LocalDateTime.of(2026, 5, 30, 10, 0));
 
         return ordemServico;
+    }
+
+    private OrcamentoEntity criarOrcamento(Long id, Long ordemServicoId) {
+        OrcamentoEntity orcamento = new OrcamentoEntity();
+        orcamento.setId(id);
+        orcamento.setOrdemServicoId(ordemServicoId);
+        orcamento.setTipo(TipoOrcamento.PRINCIPAL);
+        orcamento.setVersao(1);
+        orcamento.setStatus(StatusOrcamento.DISPONIVEL);
+        orcamento.setCriadoEm(LocalDateTime.of(2026, 5, 30, 11, 0));
+        orcamento.setDisponibilizadoEm(LocalDateTime.of(2026, 5, 30, 12, 0));
+        orcamento.setTotalServicos(new BigDecimal("100.00"));
+        orcamento.setTotalItens(BigDecimal.ZERO);
+        orcamento.setTotalGeral(new BigDecimal("100.00"));
+        return orcamento;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

@@ -87,6 +87,11 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
         return orcamento;
     }
 
+    @Override
+    public OrcamentoEntity consultarPdf(Long orcamentoId, String token) {
+        return null;
+    }
+
     private OrcamentoEntity getOrcamento(Long orcamentoId) {
         return orcamentoRepository.findById(orcamentoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado"));
