@@ -51,6 +51,7 @@ public class OrdemServicoEntity {
             orphanRemoval = true
     )
     @OrderColumn(name = "ordem")
+    @ToString.Exclude
     private List<ServicoSolicitadoEntity> servicosSolicitados = new ArrayList<>();
 
     @Column(name = "execucao_iniciada_em")
@@ -58,6 +59,9 @@ public class OrdemServicoEntity {
 
     @Column(name = "finalizada_em")
     private LocalDateTime finalizadaEm;
+
+    @Column(name = "entregue_em")
+    private LocalDateTime entregueEm;
 
     private OrdemServicoEntity(
             String numeroOs,
@@ -204,4 +208,8 @@ public class OrdemServicoEntity {
         }
     }
 
+    public void entregar() {
+        this.status = StatusOrdemServico.ENTREGUE;
+        this.entregueEm = LocalDateTime.now();
+    }
 }

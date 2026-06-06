@@ -204,6 +204,13 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return ordemServicoRepository.save(ordemServico);
     }
 
+    @Override
+    public OrdemServicoEntity entregar(Long ordemServicoId) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+        ordemServico.entregar();
+        return ordemServicoRepository.save(ordemServico);
+    }
+
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
         return itensNecessarios.stream()
                 .map(itemNecessario -> {

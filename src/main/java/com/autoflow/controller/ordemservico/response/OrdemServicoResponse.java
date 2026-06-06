@@ -14,6 +14,7 @@ public record OrdemServicoResponse(
         LocalDateTime dataAbertura,
         LocalDateTime execucaoIniciadaEm,
         LocalDateTime finalizadaEm,
+        LocalDateTime entregueEm,
         List<ServicoOsResponse> servicos
 ) {
     public static OrdemServicoResponse fromDomain(OrdemServicoEntity os) {
@@ -24,6 +25,7 @@ public record OrdemServicoResponse(
                 os.getDataAbertura(),
                 os.getExecucaoIniciadaEm(),
                 os.getFinalizadaEm(),
+                os.getEntregueEm(),
                 os.getServicosSolicitados().stream()
                         .map(ServicoOsResponse::fromDomain)
                         .toList()

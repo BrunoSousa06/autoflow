@@ -32,4 +32,5 @@ public interface OrdemServicoService {
 
     OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoOsId);
 
+    OrdemServicoEntity entregar(Long ordemServicoId);
 }

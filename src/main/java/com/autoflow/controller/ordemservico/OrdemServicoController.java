@@ -216,4 +216,22 @@ public class OrdemServicoController {
         );
     }
 
+    @Operation(
+            summary = "Entregar Ordem de Servico",
+            description = "Entrega a ordem de Servico e altera seu status para ENTREGUE."
+    )
+    @ApiResponse(responseCode = "202", description = "Serviço finalizado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/entregar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
+    public OrdemServicoResponse entregar(
+            @PathVariable Long ordemServicoId
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.entregar(ordemServicoId)
+        );
+    }
 }

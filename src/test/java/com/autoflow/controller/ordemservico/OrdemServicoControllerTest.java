@@ -201,6 +201,24 @@ class OrdemServicoControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveEntregarOrdemServicoComoAtendente() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        ordemServico.entregar();
+
+        when(ordemServicoService.entregar(1L)).thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/entregar", 1L)
+                        .with(csrf()))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.status").value("ENTREGUE"))
+                .andExpect(jsonPath("$.entregueEm").exists());
+
+        verify(ordemServicoService).entregar(1L);
+    }
+
+    @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveFinalizarDiagnosticoComoMecanico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
@@ -230,6 +248,16 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(ordemServicoService, never()).iniciarServico(anyLong(), anyLong());
+    }
+
+    @Test
+    @WithMockUser(roles = "MECANICO")
+    void deveRetornarForbiddenQuandoMecanicoTentarEntregarOrdemServico() throws Exception {
+        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/entregar", 1L)
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).entregar(anyLong());
     }
 
     @Test

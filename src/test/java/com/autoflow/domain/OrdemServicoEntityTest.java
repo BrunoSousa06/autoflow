@@ -66,6 +66,21 @@ class OrdemServicoEntityTest {
         assertThrows(UnsupportedOperationException.class, servicosSolicitados::clear);
     }
 
+    @Test
+    void deveEntregarOrdemServico() {
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(
+                veiculo,
+                List.of(new ServicoSolicitadoEntity(1L, "Revisao"))
+        );
+
+        ordemServicoEntity.entregar();
+
+        assertEquals(StatusOrdemServico.ENTREGUE, ordemServicoEntity.getStatus());
+        assertNotNull(ordemServicoEntity.getEntregueEm());
+    }
+
     private ClienteEntity criarCliente(Long clienteId) {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(clienteId);
