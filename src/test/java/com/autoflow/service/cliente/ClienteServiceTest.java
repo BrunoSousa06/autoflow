@@ -6,11 +6,6 @@ import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.mapper.ClienteMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -113,19 +107,15 @@ class ClienteServiceTest {
             when(clienteRepository.findByCpfCnpj("12345678901"))
                     .thenReturn(Optional.of(clienteEntity));
 
-            when(clienteMapper.maptoResponse(clienteEntity))
-                    .thenReturn(clienteResponse);
-
-            ClienteResponse resultado =
+            ClienteEntity resultado =
                     clienteService.buscarPorCpfCnpj("12345678901");
 
-            assertEquals(clienteResponse, resultado);
+            assertEquals(clienteEntity, resultado);
 
             verify(clienteRepository)
                     .findByCpfCnpj("12345678901");
 
-            verify(clienteMapper)
-                    .maptoResponse(clienteEntity);
+            verifyNoInteractions(clienteMapper);
         }
 
         @Test

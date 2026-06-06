@@ -1,5 +1,6 @@
 package com.autoflow.service.veiculo;
 
+import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
@@ -79,5 +80,45 @@ public class VeiculoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
     }
 
+    public VeiculoEntity buscarOuCadastrarPorPlacaParaCliente(
+            ClienteEntity cliente,
+            VeiculoOrdemServicoRequest request
+    ) {
+        String placaNormalizada = normalizarPlaca(request.placa());
+
+        Optional<VeiculoEntity> existente = veiculoRepository.findByPlaca(placaNormalizada);
+
+        if (existente.isPresent()) {
+            VeiculoEntity veiculo = existente.get();
+
+            if (!veiculo.getCliente().getId().equals(cliente.getId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Placa ja cadastrada para outro cliente.");
+            }
+
+            return veiculo;
+        }
+
+        if (request.marca() == null || request.marca().isBlank()
+                || request.modelo() == null || request.modelo().isBlank()
+                || request.ano() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Marca, modelo e ano são obrigatórios para cadastrar um novo veiculo."
+            );
+        }
+
+        VeiculoEntity novo = new VeiculoEntity();
+        novo.setCliente(cliente);
+        novo.setPlaca(placaNormalizada);
+        novo.setMarca(request.marca());
+        novo.setModelo(request.modelo());
+        novo.setAno(request.ano());
+
+        return veiculoRepository.save(novo);
+    }
+
+    private String normalizarPlaca(String placa) {
+        return placa.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+    }
 }
 

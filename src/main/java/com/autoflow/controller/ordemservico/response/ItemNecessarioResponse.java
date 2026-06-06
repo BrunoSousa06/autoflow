@@ -1,6 +1,7 @@
 package com.autoflow.controller.ordemservico.response;
 
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 
@@ -13,15 +14,23 @@ public record ItemNecessarioResponse(
         BigDecimal valorUnitario,
         Integer quantidade,
         BigDecimal valorTotal,
-        StatusItemNecessario status
+        StatusItemNecessario status,
+        MotivoPendenciaItem motivoPendencia,
+        Integer quantidadeDisponivel,
+        String mensagemStatus
 ) {
-    public static ItemNecessarioResponse fromDomain(ItemNecessarioEntity itensNecessarios) {
-        return new ItemNecessarioResponse(itensNecessarios.getPecaInsumoId(),
-                itensNecessarios.getNome(),
-                itensNecessarios.getTipo(),
-                itensNecessarios.getValorUnitario(),
-                itensNecessarios.getQuantidade(),
-                itensNecessarios.getValorTotal(),
-                itensNecessarios.getStatus());
+    public static ItemNecessarioResponse fromDomain(ItemNecessarioEntity item) {
+        return new ItemNecessarioResponse(
+                item.getPecaInsumoId(),
+                item.getNome(),
+                item.getTipo(),
+                item.getValorUnitario(),
+                item.getQuantidade(),
+                item.getValorTotal(),
+                item.getStatus(),
+                item.getMotivoPendencia(),
+                item.getQuantidadeDisponivel(),
+                item.getMensagemStatus()
+        );
     }
 }

@@ -10,24 +10,26 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class OrdemServicoEntityTest {
 
     @Test
-    void deveCriarOrdemServicoComStatusRecebida() {
+    void deveCriarOrdemServicoComStatusRecebidaESnapshotDoCliente() {
         Long clienteId = 1L;
         Long veiculoId = 1L;
         ClienteEntity cliente = criarCliente(clienteId);
         VeiculoEntity veiculo = criarVeiculo(veiculoId, cliente);
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(veiculo, List.of(servico));
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo);
+        ordemServicoEntity.adicionarServicos(List.of(servico));
 
         assertNull(ordemServicoEntity.getId());
         assertTrue(ordemServicoEntity.getNumeroOs().startsWith("OS-"));
         assertEquals(clienteId, ordemServicoEntity.getClienteId());
+        assertEquals(cliente.getCpfCnpj(), ordemServicoEntity.getCliente().getCpfCnpj());
+        assertEquals(cliente.getEmail(), ordemServicoEntity.getCliente().getEmail());
         assertEquals(veiculoId, ordemServicoEntity.getVeiculoId());
         assertEquals(StatusOrdemServico.RECEBIDA, ordemServicoEntity.getStatus());
         assertNotNull(ordemServicoEntity.getDataAbertura());
@@ -38,14 +40,15 @@ class OrdemServicoEntityTest {
     void deveValidarCamposObrigatorios() {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        List<ServicoSolicitadoEntity> servicos = List.of(new ServicoSolicitadoEntity(1L, "Revisão"));
         List<ServicoSolicitadoEntity> servicosVazios = List.of();
-        VeiculoEntity veiculoSemCliente = new VeiculoEntity();
 
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, servicos)),
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(veiculo, servicosVazios)),
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(veiculoSemCliente, servicos))
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(cliente, null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, veiculo)),
+                () -> {
+                    OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, veiculo);
+                    assertThrows(IllegalArgumentException.class, () -> os.adicionarServicos(servicosVazios));
+                }
         );
     }
 
@@ -56,7 +59,8 @@ class OrdemServicoEntityTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
 
-        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(veiculo, servicos);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo);
+        ordemServicoEntity.adicionarServicos(servicos);
 
         servicos.clear();
 
@@ -64,6 +68,19 @@ class OrdemServicoEntityTest {
 
         assertEquals(1, servicosSolicitados.size());
         assertThrows(UnsupportedOperationException.class, servicosSolicitados::clear);
+    }
+
+    @Test
+    void deveEntregarOrdemServico() {
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo);
+        ordemServicoEntity.adicionarServicos(List.of(new ServicoSolicitadoEntity(1L, "Revisao")));
+
+        ordemServicoEntity.entregar();
+
+        assertEquals(StatusOrdemServico.ENTREGUE, ordemServicoEntity.getStatus());
+        assertNotNull(ordemServicoEntity.getEntregueEm());
     }
 
     private ClienteEntity criarCliente(Long clienteId) {

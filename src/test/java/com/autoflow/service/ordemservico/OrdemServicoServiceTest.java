@@ -1,6 +1,8 @@
 package com.autoflow.service.ordemservico;
 
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
+import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -9,8 +11,10 @@ import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
+import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
@@ -18,6 +22,7 @@ import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.impl.OrdemServicoAccessPolicy;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
+import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
@@ -32,7 +37,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,20 +70,32 @@ class OrdemServicoServiceTest {
     OrcamentoRepository orcamentoRepository;
     @Mock
     OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
+    @Mock
+    ClienteService clienteService;
+    @Mock
+    ClienteRepository clienteRepository;
+    @Mock
+    HistoricoStatusOsRepository historicoStatusOsRepository;
 
     @Test
     void deveCriarOrdemServicoComServicosVinculados() {
-        VeiculoEntity veiculo = criarVeiculo(1L, criarCliente(1L));
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
         ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(10L);
         ServicoEntity servicoCatalogo = criarServico(10L, "Revisao", new BigDecimal("100.00"));
 
-        when(veiculoService.buscarPorId(1L)).thenReturn(veiculo);
+        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
+        when(veiculoService.buscarOuCadastrarPorPlacaParaCliente(cliente, veiculoRequest)).thenReturn(veiculo);
         when(servicoService.buscarEntityPorId(10L)).thenReturn(servicoCatalogo);
         when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        OrdemServicoEntity resultado = service.criar(1L, List.of(solicitado));
+        OrdemServicoEntity resultado = service.criar("12345678901", veiculoRequest, List.of(solicitado));
 
         assertEquals(StatusOrdemServico.RECEBIDA, resultado.getStatus());
+        assertNotNull(resultado.getUltimaAtualizacao());
+        assertEquals("12345678901", resultado.getCliente().getCpfCnpj());
+        assertEquals(veiculo, resultado.getVeiculo());
         assertEquals(1, resultado.getServicosSolicitados().size());
         ServicoSolicitadoEntity servicoOs = resultado.getServicosSolicitados().getFirst();
         assertEquals(10L, servicoOs.getServicoId());
@@ -87,15 +103,57 @@ class OrdemServicoServiceTest {
         assertEquals(new BigDecimal("100.00"), servicoOs.getValor());
         assertEquals(StatusServicoOs.AGUARDANDO, servicoOs.getStatus());
         assertEquals(resultado, servicoOs.getOrdemServico());
+        verify(historicoStatusOsRepository).save(argThat(historico ->
+                StatusOrdemServico.RECEBIDA.equals(historico.getStatus())
+                        && historico.getMensagemCliente() != null
+        ));
     }
 
     @Test
     void deveLancarIllegalArgumentQuandoCriarSemServicos() {
-        VeiculoEntity veiculo = criarVeiculo(1L, criarCliente(1L));
-        when(veiculoService.buscarPorId(1L)).thenReturn(veiculo);
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
+        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
+        when(veiculoService.buscarOuCadastrarPorPlacaParaCliente(cliente, veiculoRequest)).thenReturn(veiculo);
 
-        assertThrows(IllegalArgumentException.class, () -> service.criar(1L, null));
+        assertThrows(IllegalArgumentException.class, () -> service.criar("12345678901", veiculoRequest, null));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void devePropagarNotFoundQuandoClienteNaoExistirAoCriarOrdemServico() {
+        ResponseStatusException erro = new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente nao encontrado");
+        VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
+        List<ServicoSolicitadoEntity> servicosSolicitados = List.of(new ServicoSolicitadoEntity(10L));
+        when(clienteService.buscarPorCpfCnpj("12345678901")).thenThrow(erro);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.criar("12345678901", veiculoRequest, servicosSolicitados)
+        );
+
+        assertSame(erro, exception);
+        verifyNoInteractions(veiculoService, servicoService, repository);
+    }
+
+    @Test
+    void devePropagarConflictQuandoPlacaPertencerAOutroCliente() {
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
+        ResponseStatusException erro = new ResponseStatusException(HttpStatus.CONFLICT, "Placa ja cadastrada para outro cliente.");
+
+        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
+        when(veiculoService.buscarOuCadastrarPorPlacaParaCliente(cliente, veiculoRequest)).thenThrow(erro);
+        List<ServicoSolicitadoEntity> servicosSolicitados = List.of(new ServicoSolicitadoEntity(10L));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.criar("12345678901", veiculoRequest, servicosSolicitados)
+        );
+
+        assertSame(erro, exception);
+        verifyNoInteractions(servicoService, repository);
     }
 
     @Test
@@ -173,7 +231,11 @@ class OrdemServicoServiceTest {
 
         assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
         assertNotNull(resultado.getDiagnostico().getIniciadoEm());
+        assertNotNull(resultado.getUltimaAtualizacao());
         verify(ordemServicoAccessPolicy, never()).validarPodeAlterarDiagnostico(any(), any());
+        verify(historicoStatusOsRepository).save(argThat(historico ->
+                StatusOrdemServico.EM_DIAGNOSTICO.equals(historico.getStatus())
+        ));
     }
 
     @Test
@@ -236,6 +298,46 @@ class OrdemServicoServiceTest {
         ItemNecessarioEntity item = servico.getItensNecessarios().getFirst();
         assertEquals("Filtro", item.getNome());
         assertEquals(StatusItemNecessario.DISPONIVEL, item.getStatus());
+        assertEquals(5, item.getQuantidadeDisponivel());
+        assertNull(item.getMotivoPendencia());
+        assertNull(item.getMensagemStatus());
+        verify(repository).save(os);
+    }
+
+    @Test
+    void deveRegistrarItemNecessarioPendenteComMotivoQuandoEstoqueForInsuficiente() {
+        Long ordemServicoId = 1L;
+        Long servicoOsId = 55L;
+        Long pecaInsumoId = 10L;
+        String emailAdmin = "admin@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
+        PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 1);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
+        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.registrarItemNecessario(
+                ordemServicoId,
+                servicoOsId,
+                emailAdmin,
+                List.of(criarItemNecessarioSolicitado(pecaInsumoId, 2))
+        );
+
+        ItemNecessarioEntity item = resultado.buscarServicoSolicitado(servicoOsId)
+                .getItensNecessarios()
+                .getFirst();
+        assertAll(
+                () -> assertEquals(StatusItemNecessario.PENDENTE, item.getStatus()),
+                () -> assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE, item.getMotivoPendencia()),
+                () -> assertEquals(1, item.getQuantidadeDisponivel()),
+                () -> assertEquals(
+                        "Estoque insuficiente. Solicitado: 2, disponivel: 1.",
+                        item.getMensagemStatus()
+                )
+        );
         verify(repository).save(os);
     }
 
@@ -262,8 +364,12 @@ class OrdemServicoServiceTest {
         assertNotNull(servico.getIniciadoEm());
         assertEquals(StatusOrdemServico.EM_EXECUCAO, resultado.getStatus());
         assertNotNull(resultado.getExecucaoIniciadaEm());
+        assertNotNull(resultado.getUltimaAtualizacao());
         assertEquals(List.of(itemAtualizado), servico.getItensNecessarios());
         verify(repository).save(os);
+        verify(historicoStatusOsRepository).save(argThat(historico ->
+                StatusOrdemServico.EM_EXECUCAO.equals(historico.getStatus())
+        ));
     }
 
     @Test
@@ -284,6 +390,30 @@ class OrdemServicoServiceTest {
         assertNotNull(servico.getFinalizadoEm());
         assertEquals(StatusOrdemServico.FINALIZADA, resultado.getStatus());
         assertNotNull(resultado.getFinalizadaEm());
+        assertNotNull(resultado.getUltimaAtualizacao());
+        verify(historicoStatusOsRepository).save(argThat(historico ->
+                StatusOrdemServico.FINALIZADA.equals(historico.getStatus())
+        ));
+    }
+
+    @Test
+    void deveEntregarOrdemServico() {
+        Long ordemServicoId = 1L;
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, 55L);
+        os.setStatus(StatusOrdemServico.FINALIZADA);
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.entregar(ordemServicoId);
+
+        assertEquals(StatusOrdemServico.ENTREGUE, resultado.getStatus());
+        assertNotNull(resultado.getEntregueEm());
+        assertNotNull(resultado.getUltimaAtualizacao());
+        verify(repository).save(os);
+        verify(historicoStatusOsRepository).save(argThat(historico ->
+                StatusOrdemServico.ENTREGUE.equals(historico.getStatus())
+        ));
     }
 
     @Test
@@ -315,6 +445,9 @@ class OrdemServicoServiceTest {
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.ordemServico().getStatus());
         assertEquals(10L, resultado.orcamentoId());
         assertEquals("http://localhost/orcamento", resultado.publicUrl());
+        verify(historicoStatusOsRepository).save(argThat(historico ->
+                StatusOrdemServico.AGUARDANDO_APROVACAO.equals(historico.getStatus())
+        ));
     }
 
     @Test
@@ -345,6 +478,106 @@ class OrdemServicoServiceTest {
 
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.ordemServico().getStatus());
         verify(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
+        verify(historicoStatusOsRepository).save(argThat(historico ->
+                StatusOrdemServico.AGUARDANDO_APROVACAO.equals(historico.getStatus())
+        ));
+    }
+
+    @Test
+    void deveListarAcompanhamentoDoClienteAutenticado() {
+        ClienteEntity cliente = criarCliente(1L);
+        OrdemServicoEntity os = criarOrdemServicoComServico(10L, 55L);
+        os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
+        OrcamentoEntity orcamento = criarOrcamento(99L, os.getId());
+        HistoricoStatusOsEntity historico = HistoricoStatusOsEntity.criar(
+                os.getId(),
+                StatusOrdemServico.AGUARDANDO_APROVACAO,
+                "O orÃ§amento estÃ¡ disponÃ­vel e aguardando sua aprovaÃ§Ã£o."
+        );
+
+        when(clienteRepository.findByUsuarioEmail("cliente@autoflow.com")).thenReturn(Optional.of(cliente));
+        when(repository.findByCliente_IdOrderByDataAberturaDesc(cliente.getId())).thenReturn(List.of(os));
+        when(orcamentoRepository.findByOrdemServicoIdAndStatus(os.getId(), com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL))
+                .thenReturn(Optional.of(orcamento));
+        when(historicoStatusOsRepository.findByOrdemServicoIdOrderByRegistradoEmAsc(os.getId()))
+                .thenReturn(List.of(historico));
+
+        var resultado = service.listarAcompanhamentoCliente("cliente@autoflow.com");
+
+        assertEquals(1, resultado.size());
+        var acompanhamento = resultado.getFirst();
+        assertEquals(os.getNumeroOs(), acompanhamento.numeroOs());
+        assertEquals("ABC1D23", acompanhamento.placa());
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, acompanhamento.statusAtual());
+        assertEquals(os.getUltimaAtualizacao(), acompanhamento.ultimaAtualizacao());
+        assertEquals(
+                AcompanhamentoOrdemServicoResponse.mensagemParaCliente(StatusOrdemServico.AGUARDANDO_APROVACAO),
+                acompanhamento.mensagemParaCliente()
+        );
+        assertEquals(99L, acompanhamento.orcamentoAtual().id());
+        assertEquals(com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL, acompanhamento.situacaoAprovacao());
+        assertEquals(1, acompanhamento.historicoStatus().size());
+    }
+
+    @Test
+    void deveListarOrdensServicoOrdenadasPorDataAberturaDesc() {
+        OrdemServicoEntity primeiraOrdem = criarOrdemServicoComServico(1L, 55L);
+        OrdemServicoEntity segundaOrdem = criarOrdemServicoComServico(2L, 66L);
+        when(repository.findAllByOrderByDataAberturaDesc()).thenReturn(List.of(segundaOrdem, primeiraOrdem));
+
+        List<OrdemServicoEntity> resultado = service.listar();
+
+        assertEquals(List.of(segundaOrdem, primeiraOrdem), resultado);
+        verify(repository).findAllByOrderByDataAberturaDesc();
+    }
+
+    @Test
+    void deveBuscarOrcamentoAtualDisponivel() {
+        OrcamentoEntity orcamentoDisponivel = criarOrcamento(99L, 1L);
+        when(orcamentoRepository.findByOrdemServicoIdAndStatus(
+                1L,
+                com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL
+        )).thenReturn(Optional.of(orcamentoDisponivel));
+
+        OrcamentoEntity resultado = service.buscarOrcamentoAtual(1L);
+
+        assertSame(orcamentoDisponivel, resultado);
+        verify(orcamentoRepository).findByOrdemServicoIdAndStatus(
+                1L,
+                com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL
+        );
+        verify(orcamentoRepository, never()).findTopByOrdemServicoIdOrderByVersaoDesc(anyLong());
+    }
+
+    @Test
+    void deveBuscarUltimoOrcamentoQuandoNaoHouverDisponivel() {
+        OrcamentoEntity ultimoOrcamento = criarOrcamento(100L, 1L);
+        ultimoOrcamento.setStatus(com.autoflow.domain.orcamento.StatusOrcamento.APROVADO);
+
+        when(orcamentoRepository.findByOrdemServicoIdAndStatus(
+                1L,
+                com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL
+        )).thenReturn(Optional.empty());
+        when(orcamentoRepository.findTopByOrdemServicoIdOrderByVersaoDesc(1L))
+                .thenReturn(Optional.of(ultimoOrcamento));
+
+        OrcamentoEntity resultado = service.buscarOrcamentoAtual(1L);
+
+        assertSame(ultimoOrcamento, resultado);
+        verify(orcamentoRepository).findTopByOrdemServicoIdOrderByVersaoDesc(1L);
+    }
+
+    @Test
+    void deveLancarNotFoundQuandoClienteAutenticadoNaoExistirNoAcompanhamento() {
+        when(clienteRepository.findByUsuarioEmail("cliente@autoflow.com")).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.listarAcompanhamentoCliente("cliente@autoflow.com")
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        verifyNoInteractions(repository, historicoStatusOsRepository);
     }
 
     @Test
@@ -383,7 +616,8 @@ class OrdemServicoServiceTest {
     }
 
     private OrdemServicoEntity criarOrdemServicoComServico(Long ordemServicoId, Long servicoOsId) {
-        OrdemServicoEntity os = OrdemServicoEntity.criar(criarVeiculo(1L, criarCliente(1L)));
+        ClienteEntity cliente = criarCliente(1L);
+        OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, criarVeiculo(1L, cliente));
         os.setId(ordemServicoId);
         ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
@@ -406,6 +640,7 @@ class OrdemServicoServiceTest {
         veiculo.setAno(2014);
         veiculo.setMarca("marca");
         veiculo.setModelo("modelo");
+        veiculo.setPlaca("ABC1D23");
         veiculo.setCliente(cliente);
         return veiculo;
     }
@@ -416,6 +651,23 @@ class OrdemServicoServiceTest {
         servico.setNome(nome);
         servico.setValor(valor);
         return servico;
+    }
+
+    private OrcamentoEntity criarOrcamento(Long id, Long ordemServicoId) {
+        OrcamentoEntity orcamento = new OrcamentoEntity();
+        orcamento.setId(id);
+        orcamento.setOrdemServicoId(ordemServicoId);
+        orcamento.setTipo(com.autoflow.domain.orcamento.TipoOrcamento.PRINCIPAL);
+        orcamento.setVersao(1);
+        orcamento.setStatus(com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL);
+        orcamento.setTotalServicos(new BigDecimal("100.00"));
+        orcamento.setTotalItens(BigDecimal.ZERO);
+        orcamento.setTotalGeral(new BigDecimal("100.00"));
+        return orcamento;
+    }
+
+    private VeiculoOrdemServicoRequest criarVeiculoRequestCompleto() {
+        return new VeiculoOrdemServicoRequest("ABC1D23", "Honda", "Civic", 2020);
     }
 
     private UsuarioEntity criarUsuario(Long usuarioId, String nome, String email, RoleEnum role) {

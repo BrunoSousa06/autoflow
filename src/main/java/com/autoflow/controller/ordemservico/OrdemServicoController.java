@@ -1,6 +1,7 @@
 package com.autoflow.controller.ordemservico;
 
 import com.autoflow.controller.ordemservico.request.*;
+import com.autoflow.controller.ordemservico.response.OrdemServicoDetalheResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.mapper.ItensNecessariosMapper;
@@ -8,6 +9,8 @@ import com.autoflow.mapper.ServicoSolicitadoMapper;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ordens-servico")
-@Tag(name = "ordens de serviço", description = "Endpoints para gerenciamento das ordens de serviços")
+@Tag(name = "ordens de serviço", description = "Endpoints para gerenciamento das ordens de serviço")
 public class OrdemServicoController {
 
     private final OrdemServicoService ordemServicoService;
@@ -36,9 +39,11 @@ public class OrdemServicoController {
         this.itensNecessariosMapper = itensNecessariosMapper;
     }
 
-    @Operation(summary = "Criar a ordem de serviço", description = "Cria uma nova ordem de serviço para um veículo e associa os serviços solicitados")
-    @ApiResponse(responseCode = "200", description = "Ordem de serviço criada com sucesso")
-    @ApiResponse(responseCode = "404", description = "Veiculo da ordem de serviço não foi encontrado")
+    @Operation(summary = "Criar a ordem de serviço", description = "Cria uma nova ordem de serviço identificando o cliente por CPF/CNPJ e buscando ou cadastrando o veiculo pela placa")
+    @ApiResponse(responseCode = "201", description = "Ordem de serviço criada com sucesso")
+    @ApiResponse(responseCode = "400", description = "Dados obrigatórios não informados ou inválidos")
+    @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
+    @ApiResponse(responseCode = "409", description = "Placa ja cadastrada para outro cliente")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping
@@ -46,8 +51,8 @@ public class OrdemServicoController {
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
     public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request.servicosSolicitados());
-        return OrdemServicoResponse.fromDomain(ordemServicoService.criar(
-                request.veiculoId(),
+        return OrdemServicoResponse.fromDomain(ordemServicoService.criar(request.cpfCnpj(),
+                request.veiculo(),
                 servicos
         ));
     }
@@ -154,7 +159,6 @@ public class OrdemServicoController {
         ));
     }
 
-
     @Operation(
             summary = "Finalizar diagnóstico",
             description = "Finaliza a etapa de diagnóstico e retorna o resultado consolidado do diagnóstico."
@@ -216,4 +220,59 @@ public class OrdemServicoController {
         );
     }
 
+    @Operation(
+            summary = "Entregar Ordem de Servico",
+            description = "Entrega a ordem de Servico e altera seu status para ENTREGUE."
+    )
+    @ApiResponse(responseCode = "202", description = "Serviço finalizado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @PatchMapping("/{ordemServicoId}/entregar")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
+    public OrdemServicoResponse entregar(
+            @PathVariable Long ordemServicoId
+    ) {
+        return OrdemServicoResponse.fromDomain(
+                ordemServicoService.entregar(ordemServicoId)
+        );
+    }
+
+    @Operation(
+            summary = "Listar ordens de serviço",
+            description = "Lista as ordens de serviço cadastradas para gestão administrativa."
+    )
+    @ApiResponse(responseCode = "200", description = "Ordens de serviço listadas com sucesso")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
+    public List<OrdemServicoResponse> listar() {
+        return ordemServicoService.listar()
+                .stream()
+                .map(OrdemServicoResponse::fromDomain)
+                .toList();
+    }
+
+    @Operation(
+            summary = "Detalhar ordem de serviço",
+            description = "Retorna os dados completos da ordem de serviço, incluindo cliente, veículo, serviços, peças, orçamento atual e status."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Ordem de serviço encontrada",
+            content = @Content(schema = @Schema(implementation = OrdemServicoDetalheResponse.class))
+    )
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping("/{ordemServicoId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
+    public OrdemServicoDetalheResponse detalhar(@PathVariable Long ordemServicoId) {
+        return OrdemServicoDetalheResponse.fromDomain(
+                ordemServicoService.buscaOrdemServicoPorId(ordemServicoId),
+                ordemServicoService.buscarOrcamentoAtual(ordemServicoId)
+        );
+    }
 }

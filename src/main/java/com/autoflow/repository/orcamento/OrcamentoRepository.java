@@ -17,4 +17,6 @@ public interface OrcamentoRepository extends JpaRepository<OrcamentoEntity, Long
     Boolean existsByOrdemServicoIdAndTipoAndStatus(Long ordemServicoId, TipoOrcamento tipo, StatusOrcamento status);
 
     Optional<OrcamentoEntity> findByOrdemServicoIdAndStatus(Long ordemServicoId, StatusOrcamento status);
+
+    Optional<OrcamentoEntity> findTopByOrdemServicoIdOrderByVersaoDesc(Long ordemServicoId);
 }

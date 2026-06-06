@@ -3,6 +3,7 @@ package com.autoflow.service.pecainsumo;
 import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
 import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
@@ -365,7 +366,10 @@ class PecaInsumoServiceTest {
                     () -> assertEquals(new BigDecimal("50.00"), itemAtualizado.getValorUnitario()),
                     () -> assertEquals(2, itemAtualizado.getQuantidade()),
                     () -> assertEquals(new BigDecimal("100.00"), itemAtualizado.getValorTotal()),
-                    () -> assertEquals(StatusItemNecessario.DISPONIVEL, itemAtualizado.getStatus())
+                    () -> assertEquals(StatusItemNecessario.DISPONIVEL, itemAtualizado.getStatus()),
+                    () -> assertEquals(8, itemAtualizado.getQuantidadeDisponivel()),
+                    () -> assertNull(itemAtualizado.getMotivoPendencia()),
+                    () -> assertNull(itemAtualizado.getMensagemStatus())
             );
             verify(repository).findAllById(List.of(1L));
             verify(repository).saveAll(List.of(filtro));
@@ -393,7 +397,13 @@ class PecaInsumoServiceTest {
                     () -> assertEquals(1L, itemAtualizado.getPecaInsumoId()),
                     () -> assertEquals("Filtro de Oleo", itemAtualizado.getNome()),
                     () -> assertEquals(3, itemAtualizado.getQuantidade()),
-                    () -> assertEquals(StatusItemNecessario.PENDENTE, itemAtualizado.getStatus())
+                    () -> assertEquals(StatusItemNecessario.PENDENTE, itemAtualizado.getStatus()),
+                    () -> assertEquals(2, itemAtualizado.getQuantidadeDisponivel()),
+                    () -> assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE, itemAtualizado.getMotivoPendencia()),
+                    () -> assertEquals(
+                            "Estoque insuficiente. Solicitado: 3, disponivel: 2.",
+                            itemAtualizado.getMensagemStatus()
+                    )
             );
             verify(repository).findAllById(List.of(1L));
             verify(repository).saveAll(List.of());

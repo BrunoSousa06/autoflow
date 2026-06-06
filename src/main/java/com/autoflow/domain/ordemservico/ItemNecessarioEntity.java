@@ -38,8 +38,39 @@ public class ItemNecessarioEntity {
     @Enumerated(EnumType.STRING)
     private StatusItemNecessario status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motivo_pendencia")
+    private MotivoPendenciaItem motivoPendencia;
 
-    public static ItemNecessarioEntity criar(Long id, String nome, CategoriaPecaInsumo tipo, BigDecimal valor, Integer quantidade, StatusItemNecessario status) {
+    @Column(name = "quantidade_disponivel")
+    private Integer quantidadeDisponivel;
+
+    @Column(name = "mensagem_status")
+    private String mensagemStatus;
+
+
+    public static ItemNecessarioEntity criar(
+            Long id,
+            String nome,
+            CategoriaPecaInsumo tipo,
+            BigDecimal valor,
+            Integer quantidade,
+            StatusItemNecessario status
+    ) {
+        return criar(id, nome, tipo, valor, quantidade, status, null, null);
+    }
+
+
+    public static ItemNecessarioEntity criar(
+            Long id,
+            String nome,
+            CategoriaPecaInsumo tipo,
+            BigDecimal valor,
+            Integer quantidade,
+            StatusItemNecessario status,
+            Integer quantidadeDisponivel,
+            MotivoPendenciaItem motivoPendencia
+    ) {
         ItemNecessarioEntity item = new ItemNecessarioEntity();
         item.setPecaInsumoId(id);
         item.setNome(nome);
@@ -48,6 +79,27 @@ public class ItemNecessarioEntity {
         item.setQuantidade(quantidade);
         item.setValorTotal(valor.multiply(BigDecimal.valueOf(quantidade)));
         item.setStatus(status);
+        item.setQuantidadeDisponivel(quantidadeDisponivel);
+        item.setMotivoPendencia(motivoPendencia);
+        item.setMensagemStatus(criarMensagemStatus(status, quantidade, quantidadeDisponivel, motivoPendencia));
         return item;
+    }
+
+    private static String criarMensagemStatus(
+            StatusItemNecessario status,
+            Integer quantidadeSolicitada,
+            Integer quantidadeDisponivel,
+            MotivoPendenciaItem motivoPendencia
+    ) {
+        if (StatusItemNecessario.PENDENTE.equals(status)
+                && MotivoPendenciaItem.ESTOQUE_INSUFICIENTE.equals(motivoPendencia)) {
+            return "Estoque insuficiente. Solicitado: "
+                    + quantidadeSolicitada
+                    + ", disponivel: "
+                    + quantidadeDisponivel
+                    + ".";
+        }
+
+        return null;
     }
 }

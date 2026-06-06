@@ -8,6 +8,7 @@ import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
     }
 
     @Override
+    @Transactional
     public OrcamentoEntity aprovar(Long orcamentoId, String token, String nome) {
         OrcamentoEntity orcamento = getOrcamento(orcamentoId);
         validarToken(orcamento, token);
@@ -47,6 +49,11 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
         orcamento.setStatus(StatusOrcamento.APROVADO);
         orcamento.setAssinaturaNome(nome.trim());
         orcamento.setAprovadoEm(LocalDateTime.now());
+
+        OrdemServicoEntity ordemServico = ordemServicoRepository.findById(orcamento.getOrdemServicoId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS nao encontrada"));
+        ordemServico.iniciarExecucaoSeNecessario();
+        ordemServicoRepository.save(ordemServico);
 
         return orcamentoRepository.save(orcamento);
     }

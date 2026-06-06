@@ -28,21 +28,20 @@ public class ClienteService {
         ));
     }
 
-    public  ClienteResponse buscarPorCpfCnpj(String cpfCnpj) {
-        ClienteEntity clienteEntity = clienteRepository.findByCpfCnpj(cpfCnpj).orElseThrow(() -> new ResponseStatusException(
+    public ClienteEntity buscarPorCpfCnpj(String cpfCnpj) {
+        return clienteRepository.findByCpfCnpj(cpfCnpj).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
                 "Cliente nao encontrado com o CPF/CNPJ: " + cpfCnpj
         ));
-
-        return clienteMapper.maptoResponse(clienteEntity);
     }
+
 
     public ClienteResponse listar(Long documento) {
 
         String identificador =String.valueOf(documento).replaceAll("\\D", "");
 
         if (identificador.matches("\\d{11}|\\d{14}")) {
-            return buscarPorCpfCnpj(identificador);
+            return clienteMapper.maptoResponse(buscarPorCpfCnpj(identificador));
         }
 
         ClienteEntity clienteEntity = clienteRepository.findById(documento).orElseThrow(() -> new ResponseStatusException(

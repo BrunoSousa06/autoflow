@@ -1,5 +1,6 @@
 package com.autoflow.domain.ordemservico;
 
+import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -51,6 +52,7 @@ public class OrdemServicoEntity {
             orphanRemoval = true
     )
     @OrderColumn(name = "ordem")
+    @ToString.Exclude
     private List<ServicoSolicitadoEntity> servicosSolicitados = new ArrayList<>();
 
     @Column(name = "execucao_iniciada_em")
@@ -58,6 +60,12 @@ public class OrdemServicoEntity {
 
     @Column(name = "finalizada_em")
     private LocalDateTime finalizadaEm;
+
+    @Column(name = "entregue_em")
+    private LocalDateTime entregueEm;
+
+    @Column(name = "ultima_atualizacao", nullable = false)
+    private LocalDateTime ultimaAtualizacao;
 
     private OrdemServicoEntity(
             String numeroOs,
@@ -72,11 +80,12 @@ public class OrdemServicoEntity {
     }
 
     public static OrdemServicoEntity criar(
+            ClienteEntity cliente,
             VeiculoEntity veiculo
     ) {
         validarVeiculo(veiculo);
 
-        if(veiculo.getCliente() == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
+        if(cliente == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
 
         OrdemServicoEntity ordemServico = new OrdemServicoEntity(
                 gerarNumeroOs(),
@@ -84,17 +93,13 @@ public class OrdemServicoEntity {
                 StatusOrdemServico.RECEBIDA,
                 LocalDateTime.now()
         );
-        ordemServico.cliente = ClienteOsEntity.fromCliente(veiculo.getCliente());
+        ordemServico.cliente = ClienteOsEntity.fromCliente(cliente);
+        ordemServico.atualizarUltimaAtualizacao();
         return ordemServico;
     }
 
-    public static OrdemServicoEntity criar(
-            VeiculoEntity veiculo,
-            List<ServicoSolicitadoEntity> servicosSolicitados
-    ) {
-        OrdemServicoEntity ordemServico = criar(veiculo);
-        ordemServico.adicionarServicos(servicosSolicitados);
-        return ordemServico;
+    public void atualizarUltimaAtualizacao() {
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public void registrarLaudo(
@@ -104,11 +109,22 @@ public class OrdemServicoEntity {
             throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
         }
         this.diagnostico.setLaudo(laudo);
+        this.atualizarUltimaAtualizacao();
+    }
+    public void iniciarDiagnostico() {
+        if (this.diagnostico == null) {
+            this.diagnostico = new DiagnosticoEntity();
+        }
+
+        this.diagnostico.setIniciadoEm(LocalDateTime.now());
+        this.status = StatusOrdemServico.EM_DIAGNOSTICO;
+        this.atualizarUltimaAtualizacao();
     }
 
     public void finalizarDiagnostico(){
         validaSePodeFinalizarDiagnostico();
         this.diagnostico.setConcluidoEm(LocalDateTime.now());
+        this.atualizarUltimaAtualizacao();
     }
 
     private void validaSePodeFinalizarDiagnostico() {
@@ -141,7 +157,9 @@ public class OrdemServicoEntity {
 
     public void aguardarAprovacao(){
         this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
+        this.atualizarUltimaAtualizacao();
     }
+
     private static void validarVeiculo(VeiculoEntity veiculo) {
         if (veiculo == null) {
             throw new IllegalArgumentException("Veiculo e obrigatorio.");
@@ -190,7 +208,7 @@ public class OrdemServicoEntity {
         if (this.execucaoIniciadaEm == null) {
             this.execucaoIniciadaEm = LocalDateTime.now();
         }
-
+        this.atualizarUltimaAtualizacao();
         this.status = StatusOrdemServico.EM_EXECUCAO;
     }
 
@@ -201,7 +219,14 @@ public class OrdemServicoEntity {
         if (todosFinalizados) {
             this.status = StatusOrdemServico.FINALIZADA;
             this.finalizadaEm = LocalDateTime.now();
+            this.atualizarUltimaAtualizacao();
         }
     }
 
+    public void entregar() {
+        this.status = StatusOrdemServico.ENTREGUE;
+        this.entregueEm = LocalDateTime.now();
+        this.atualizarUltimaAtualizacao();
+
+    }
 }
