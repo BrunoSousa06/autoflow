@@ -73,11 +73,14 @@ class PublicOrcamentoServiceImplTest {
     }
 
     @Test
-    void aprovar_deveAprovarOrcamentoSemIniciarExecucaoDaOs() {
+    void aprovar_deveAprovarOrcamentoEIniciarExecucaoDaOs() {
         OrcamentoEntity orc = orcamentoDisponivel();
+        OrdemServicoEntity os = osAguardandoAprovacao(orc.getOrdemServicoId());
 
         when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
         when(publicacaoService.validarToken(orc, "tok")).thenReturn(true);
+        when(ordemServicoRepository.findById(1L)).thenReturn(Optional.of(os));
+        when(ordemServicoRepository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         OrcamentoEntity result = service.aprovar(10L, "tok", " Maria ");
@@ -85,7 +88,8 @@ class PublicOrcamentoServiceImplTest {
         assertEquals(StatusOrcamento.APROVADO, result.getStatus());
         assertEquals("Maria", result.getAssinaturaNome());
         assertNotNull(result.getAprovadoEm());
-        verify(ordemServicoRepository, never()).save(any());
+        assertEquals(StatusOrdemServico.EM_EXECUCAO, os.getStatus());
+        verify(ordemServicoRepository).save(os);
     }
 
     @Test

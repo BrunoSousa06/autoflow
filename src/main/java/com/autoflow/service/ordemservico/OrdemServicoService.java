@@ -9,7 +9,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 
 public interface OrdemServicoService {
-    OrdemServicoEntity criar(Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados);
+    OrdemServicoEntity criar(String cpfCnpj,Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados);
 
     @Transactional
     OrdemServicoEntity incluirServicos(Long ordemServicoId, List<ServicoSolicitadoEntity> servicos);
