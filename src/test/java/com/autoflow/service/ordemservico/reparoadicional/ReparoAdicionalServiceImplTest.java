@@ -8,17 +8,20 @@ import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.reparoadicional.ReparoAdicionalRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
+import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.reparoadicional.impl.CriarReparoAdicionalResult;
 import com.autoflow.service.ordemservico.reparoadicional.impl.ReparoAdicionalServiceImpl;
+import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,6 +67,12 @@ class ReparoAdicionalServiceImplTest {
     @Mock
     OrcamentoPublicacaoService orcamentoPublicacaoService;
 
+    @Mock
+    OrcamentoNotificacaoService orcamentoNotificacaoService;
+
+    @Mock
+    ServicoService servicoService;
+
     @InjectMocks
     ReparoAdicionalServiceImpl service;
 
@@ -80,6 +89,7 @@ class ReparoAdicionalServiceImplTest {
 
         when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
         when(reparoAdicionalRepository.save(any(ReparoAdicionalEntity.class))).thenAnswer(invocation -> {
             ReparoAdicionalEntity reparo = invocation.getArgument(0);
             if (reparo.getId() == null) {
@@ -111,7 +121,10 @@ class ReparoAdicionalServiceImplTest {
         assertEquals(20L, reparoPersistido.getMecanicoId());
         assertEquals(30L, reparoPersistido.getOrcamentoId());
         assertEquals(StatusReparoAdicional.PENDENTE_APROVACAO, reparoPersistido.getStatus());
-        assertSame(reparoPersistido, servico.getReparoAdicional());
+        assertEquals(1, reparoPersistido.getServicos().size());
+        assertSame(reparoPersistido, reparoPersistido.getServicos().getFirst().getReparoAdicional());
+        assertNull(reparoPersistido.getServicos().getFirst().getOrdemServico());
+        assertEquals("Troca de pastilha", reparoPersistido.getServicos().getFirst().getNome());
         verify(orcamentoPublicacaoService).publicar(30L);
     }
 
@@ -208,6 +221,14 @@ class ReparoAdicionalServiceImplTest {
 
     private ServicoSolicitadoEntity servico(Long servicoId, String nome, String valor) {
         return new ServicoSolicitadoEntity(servicoId, nome, new BigDecimal(valor));
+    }
+
+    private ServicoEntity servicoCatalogo(Long servicoId, String nome, String valor) {
+        ServicoEntity servico = new ServicoEntity();
+        servico.setId(servicoId);
+        servico.setNome(nome);
+        servico.setValor(new BigDecimal(valor));
+        return servico;
     }
 
     private ItemNecessarioEntity item(Long id, String nome, int quantidade) {

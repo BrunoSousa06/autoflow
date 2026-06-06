@@ -113,9 +113,9 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
             return;
         }
 
-        PdfPTable tabela = new PdfPTable(3);
+        PdfPTable tabela = new PdfPTable(2);
         tabela.setWidthPercentage(100);
-        tabela.setWidths(new float[]{5, 2, 2});
+        tabela.setWidths(new float[]{5, 2});
 
         tabela.addCell("Descrição");
         tabela.addCell("Valor");

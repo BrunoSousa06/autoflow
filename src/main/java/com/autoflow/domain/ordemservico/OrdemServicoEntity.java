@@ -5,6 +5,8 @@ import com.autoflow.domain.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,13 +48,7 @@ public class OrdemServicoEntity {
     @Embedded
     private DiagnosticoEntity diagnostico;
 
-    @OneToMany(
-            mappedBy = "ordemServico",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    @OrderColumn(name = "ordem")
-    @ToString.Exclude
+    @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServicoSolicitadoEntity> servicosSolicitados = new ArrayList<>();
 
     @Column(name = "execucao_iniciada_em")
@@ -135,7 +131,7 @@ public class OrdemServicoEntity {
             throw new IllegalArgumentException("OS deve ter um diagnostico para finalizar diagnostico.");
         }
         if(this.diagnostico.getLaudo() == null){
-            throw new IllegalArgumentException("Diagnostico deve possuir um laudo para finalizar diagnostico.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Diagnostico deve possuir um laudo para finalizar diagnostico.");
         }
     }
 
@@ -150,7 +146,7 @@ public class OrdemServicoEntity {
 
     public ServicoSolicitadoEntity buscarServicoSolicitado(Long servicoOsId) {
         return servicosSolicitados.stream()
-                .filter(servico -> Objects.equals(servico.getId(), servicoOsId))
+                .filter(servico -> Objects.equals(servico.getServicoId(), servicoOsId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado na OS."));
     }
