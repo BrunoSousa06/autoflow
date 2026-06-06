@@ -9,7 +9,8 @@ import java.util.List;
 
 public record CriarOrdemServicoRequest(
         @NotBlank String cpfCnpj,
-        @NotNull Long veiculoId,
+        @NotNull
+        @Valid VeiculoOrdemServicoRequest veiculo,
         @NotEmpty List<@Valid ServicoSolicitadoRequest> servicosSolicitados
 ) {
 }

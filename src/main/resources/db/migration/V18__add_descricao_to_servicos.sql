@@ -1,0 +1,5 @@
+ALTER TABLE servicos
+    ADD COLUMN descricao VARCHAR(500) NOT NULL DEFAULT '';
+
+ALTER TABLE servicos
+    ALTER COLUMN descricao DROP DEFAULT;

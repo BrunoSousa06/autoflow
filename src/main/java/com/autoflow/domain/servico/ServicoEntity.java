@@ -19,5 +19,6 @@ public class ServicoEntity {
     @Column(unique = true, nullable = false)
     String nome;
     BigDecimal valor ;
-
+    @Column(nullable = false, length = 500)
+    String descricao;
 }

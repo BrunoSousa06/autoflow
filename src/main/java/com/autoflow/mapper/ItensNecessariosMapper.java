@@ -16,6 +16,9 @@ public interface ItensNecessariosMapper {
     @Mapping(target = "valorUnitario", ignore = true)
     @Mapping(target = "valorTotal", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "motivoPendencia", ignore = true)
+    @Mapping(target = "quantidadeDisponivel", ignore = true)
+    @Mapping(target = "mensagemStatus", ignore = true)
     ItemNecessarioEntity mapToEntity(ItensNecessariosRequest request);
     List<ItemNecessarioEntity> mapToEntities(List<ItensNecessariosRequest> requests);
 }

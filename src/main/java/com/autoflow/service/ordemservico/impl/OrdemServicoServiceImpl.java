@@ -1,15 +1,20 @@
 package com.autoflow.service.ordemservico.impl;
 
+import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
+import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
+import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
@@ -30,6 +35,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse.mensagemParaCliente;
+
 
 @Service
 @RequiredArgsConstructor
@@ -47,10 +54,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OrcamentoRepository orcamentoRepository;
     private final OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
     private final ClienteService clienteService;
+    private final ClienteRepository clienteRepository;
+    private final HistoricoStatusOsRepository historicoStatusOsRepository;
 
-    public OrdemServicoEntity criar(String cpfCnpj, Long veiculoId, List<ServicoSolicitadoEntity> servicosSolicitados) {
+    public OrdemServicoEntity criar(String cpfCnpj, VeiculoOrdemServicoRequest veiculoRequest, List<ServicoSolicitadoEntity> servicosSolicitados) {
         ClienteEntity cliente = clienteService.buscarPorCpfCnpj(cpfCnpj);
-        VeiculoEntity veiculo = veiculoService.buscarPorId(veiculoId);
+
+        VeiculoEntity veiculo = veiculoService.buscarOuCadastrarPorPlacaParaCliente(
+                cliente,
+                veiculoRequest
+        );
         validarServicosSolicitados(servicosSolicitados);
 
         OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
@@ -60,7 +73,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 .toList();
 
         ordemServico.adicionarServicos(servicosComDados);
-        return ordemServicoRepository.save(ordemServico);
+        return salvarOs(ordemServico);
     }
 
     @Transactional
@@ -76,6 +89,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
         return ordemServicoRepository.save(ordemServico);
     }
+
     @Override
     public OrdemServicoEntity atribuirMecanico(Long ordemServicoId, Long mecanicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
@@ -97,9 +111,14 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
-        ordemServico.getDiagnostico().setIniciadoEm(LocalDateTime.now());
-        ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-        return ordemServicoRepository.save(ordemServico);
+        ordemServico.iniciarDiagnostico();
+        return salvarOs(ordemServico);
+    }
+
+    private OrdemServicoEntity salvarOs(OrdemServicoEntity ordemServico) {
+        OrdemServicoEntity ordemServicoSalva = ordemServicoRepository.save(ordemServico);
+        registrarHistorico(ordemServicoSalva);
+        return ordemServicoSalva;
     }
 
     public OrdemServicoEntity registrarItemNecessario(
@@ -151,10 +170,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServico.aguardarAprovacao();
 
         OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
-
         String publicUrl = orcamentoPublicacaoServiceImpl.publicar(orcamentoSalvo.getId()).url();
 
-        OrdemServicoEntity ordemServicoSalvo = ordemServicoRepository.save(ordemServico);
+        OrdemServicoEntity ordemServicoSalvo = salvarOs(ordemServico);
 
         return new FinalizarDiagnosticoResult(ordemServicoSalvo, orcamentoSalvo.getId(), publicUrl);
     }
@@ -180,6 +198,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoOsId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+        StatusOrdemServico statusAnterior = ordemServico.getStatus();
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
 
@@ -189,6 +208,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         servico.iniciar(baixaEstoqueResult.itensAtualizados());
 
         ordemServico.iniciarExecucaoSeNecessario();
+        if (!statusAnterior.equals(ordemServico.getStatus())) {
+            return salvarOs(ordemServico);
+        }
 
         return ordemServicoRepository.save(ordemServico);
     }
@@ -201,25 +223,70 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
 
         servico.finalizar();
-
+        ordemServico.atualizarUltimaAtualizacao();
         ordemServico.finalizarSeTodosServicosFinalizados();
+        OrdemServicoEntity salva = ordemServicoRepository.save(ordemServico);
 
-        return ordemServicoRepository.save(ordemServico);
+        if (StatusOrdemServico.FINALIZADA.equals(salva.getStatus())) {
+            registrarHistorico(salva);
+        }
+        return salva;
     }
 
     @Override
     public OrdemServicoEntity entregar(Long ordemServicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
         ordemServico.entregar();
-        return ordemServicoRepository.save(ordemServico);
+        OrdemServicoEntity salva = ordemServicoRepository.save(ordemServico);
+        registrarHistorico(salva);
+        return salva;
+    }
+
+    public List<AcompanhamentoOrdemServicoResponse> listarAcompanhamentoCliente(String emailCliente) {
+        ClienteEntity cliente = clienteRepository.findByUsuarioEmail(emailCliente)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Cliente autenticado nao encontrado."
+                ));
+
+        return ordemServicoRepository.findByCliente_IdOrderByDataAberturaDesc(cliente.getId())
+                .stream()
+                .map(os -> {
+                    OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(os.getId());
+                    List<HistoricoStatusOsEntity> historico =
+                            historicoStatusOsRepository.findByOrdemServicoIdOrderByRegistradoEmAsc(os.getId());
+
+                    return AcompanhamentoOrdemServicoResponse.from(os, orcamentoAtual, historico);
+                })
+                .toList();
+    }
+
+    @Override
+    public List<OrdemServicoEntity> listar() {
+        return ordemServicoRepository.findAllByOrderByDataAberturaDesc();
+    }
+
+    @Override
+    public OrcamentoEntity buscarOrcamentoAtual(Long ordemServicoId) {
+        return orcamentoRepository.findByOrdemServicoIdAndStatus(ordemServicoId, StatusOrcamento.DISPONIVEL)
+                .or(() -> orcamentoRepository.findTopByOrdemServicoIdOrderByVersaoDesc(ordemServicoId))
+                .orElse(null);
     }
 
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
         return itensNecessarios.stream()
                 .map(itemNecessario -> {
                     PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
-                    StatusItemNecessario status = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade() ?
-                            StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE;
+
+                    boolean disponivel = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
+
+                    StatusItemNecessario status = disponivel
+                            ? StatusItemNecessario.DISPONIVEL
+                            : StatusItemNecessario.PENDENTE;
+
+                    MotivoPendenciaItem motivoPendencia = disponivel
+                            ? null
+                            : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE;
 
                     return ItemNecessarioEntity.criar(
                             itemEstoque.getId(),
@@ -227,7 +294,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                             itemEstoque.getTipo(),
                             itemEstoque.getValor(),
                             itemNecessario.getQuantidade(),
-                            status
+                            status,
+                            itemEstoque.getQuantidade(),
+                            motivoPendencia
                     );
                 }).toList();
     }
@@ -252,5 +321,15 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         if (servicos == null || servicos.isEmpty()) {
             throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
         }
+    }
+
+    private void registrarHistorico(OrdemServicoEntity os) {
+        historicoStatusOsRepository.save(
+                HistoricoStatusOsEntity.criar(
+                        os.getId(),
+                        os.getStatus(),
+                        mensagemParaCliente(os.getStatus())
+                )
+        );
     }
 }
