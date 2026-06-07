@@ -5,6 +5,8 @@ import com.autoflow.domain.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,13 +48,7 @@ public class OrdemServicoEntity {
     @Embedded
     private DiagnosticoEntity diagnostico;
 
-    @OneToMany(
-            mappedBy = "ordemServico",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    @OrderColumn(name = "ordem")
-    @ToString.Exclude
+    @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServicoSolicitadoEntity> servicosSolicitados = new ArrayList<>();
 
     @Column(name = "execucao_iniciada_em")
@@ -112,6 +108,7 @@ public class OrdemServicoEntity {
         this.atualizarUltimaAtualizacao();
     }
     public void iniciarDiagnostico() {
+        validarTransicao(StatusOrdemServico.RECEBIDA, StatusOrdemServico.EM_DIAGNOSTICO);
         if (this.diagnostico == null) {
             this.diagnostico = new DiagnosticoEntity();
         }
@@ -135,7 +132,7 @@ public class OrdemServicoEntity {
             throw new IllegalArgumentException("OS deve ter um diagnostico para finalizar diagnostico.");
         }
         if(this.diagnostico.getLaudo() == null){
-            throw new IllegalArgumentException("Diagnostico deve possuir um laudo para finalizar diagnostico.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Diagnostico deve possuir um laudo para finalizar diagnostico.");
         }
     }
 
@@ -150,12 +147,13 @@ public class OrdemServicoEntity {
 
     public ServicoSolicitadoEntity buscarServicoSolicitado(Long servicoOsId) {
         return servicosSolicitados.stream()
-                .filter(servico -> Objects.equals(servico.getId(), servicoOsId))
+                .filter(servico -> Objects.equals(servico.getServicoId(), servicoOsId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado na OS."));
     }
 
     public void aguardarAprovacao(){
+        validarTransicao(StatusOrdemServico.EM_DIAGNOSTICO, StatusOrdemServico.AGUARDANDO_APROVACAO);
         this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
         this.atualizarUltimaAtualizacao();
     }
@@ -204,7 +202,15 @@ public class OrdemServicoEntity {
         return this instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
-    public void iniciarExecucaoSeNecessario() {
+    public void finalizarPorOrcamentoRecusado() {
+        validarTransicao(StatusOrdemServico.AGUARDANDO_APROVACAO, StatusOrdemServico.FINALIZADA);
+        this.status = StatusOrdemServico.FINALIZADA;
+        this.finalizadaEm = LocalDateTime.now();
+        atualizarUltimaAtualizacao();
+    }
+
+    public void iniciarExecucao() {
+        validarTransicao(StatusOrdemServico.AGUARDANDO_APROVACAO, StatusOrdemServico.EM_EXECUCAO);
         if (this.execucaoIniciadaEm == null) {
             this.execucaoIniciadaEm = LocalDateTime.now();
         }
@@ -224,9 +230,19 @@ public class OrdemServicoEntity {
     }
 
     public void entregar() {
+        validarTransicao(StatusOrdemServico.FINALIZADA, StatusOrdemServico.ENTREGUE);
         this.status = StatusOrdemServico.ENTREGUE;
         this.entregueEm = LocalDateTime.now();
         this.atualizarUltimaAtualizacao();
+    }
 
+    private void validarTransicao(StatusOrdemServico esperado, StatusOrdemServico destino) {
+        if (this.status != esperado) {
+            throw new IllegalStateException(
+                    "Transicao invalida: OS esta " + this.status +
+                            " e nao pode ir para " + destino +
+                            ". Status esperado: " + esperado
+            );
+        }
     }
 }

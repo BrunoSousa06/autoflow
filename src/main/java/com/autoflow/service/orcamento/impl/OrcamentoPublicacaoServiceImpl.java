@@ -48,10 +48,13 @@ public class OrcamentoPublicacaoServiceImpl implements OrcamentoPublicacaoServic
         if(orcamento.getDisponibilizadoEm() == null) orcamento.setDisponibilizadoEm(LocalDateTime.now());
         
         orcamentoRepository.save(orcamento);
-        
-        String url = publicBaseUrl + "/public/orcamentos/" + orcamento.getId() + "?token=" + token;
-        return new PublicacaoOrcamentoResult(orcamento.getId(), url);
+
+        String urlPdf = publicBaseUrl + "/public/orcamentos/" + orcamento.getId() + "/pdf?token=" + token;
+
+        return new PublicacaoOrcamentoResult(orcamento.getId(), urlPdf);
     }
+
+
 
     private String sha256Hex(String input){
         try {

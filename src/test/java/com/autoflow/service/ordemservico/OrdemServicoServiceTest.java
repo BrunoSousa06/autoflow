@@ -378,7 +378,7 @@ class OrdemServicoServiceTest {
         Long servicoOsId = 55L;
         OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
         os.buscarServicoSolicitado(servicoOsId).iniciar(List.of());
-        os.iniciarExecucaoSeNecessario();
+        os.iniciarExecucao();
 
         when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
         when(repository.save(os)).thenReturn(os);
