@@ -16,6 +16,7 @@ import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
+import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
@@ -76,6 +77,8 @@ class OrdemServicoServiceTest {
     ClienteRepository clienteRepository;
     @Mock
     HistoricoStatusOsRepository historicoStatusOsRepository;
+    @Mock
+    OrcamentoNotificacaoService orcamentoNotificacaoService;
 
     @Test
     void deveCriarOrdemServicoComServicosVinculados() {
@@ -346,6 +349,7 @@ class OrdemServicoServiceTest {
         Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
         ItemNecessarioEntity itemOriginal = criarItemNecessarioSolicitado(10L, 2);
         os.buscarServicoSolicitado(servicoOsId).registrarItensNecessarios(List.of(itemOriginal));
         ItemNecessarioEntity itemAtualizado = ItemNecessarioEntity.criar(
@@ -377,8 +381,9 @@ class OrdemServicoServiceTest {
         Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
-        os.buscarServicoSolicitado(servicoOsId).iniciar(List.of());
+        os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
         os.iniciarExecucao();
+        os.buscarServicoSolicitado(servicoOsId).iniciar(List.of());
 
         when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
         when(repository.save(os)).thenReturn(os);
@@ -619,7 +624,7 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, criarVeiculo(1L, cliente));
         os.setId(ordemServicoId);
-        ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
+        ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(servicoOsId, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
         os.adicionarServicos(List.of(servico));
         return os;

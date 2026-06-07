@@ -20,10 +20,13 @@ import java.util.Locale;
 @Service
 public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
 
+    private final OrdemServicoRepository ordemServicoRepository;
+
     private static final DateTimeFormatter DATA_HORA_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public OrcamentoPdfServiceImpl(OrdemServicoRepository ordemServicoRepository) {
+        this.ordemServicoRepository = ordemServicoRepository;
     }
 
     @Override

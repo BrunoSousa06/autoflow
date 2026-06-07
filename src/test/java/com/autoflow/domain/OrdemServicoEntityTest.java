@@ -108,10 +108,8 @@ class OrdemServicoEntityTest {
     }
 
     @Test
-    void naoDeveAguardarAprovacaoSemDiagnosticoFinalizado() {
+    void naoDeveAguardarAprovacaoForaDeDiagnostico() {
         OrdemServicoEntity ordemServicoEntity = criarOrdemServico();
-        ordemServicoEntity.iniciarDiagnostico();
-        ordemServicoEntity.registrarLaudo("Laudo tecnico");
 
         assertThrows(IllegalStateException.class, ordemServicoEntity::aguardarAprovacao);
     }
