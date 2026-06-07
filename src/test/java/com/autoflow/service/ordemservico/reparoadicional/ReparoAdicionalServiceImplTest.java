@@ -2,12 +2,15 @@ package com.autoflow.service.ordemservico.reparoadicional;
 
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
@@ -21,6 +24,7 @@ import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.reparoadicional.impl.CriarReparoAdicionalResult;
 import com.autoflow.service.ordemservico.reparoadicional.impl.ReparoAdicionalServiceImpl;
+import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
 import org.junit.jupiter.api.Test;
@@ -36,9 +40,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReparoAdicionalServiceImplTest {
@@ -73,6 +75,9 @@ class ReparoAdicionalServiceImplTest {
     @Mock
     ServicoService servicoService;
 
+    @Mock
+    PecaInsumoService pecaInsumoService;
+
     @InjectMocks
     ReparoAdicionalServiceImpl service;
 
@@ -83,6 +88,7 @@ class ReparoAdicionalServiceImplTest {
         UsuarioEntity mecanico = new UsuarioEntity();
         mecanico.setId(20L);
         ServicoSolicitadoEntity servico = servico(1L, "Troca de pastilha", "120.00");
+        servico.registrarItensNecessarios(List.of(item(7L, "Pastilha", 2)));
         OrcamentoEntity orcamento = new OrcamentoEntity();
         OrcamentoEntity orcamentoSalvo = new OrcamentoEntity();
         orcamentoSalvo.setId(30L);
@@ -90,6 +96,7 @@ class ReparoAdicionalServiceImplTest {
         when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
+        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 10));
         when(reparoAdicionalRepository.save(any(ReparoAdicionalEntity.class))).thenAnswer(invocation -> {
             ReparoAdicionalEntity reparo = invocation.getArgument(0);
             if (reparo.getId() == null) {
@@ -97,8 +104,8 @@ class ReparoAdicionalServiceImplTest {
             }
             return reparo;
         });
-        when(orcamentoVersioningService.proximaVersaoPrincipal(10L)).thenReturn(2);
-        when(orcamentoFactory.criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(2), any()))
+        when(orcamentoVersioningService.proximaVersaoAdicional(10L)).thenReturn(1);
+        when(orcamentoFactory.criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(1), any()))
                 .thenReturn(orcamento);
         when(orcamentoRepository.save(orcamento)).thenReturn(orcamentoSalvo);
         when(orcamentoPublicacaoService.publicar(30L))
@@ -125,7 +132,95 @@ class ReparoAdicionalServiceImplTest {
         assertSame(reparoPersistido, reparoPersistido.getServicos().getFirst().getReparoAdicional());
         assertNull(reparoPersistido.getServicos().getFirst().getOrdemServico());
         assertEquals("Troca de pastilha", reparoPersistido.getServicos().getFirst().getNome());
+        verify(orcamentoVersioningService).proximaVersaoAdicional(10L);
+        verify(orcamentoFactory).criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(1), any());
         verify(orcamentoPublicacaoService).publicar(30L);
+    }
+
+    @Test
+    void criar_deveContinuarQuandoEnvioDeNotificacaoFalhar() {
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        UsuarioEntity mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        ServicoSolicitadoEntity servico = servico(1L, "Troca de pastilha", "120.00");
+        servico.registrarItensNecessarios(List.of(item(7L, "Pastilha", 2)));
+        OrcamentoEntity orcamento = new OrcamentoEntity();
+        OrcamentoEntity orcamentoSalvo = new OrcamentoEntity();
+        orcamentoSalvo.setId(30L);
+
+        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
+        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 10));
+        when(reparoAdicionalRepository.save(any(ReparoAdicionalEntity.class))).thenAnswer(invocation -> {
+            ReparoAdicionalEntity reparo = invocation.getArgument(0);
+            if (reparo.getId() == null) {
+                reparo.setId(40L);
+            }
+            return reparo;
+        });
+        when(orcamentoVersioningService.proximaVersaoAdicional(10L)).thenReturn(1);
+        when(orcamentoFactory.criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(1), any()))
+                .thenReturn(orcamento);
+        when(orcamentoRepository.save(orcamento)).thenReturn(orcamentoSalvo);
+        when(orcamentoPublicacaoService.publicar(30L))
+                .thenReturn(new PublicacaoOrcamentoResult(30L, "http://localhost:8080/public/orcamentos/30?token=abc"));
+        doThrow(new RuntimeException("smtp indisponivel"))
+                .when(orcamentoNotificacaoService)
+                .enviarLinkOrcamentoParaCliente(
+                        orcamentoSalvo,
+                        ordemServico,
+                        "http://localhost:8080/public/orcamentos/30?token=abc"
+                );
+
+        CriarReparoAdicionalResult result = service.criar(
+                10L,
+                "mecanico@autoflow.com",
+                List.of(servico)
+        );
+
+        assertEquals(40L, result.reparoAdicionalId());
+        assertEquals(30L, result.orcamentoId());
+        verify(reparoAdicionalRepository, times(2)).save(any(ReparoAdicionalEntity.class));
+    }
+
+    @Test
+    void criar_deveLancarErroQuandoNaoReceberServicos() {
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        UsuarioEntity mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.criar(10L, "mecanico@autoflow.com", List.of())
+        );
+
+        verify(reparoAdicionalRepository, never()).save(any());
+        verifyNoInteractions(orcamentoRepository);
+    }
+
+    @Test
+    void criar_deveLancarErroQuandoServicoNaoTemItemNecessario() {
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        UsuarioEntity mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        ServicoSolicitadoEntity servico = servico(1L, "Troca de pastilha", "120.00");
+
+        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.criar(10L, "mecanico@autoflow.com", List.of(servico))
+        );
+
+        verify(reparoAdicionalRepository, never()).save(any());
     }
 
     @Test
@@ -219,6 +314,82 @@ class ReparoAdicionalServiceImplTest {
         assertThrows(IllegalArgumentException.class, () -> service.aprovarPorOrcamentoId(30L));
     }
 
+    @Test
+    void aprovarSeExistirPorOrcamentoId_deveAprovarQuandoEncontrarReparo() {
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico(1L, "Troca", "80.00")));
+        reparo.setId(40L);
+        reparo.setOrcamentoId(30L);
+
+        when(reparoAdicionalRepository.findByOrcamentoId(30L)).thenReturn(Optional.of(reparo));
+        when(reparoAdicionalRepository.findById(40L)).thenReturn(Optional.of(reparo));
+        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+
+        service.aprovarSeExistirPorOrcamentoId(30L);
+
+        assertEquals(StatusReparoAdicional.APROVADO, reparo.getStatus());
+        assertEquals(1, ordemServico.getServicosSolicitados().size());
+        verify(ordemServicoRepository).save(ordemServico);
+    }
+
+    @Test
+    void aprovarSeExistirPorOrcamentoId_naoDeveFazerNadaQuandoNaoEncontrarReparo() {
+        when(reparoAdicionalRepository.findByOrcamentoId(30L)).thenReturn(Optional.empty());
+
+        service.aprovarSeExistirPorOrcamentoId(30L);
+
+        verify(reparoAdicionalRepository).findByOrcamentoId(30L);
+    }
+
+    @Test
+    void recusarSeExistirPorOrcamentoId_deveRecusarQuandoEncontrarReparo() {
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico(1L, "Troca", "80.00")));
+        reparo.setId(40L);
+        reparo.setOrcamentoId(30L);
+
+        when(reparoAdicionalRepository.findByOrcamentoId(30L)).thenReturn(Optional.of(reparo));
+        when(reparoAdicionalRepository.findById(40L)).thenReturn(Optional.of(reparo));
+        when(reparoAdicionalRepository.save(reparo)).thenReturn(reparo);
+
+        service.recusarSeExistirPorOrcamentoId(30L, "Cliente recusou adicional");
+
+        assertEquals(StatusReparoAdicional.RECUSADO, reparo.getStatus());
+        assertEquals("Cliente recusou adicional", reparo.getMotivoRecusa());
+        assertNotNull(reparo.getRecusadoEm());
+        verify(reparoAdicionalRepository).save(reparo);
+    }
+
+    @Test
+    void existePorOrcamentoId_deveRetornarTrueQuandoEncontrarReparo() {
+        ReparoAdicionalEntity reparo = new ReparoAdicionalEntity();
+        when(reparoAdicionalRepository.findByOrcamentoId(30L)).thenReturn(Optional.of(reparo));
+
+        assertTrue(service.existePorOrcamentoId(30L));
+    }
+
+    @Test
+    void existePorOrcamentoId_deveRetornarFalseQuandoNaoEncontrarReparo() {
+        when(reparoAdicionalRepository.findByOrcamentoId(30L)).thenReturn(Optional.empty());
+
+        assertFalse(service.existePorOrcamentoId(30L));
+    }
+
+    @Test
+    void buscaItensNecessarios_deveMarcarItemComoPendenteQuandoEstoqueInsuficiente() {
+        ItemNecessarioEntity solicitado = item(7L, "Pastilha", 3);
+        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 1));
+
+        List<ItemNecessarioEntity> resultado = service.buscaItensNecessarios(List.of(solicitado), pecaInsumoService);
+
+        assertEquals(1, resultado.size());
+        ItemNecessarioEntity item = resultado.getFirst();
+        assertEquals(StatusItemNecessario.PENDENTE, item.getStatus());
+        assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE, item.getMotivoPendencia());
+        assertEquals(1, item.getQuantidadeDisponivel());
+        assertEquals("Estoque insuficiente. Solicitado: 3, disponivel: 1.", item.getMensagemStatus());
+    }
+
     private ServicoSolicitadoEntity servico(Long servicoId, String nome, String valor) {
         return new ServicoSolicitadoEntity(servicoId, nome, new BigDecimal(valor));
     }
@@ -240,5 +411,15 @@ class ReparoAdicionalServiceImplTest {
                 quantidade,
                 null
         );
+    }
+
+    private PecaInsumoEntity pecaInsumo(Long id, String nome, String valor, int quantidade) {
+        PecaInsumoEntity pecaInsumo = new PecaInsumoEntity();
+        pecaInsumo.setId(id);
+        pecaInsumo.setNome(nome);
+        pecaInsumo.setValor(new BigDecimal(valor));
+        pecaInsumo.setQuantidade(quantidade);
+        pecaInsumo.setTipo(CategoriaPecaInsumo.PECA);
+        return pecaInsumo;
     }
 }

@@ -377,6 +377,46 @@ class OrdemServicoServiceTest {
     }
 
     @Test
+    void deveIniciarServicoSemRegistrarHistoricoQuandoOsJaEstaEmExecucao() {
+        Long ordemServicoId = 1L;
+        Long servicoOsId = 55L;
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
+        os.iniciarExecucao();
+        ItemNecessarioEntity itemOriginal = criarItemNecessarioSolicitado(10L, 2);
+        os.buscarServicoSolicitado(servicoOsId).registrarItensNecessarios(List.of(itemOriginal));
+        ItemNecessarioEntity itemAtualizado = ItemNecessarioEntity.criar(
+                10L, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 2, StatusItemNecessario.DISPONIVEL
+        );
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(pecaInsumoService.verificarDisponibilidadeEBaixar(List.of(itemOriginal)))
+                .thenReturn(new BaixaEstoqueResult(List.of(itemAtualizado)));
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.iniciarServico(ordemServicoId, servicoOsId);
+
+        assertEquals(StatusOrdemServico.EM_EXECUCAO, resultado.getStatus());
+        assertEquals(StatusServicoOs.EM_EXECUCAO, resultado.buscarServicoSolicitado(servicoOsId).getStatus());
+        verify(repository).save(os);
+        verify(historicoStatusOsRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarErroQuandoIniciarServicoComStatusInvalido() {
+        Long ordemServicoId = 1L;
+        Long servicoOsId = 55L;
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        os.setStatus(StatusOrdemServico.RECEBIDA);
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+
+        assertThrows(IllegalStateException.class, () -> service.iniciarServico(ordemServicoId, servicoOsId));
+
+        verifyNoInteractions(pecaInsumoService);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void deveFinalizarServicoEFinalizarOsQuandoTodosServicosFinalizados() {
         Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
@@ -453,6 +493,40 @@ class OrdemServicoServiceTest {
         verify(historicoStatusOsRepository).save(argThat(historico ->
                 StatusOrdemServico.AGUARDANDO_APROVACAO.equals(historico.getStatus())
         ));
+    }
+
+    @Test
+    void deveFinalizarDiagnosticoMesmoQuandoNotificacaoFalhar() {
+        Long ordemServicoId = 1L;
+        String emailAdmin = "admin@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, 55L);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setLaudo("Laudo");
+        os.setDiagnostico(diagnostico);
+        UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
+        OrcamentoEntity orcamento = new OrcamentoEntity();
+
+        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
+        when(orcamentoVersioningServiceImpl.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
+        when(orcamentoFactoryImpl.criarPrincipalDisponivel(eq(os), eq(1), any())).thenReturn(orcamento);
+        when(orcamentoRepository.save(orcamento)).thenAnswer(invocation -> {
+            orcamento.setId(10L);
+            return orcamento;
+        });
+        when(orcamentoPublicacaoServiceImpl.publicar(10L))
+                .thenReturn(new PublicacaoOrcamentoResult(10L, "http://localhost/orcamento"));
+        doThrow(new RuntimeException("smtp indisponivel"))
+                .when(orcamentoNotificacaoService)
+                .enviarLinkOrcamentoParaCliente(orcamento, os, "http://localhost/orcamento");
+        when(repository.save(os)).thenReturn(os);
+
+        FinalizarDiagnosticoResult resultado = service.finalizarDiagnostico(ordemServicoId, emailAdmin);
+
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.ordemServico().getStatus());
+        assertEquals(10L, resultado.orcamentoId());
+        verify(repository).save(os);
     }
 
     @Test

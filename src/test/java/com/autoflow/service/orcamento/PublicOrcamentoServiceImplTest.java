@@ -7,6 +7,7 @@ import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.service.orcamento.impl.PublicOrcamentoServiceImpl;
+import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,6 +36,9 @@ class PublicOrcamentoServiceImplTest {
 
     @Mock
     OrcamentoPublicacaoService publicacaoService;
+
+    @Mock
+    ReparoAdicionalService reparoAdicionalService;
 
     @InjectMocks
     PublicOrcamentoServiceImpl service;
@@ -90,6 +94,25 @@ class PublicOrcamentoServiceImplTest {
         assertNotNull(result.getAprovadoEm());
         assertEquals(StatusOrdemServico.EM_EXECUCAO, os.getStatus());
         verify(ordemServicoRepository).save(os);
+    }
+
+    @Test
+    void aprovar_deveAprovarReparoAdicionalQuandoOrcamentoTemReparoVinculadoSemIniciarOs() {
+        OrcamentoEntity orc = orcamentoDisponivel();
+
+        when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
+        when(publicacaoService.validarToken(orc, "tok")).thenReturn(true);
+        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(reparoAdicionalService.existePorOrcamentoId(10L)).thenReturn(true);
+
+        OrcamentoEntity result = service.aprovar(10L, "tok", " Maria ");
+
+        assertEquals(StatusOrcamento.APROVADO, result.getStatus());
+        assertEquals("Maria", result.getAssinaturaNome());
+        assertNotNull(result.getAprovadoEm());
+        verify(reparoAdicionalService).aprovarSeExistirPorOrcamentoId(10L);
+        verify(ordemServicoRepository, never()).findById(any());
+        verify(ordemServicoRepository, never()).save(any());
     }
 
     @Test
@@ -177,6 +200,25 @@ class PublicOrcamentoServiceImplTest {
         assertNotNull(result.getReprovadoEm());
         assertEquals(StatusOrdemServico.FINALIZADA, os.getStatus());
         verify(ordemServicoRepository).save(os);
+    }
+
+    @Test
+    void recusar_deveRecusarReparoAdicionalQuandoOrcamentoTemReparoVinculadoSemFinalizarOs() {
+        OrcamentoEntity orc = orcamentoDisponivel();
+
+        when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
+        when(publicacaoService.validarToken(orc, "tok")).thenReturn(true);
+        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(reparoAdicionalService.existePorOrcamentoId(10L)).thenReturn(true);
+
+        OrcamentoEntity result = service.recusar(10L, "tok", "Cliente recusou adicional");
+
+        assertEquals(StatusOrcamento.REPROVADO, result.getStatus());
+        assertEquals("Cliente recusou adicional", result.getRecusaMotivo());
+        assertNotNull(result.getReprovadoEm());
+        verify(reparoAdicionalService).recusarSeExistirPorOrcamentoId(10L, "Cliente recusou adicional");
+        verify(ordemServicoRepository, never()).findById(any());
+        verify(ordemServicoRepository, never()).save(any());
     }
 
     @Test

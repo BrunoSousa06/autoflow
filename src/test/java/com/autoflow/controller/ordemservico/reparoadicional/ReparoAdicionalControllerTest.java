@@ -2,8 +2,8 @@ package com.autoflow.controller.ordemservico.reparoadicional;
 
 import com.autoflow.config.security.service.CustomUserDetailsService;
 import com.autoflow.config.security.service.JwtService;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.mapper.ServicoSolicitadoMapper;
+import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import com.autoflow.service.ordemservico.reparoadicional.impl.CriarReparoAdicionalResult;
 import org.junit.jupiter.api.Test;
@@ -26,10 +26,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -54,7 +54,7 @@ class ReparoAdicionalControllerTest {
     private ReparoAdicionalService reparoAdicionalService;
 
     @MockitoBean
-    private ServicoSolicitadoMapper servicoSolicitadoMapper;
+    private ItensNecessariosMapper itensNecessariosMapper;
 
     @MockitoBean
     private JwtService jwtService;
@@ -65,14 +65,12 @@ class ReparoAdicionalControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveCriarReparoAdicionalComoMecanico() throws Exception {
-        List<ServicoSolicitadoEntity> servicos = List.of(
-                new ServicoSolicitadoEntity(10L, "Troca de pastilha", new BigDecimal("120.00"))
-        );
-        when(servicoSolicitadoMapper.mapToEntities(any())).thenReturn(servicos);
+        List<ItemNecessarioEntity> itens = List.of(itemNecessario(7L, 2));
+        when(itensNecessariosMapper.mapToEntities(any())).thenReturn(itens);
         when(reparoAdicionalService.criar(
-                1L,
-                "mecanico@autoflow.com",
-                servicos
+                eq(1L),
+                eq("mecanico@autoflow.com"),
+                any()
         )).thenReturn(new CriarReparoAdicionalResult(
                 5L,
                 20L,
@@ -86,7 +84,13 @@ class ReparoAdicionalControllerTest {
                                 {
                                   "servicos": [
                                     {
-                                      "servicoId": 10
+                                      "servicoId": 10,
+                                      "itensNecessarios": [
+                                        {
+                                          "pecaInsumoId": 7,
+                                          "quantidade": 2
+                                        }
+                                      ]
                                     }
                                   ]
                                 }
@@ -96,18 +100,15 @@ class ReparoAdicionalControllerTest {
                 .andExpect(jsonPath("$.orcamentoId").value(20L))
                 .andExpect(jsonPath("$.publicUrl").value("http://localhost:8080/public/orcamentos/20?token=abc"));
 
-        verify(servicoSolicitadoMapper).mapToEntities(any());
-        verify(reparoAdicionalService).criar(1L, "mecanico@autoflow.com", servicos);
+        verify(itensNecessariosMapper).mapToEntities(any());
+        verify(reparoAdicionalService).criar(eq(1L), eq("mecanico@autoflow.com"), any());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void deveCriarReparoAdicionalComoAdmin() throws Exception {
-        List<ServicoSolicitadoEntity> servicos = List.of(
-                new ServicoSolicitadoEntity(10L, "Troca de pastilha", new BigDecimal("120.00"))
-        );
-        when(servicoSolicitadoMapper.mapToEntities(any())).thenReturn(servicos);
-        when(reparoAdicionalService.criar(1L, "user", servicos))
+        when(itensNecessariosMapper.mapToEntities(any())).thenReturn(List.of(itemNecessario(7L, 2)));
+        when(reparoAdicionalService.criar(eq(1L), eq("user"), any()))
                 .thenReturn(new CriarReparoAdicionalResult(5L, 20L, "url"));
 
         mockMvc.perform(post("/ordens-servico/{ordemServicoId}/reparos-adicionais", 1L)
@@ -117,7 +118,13 @@ class ReparoAdicionalControllerTest {
                                 {
                                   "servicos": [
                                     {
-                                      "servicoId": 10
+                                      "servicoId": 10,
+                                      "itensNecessarios": [
+                                        {
+                                          "pecaInsumoId": 7,
+                                          "quantidade": 2
+                                        }
+                                      ]
                                     }
                                   ]
                                 }
@@ -125,7 +132,7 @@ class ReparoAdicionalControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reparoAdicionalId").value(5L));
 
-        verify(reparoAdicionalService).criar(1L, "user", servicos);
+        verify(reparoAdicionalService).criar(eq(1L), eq("user"), any());
     }
 
     @Test
@@ -141,7 +148,7 @@ class ReparoAdicionalControllerTest {
                                 """))
                 .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(servicoSolicitadoMapper);
+        verifyNoInteractions(itensNecessariosMapper);
         verifyNoInteractions(reparoAdicionalService);
     }
 
@@ -155,15 +162,28 @@ class ReparoAdicionalControllerTest {
                                 {
                                   "servicos": [
                                     {
-                                      "servicoId": 10
+                                      "servicoId": 10,
+                                      "itensNecessarios": [
+                                        {
+                                          "pecaInsumoId": 7,
+                                          "quantidade": 2
+                                        }
+                                      ]
                                     }
                                   ]
                                 }
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(servicoSolicitadoMapper, never()).mapToEntities(any());
+        verify(itensNecessariosMapper, never()).mapToEntities(any());
         verify(reparoAdicionalService, never()).criar(any(), any(), any());
+    }
+
+    private ItemNecessarioEntity itemNecessario(Long pecaInsumoId, Integer quantidade) {
+        ItemNecessarioEntity item = new ItemNecessarioEntity();
+        item.setPecaInsumoId(pecaInsumoId);
+        item.setQuantidade(quantidade);
+        return item;
     }
 
     @TestConfiguration

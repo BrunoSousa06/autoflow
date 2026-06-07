@@ -2,6 +2,7 @@ package com.autoflow.service.orcamento.impl;
 
 import com.autoflow.domain.orcamento.*;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,9 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                 .totalServicos(totalServicos)
                 .totalItens(totalItens)
                 .totalGeral(totalGeral)
+                .numeroOs(ordemServico.getNumeroOs())
+                .cliente(ClienteOrcamentoSnapshot.from(ordemServico.getCliente()))
+                .veiculo(VeiculoOrcamentoSnapshot.from(ordemServico.getVeiculo()))
                 .build();
     }
 
@@ -83,6 +87,62 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                 .totalServicos(totalServicos)
                 .totalItens(totalItens)
                 .totalGeral(totalGeral)
+                .numeroOs(ordemServico.getNumeroOs())
+                .cliente(ClienteOrcamentoSnapshot.from(ordemServico.getCliente()))
+                .veiculo(VeiculoOrcamentoSnapshot.from(ordemServico.getVeiculo()))
+                .build();
+    }
+
+    @Override
+    public OrcamentoEntity criarPrincipalConsolidadoDisponivel(
+            OrdemServicoEntity ordemServico,
+            ReparoAdicionalEntity reparo,
+            int versao,
+            LocalDateTime now
+    ) {
+        List<ServicoSolicitadoEntity> servicosConsolidados = new ArrayList<>();
+        servicosConsolidados.addAll(ordemServico.getServicosSolicitados());
+        servicosConsolidados.addAll(reparo.getServicos());
+
+        List<OrcamentoServicoEntity> servicos = servicosConsolidados.stream()
+                .map(servico -> OrcamentoServicoEntity.builder()
+                        .servicoId(servico.getServicoId())
+                        .nome(servico.getNome())
+                        .valor(servico.getValor())
+                        .build())
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        List<OrcamentoItemNecessarioEntity> itens = servicosConsolidados.stream()
+                .flatMap(servico -> servico.getItensNecessarios().stream()
+                        .map(item -> OrcamentoItemNecessarioEntity.builder()
+                                .servicoOsId(servico.getId())
+                                .tipo(item.getTipo())
+                                .pecaInsumoId(item.getPecaInsumoId())
+                                .quantidade(item.getQuantidade())
+                                .valorUnitario(item.getValorUnitario())
+                                .valorTotal(item.getValorTotal())
+                                .nome(item.getNome())
+                                .build()))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        BigDecimal totalServicos = totalServicos(servicos);
+        BigDecimal totalItens = totalItens(itens);
+
+        return OrcamentoEntity.builder()
+                .ordemServicoId(ordemServico.getId())
+                .tipo(TipoOrcamento.PRINCIPAL)
+                .versao(versao)
+                .status(StatusOrcamento.DISPONIVEL)
+                .criadoEm(now)
+                .disponibilizadoEm(now)
+                .servicos(servicos)
+                .itens(itens)
+                .totalServicos(totalServicos)
+                .totalItens(totalItens)
+                .totalGeral(totalServicos.add(totalItens))
+                .numeroOs(ordemServico.getNumeroOs())
+                .cliente(ClienteOrcamentoSnapshot.from(ordemServico.getCliente()))
+                .veiculo(VeiculoOrcamentoSnapshot.from(ordemServico.getVeiculo()))
                 .build();
     }
 

@@ -3,7 +3,7 @@ package com.autoflow.controller.ordemservico.reparoadicional;
 import com.autoflow.controller.ordemservico.reparoadicional.request.CriarReparoAdicionalRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.response.CriarReparoAdicionalResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.mapper.ServicoSolicitadoMapper;
+import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.util.List;
 public class ReparoAdicionalController {
 
     private final ReparoAdicionalService reparoAdicionalService;
-    private final ServicoSolicitadoMapper servicoSolicitadoMapper;
+    private final ItensNecessariosMapper itensNecessariosMapper;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -31,8 +31,17 @@ public class ReparoAdicionalController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CriarReparoAdicionalRequest request
     ) {
-        List<ServicoSolicitadoEntity> servicos =
-                servicoSolicitadoMapper.mapToEntities(request.servicos());
+        List<ServicoSolicitadoEntity> servicos = request.servicos()
+                .stream()
+                .map(servicoRequest -> {
+                    ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity();
+                    servico.setServicoId(servicoRequest.servicoId());
+                    servico.registrarItensNecessarios(
+                            itensNecessariosMapper.mapToEntities(servicoRequest.itensNecessarios())
+                    );
+                    return servico;
+                })
+                .toList();
 
         return CriarReparoAdicionalResponse.from(reparoAdicionalService.criar(
                 ordemServicoId,
@@ -40,6 +49,4 @@ public class ReparoAdicionalController {
                 servicos
         ));
     }
-
-
 }

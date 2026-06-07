@@ -2,12 +2,13 @@ package com.autoflow.controller.orcamento;
 
 import com.autoflow.config.security.service.CustomUserDetailsService;
 import com.autoflow.config.security.service.JwtService;
+import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
+import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
 import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
-import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -36,9 +36,6 @@ class PublicOrcamentoControllerTest {
 
     @MockitoBean
     private PublicOrcamentoService publicOrcamentoService;
-
-    @MockitoBean
-    private ReparoAdicionalService reparoAdicionalService;
 
     @MockitoBean
     private OrcamentoPdfService orcamentoPdfService;
@@ -87,13 +84,13 @@ class PublicOrcamentoControllerTest {
                 .andExpect(jsonPath("$.status").value("APROVADO"));
 
         verify(publicOrcamentoService).aprovar(10L, "tok", "Maria");
-        verify(reparoAdicionalService, never()).aprovarPorOrcamentoId(10L);
     }
 
     @Test
-    void deveAprovarOrcamentoAdicionalEAplicarReparoNaOs() throws Exception {
+    void deveAprovarOrcamentoConsolidadoSemRegraDeReparoNoController() throws Exception {
         OrcamentoEntity orc = baseOrcamento();
-        orc.setTipo(TipoOrcamento.ADICIONAL);
+        orc.setTipo(TipoOrcamento.PRINCIPAL);
+        orc.setVersao(2);
         orc.setStatus(StatusOrcamento.APROVADO);
 
         when(publicOrcamentoService.aprovar(10L, "tok", "Maria"))
@@ -106,11 +103,11 @@ class PublicOrcamentoControllerTest {
                                 {"nome":"Maria"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tipo").value("ADICIONAL"))
+                .andExpect(jsonPath("$.tipo").value("PRINCIPAL"))
+                .andExpect(jsonPath("$.versao").value(2))
                 .andExpect(jsonPath("$.status").value("APROVADO"));
 
         verify(publicOrcamentoService).aprovar(10L, "tok", "Maria");
-        verify(reparoAdicionalService).aprovarPorOrcamentoId(10L);
     }
 
     @Test
@@ -161,6 +158,18 @@ class PublicOrcamentoControllerTest {
                 .totalServicos(new BigDecimal("100.00"))
                 .totalItens(new BigDecimal("50.00"))
                 .totalGeral(new BigDecimal("150.00"))
+                .cliente(ClienteOrcamentoSnapshot.builder()
+                        .nome("Cliente")
+                        .cpfCnpj("12345678901")
+                        .email("cliente@exemplo.com")
+                        .telefone("11999999999")
+                        .build())
+                .veiculo(VeiculoOrcamentoSnapshot.builder()
+                        .placa("ABC1234")
+                        .marca("Fiat")
+                        .modelo("Uno")
+                        .ano(2020)
+                        .build())
                 .build();
     }
 }

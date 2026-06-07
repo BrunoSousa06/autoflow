@@ -40,7 +40,6 @@ import java.util.List;
 
 import static com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse.mensagemParaCliente;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -146,7 +145,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     public OrdemServicoEntity registrarItemNecessario(
             Long ordemServicoId,
-            Long servicoOsId,
+            Long servicoId,
             String emailUsuarioLogado,
             List<ItemNecessarioEntity> itensNecessarios
     ) {
@@ -158,7 +157,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
 
-        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
 
         List<ItemNecessarioEntity> itensComDados = verificaItensNecessarios(itensNecessarios);
 
@@ -222,18 +221,23 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Transactional
     @Override
-    public OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoOsId) {
+    public OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
         StatusOrdemServico statusAnterior = ordemServico.getStatus();
 
-        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+        if (statusAnterior == StatusOrdemServico.AGUARDANDO_APROVACAO) {
+            ordemServico.iniciarExecucao();
+        } else if (statusAnterior != StatusOrdemServico.EM_EXECUCAO) {
+            throw new IllegalStateException("OS deve estar aprovada ou em execucao para iniciar servico.");
+        }
+
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
 
         BaixaEstoqueResult baixaEstoqueResult =
                 pecaInsumoService.verificarDisponibilidadeEBaixar(servico.getItensNecessarios());
 
         servico.iniciar(baixaEstoqueResult.itensAtualizados());
 
-        ordemServico.iniciarExecucao();
         if (!statusAnterior.equals(ordemServico.getStatus())) {
             return salvarOs(ordemServico);
         }
@@ -243,10 +247,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Transactional
     @Override
-    public OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoOsId) {
+    public OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
 
-        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
 
         servico.finalizar();
         ordemServico.atualizarUltimaAtualizacao();
@@ -302,9 +306,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
         return itensNecessarios.stream()
                 .map(itemNecessario -> {
-                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
+                    PecaInsumoEntity itemEstoque =
+                            pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
 
-                    boolean disponivel = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
+                    boolean disponivel =
+                            itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
 
                     StatusItemNecessario status = disponivel
                             ? StatusItemNecessario.DISPONIVEL
@@ -324,7 +330,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                             itemEstoque.getQuantidade(),
                             motivoPendencia
                     );
-                }).toList();
+                })
+                .toList();
     }
 
     private ServicoSolicitadoEntity preencherDadosDoServico(

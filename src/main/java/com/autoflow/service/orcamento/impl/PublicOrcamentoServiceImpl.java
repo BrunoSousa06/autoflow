@@ -7,6 +7,7 @@ import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
+import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
     private final OrcamentoRepository orcamentoRepository;
     private final OrdemServicoRepository ordemServicoRepository;
     private final OrcamentoPublicacaoService publicacaoService;
+    private final ReparoAdicionalService reparoAdicionalService;
 
     @Override
     public OrcamentoEntity consultar(Long orcamentoId, String token) {
@@ -48,6 +50,13 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
         orcamento.setStatus(StatusOrcamento.APROVADO);
         orcamento.setAssinaturaNome(nome.trim());
         orcamento.setAprovadoEm(LocalDateTime.now());
+
+        OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
+
+        if (reparoAdicionalService.existePorOrcamentoId(orcamento.getId())) {
+            reparoAdicionalService.aprovarSeExistirPorOrcamentoId(orcamento.getId());
+            return orcamentoSalvo;
+        }
 
         OrdemServicoEntity ordemServico = ordemServicoRepository.findById(orcamento.getOrdemServicoId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS nao encontrada"));
@@ -76,8 +85,15 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
 
         orcamento.setStatus(StatusOrcamento.REPROVADO);
         orcamento.setReprovadoEm(LocalDateTime.now());
+
         if(motivo != null) orcamento.setRecusaMotivo(motivo);
-        orcamentoRepository.save(orcamento);
+
+        OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
+
+        if(reparoAdicionalService.existePorOrcamentoId(orcamento.getId())) {
+            reparoAdicionalService.recusarSeExistirPorOrcamentoId(orcamento.getId(), motivo);
+            return orcamentoSalvo;
+        }
 
         OrdemServicoEntity ordemServico = ordemServicoRepository.findById(orcamento.getOrdemServicoId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS nao encontrada"));

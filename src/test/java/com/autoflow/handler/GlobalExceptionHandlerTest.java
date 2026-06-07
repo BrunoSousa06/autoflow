@@ -94,4 +94,30 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals("Cliente não encontrado", response.getBody().get("erro"));
     }
+
+    @Test
+    void deveRetornarBadRequestQuandoRegraDeEstadoForViolada() {
+        IllegalStateException exception =
+                new IllegalStateException("Servico deve estar em execucao para finalizar.");
+
+        ResponseEntity<Map<String, String>> response =
+                handler.handleBusinessException(exception);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Servico deve estar em execucao para finalizar.", response.getBody().get("erro"));
+    }
+
+    @Test
+    void deveRetornarBadRequestQuandoArgumentoForInvalido() {
+        IllegalArgumentException exception =
+                new IllegalArgumentException("Servico e obrigatorio.");
+
+        ResponseEntity<Map<String, String>> response =
+                handler.handleBusinessException(exception);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Servico e obrigatorio.", response.getBody().get("erro"));
+    }
 }

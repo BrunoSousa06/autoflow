@@ -24,7 +24,7 @@ public interface OrdemServicoService {
 
     OrdemServicoEntity iniciarDiagnostico(Long ordemServicoId, String emailUsuarioLogado);
 
-    OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, Long servicoOsId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios);
+    OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, Long servicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios);
 
     OrdemServicoEntity registrarLaudo(Long ordemServicoId, String emailUsuarioLogado, String laudo);
 
@@ -34,9 +34,9 @@ public interface OrdemServicoService {
     OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId);
 
     @Transactional
-    OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoOsId);
+    OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoId);
 
-    OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoOsId);
+    OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoId);
 
     OrdemServicoEntity entregar(Long ordemServicoId);
 

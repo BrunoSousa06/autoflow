@@ -366,7 +366,7 @@ class PecaInsumoServiceTest {
                     () -> assertEquals(new BigDecimal("50.00"), itemAtualizado.getValorUnitario()),
                     () -> assertEquals(2, itemAtualizado.getQuantidade()),
                     () -> assertEquals(new BigDecimal("100.00"), itemAtualizado.getValorTotal()),
-                    () -> assertEquals(StatusItemNecessario.DISPONIVEL, itemAtualizado.getStatus()),
+                    () -> assertEquals(StatusItemNecessario.UTILIZADO, itemAtualizado.getStatus()),
                     () -> assertEquals(8, itemAtualizado.getQuantidadeDisponivel()),
                     () -> assertNull(itemAtualizado.getMotivoPendencia()),
                     () -> assertNull(itemAtualizado.getMensagemStatus())
