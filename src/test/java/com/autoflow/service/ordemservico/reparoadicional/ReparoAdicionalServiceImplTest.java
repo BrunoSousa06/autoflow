@@ -71,6 +71,7 @@ class ReparoAdicionalServiceImplTest {
     void criar_deveCriarReparoGerarOrcamentoPublicarLinkERetornarResultado() {
         OrdemServicoEntity ordemServico = new OrdemServicoEntity();
         ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
         UsuarioEntity mecanico = new UsuarioEntity();
         mecanico.setId(20L);
         ServicoSolicitadoEntity servico = servico(1L, "Troca de pastilha", "120.00");
@@ -78,7 +79,7 @@ class ReparoAdicionalServiceImplTest {
         OrcamentoEntity orcamentoSalvo = new OrcamentoEntity();
         orcamentoSalvo.setId(30L);
 
-        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(reparoAdicionalRepository.save(any(ReparoAdicionalEntity.class))).thenAnswer(invocation -> {
             ReparoAdicionalEntity reparo = invocation.getArgument(0);
@@ -95,7 +96,7 @@ class ReparoAdicionalServiceImplTest {
                 .thenReturn(new PublicacaoOrcamentoResult(30L, "http://localhost:8080/public/orcamentos/30?token=abc"));
 
         CriarReparoAdicionalResult result = service.criar(
-                10L,
+                "OS-123",
                 "mecanico@autoflow.com",
                 List.of(servico)
         );
@@ -122,11 +123,11 @@ class ReparoAdicionalServiceImplTest {
         ServicoSolicitadoEntity servicoDoReparo = servico(1L, "Troca de pastilha", "120.00");
         servicoDoReparo.setId(55L);
         servicoDoReparo.registrarItensNecessarios(List.of(item(7L, "Pastilha", 2)));
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servicoDoReparo));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servicoDoReparo));
         reparo.setId(40L);
 
         when(reparoAdicionalRepository.findById(40L)).thenReturn(Optional.of(reparo));
-        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(reparoAdicionalRepository.save(reparo)).thenReturn(reparo);
         when(ordemServicoRepository.save(ordemServico)).thenReturn(ordemServico);
 
@@ -159,7 +160,7 @@ class ReparoAdicionalServiceImplTest {
 
     @Test
     void recusar_deveRecusarReparoESalvarMotivo() {
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico(1L, "Troca", "80.00")));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico(1L, "Troca", "80.00")));
         reparo.setId(40L);
         when(reparoAdicionalRepository.findById(40L)).thenReturn(Optional.of(reparo));
         when(reparoAdicionalRepository.save(reparo)).thenReturn(reparo);
@@ -184,13 +185,13 @@ class ReparoAdicionalServiceImplTest {
     void aprovarPorOrcamentoId_deveBuscarReparoPeloOrcamentoEAprovar() {
         OrdemServicoEntity ordemServico = new OrdemServicoEntity();
         ordemServico.setId(10L);
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico(1L, "Troca", "80.00")));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico(1L, "Troca", "80.00")));
         reparo.setId(40L);
         reparo.setOrcamentoId(30L);
 
         when(reparoAdicionalRepository.findByOrcamentoId(30L)).thenReturn(Optional.of(reparo));
         when(reparoAdicionalRepository.findById(40L)).thenReturn(Optional.of(reparo));
-        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
 
         service.aprovarPorOrcamentoId(30L);
 

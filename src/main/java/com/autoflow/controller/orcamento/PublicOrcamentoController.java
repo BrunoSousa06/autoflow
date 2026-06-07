@@ -23,7 +23,7 @@ public class PublicOrcamentoController {
     private final PublicOrcamentoService publicOrcamentoService;
     private final ReparoAdicionalService reparoAdicionalService;
 
-    @Operation(summary = "Listar o orçamento do cliente", description = "Retorna as informações do orçamento do cliente")
+    @Operation(summary = "Listar o orçamento da ordem de serviço", description = "Retorna as informações do orçamento da ordem de serviço")
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
     @GetMapping("/{orcamentoId}")
@@ -32,7 +32,7 @@ public class PublicOrcamentoController {
         return OrcamentoPublicoResponse.from(publicOrcamentoService.consultar(orcamentoId, token));
     }
 
-    @Operation(summary = "Aprovar o orçamento do cliente", description = "Retorna as informações do orçamento aprovado do cliente com os status atualizado")
+    @Operation(summary = "Aprovar o orçamento da ordem de serviço", description = "Retorna as informações do orçamento aprovado da ordem de serviço com o status atualizado")
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
     @ApiResponse(responseCode = "400", description = "Orçamento não está disponivel")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
@@ -48,7 +48,7 @@ public class PublicOrcamentoController {
         return OrcamentoPublicoResponse.from(orcamento);
     }
 
-    @Operation(summary = "Recusar o orçamento do cliente", description = "Retorna as informações do orçamento recusado do cliente com os status atualizado")
+    @Operation(summary = "Recusar o orçamento da ordem de serviço", description = "Retorna as informações do orçamento recusado da ordem de serviço com o status atualizado")
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
     @ApiResponse(responseCode = "400", description = "Orçamento não está disponivel ou ja foi aprovado")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")

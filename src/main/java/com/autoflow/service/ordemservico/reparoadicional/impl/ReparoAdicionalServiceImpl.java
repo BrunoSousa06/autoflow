@@ -38,22 +38,22 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
     @Transactional
     @Override
     public CriarReparoAdicionalResult criar(
-            Long ordemServicoId,
+            String numeroOs,
             String emailMecanico,
             List<ServicoSolicitadoEntity> servicos
     ) {
         OrdemServicoEntity ordemServico =
-                ordemServicoService.buscaOrdemServicoPorId(ordemServicoId);
+                ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs);
 
         Long mecanicoId =
                 usuarioService.buscarPorEmail(emailMecanico).getId();
 
         ReparoAdicionalEntity reparo =
-                ReparoAdicionalEntity.criar(ordemServico.getId(), mecanicoId, servicos);
+                ReparoAdicionalEntity.criar(ordemServico.getNumeroOs(), mecanicoId, servicos);
 
         ReparoAdicionalEntity reparoSalvo = reparoAdicionalRepository.save(reparo);
 
-        int versao = orcamentoVersioningService.proximaVersaoPrincipal(ordemServicoId);
+        int versao = orcamentoVersioningService.proximaVersaoPrincipalNumeroOs(numeroOs);
         OrcamentoEntity orcamento =
                 orcamentoFactory.criarAdicionalDisponivel(ordemServico, reparoSalvo, versao, LocalDateTime.now());
 

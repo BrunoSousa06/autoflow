@@ -80,7 +80,7 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
         if(motivo != null) orcamento.setRecusaMotivo(motivo);
         orcamentoRepository.save(orcamento);
 
-        OrdemServicoEntity ordemServico = ordemServicoRepository.findById(orcamento.getOrdemServicoId())
+        OrdemServicoEntity ordemServico = ordemServicoRepository.findByNumeroOs(orcamento.getNumeroOs())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS nao encontrada"));
         ordemServico.setStatus(StatusOrdemServico.FINALIZADA);
         ordemServicoRepository.save(ordemServico);

@@ -16,7 +16,7 @@ class ReparoAdicionalEntityTest {
     void deveCriarReparoAdicionalPendenteEVincularServicos() {
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00"));
 
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico));
 
         assertEquals(10L, reparo.getOrdemServicoId());
         assertEquals(20L, reparo.getMecanicoId());
@@ -29,7 +29,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void deveAprovarReparoPendente() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
@@ -44,7 +44,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void deveRecusarReparoPendenteComMotivo() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
@@ -60,7 +60,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void naoDeveAprovarReparoQueNaoEstaPendente() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
@@ -72,7 +72,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void naoDeveRecusarReparoQueNaoEstaPendente() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );

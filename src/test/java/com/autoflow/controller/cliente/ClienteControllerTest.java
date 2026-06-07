@@ -49,8 +49,8 @@ class ClienteControllerTest {
                 .standaloneSetup(clienteController)
                 .build();
 
-        request = new ClienteRequest("João Silva", "12345678901", "12312321321", "bruno@hotmail.com");
-        response = new ClienteResponse(1L, "João Silva", "12345678901", "12312321321", "bruno@hotmail.com", null);
+        request = new ClienteRequest("João Silva", "52998224725", "12312321321", "bruno@hotmail.com");
+        response = new ClienteResponse(1L, "João Silva", "52998224725", "12312321321", "bruno@hotmail.com", null);
         responses = List.of(response);
     }
 

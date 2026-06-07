@@ -24,6 +24,15 @@ public class ClienteController {
 
     private final ClienteService clienteService;
 
+
+    @Operation(summary = "Criar cadastro do cliente", description = "cria cadastro do cliente")
+    @ApiResponse(responseCode = "200", description = "Cliente cadastrado com sucesso")
+    @PostMapping
+    public ResponseEntity<ClienteResponse> cadastrarCliente(@RequestBody ClienteRequest request){
+        return ResponseEntity.ok(clienteService.cadastrar(request));
+
+    }
+
     @Operation(summary = "Listar um cliente pelo CPF/CNPJ ou ID", description = "Retorna os detalhes de um cliente específico")
     @ApiResponse(responseCode = "200", description = "Cliente encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
@@ -49,6 +58,7 @@ public class ClienteController {
     @ApiResponse(responseCode = "200", description = "Cliente atualizado com sucesso")
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
     @PatchMapping("/{id}/atualizacao")
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
     public ResponseEntity<ClienteResponse> atualizar(@Valid @RequestBody ClienteRequest request, @PathVariable Long id){
         return ResponseEntity.ok(clienteService.atualizar(request, id));
 

@@ -90,7 +90,7 @@ class OrdemServicoControllerTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.criar(eq("12345678901"), any(VeiculoOrdemServicoRequest.class), anyList()))
+        when(ordemServicoService.criar(eq("52998224725"), any(VeiculoOrdemServicoRequest.class), anyList()))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(post("/ordens-servico")
@@ -98,7 +98,7 @@ class OrdemServicoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "cpfCnpj": "12345678901",
+                                  "cpfCnpj": "52998224725",
                                   "veiculo": {
                                     "placa": "abc-1d23",
                                     "marca": "Honda",
@@ -120,7 +120,7 @@ class OrdemServicoControllerTest {
 
         ArgumentCaptor<VeiculoOrdemServicoRequest> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoRequest.class);
         ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
-        verify(ordemServicoService).criar(eq("12345678901"), veiculoCaptor.capture(), servicosCaptor.capture());
+        verify(ordemServicoService).criar(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
         assertEquals("abc-1d23", veiculoCaptor.getValue().placa());
         assertEquals("Honda", veiculoCaptor.getValue().marca());
         assertEquals("Civic", veiculoCaptor.getValue().modelo());
@@ -134,7 +134,7 @@ class OrdemServicoControllerTest {
     void deveIncluirServicosNaOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.incluirServicos(eq(1L), anyList()))
+        when(ordemServicoService.incluirServicos("OS-123", anyList()))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(post("/ordens-servico/{ordemServicoId}/servicos", 1L)
@@ -150,7 +150,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        verify(ordemServicoService).incluirServicos(eq(1L), anyList());
+        verify(ordemServicoService).incluirServicos("OS-123", anyList());
     }
 
     @Test
@@ -158,10 +158,10 @@ class OrdemServicoControllerTest {
     void deveRegistrarItensNecessariosComoMecanico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.registrarItemNecessario(eq(1L), eq(55L), eq("mecanico@autoflow.com"), anyList()))
+        when(ordemServicoService.registrarItemNecessario("342-sb",eq(55L), eq("mecanico@autoflow.com"), anyList() ))
                 .thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/itens-necessarios", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{numeroOs}/itens-necessarios", 1L, 55L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -176,12 +176,10 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L));
 
         ArgumentCaptor<List<ItemNecessarioEntity>> itensCaptor = captorDeLista();
-        verify(ordemServicoService).registrarItemNecessario(
-                eq(1L),
+        verify(ordemServicoService).registrarItemNecessario("342-sb",
                 eq(55L),
                 eq("mecanico@autoflow.com"),
-                itensCaptor.capture()
-        );
+                itensCaptor.capture());
         assertEquals(10L, itensCaptor.getValue().getFirst().getPecaInsumoId());
         assertEquals(2, itensCaptor.getValue().getFirst().getQuantidade());
     }
@@ -204,9 +202,9 @@ class OrdemServicoControllerTest {
                 MotivoPendenciaItem.ESTOQUE_INSUFICIENTE
         )));
 
-        when(ordemServicoService.iniciarServico(1L, 55L)).thenReturn(ordemServico);
+        when(ordemServicoService.iniciarServico("OS-123", 55L)).thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/iniciar", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", 1L, 55L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.status").value("EM_EXECUCAO"))
@@ -217,7 +215,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].mensagemStatus")
                         .value("Estoque insuficiente. Solicitado: 2, disponivel: 1."));
 
-        verify(ordemServicoService).iniciarServico(1L, 55L);
+        verify(ordemServicoService).iniciarServico("OS-123", 55L);
     }
 
     @Test
@@ -226,14 +224,14 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.FINALIZADO);
 
-        when(ordemServicoService.finalizarServico(1L, 55L)).thenReturn(ordemServico);
+        when(ordemServicoService.finalizarServico("OS-123", 55L)).thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/finalizar", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/finalizar", 1L, 55L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.servicos[0].status").value("FINALIZADO"));
 
-        verify(ordemServicoService).finalizarServico(1L, 55L);
+        verify(ordemServicoService).finalizarServico("OS-123", 55L);
     }
 
     @Test
@@ -242,16 +240,16 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.entregar();
 
-        when(ordemServicoService.entregar(1L)).thenReturn(ordemServico);
+        when(ordemServicoService.entregar("OS-123")).thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/entregar", 1L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/entregar", 1L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.status").value("ENTREGUE"))
                 .andExpect(jsonPath("$.entregueEm").exists());
 
-        verify(ordemServicoService).entregar(1L);
+        verify(ordemServicoService).entregar("OS-123");
     }
 
     @Test
@@ -282,9 +280,9 @@ class OrdemServicoControllerTest {
         OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getId());
 
         when(ordemServicoService.buscaOrdemServicoPorId(1L)).thenReturn(ordemServico);
-        when(ordemServicoService.buscarOrcamentoAtual(1L)).thenReturn(orcamento);
+        when(ordemServicoService.buscarOrcamentoAtual("OS-123")).thenReturn(orcamento);
 
-        mockMvc.perform(get("/ordens-servico/{ordemServicoId}", 1L))
+        mockMvc.perform(get("/ordens-servico/{numeroOs}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.numeroOs").value("OS-123"))
@@ -307,7 +305,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.orcamentoAtual.totalGeral").value(100.00));
 
         verify(ordemServicoService).buscaOrdemServicoPorId(1L);
-        verify(ordemServicoService).buscarOrcamentoAtual(1L);
+        verify(ordemServicoService).buscarOrcamentoAtual("OS-123");
     }
 
     @Test
@@ -322,11 +320,11 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarDetalharOrdemServico() throws Exception {
-        mockMvc.perform(get("/ordens-servico/{ordemServicoId}", 1L))
+        mockMvc.perform(get("/ordens-servico/{numeroOs}", 1L))
                 .andExpect(status().isForbidden());
 
         verify(ordemServicoService, never()).buscaOrdemServicoPorId(anyLong());
-        verify(ordemServicoService, never()).buscarOrcamentoAtual(anyLong());
+        verify(ordemServicoService, never()).buscarOrcamentoAtual(anyString());
     }
 
     @Test
@@ -335,46 +333,46 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
 
-        when(ordemServicoService.finalizarDiagnostico(1L, "mecanico@autoflow.com"))
+        when(ordemServicoService.finalizarDiagnostico("OS-123", "mecanico@autoflow.com"))
                 .thenReturn(new FinalizarDiagnosticoResult(
                         ordemServico,
                         10L,
                         "http://localhost:8080/public/orcamentos/10?token=abc"
                 ));
 
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/diagnostico/finalizar", 1L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/finalizar", 1L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.ordemServico.id").value(1L))
                 .andExpect(jsonPath("$.orcamentoId").value(10L));
 
-        verify(ordemServicoService).finalizarDiagnostico(1L, "mecanico@autoflow.com");
+        verify(ordemServicoService).finalizarDiagnostico("OS-123", "mecanico@autoflow.com");
     }
 
     @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarIniciarServico() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/iniciar", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", 1L, 55L)
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).iniciarServico(anyLong(), anyLong());
+        verify(ordemServicoService, never()).iniciarServico(anyString(), anyLong());
     }
 
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveRetornarForbiddenQuandoMecanicoTentarEntregarOrdemServico() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/entregar", 1L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/entregar", 1L)
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).entregar(anyLong());
+        verify(ordemServicoService, never()).entregar(anyString());
     }
 
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveRetornarForbiddenQuandoAtendenteTentarRegistrarItensNecessarios() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{ordemServicoId}/servicos/{servicoOsId}/itens-necessarios", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/itens-necessarios", 1L, 55L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -387,7 +385,7 @@ class OrdemServicoControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).registrarItemNecessario(anyLong(), anyLong(), anyString(), anyList());
+        verify(ordemServicoService, never()).registrarItemNecessario(anyString(),anyLong(), anyString(), anyList());
     }
 
     @Test
@@ -398,7 +396,7 @@ class OrdemServicoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "cpfCnpj": "12345678901",
+                                  "cpfCnpj": "52998224725",
                                   "veiculo": {
                                     "placa": "ABC1D23"
                                   },
@@ -418,7 +416,7 @@ class OrdemServicoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "cpfCnpj": "12345678901",
+                                  "cpfCnpj": "52998224725",
                                   "servicosSolicitados": [
                                     {
                                       "servicoId": 10

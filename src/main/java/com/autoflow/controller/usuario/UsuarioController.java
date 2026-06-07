@@ -52,4 +52,16 @@ public class UsuarioController {
     public ResponseEntity<List<UsuarioResponse>> listarUsuarios() {
         return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
+
+    @Operation(summary = "Listar todos mecanicos cadastrados no sistema", description = "Retorna a lista dos mecanicos cadastrados")
+    @ApiResponse(responseCode = "200", description = "Mecanicos retornados com sucesso")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping("/mecanicos")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UsuarioResponse>> listarMecanicos() {
+        return ResponseEntity.ok(usuarioService.buscarMecanicos());
+    }
+
+
 }

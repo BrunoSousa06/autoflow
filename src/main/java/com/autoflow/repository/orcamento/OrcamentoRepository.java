@@ -13,10 +13,13 @@ public interface OrcamentoRepository extends JpaRepository<OrcamentoEntity, Long
     Boolean existsByOrdemServicoIdAndStatus(Long ordemServicoId, StatusOrcamento status);
 
     Optional<OrcamentoEntity> findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(Long ordemServicoId, TipoOrcamento tipoOrcamento);
+    Optional<OrcamentoEntity> findTopByNumeroOsAndTipoOrderByVersaoDesc(String numeroOs, TipoOrcamento tipoOrcamento);
 
     Boolean existsByOrdemServicoIdAndTipoAndStatus(Long ordemServicoId, TipoOrcamento tipo, StatusOrcamento status);
 
     Optional<OrcamentoEntity> findByOrdemServicoIdAndStatus(Long ordemServicoId, StatusOrcamento status);
+    Optional<OrcamentoEntity> findByNumeroOsAndStatus(String numeroOs, StatusOrcamento status);
 
     Optional<OrcamentoEntity> findTopByOrdemServicoIdOrderByVersaoDesc(Long ordemServicoId);
+    Optional<OrcamentoEntity> findTopByNumeroOsOrderByVersaoDesc(String numeroOs);
 }

@@ -70,7 +70,7 @@ class ReparoAdicionalControllerTest {
         );
         when(servicoSolicitadoMapper.mapToEntities(any())).thenReturn(servicos);
         when(reparoAdicionalService.criar(
-                1L,
+                "OS-123",
                 "mecanico@autoflow.com",
                 servicos
         )).thenReturn(new CriarReparoAdicionalResult(
@@ -79,7 +79,7 @@ class ReparoAdicionalControllerTest {
                 "http://localhost:8080/public/orcamentos/20?token=abc"
         ));
 
-        mockMvc.perform(post("/ordens-servico/{ordemServicoId}/reparos-adicionais", 1L)
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", 1L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -97,7 +97,7 @@ class ReparoAdicionalControllerTest {
                 .andExpect(jsonPath("$.publicUrl").value("http://localhost:8080/public/orcamentos/20?token=abc"));
 
         verify(servicoSolicitadoMapper).mapToEntities(any());
-        verify(reparoAdicionalService).criar(1L, "mecanico@autoflow.com", servicos);
+        verify(reparoAdicionalService).criar("OS-123", "mecanico@autoflow.com", servicos);
     }
 
     @Test
@@ -107,10 +107,10 @@ class ReparoAdicionalControllerTest {
                 new ServicoSolicitadoEntity(10L, "Troca de pastilha", new BigDecimal("120.00"))
         );
         when(servicoSolicitadoMapper.mapToEntities(any())).thenReturn(servicos);
-        when(reparoAdicionalService.criar(1L, "user", servicos))
+        when(reparoAdicionalService.criar("OS-123", "user", servicos))
                 .thenReturn(new CriarReparoAdicionalResult(5L, 20L, "url"));
 
-        mockMvc.perform(post("/ordens-servico/{ordemServicoId}/reparos-adicionais", 1L)
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -125,13 +125,13 @@ class ReparoAdicionalControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reparoAdicionalId").value(5L));
 
-        verify(reparoAdicionalService).criar(1L, "user", servicos);
+        verify(reparoAdicionalService).criar("OS-123", "user", servicos);
     }
 
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveRetornarBadRequestQuandoServicoNaoForInformado() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{ordemServicoId}/reparos-adicionais", 1L)
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -148,7 +148,7 @@ class ReparoAdicionalControllerTest {
     @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarCriarReparoAdicional() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{ordemServicoId}/reparos-adicionais", 1L)
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", 1L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
