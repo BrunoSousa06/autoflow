@@ -5,6 +5,7 @@ import com.autoflow.config.security.service.JwtService;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
+import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class PublicOrcamentoControllerTest {
 
     @MockitoBean
     private ReparoAdicionalService reparoAdicionalService;
+
+    @MockitoBean
+    private OrcamentoPdfService orcamentoPdfService;
 
     @MockitoBean
     private JwtService jwtService;

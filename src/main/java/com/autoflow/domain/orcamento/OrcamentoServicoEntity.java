@@ -22,4 +22,5 @@ public class OrcamentoServicoEntity {
 
     @Column(nullable = false)
     private BigDecimal valor;
+
 }
