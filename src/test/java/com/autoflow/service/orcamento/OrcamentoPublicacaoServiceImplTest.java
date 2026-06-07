@@ -48,7 +48,7 @@ class OrcamentoPublicacaoServiceImplTest {
         assertEquals(10L, result.orcamentoId());
         assertNotNull(orc.getPublicTokenHash());
         assertNotNull(orc.getDisponibilizadoEm());
-        assertTrue(result.url().startsWith("http://localhost:8080/public/orcamentos/10?token="));
+        assertTrue(result.url().startsWith("http://localhost:8080/public/orcamentos/10/pdf?token="));
         verify(orcamentoRepository).save(orc);
     }
 

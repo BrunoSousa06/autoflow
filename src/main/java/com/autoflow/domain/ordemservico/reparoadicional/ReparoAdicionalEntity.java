@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "reparo_adicional")
 @Getter
 @Setter
 public class ReparoAdicionalEntity {

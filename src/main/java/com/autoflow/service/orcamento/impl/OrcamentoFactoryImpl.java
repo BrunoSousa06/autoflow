@@ -8,15 +8,17 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class OrcamentoFactoryImpl implements OrcamentoFactory {
 
     @Override
     public OrcamentoEntity criarPrincipalDisponivel(OrdemServicoEntity ordemServico, int versao, LocalDateTime now) {
-        List<OrcamentoServicoEntity> orcamentoServicoEntities = ordemServico.getServicosSolicitados().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).toList();
+        List<OrcamentoServicoEntity> orcamentoServicoEntities = ordemServico.getServicosSolicitados().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
         List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
                 ordemServico.getServicosSolicitados().stream()
@@ -30,7 +32,7 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                                         .valorTotal(item.getValorTotal())
                                         .nome(item.getNome())
                                         .build()))
-                        .toList();
+                        .collect(Collectors.toCollection(ArrayList::new));
 
         BigDecimal totalServicos = totalServicos(orcamentoServicoEntities);
         BigDecimal totalItens = totalItens(itemNecessarioEntities);
@@ -52,7 +54,7 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
 
     @Override
     public OrcamentoEntity criarAdicionalDisponivel(OrdemServicoEntity ordemServico, ReparoAdicionalEntity reparoSalvo, int versao, LocalDateTime now) {
-        List<OrcamentoServicoEntity> orcamentoServicoEntities = reparoSalvo.getServicos().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).toList();
+        List<OrcamentoServicoEntity> orcamentoServicoEntities = reparoSalvo.getServicos().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
         List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
                 reparoSalvo.getServicos().stream()
@@ -66,7 +68,7 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                                         .valorTotal(item.getValorTotal())
                                         .nome(item.getNome())
                                         .build()))
-                        .toList();
+                        .collect(Collectors.toCollection(ArrayList::new));
 
         BigDecimal totalServicos = totalServicos(orcamentoServicoEntities);
         BigDecimal totalItens = totalItens(itemNecessarioEntities);

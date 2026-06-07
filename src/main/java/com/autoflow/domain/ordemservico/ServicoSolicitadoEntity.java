@@ -42,7 +42,7 @@ public class ServicoSolicitadoEntity {
     private LocalDateTime finalizadoEm;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ordem_servico_id", nullable = false)
+    @JoinColumn(name = "ordem_servico_id")
     private OrdemServicoEntity ordemServico;
 
     @ElementCollection

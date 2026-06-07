@@ -238,6 +238,7 @@ class OrdemServicoControllerTest {
     @WithMockUser(roles = "ATENDENTE")
     void deveEntregarOrdemServicoComoAtendente() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        ordemServico.setStatus(StatusOrdemServico.FINALIZADA);
         ordemServico.entregar();
 
         when(ordemServicoService.entregar("OS-123")).thenReturn(ordemServico);

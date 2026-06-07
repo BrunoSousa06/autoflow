@@ -17,6 +17,7 @@ import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.orcamento.OrcamentoFactory;
+import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.ordemservico.OrdemServicoService;
@@ -28,6 +29,8 @@ import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.service.veiculo.VeiculoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -38,10 +41,10 @@ import java.util.List;
 import static com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse.mensagemParaCliente;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrdemServicoServiceImpl implements OrdemServicoService {
-
     private final OrdemServicoRepository ordemServicoRepository;
 
     private final VeiculoService veiculoService;
@@ -56,6 +59,25 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final ClienteService clienteService;
     private final ClienteRepository clienteRepository;
     private final HistoricoStatusOsRepository historicoStatusOsRepository;
+    private final OrcamentoNotificacaoService orcamentoNotificacaoService;
+
+    @Autowired
+    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, VeiculoService veiculoService, ServicoService servicoService, UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService, OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl, OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl, ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl, ClienteService clienteService) {
+        this.ordemServicoRepository = ordemServicoRepository;
+        this.veiculoService = veiculoService;
+        this.servicoService = servicoService;
+        this.usuarioService = usuarioService;
+        this.historicoStatusOsRepository = historicoStatusOsRepository;
+        this.pecaInsumoService = pecaInsumoService;
+        this.ordemServicoAccessPolicy = ordemServicoAccessPolicy;
+        this.orcamentoFactoryImpl = orcamentoFactoryImpl;
+        this.orcamentoNotificacaoService = orcamentoNotificacaoService;
+        this.orcamentoVersioningServiceImpl = orcamentoVersioningServiceImpl;
+        this.clienteRepository = clienteRepository;
+        this.orcamentoRepository = orcamentoRepository;
+        this.orcamentoPublicacaoServiceImpl = orcamentoPublicacaoServiceImpl;
+        this.clienteService = clienteService;
+    }
 
     public OrdemServicoEntity criar(String cpfCnpj, VeiculoOrdemServicoRequest veiculoRequest, List<ServicoSolicitadoEntity> servicosSolicitados) {
         ClienteEntity cliente = clienteService.buscarPorCpfCnpj(cpfCnpj);
@@ -172,21 +194,24 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
         OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
         String publicUrl = orcamentoPublicacaoServiceImpl.publicar(orcamentoSalvo.getId()).url();
-
+        try {
+            orcamentoNotificacaoService.enviarLinkOrcamentoParaCliente(
+                    orcamentoSalvo,
+                    ordemServico,
+                    publicUrl
+            );
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
         OrdemServicoEntity ordemServicoSalvo = salvarOs(ordemServico);
 
         return new FinalizarDiagnosticoResult(ordemServicoSalvo, orcamentoSalvo.getId(), publicUrl);
     }
 
-    private List<ServicoSolicitadoEntity> preencherDadosDosServicos(
-            OrdemServicoEntity ordemServico,
-            List<ServicoSolicitadoEntity> servicos
-    ) {
+    private List<ServicoSolicitadoEntity> preencherDadosDosServicos(OrdemServicoEntity ordemServico, List<ServicoSolicitadoEntity> servicos) {
         validarServicosSolicitados(servicos);
 
-        return servicos.stream()
-                .map(servico -> preencherDadosDoServico(ordemServico, servico))
-                .toList();
+        return servicos.stream().map(servico -> preencherDadosDoServico(ordemServico, servico)).toList();
     }
 
     @Override
@@ -214,7 +239,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
         servico.iniciar(baixaEstoqueResult.itensAtualizados());
 
-        ordemServico.iniciarExecucaoSeNecessario();
+        ordemServico.iniciarExecucao();
         if (!statusAnterior.equals(ordemServico.getStatus())) {
             return salvarOs(ordemServico);
         }
