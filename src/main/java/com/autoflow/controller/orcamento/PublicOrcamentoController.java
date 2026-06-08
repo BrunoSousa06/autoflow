@@ -102,7 +102,7 @@ public class PublicOrcamentoController {
     @GetMapping()
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE', 'ATENDENTE')")
     public List<OrcamentoPublicoResponse> listarOrcamentos(@RequestParam String token,
-                                                           @RequestParam StatusOrcamento statusOrcamento) {
+                                                           @RequestParam(required = false) StatusOrcamento statusOrcamento) {
 
         return publicOrcamentoService.consultarOrcamentos(statusOrcamento)
                 .stream()

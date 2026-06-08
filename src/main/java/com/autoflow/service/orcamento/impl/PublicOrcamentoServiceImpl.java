@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -89,7 +90,9 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
 
     @Override
     public List<OrcamentoEntity> consultarOrcamentos(StatusOrcamento status) {
-        return orcamentoRepository.findByStatus(status);
+        return status == null
+                ? orcamentoRepository.findAll()
+                : orcamentoRepository.findByStatus(status);
     }
 
     @Override
