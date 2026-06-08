@@ -27,6 +27,7 @@ public class ClienteController {
 
     @Operation(summary = "Criar cadastro do cliente", description = "cria cadastro do cliente")
     @ApiResponse(responseCode = "200", description = "Cliente cadastrado com sucesso")
+    @ApiResponse(responseCode = "409", description = "CPF/CNPJ ja cadastrado")
     @PostMapping
     public ResponseEntity<ClienteResponse> cadastrarCliente(@RequestBody ClienteRequest request){
         return ResponseEntity.ok(clienteService.cadastrar(request));

@@ -10,10 +10,6 @@ public class CpfCnpjValidator implements ConstraintValidator<CpfCnpj, String> {
     public boolean isValid(String value,
                            ConstraintValidatorContext context) {
 
-        if (value == null || value.isBlank()) {
-            return true;
-        }
-
         return DocumentoValidator.isCpfOuCnpj(value);
     }
 

@@ -90,4 +90,15 @@ class UsuarioControllerTest {
                         .content(jsonBody))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void deveListarMecanicos() throws Exception {
+        when(usuarioService.buscarMecanicos()).thenReturn(usuarioResponses);
+
+        mockMvc.perform(get("/auth/mecanicos")
+                        .param("token", "tok"))
+                .andExpect(status().isOk());
+
+
+    }
 }
