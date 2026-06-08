@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -255,5 +256,30 @@ class PublicOrcamentoServiceImplTest {
         os.setId(osId);
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
         return os;
+    }
+
+    @Test
+    void deveConsultarOrcamentosPorStatus() {
+
+        OrcamentoEntity orcamento1 = new OrcamentoEntity();
+        orcamento1.setId(1L);
+        orcamento1.setStatus(StatusOrcamento.DISPONIVEL);
+
+        OrcamentoEntity orcamento2 = new OrcamentoEntity();
+        orcamento2.setId(2L);
+        orcamento2.setStatus(StatusOrcamento.DISPONIVEL);
+
+        when(orcamentoRepository.findByStatus(StatusOrcamento.DISPONIVEL))
+                .thenReturn(List.of(orcamento1, orcamento2));
+
+        List<OrcamentoEntity> resultado =
+                service.consultarOrcamentos(StatusOrcamento.DISPONIVEL);
+
+        assertEquals(2, resultado.size());
+        assertEquals(1L, resultado.get(0).getId());
+        assertEquals(2L, resultado.get(1).getId());
+
+        verify(orcamentoRepository)
+                .findByStatus(StatusOrcamento.DISPONIVEL);
     }
 }

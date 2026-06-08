@@ -4,6 +4,7 @@ import com.autoflow.controller.orcamento.request.AprovarOrcamentoRequest;
 import com.autoflow.controller.orcamento.request.RecusarOrcamentoRequest;
 import com.autoflow.controller.orcamento.response.OrcamentoPublicoResponse;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
@@ -17,6 +18,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping("/public/orcamentos")
@@ -91,4 +95,18 @@ public class PublicOrcamentoController {
         return OrcamentoPublicoResponse.from(publicOrcamentoService.recusar(orcamentoId, token, motivo));
     }
 
+
+    @Operation(summary = "Listar todos orçamentos", description = "Retorna as informações de todos orçamentos baseado nos status")
+    @ApiResponse(responseCode = "200", description = "Orçamentos encontrados com sucesso")
+    @ApiResponse(responseCode = "400", description = "Status incorreto")
+    @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE', 'ATENDENTE')")
+    public List<OrcamentoPublicoResponse> listarOrcamentos(@RequestParam String token,
+                                                           @RequestParam StatusOrcamento statusOrcamento) {
+
+        return publicOrcamentoService.consultarOrcamentos(statusOrcamento)
+                .stream()
+                .map(OrcamentoPublicoResponse::from)
+                .toList();
+    }
 }
