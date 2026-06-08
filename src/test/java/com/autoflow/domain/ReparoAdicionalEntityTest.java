@@ -18,7 +18,7 @@ class ReparoAdicionalEntityTest {
 
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico));
 
-        assertEquals(10L, reparo.getOrdemServicoId());
+        assertEquals("OS-123", reparo.getNumeroOs());
         assertEquals(20L, reparo.getMecanicoId());
         assertEquals(StatusReparoAdicional.PENDENTE_APROVACAO, reparo.getStatus());
         assertNotNull(reparo.getCriadoEm());

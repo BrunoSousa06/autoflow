@@ -165,7 +165,7 @@ class OrdemServicoServiceTest {
         ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(20L);
         ServicoEntity servicoCatalogo = criarServico(20L, "Troca oleo", new BigDecimal("80.00"));
 
-        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
         when(servicoService.buscarEntityPorId(20L)).thenReturn(servicoCatalogo);
         when(repository.save(os)).thenReturn(os);
 
@@ -182,7 +182,7 @@ class OrdemServicoServiceTest {
     void deveLancarIllegalArgumentQuandoIncluirServicosComListaVazia() {
         OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
         List<ServicoSolicitadoEntity> servicosVazios = List.of();
-        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
 
         assertThrows(IllegalArgumentException.class, () -> service.incluirServicos("OS-123", servicosVazios));
         verify(repository, never()).save(any());
@@ -193,7 +193,7 @@ class OrdemServicoServiceTest {
         OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
         UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
         when(usuarioService.buscarMecanicoPorId(2L)).thenReturn(mecanico);
         when(repository.save(os)).thenReturn(os);
 
@@ -210,7 +210,7 @@ class OrdemServicoServiceTest {
         os.setDiagnostico(diagnostico);
         UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
         when(usuarioService.buscarMecanicoPorId(2L)).thenReturn(mecanico);
         when(repository.save(os)).thenReturn(os);
 
@@ -226,7 +226,7 @@ class OrdemServicoServiceTest {
         os.setDiagnostico(new DiagnosticoEntity());
         UsuarioEntity admin = criarUsuario(1L, "Admin", "admin@autoflow.com", RoleEnum.ADMIN);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail("admin@autoflow.com")).thenReturn(admin);
         when(repository.save(os)).thenReturn(os);
 
@@ -247,7 +247,7 @@ class OrdemServicoServiceTest {
         os.setDiagnostico(new DiagnosticoEntity());
         UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(repository.save(os)).thenReturn(os);
 
@@ -264,7 +264,7 @@ class OrdemServicoServiceTest {
         os.setDiagnostico(new DiagnosticoEntity());
         UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(repository.save(os)).thenReturn(os);
 
@@ -285,7 +285,7 @@ class OrdemServicoServiceTest {
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 5);
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
         when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
         when(repository.save(os)).thenReturn(os);
@@ -317,7 +317,7 @@ class OrdemServicoServiceTest {
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 1);
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
         when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
         when(repository.save(os)).thenReturn(os);
@@ -356,7 +356,7 @@ class OrdemServicoServiceTest {
                 10L, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 2, StatusItemNecessario.DISPONIVEL
         );
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(pecaInsumoService.verificarDisponibilidadeEBaixar(List.of(itemOriginal)))
                 .thenReturn(new BaixaEstoqueResult(List.of(itemAtualizado)));
         when(repository.save(os)).thenReturn(os);
@@ -386,7 +386,7 @@ class OrdemServicoServiceTest {
         os.iniciarExecucao();
         os.buscarServicoSolicitado(servicoOsId).iniciar(List.of());
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(repository.save(os)).thenReturn(os);
 
         OrdemServicoEntity resultado = service.finalizarServico(numeroOs, servicoOsId);
@@ -409,7 +409,7 @@ class OrdemServicoServiceTest {
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, 55L);
         os.setStatus(StatusOrdemServico.FINALIZADA);
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(repository.save(os)).thenReturn(os);
 
         OrdemServicoEntity resultado = service.entregar(numeroOs);
@@ -436,9 +436,9 @@ class OrdemServicoServiceTest {
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         OrcamentoEntity orcamento = new OrcamentoEntity();
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
-        when(orcamentoVersioningServiceImpl.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
+        when(orcamentoVersioningServiceImpl.proximaVersaoPrincipalNumeroOs("OS-123")).thenReturn(1);
         when(orcamentoFactoryImpl.criarPrincipalDisponivel(eq(os), eq(1), any())).thenReturn(orcamento);
         when(orcamentoRepository.save(orcamento)).thenAnswer(invocation -> {
             orcamento.setId(10L);
@@ -471,9 +471,9 @@ class OrdemServicoServiceTest {
         UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", emailMecanico, RoleEnum.MECANICO);
         OrcamentoEntity orcamento = new OrcamentoEntity();
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
-        when(orcamentoVersioningServiceImpl.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
+        when(orcamentoVersioningServiceImpl.proximaVersaoPrincipalNumeroOs("OS-123")).thenReturn(1);
         when(orcamentoFactoryImpl.criarPrincipalDisponivel(eq(os), eq(1), any())).thenReturn(orcamento);
         when(orcamentoRepository.save(orcamento)).thenAnswer(invocation -> {
             orcamento.setId(10L);
@@ -497,7 +497,7 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
-        OrcamentoEntity orcamento = criarOrcamento(99L, os.getId());
+        OrcamentoEntity orcamento = criarOrcamento(99L, os.getNumeroOs());
         HistoricoStatusOsEntity historico = HistoricoStatusOsEntity.criar(
                 os.getId(),
                 StatusOrdemServico.AGUARDANDO_APROVACAO,
@@ -507,9 +507,9 @@ class OrdemServicoServiceTest {
 
         when(clienteRepository.findByUsuarioEmail("cliente@autoflow.com")).thenReturn(Optional.of(cliente));
         when(repository.findByCliente_IdOrderByDataAberturaDesc(cliente.getId())).thenReturn(List.of(os));
-        when(orcamentoRepository.findByOrdemServicoIdAndStatus(os.getId(), com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL))
+        when(orcamentoRepository.findByNumeroOsAndStatus(os.getNumeroOs(), com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.of(orcamento));
-        when(historicoStatusOsRepository.findByOrdemServicoIdOrderByRegistradoEmAsc(os.getId()))
+        when(historicoStatusOsRepository.findByNumeroOsOrderByRegistradoEmAsc(os.getNumeroOs()))
                 .thenReturn(List.of(historico));
 
         var resultado = service.listarAcompanhamentoCliente("cliente@autoflow.com");
@@ -543,38 +543,38 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveBuscarOrcamentoAtualDisponivel() {
-        OrcamentoEntity orcamentoDisponivel = criarOrcamento(99L, 1L);
-        when(orcamentoRepository.findByOrdemServicoIdAndStatus(
-                1L,
+        OrcamentoEntity orcamentoDisponivel = criarOrcamento(99L, "OS-123");
+        when(orcamentoRepository.findByNumeroOsAndStatus(
+                "OS-123",
                 com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL
         )).thenReturn(Optional.of(orcamentoDisponivel));
 
         OrcamentoEntity resultado = service.buscarOrcamentoAtual("OS-123");
 
         assertSame(orcamentoDisponivel, resultado);
-        verify(orcamentoRepository).findByOrdemServicoIdAndStatus(
-                1L,
+        verify(orcamentoRepository).findByNumeroOsAndStatus(
+                "OS-123",
                 com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL
         );
-        verify(orcamentoRepository, never()).findTopByOrdemServicoIdOrderByVersaoDesc(anyLong());
+        verify(orcamentoRepository, never()).findTopByNumeroOsOrderByVersaoDesc(anyString());
     }
 
     @Test
     void deveBuscarUltimoOrcamentoQuandoNaoHouverDisponivel() {
-        OrcamentoEntity ultimoOrcamento = criarOrcamento(100L, 1L);
+        OrcamentoEntity ultimoOrcamento = criarOrcamento(100L, "OS-123");
         ultimoOrcamento.setStatus(com.autoflow.domain.orcamento.StatusOrcamento.APROVADO);
 
-        when(orcamentoRepository.findByOrdemServicoIdAndStatus(
-                1L,
+        when(orcamentoRepository.findByNumeroOsAndStatus(
+                "OS-123",
                 com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL
         )).thenReturn(Optional.empty());
-        when(orcamentoRepository.findTopByOrdemServicoIdOrderByVersaoDesc(1L))
+        when(orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc("OS-123"))
                 .thenReturn(Optional.of(ultimoOrcamento));
 
         OrcamentoEntity resultado = service.buscarOrcamentoAtual("OS-123");
 
         assertSame(ultimoOrcamento, resultado);
-        verify(orcamentoRepository).findTopByOrdemServicoIdOrderByVersaoDesc(1L);
+        verify(orcamentoRepository).findTopByNumeroOsOrderByVersaoDesc("OS-123");
     }
 
     @Test
@@ -592,11 +592,11 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveLancarNotFoundQuandoOrdemServicoNaoExistir() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> service.buscaOrdemServicoPorId(1L)
+                () -> service.buscaOrdemServicoPorNumeroOs("OS-123")
         );
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
@@ -612,7 +612,7 @@ class OrdemServicoServiceTest {
         UsuarioEntity mecanico = criarUsuario(1L, "Mecanico", email, RoleEnum.MECANICO);
         RuntimeException erro = new ResponseStatusException(HttpStatus.FORBIDDEN, "sem permissao");
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(email)).thenReturn(mecanico);
         doThrow(erro).when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
         List<ItemNecessarioEntity> itensVazios = List.of();
@@ -664,10 +664,10 @@ class OrdemServicoServiceTest {
         return servico;
     }
 
-    private OrcamentoEntity criarOrcamento(Long id, Long ordemServicoId) {
+    private OrcamentoEntity criarOrcamento(Long id, String numeroOs) {
         OrcamentoEntity orcamento = new OrcamentoEntity();
         orcamento.setId(id);
-        orcamento.setOrdemServicoId(ordemServicoId);
+        orcamento.setNumeroOs(numeroOs);
         orcamento.setTipo(com.autoflow.domain.orcamento.TipoOrcamento.PRINCIPAL);
         orcamento.setVersao(1);
         orcamento.setStatus(com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL);

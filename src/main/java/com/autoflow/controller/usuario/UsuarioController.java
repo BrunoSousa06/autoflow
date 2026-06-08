@@ -58,7 +58,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping("/mecanicos")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','ATENDENTE')")
     public ResponseEntity<List<UsuarioResponse>> listarMecanicos() {
         return ResponseEntity.ok(usuarioService.buscarMecanicos());
     }

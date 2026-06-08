@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -32,6 +33,7 @@ public class PublicOrcamentoController {
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
     @GetMapping("/{orcamentoId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     public OrcamentoPublicoResponse consultar(@PathVariable Long orcamentoId,
                                               @RequestParam String token) {
         return OrcamentoPublicoResponse.from(publicOrcamentoService.consultar(orcamentoId, token));
@@ -41,6 +43,7 @@ public class PublicOrcamentoController {
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
     @GetMapping(value = "/{orcamentoId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE', 'MECANICO')")
     public ResponseEntity<byte[]> baixarPdf(
             @PathVariable Long orcamentoId,
             @RequestParam String token
@@ -63,6 +66,7 @@ public class PublicOrcamentoController {
     @ApiResponse(responseCode = "400", description = "Orçamento não está disponivel")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
     @PostMapping("/{orcamentoId}/aprovar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     public OrcamentoPublicoResponse aprovar(@PathVariable Long orcamentoId,
                                             @RequestParam String token,
                                             @RequestBody AprovarOrcamentoRequest req) {
@@ -79,6 +83,7 @@ public class PublicOrcamentoController {
     @ApiResponse(responseCode = "400", description = "Orçamento não está disponivel ou ja foi aprovado")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
     @PostMapping("/{orcamentoId}/recusar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     public OrcamentoPublicoResponse recusar(@PathVariable Long orcamentoId,
                                             @RequestParam String token,
                                             @RequestBody(required = false) RecusarOrcamentoRequest req) {

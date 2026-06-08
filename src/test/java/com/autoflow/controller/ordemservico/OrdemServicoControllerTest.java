@@ -134,10 +134,10 @@ class OrdemServicoControllerTest {
     void deveIncluirServicosNaOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.incluirServicos("OS-123", anyList()))
+        when(ordemServicoService.incluirServicos(eq("OS-123"), anyList()))
                 .thenReturn(ordemServico);
 
-        mockMvc.perform(post("/ordens-servico/{ordemServicoId}/servicos", 1L)
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/servicos", "OS-123")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -150,7 +150,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        verify(ordemServicoService).incluirServicos("OS-123", anyList());
+        verify(ordemServicoService).incluirServicos(eq("OS-123"), anyList());
     }
 
     @Test
@@ -158,10 +158,10 @@ class OrdemServicoControllerTest {
     void deveRegistrarItensNecessariosComoMecanico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.registrarItemNecessario("342-sb",eq(55L), eq("mecanico@autoflow.com"), anyList() ))
+        when(ordemServicoService.registrarItemNecessario(eq("342-sb"),eq(55L), eq("mecanico@autoflow.com"),anyList()))
                 .thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{numeroOs}/itens-necessarios", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/itens-necessarios", "342-sb", 55L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -176,7 +176,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L));
 
         ArgumentCaptor<List<ItemNecessarioEntity>> itensCaptor = captorDeLista();
-        verify(ordemServicoService).registrarItemNecessario("342-sb",
+        verify(ordemServicoService).registrarItemNecessario(eq("342-sb"),
                 eq(55L),
                 eq("mecanico@autoflow.com"),
                 itensCaptor.capture());
@@ -204,7 +204,7 @@ class OrdemServicoControllerTest {
 
         when(ordemServicoService.iniciarServico("OS-123", 55L)).thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", "OS-123", 55L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.status").value("EM_EXECUCAO"))
@@ -226,7 +226,7 @@ class OrdemServicoControllerTest {
 
         when(ordemServicoService.finalizarServico("OS-123", 55L)).thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/finalizar", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/finalizar", "OS-123", 55L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.servicos[0].status").value("FINALIZADO"));
@@ -243,7 +243,7 @@ class OrdemServicoControllerTest {
 
         when(ordemServicoService.entregar("OS-123")).thenReturn(ordemServico);
 
-        mockMvc.perform(patch("/ordens-servico/{numeroOs}/entregar", 1L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/entregar", "OS-123")
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L))
@@ -264,7 +264,6 @@ class OrdemServicoControllerTest {
         mockMvc.perform(get("/ordens-servico"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].numeroOs").value("OS-123"))
                 .andExpect(jsonPath("$[0].status").value("RECEBIDA"))
                 .andExpect(jsonPath("$[0].servicos[0].id").value(55L))
                 .andExpect(jsonPath("$[1].id").value(2L))
@@ -278,12 +277,12 @@ class OrdemServicoControllerTest {
     @WithMockUser(roles = "ATENDENTE")
     void deveDetalharOrdemServicoComoAtendente() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
-        OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getId());
+        OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getNumeroOs());
 
-        when(ordemServicoService.buscaOrdemServicoPorId(1L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(ordemServicoService.buscarOrcamentoAtual("OS-123")).thenReturn(orcamento);
 
-        mockMvc.perform(get("/ordens-servico/{numeroOs}", 1L))
+        mockMvc.perform(get("/ordens-servico/{numeroOs}", "OS-123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.numeroOs").value("OS-123"))
@@ -305,7 +304,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.orcamentoAtual.status").value("DISPONIVEL"))
                 .andExpect(jsonPath("$.orcamentoAtual.totalGeral").value(100.00));
 
-        verify(ordemServicoService).buscaOrdemServicoPorId(1L);
+        verify(ordemServicoService).buscaOrdemServicoPorNumeroOs("OS-123");
         verify(ordemServicoService).buscarOrcamentoAtual("OS-123");
     }
 
@@ -321,10 +320,10 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarDetalharOrdemServico() throws Exception {
-        mockMvc.perform(get("/ordens-servico/{numeroOs}", 1L))
+        mockMvc.perform(get("/ordens-servico/{numeroOs}", "OS-123"))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).buscaOrdemServicoPorId(anyLong());
+        verify(ordemServicoService, never()).buscaOrdemServicoPorNumeroOs(anyString());
         verify(ordemServicoService, never()).buscarOrcamentoAtual(anyString());
     }
 
@@ -341,7 +340,7 @@ class OrdemServicoControllerTest {
                         "http://localhost:8080/public/orcamentos/10?token=abc"
                 ));
 
-        mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/finalizar", 1L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/finalizar", "OS-123")
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.ordemServico.id").value(1L))
@@ -353,7 +352,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarIniciarServico() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", "OS-123", 55L)
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
@@ -373,7 +372,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveRetornarForbiddenQuandoAtendenteTentarRegistrarItensNecessarios() throws Exception {
-        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/itens-necessarios", 1L, 55L)
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/itens-necessarios", "OS-123", 55L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -458,10 +457,10 @@ class OrdemServicoControllerTest {
         return ordemServico;
     }
 
-    private OrcamentoEntity criarOrcamento(Long id, Long ordemServicoId) {
+    private OrcamentoEntity criarOrcamento(Long id, String numeroOs) {
         OrcamentoEntity orcamento = new OrcamentoEntity();
         orcamento.setId(id);
-        orcamento.setOrdemServicoId(ordemServicoId);
+        orcamento.setNumeroOs(numeroOs);
         orcamento.setTipo(TipoOrcamento.PRINCIPAL);
         orcamento.setVersao(1);
         orcamento.setStatus(StatusOrcamento.DISPONIVEL);

@@ -285,7 +285,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 .map(os -> {
                     OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(os.getNumeroOs());
                     List<HistoricoStatusOsEntity> historico =
-                            historicoStatusOsRepository.findByOrdemServicoIdOrderByRegistradoEmAsc(os.getId());
+                            historicoStatusOsRepository.findByNumeroOsOrderByRegistradoEmAsc(os.getNumeroOs());
 
                     return AcompanhamentoOrdemServicoResponse.from(os, orcamentoAtual, historico);
                 })

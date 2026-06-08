@@ -79,7 +79,7 @@ class ReparoAdicionalControllerTest {
                 "http://localhost:8080/public/orcamentos/20?token=abc"
         ));
 
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", 1L)
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

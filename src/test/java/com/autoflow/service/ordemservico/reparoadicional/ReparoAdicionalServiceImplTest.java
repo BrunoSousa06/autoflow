@@ -98,7 +98,7 @@ class ReparoAdicionalServiceImplTest {
             }
             return reparo;
         });
-        when(orcamentoVersioningService.proximaVersaoPrincipal(10L)).thenReturn(2);
+        when(orcamentoVersioningService.proximaVersaoPrincipalNumeroOs("OS-123")).thenReturn(2);
         when(orcamentoFactory.criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(2), any()))
                 .thenReturn(orcamento);
         when(orcamentoRepository.save(orcamento)).thenReturn(orcamentoSalvo);
@@ -118,7 +118,7 @@ class ReparoAdicionalServiceImplTest {
         ArgumentCaptor<ReparoAdicionalEntity> reparoCaptor = ArgumentCaptor.forClass(ReparoAdicionalEntity.class);
         verify(reparoAdicionalRepository, times(2)).save(reparoCaptor.capture());
         ReparoAdicionalEntity reparoPersistido = reparoCaptor.getAllValues().getLast();
-        assertEquals(10L, reparoPersistido.getOrdemServicoId());
+        assertEquals("OS-123", reparoPersistido.getNumeroOs());
         assertEquals(20L, reparoPersistido.getMecanicoId());
         assertEquals(30L, reparoPersistido.getOrcamentoId());
         assertEquals(StatusReparoAdicional.PENDENTE_APROVACAO, reparoPersistido.getStatus());

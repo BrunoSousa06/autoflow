@@ -8,4 +8,5 @@ import java.util.List;
 public interface HistoricoStatusOsRepository extends JpaRepository<HistoricoStatusOsEntity, Long> {
 
     List<HistoricoStatusOsEntity> findByOrdemServicoIdOrderByRegistradoEmAsc(Long ordemServicoId);
+    List<HistoricoStatusOsEntity> findByNumeroOsOrderByRegistradoEmAsc(String numeroOs);
 }

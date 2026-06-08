@@ -30,7 +30,7 @@ public class PecaInsumoController {
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping
-    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
     public ResponseEntity<PecaInsumoResponse> cadastrar(@Valid @RequestBody PecaInsumoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(pecaInsumoService.cadastrar(request));
 

@@ -96,7 +96,7 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
         ReparoAdicionalEntity reparo = buscarPorId(reparoAdicionalId);
 
         OrdemServicoEntity ordemServico =
-                ordemServicoService.buscaOrdemServicoPorId(reparo.getOrdemServicoId());
+                ordemServicoService.buscaOrdemServicoPorNumeroOs(reparo.getNumeroOs());
 
         reparo.aprovar();
 

@@ -167,7 +167,7 @@ class PublicOrcamentoServiceImplTest {
         when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
         when(publicacaoService.validarToken(orc, "tok")).thenReturn(true);
         when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(ordemServicoRepository.findById(1L)).thenReturn(Optional.of(os));
+        when(ordemServicoRepository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
         when(ordemServicoRepository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         OrcamentoEntity result = service.recusar(10L, "tok", "Nao quero");
@@ -187,7 +187,7 @@ class PublicOrcamentoServiceImplTest {
         when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
         when(publicacaoService.validarToken(orc, "tok")).thenReturn(true);
         when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(ordemServicoRepository.findById(1L)).thenReturn(Optional.of(os));
+        when(ordemServicoRepository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
 
         OrcamentoEntity result = service.recusar(10L, "tok", null);
 
@@ -244,6 +244,7 @@ class PublicOrcamentoServiceImplTest {
         OrcamentoEntity orc = new OrcamentoEntity();
         orc.setId(10L);
         orc.setOrdemServicoId(1L);
+        orc.setNumeroOs("OS-123");
         orc.setStatus(StatusOrcamento.DISPONIVEL);
         orc.setCriadoEm(LocalDateTime.of(2026, 5, 31, 10, 0));
         return orc;
