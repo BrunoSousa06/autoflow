@@ -20,4 +20,5 @@ public interface ClienteMapper {
 
     List<ClienteResponse> mapToList(List<ClienteEntity> clientes);
 
+    ClienteEntity mapToEntity(ClienteRequest request);
 }

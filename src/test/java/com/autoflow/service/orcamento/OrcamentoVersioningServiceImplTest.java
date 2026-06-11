@@ -26,10 +26,10 @@ class OrcamentoVersioningServiceImplTest {
 
     @Test
     void deveRetornarVersao1QuandoNaoExisteAnterior() {
-        when(repository.findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(1L, TipoOrcamento.PRINCIPAL))
+        when(repository.findTopByNumeroOsAndTipoOrderByVersaoDesc("OS-123", TipoOrcamento.PRINCIPAL))
                 .thenReturn(Optional.empty());
 
-        assertEquals(1, service.proximaVersaoPrincipal(1L));
+        assertEquals(1, service.proximaVersaoPrincipalNumeroOs("OS-123"));
     }
 
     @Test
@@ -37,10 +37,10 @@ class OrcamentoVersioningServiceImplTest {
         OrcamentoEntity ultimo = new OrcamentoEntity();
         ultimo.setVersao(3);
 
-        when(repository.findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(1L, TipoOrcamento.PRINCIPAL))
+        when(repository.findTopByNumeroOsAndTipoOrderByVersaoDesc("OS-123", TipoOrcamento.PRINCIPAL))
                 .thenReturn(Optional.of(ultimo));
 
-        assertEquals(4, service.proximaVersaoPrincipal(1L));
+        assertEquals(4, service.proximaVersaoPrincipalNumeroOs("OS-123"));
     }
 }
 

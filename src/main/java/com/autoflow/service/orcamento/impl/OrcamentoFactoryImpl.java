@@ -40,6 +40,7 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
 
         return OrcamentoEntity.builder()
                 .ordemServicoId(ordemServico.getId())
+                .numeroOs(ordemServico.getNumeroOs())
                 .tipo(TipoOrcamento.PRINCIPAL).versao(versao)
                 .status(StatusOrcamento.DISPONIVEL).criadoEm(now)
                 .disponibilizadoEm(now)
@@ -75,6 +76,7 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
 
         return OrcamentoEntity.builder()
                 .ordemServicoId(ordemServico.getId())
+                .numeroOs(ordemServico.getNumeroOs())
                 .tipo(TipoOrcamento.ADICIONAL).versao(versao)
                 .status(StatusOrcamento.DISPONIVEL).criadoEm(now)
                 .disponibilizadoEm(now)

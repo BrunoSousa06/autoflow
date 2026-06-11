@@ -21,6 +21,8 @@ public class ReparoAdicionalEntity {
 
     private Long ordemServicoId;
 
+    private String numeroOs;
+
     private Long mecanicoId;
 
     private Long orcamentoId;
@@ -40,12 +42,12 @@ public class ReparoAdicionalEntity {
     private List<ServicoSolicitadoEntity> servicos = new ArrayList<>();
 
     public static ReparoAdicionalEntity criar(
-            Long ordemServicoId,
+            String numeroOs,
             Long mecanicoId,
             List<ServicoSolicitadoEntity> servicos
     ) {
         ReparoAdicionalEntity reparo = new ReparoAdicionalEntity();
-        reparo.setOrdemServicoId(ordemServicoId);
+        reparo.setNumeroOs(numeroOs);
         reparo.setMecanicoId(mecanicoId);
         reparo.setCriadoEm(LocalDateTime.now());
         reparo.setStatus(StatusReparoAdicional.PENDENTE_APROVACAO);

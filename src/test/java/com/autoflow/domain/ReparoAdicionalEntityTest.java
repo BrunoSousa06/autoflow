@@ -16,9 +16,9 @@ class ReparoAdicionalEntityTest {
     void deveCriarReparoAdicionalPendenteEVincularServicos() {
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00"));
 
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico));
 
-        assertEquals(10L, reparo.getOrdemServicoId());
+        assertEquals("OS-123", reparo.getNumeroOs());
         assertEquals(20L, reparo.getMecanicoId());
         assertEquals(StatusReparoAdicional.PENDENTE_APROVACAO, reparo.getStatus());
         assertNotNull(reparo.getCriadoEm());
@@ -29,7 +29,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void deveAprovarReparoPendente() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
@@ -44,7 +44,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void deveRecusarReparoPendenteComMotivo() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
@@ -60,7 +60,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void naoDeveAprovarReparoQueNaoEstaPendente() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
@@ -72,7 +72,7 @@ class ReparoAdicionalEntityTest {
     @Test
     void naoDeveRecusarReparoQueNaoEstaPendente() {
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
-                10L,
+                "OS-123",
                 20L,
                 List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );

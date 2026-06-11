@@ -100,9 +100,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Transactional
     @Override
-    public OrdemServicoEntity incluirServicos(Long ordemServicoId, List<ServicoSolicitadoEntity> servicos) {
+    public OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos) {
 
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
         List<ServicoSolicitadoEntity> servicosComDados =
                 preencherDadosDosServicos(ordemServico, servicos);
@@ -113,8 +113,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public OrdemServicoEntity atribuirMecanico(Long ordemServicoId, Long mecanicoId) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+    public OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
         UsuarioEntity mecanico = usuarioService.buscarMecanicoPorId(mecanicoId);
 
@@ -128,8 +128,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public OrdemServicoEntity iniciarDiagnostico(Long ordemServicoId, String emailUsuarioLogado) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+    public OrdemServicoEntity iniciarDiagnostico(String numeroOs, String emailUsuarioLogado) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
@@ -144,13 +144,14 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return ordemServicoSalva;
     }
 
+    @Override
     public OrdemServicoEntity registrarItemNecessario(
-            Long ordemServicoId,
+            String numeroOs,
             Long servicoOsId,
             String emailUsuarioLogado,
             List<ItemNecessarioEntity> itensNecessarios
-    ) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+            ) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
 
@@ -167,10 +168,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return ordemServicoRepository.save(ordemServico);
     }
 
-
     @Override
-    public OrdemServicoEntity registrarLaudo(Long ordemServicoId, String emailUsuarioLogado, String laudo){
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+    public OrdemServicoEntity registrarLaudo(String numeroOs, String emailUsuarioLogado, String laudo){
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
         ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         ordemServico.registrarLaudo(laudo);
@@ -179,15 +179,15 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Transactional
     @Override
-    public FinalizarDiagnosticoResult finalizarDiagnostico(Long ordemServicoId, String emailUsuarioLogado){
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+    public FinalizarDiagnosticoResult finalizarDiagnostico(String numeroOs, String emailUsuarioLogado){
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
 
         if(!RoleEnum.ADMIN.equals(usuarioLogado.getRole())){
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
         ordemServico.finalizarDiagnostico();
-        int versao = orcamentoVersioningServiceImpl.proximaVersaoPrincipal(ordemServicoId);
+        int versao = orcamentoVersioningServiceImpl.proximaVersaoPrincipalNumeroOs(numeroOs);
         OrcamentoEntity orcamento = orcamentoFactoryImpl.criarPrincipalDisponivel(ordemServico, versao, LocalDateTime.now());
 
         ordemServico.aguardarAprovacao();
@@ -220,10 +220,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
     }
 
+    @Override
+    public OrdemServicoEntity buscaOrdemServicoPorNumeroOs(String numeroOs) {
+        return ordemServicoRepository.findByNumeroOs(numeroOs)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
+    }
+
     @Transactional
     @Override
-    public OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoOsId) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+    public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoOsId) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
         StatusOrdemServico statusAnterior = ordemServico.getStatus();
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
@@ -242,9 +248,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Transactional
-    @Override
-    public OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoOsId) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+    public OrdemServicoEntity finalizarServico(String numeroOs, Long servicoOsId) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
 
@@ -260,8 +265,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public OrdemServicoEntity entregar(Long ordemServicoId) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorId(ordemServicoId);
+    public OrdemServicoEntity entregar(String numeroOs) {
+        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
         ordemServico.entregar();
         OrdemServicoEntity salva = ordemServicoRepository.save(ordemServico);
         registrarHistorico(salva);
@@ -278,9 +283,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return ordemServicoRepository.findByCliente_IdOrderByDataAberturaDesc(cliente.getId())
                 .stream()
                 .map(os -> {
-                    OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(os.getId());
+                    OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(os.getNumeroOs());
                     List<HistoricoStatusOsEntity> historico =
-                            historicoStatusOsRepository.findByOrdemServicoIdOrderByRegistradoEmAsc(os.getId());
+                            historicoStatusOsRepository.findByNumeroOsOrderByRegistradoEmAsc(os.getNumeroOs());
 
                     return AcompanhamentoOrdemServicoResponse.from(os, orcamentoAtual, historico);
                 })
@@ -293,9 +298,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public OrcamentoEntity buscarOrcamentoAtual(Long ordemServicoId) {
-        return orcamentoRepository.findByOrdemServicoIdAndStatus(ordemServicoId, StatusOrcamento.DISPONIVEL)
-                .or(() -> orcamentoRepository.findTopByOrdemServicoIdOrderByVersaoDesc(ordemServicoId))
+    public OrcamentoEntity buscarOrcamentoAtual(String numeroOs) {
+        return orcamentoRepository.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
+                .or(() -> orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc(numeroOs))
                 .orElse(null);
     }
 
@@ -354,7 +359,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 HistoricoStatusOsEntity.criar(
                         os.getId(),
                         os.getStatus(),
-                        mensagemParaCliente(os.getStatus())
+                        mensagemParaCliente(os.getStatus()),
+                        os.getNumeroOs()
                 )
         );
     }

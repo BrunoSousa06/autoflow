@@ -22,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -147,6 +148,23 @@ class UsuarioServiceTest {
 
         assertEquals(mecanico, resultado);
         verify(usuarioRepository).findById(mecanicoId);
+    }
+
+    @Test
+    void deveBuscarMecanicos() {
+        Long mecanicoId = 1L;
+        UsuarioEntity mecanico = new UsuarioEntity();
+        mecanico.setId(mecanicoId);
+        List<UsuarioEntity> mecanicos = new ArrayList<>();
+        mecanicos.add(mecanico);
+        mecanico.setRole(RoleEnum.MECANICO);
+
+        when(usuarioRepository.findByRole(RoleEnum.MECANICO)).thenReturn(List.of(mecanico));
+
+        List<UsuarioResponse> usuarioResponses = usuarioService.buscarMecanicos();
+
+        assertNotNull(usuarioResponses);
+        verify(usuarioRepository).findByRole(RoleEnum.MECANICO);
     }
 
     @Test

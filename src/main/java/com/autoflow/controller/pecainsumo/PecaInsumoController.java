@@ -30,7 +30,7 @@ public class PecaInsumoController {
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping
-    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
     public ResponseEntity<PecaInsumoResponse> cadastrar(@Valid @RequestBody PecaInsumoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(pecaInsumoService.cadastrar(request));
 
@@ -59,7 +59,7 @@ public class PecaInsumoController {
 
     }
 
-    @Operation(summary = "Atualiza uma peça ou insumo", description = "Atualiza as informações de uma peça ou insumo")
+    @Operation(summary = "Atualizar uma peça ou insumo", description = "Atualiza as informações de uma peça ou insumo")
     @ApiResponse(responseCode = "200", description = "Peça/Insumo atualizado com sucesso")
     @ApiResponse(responseCode = "404", description = "Peça/Insumo não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")

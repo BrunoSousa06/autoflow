@@ -92,6 +92,14 @@ public class UsuarioService {
         return usuario;
     }
 
+    public List<UsuarioResponse> buscarMecanicos(){
+
+        List<UsuarioEntity> mecanicos = usuarioRepository.findByRole(RoleEnum.MECANICO);
+
+        return usuarioMapper.mapToResponse(mecanicos);
+
+    }
+
     public UsuarioEntity buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário autenticado não encontrado."));

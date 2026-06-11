@@ -1,6 +1,7 @@
 package com.autoflow.controller.ordemservico;
 
 import com.autoflow.controller.ordemservico.request.*;
+import com.autoflow.controller.ordemservico.response.FinalizarDiagnosticoResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoDetalheResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
@@ -62,15 +63,15 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Veiculo pertencente a ordem de serviço não foi encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PostMapping("/{ordemServicoId}/servicos")
+    @PostMapping("/{numeroOs}/servicos")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
     public OrdemServicoResponse incluirServico(
-            @PathVariable Long ordemServicoId,
+            @PathVariable String numeroOs,
             @Valid @RequestBody List<ServicoSolicitadoRequest> request
     ) {
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request);
-        return OrdemServicoResponse.fromDomain(ordemServicoService.incluirServicos(ordemServicoId, servicos));
+        return OrdemServicoResponse.fromDomain(ordemServicoService.incluirServicos(numeroOs, servicos));
     }
 
     @Operation(
@@ -81,14 +82,14 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou mecânico não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/mecanico")
+    @PatchMapping("/{numeroOs}/mecanico")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
     public OrdemServicoResponse atribuirMecanico(
-            @PathVariable Long ordemServicoId,
+            @PathVariable String numeroOs,
             @Valid @RequestBody IncluirMecanicoRequest request){
         return OrdemServicoResponse.fromDomain(ordemServicoService.atribuirMecanico(
-                ordemServicoId,
+                numeroOs,
                 request.mecanicoId()));
     }
 
@@ -100,12 +101,12 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/diagnostico/iniciar")
+    @PatchMapping("/{numeroOs}/diagnostico/iniciar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
-    public OrdemServicoResponse iniciarDiagnostico(@PathVariable Long ordemServicoId, @AuthenticationPrincipal UserDetails userDetails){
+    public OrdemServicoResponse iniciarDiagnostico(@PathVariable String numeroOs, @AuthenticationPrincipal UserDetails userDetails){
         return OrdemServicoResponse.fromDomain(ordemServicoService.iniciarDiagnostico(
-                ordemServicoId,
+                numeroOs,
                 userDetails.getUsername()));
     }
 
@@ -117,18 +118,18 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/itens-necessarios")
+    @PatchMapping("/{numeroOs}/servicos/{servicoOsId}/itens-necessarios")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse registrarItensDoServico(
-            @PathVariable Long ordemServicoId,
+            @PathVariable String numeroOs,
             @PathVariable Long servicoOsId,
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody List<ItensNecessariosRequest> request
     ) {
         return OrdemServicoResponse.fromDomain(
                 ordemServicoService.registrarItemNecessario(
-                        ordemServicoId,
+                        numeroOs,
                         servicoOsId,
                         userDetails.getUsername(),
                         itensNecessariosMapper.mapToEntities(request)
@@ -144,16 +145,16 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/diagnostico/laudo")
+    @PatchMapping("/{numeroOs}/diagnostico/laudo")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse atualizarDiagnostico(
-            @PathVariable Long ordemServicoId,
+            @PathVariable String numeroOs,
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody RegistrarLaudoRequest request
     ){
         return OrdemServicoResponse.fromDomain(ordemServicoService.registrarLaudo(
-                ordemServicoId,
+                numeroOs,
                 userDetails.getUsername(),
                 request.laudo()
         ));
@@ -167,15 +168,15 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/diagnostico/finalizar")
+    @PatchMapping("/{numeroOs}/diagnostico/finalizar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public FinalizarDiagnosticoResponse finalizarDiagnostico(
-            @PathVariable Long ordemServicoId,
+            @PathVariable String numeroOs,
             @AuthenticationPrincipal UserDetails userDetails
     ){
         return FinalizarDiagnosticoResponse.from(ordemServicoService.finalizarDiagnostico(
-                ordemServicoId,
+                numeroOs,
                 userDetails.getUsername()
         ));
     }
@@ -188,15 +189,15 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/iniciar")
+    @PatchMapping("/{numeroOs}/servicos/{servicoOsId}/iniciar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO', 'ATENDENTE')")
     public OrdemServicoResponse iniciarServico(
-            @PathVariable Long ordemServicoId,
+            @PathVariable String numeroOs,
             @PathVariable Long servicoOsId
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.iniciarServico(ordemServicoId, servicoOsId)
+                ordemServicoService.iniciarServico(numeroOs, servicoOsId)
         );
     }
 
@@ -208,15 +209,15 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/servicos/{servicoOsId}/finalizar")
+    @PatchMapping("/{numeroOs}/servicos/{servicoOsId}/finalizar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse finalizarServico(
-            @PathVariable Long ordemServicoId,
+            @PathVariable String numeroOs,
             @PathVariable Long servicoOsId
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.finalizarServico(ordemServicoId, servicoOsId)
+                ordemServicoService.finalizarServico(numeroOs, servicoOsId)
         );
     }
 
@@ -228,14 +229,14 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{ordemServicoId}/entregar")
+    @PatchMapping("/{numeroOs}/entregar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
     public OrdemServicoResponse entregar(
-            @PathVariable Long ordemServicoId
+            @PathVariable String numeroOs
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.entregar(ordemServicoId)
+                ordemServicoService.entregar(numeroOs)
         );
     }
 
@@ -267,12 +268,12 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @GetMapping("/{ordemServicoId}")
+    @GetMapping("/{numeroOs}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
-    public OrdemServicoDetalheResponse detalhar(@PathVariable Long ordemServicoId) {
+    public OrdemServicoDetalheResponse detalhar(@PathVariable String numeroOs) {
         return OrdemServicoDetalheResponse.fromDomain(
-                ordemServicoService.buscaOrdemServicoPorId(ordemServicoId),
-                ordemServicoService.buscarOrcamentoAtual(ordemServicoId)
+                ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs),
+                ordemServicoService.buscarOrcamentoAtual(numeroOs)
         );
     }
 }

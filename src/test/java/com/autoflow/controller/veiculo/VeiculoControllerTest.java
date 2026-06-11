@@ -41,8 +41,7 @@ class VeiculoControllerTest {
                 .standaloneSetup(new VeiculoController(veiculoService))
                 .build();
 
-        // Ajuste os parâmetros do construtor conforme os campos reais de VeiculoRequest/Response
-        request = new VeiculoRequest("43243242432","Honda",2020,"ABC1234", "Civic");
+        request = new VeiculoRequest("11222333000181","Honda",2020,"ABC1234", "Civic");
         response = new VeiculoResponse(1L,"Honda",2020,"ABC1234", "Civic", null);
         responses = List.of(response);
     }

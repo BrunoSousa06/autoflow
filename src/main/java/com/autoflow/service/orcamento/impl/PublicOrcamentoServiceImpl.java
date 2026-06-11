@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -79,11 +81,18 @@ public class PublicOrcamentoServiceImpl implements PublicOrcamentoService {
         if(motivo != null) orcamento.setRecusaMotivo(motivo);
         orcamentoRepository.save(orcamento);
 
-        OrdemServicoEntity ordemServico = ordemServicoRepository.findById(orcamento.getOrdemServicoId())
+        OrdemServicoEntity ordemServico = ordemServicoRepository.findByNumeroOs(orcamento.getNumeroOs())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS nao encontrada"));
         ordemServico.finalizarPorOrcamentoRecusado();
         ordemServicoRepository.save(ordemServico);
         return orcamento;
+    }
+
+    @Override
+    public List<OrcamentoEntity> consultarOrcamentos(StatusOrcamento status) {
+        return status == null
+                ? orcamentoRepository.findAll()
+                : orcamentoRepository.findByStatus(status);
     }
 
     @Override

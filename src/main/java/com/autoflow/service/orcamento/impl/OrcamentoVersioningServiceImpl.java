@@ -17,4 +17,11 @@ public class OrcamentoVersioningServiceImpl implements OrcamentoVersioningServic
                 .map(o -> o.getVersao() + 1)
                 .orElse(1);
     }
+
+    @Override
+    public int proximaVersaoPrincipalNumeroOs(String numeroOs){
+        return repository.findTopByNumeroOsAndTipoOrderByVersaoDesc(numeroOs, TipoOrcamento.PRINCIPAL)
+                .map(o -> o.getVersao() + 1)
+                .orElse(1);
+    }
 }

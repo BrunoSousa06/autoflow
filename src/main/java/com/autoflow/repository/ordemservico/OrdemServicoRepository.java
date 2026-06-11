@@ -4,6 +4,7 @@ import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public interface OrdemServicoRepository extends JpaRepository<OrdemServicoEntity, Long> {
@@ -12,4 +13,5 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServicoEntity
 
     List<OrdemServicoEntity> findAllByOrderByDataAberturaDesc();
 
+    Optional<OrdemServicoEntity> findByNumeroOs(String numeroOs);
 }

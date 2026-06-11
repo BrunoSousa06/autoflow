@@ -21,6 +21,17 @@ public class ClienteService {
 
     final ClienteMapper clienteMapper;
 
+    public ClienteResponse cadastrar(ClienteRequest request) {
+
+        if (clienteRepository.existsByCpfCnpj(request.cpfCnpj())){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF/CNPJ ja cadastrado");
+        }
+
+        ClienteEntity save = clienteRepository.save(clienteMapper.mapToEntity(request));
+
+        return clienteMapper.maptoResponse(save);
+    }
+
     public ClienteEntity buscarPorId(Long id) {
         return clienteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
