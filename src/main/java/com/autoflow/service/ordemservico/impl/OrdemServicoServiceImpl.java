@@ -228,7 +228,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Transactional
     @Override
-    public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoOsId) {
+    public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
         StatusOrdemServico statusAnterior = ordemServico.getStatus();
 
@@ -253,7 +253,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Transactional
-    public OrdemServicoEntity finalizarServico(String numeroOs, Long servicoOsId) {
+    public OrdemServicoEntity finalizarServico(String numeroOs, Long servicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);

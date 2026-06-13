@@ -133,8 +133,8 @@ class ReparoAdicionalServiceImplTest {
         assertSame(reparoPersistido, reparoPersistido.getServicos().getFirst().getReparoAdicional());
         assertNull(reparoPersistido.getServicos().getFirst().getOrdemServico());
         assertEquals("Troca de pastilha", reparoPersistido.getServicos().getFirst().getNome());
-        verify(orcamentoVersioningService).proximaVersaoAdicional(10L);
-        verify(orcamentoFactory).criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(1), any());
+        verify(orcamentoVersioningService).proximaVersaoPrincipalNumeroOs("OS-123");
+        verify(orcamentoFactory).criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(2), any());
         verify(orcamentoPublicacaoService).publicar(30L);
     }
 
@@ -142,6 +142,7 @@ class ReparoAdicionalServiceImplTest {
     void criar_deveContinuarQuandoEnvioDeNotificacaoFalhar() {
         OrdemServicoEntity ordemServico = new OrdemServicoEntity();
         ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
         UsuarioEntity mecanico = new UsuarioEntity();
         mecanico.setId(20L);
         ServicoSolicitadoEntity servico = servico(1L, "Troca de pastilha", "120.00");
@@ -150,7 +151,7 @@ class ReparoAdicionalServiceImplTest {
         OrcamentoEntity orcamentoSalvo = new OrcamentoEntity();
         orcamentoSalvo.setId(30L);
 
-        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
         when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 10));
@@ -161,7 +162,7 @@ class ReparoAdicionalServiceImplTest {
             }
             return reparo;
         });
-        when(orcamentoVersioningService.proximaVersaoAdicional(10L)).thenReturn(1);
+        when(orcamentoVersioningService.proximaVersaoPrincipalNumeroOs("OS-123")).thenReturn(1);
         when(orcamentoFactory.criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(1), any()))
                 .thenReturn(orcamento);
         when(orcamentoRepository.save(orcamento)).thenReturn(orcamentoSalvo);
@@ -176,7 +177,7 @@ class ReparoAdicionalServiceImplTest {
                 );
 
         CriarReparoAdicionalResult result = service.criar(
-                10L,
+                "OS-123",
                 "mecanico@autoflow.com",
                 List.of(servico)
         );
@@ -190,14 +191,15 @@ class ReparoAdicionalServiceImplTest {
     void criar_deveLancarErroQuandoNaoReceberServicos() {
         OrdemServicoEntity ordemServico = new OrdemServicoEntity();
         ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
         UsuarioEntity mecanico = new UsuarioEntity();
         mecanico.setId(20L);
-        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> service.criar(10L, "mecanico@autoflow.com", List.of())
+                () -> service.criar("OS-123", "mecanico@autoflow.com", List.of())
         );
 
         verify(reparoAdicionalRepository, never()).save(any());
@@ -208,17 +210,18 @@ class ReparoAdicionalServiceImplTest {
     void criar_deveLancarErroQuandoServicoNaoTemItemNecessario() {
         OrdemServicoEntity ordemServico = new OrdemServicoEntity();
         ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
         UsuarioEntity mecanico = new UsuarioEntity();
         mecanico.setId(20L);
         ServicoSolicitadoEntity servico = servico(1L, "Troca de pastilha", "120.00");
 
-        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> service.criar(10L, "mecanico@autoflow.com", List.of(servico))
+                () -> service.criar("OS-123", "mecanico@autoflow.com", List.of(servico))
         );
 
         verify(reparoAdicionalRepository, never()).save(any());
@@ -319,13 +322,13 @@ class ReparoAdicionalServiceImplTest {
     void aprovarSeExistirPorOrcamentoId_deveAprovarQuandoEncontrarReparo() {
         OrdemServicoEntity ordemServico = new OrdemServicoEntity();
         ordemServico.setId(10L);
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico(1L, "Troca", "80.00")));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico(1L, "Troca", "80.00")));
         reparo.setId(40L);
         reparo.setOrcamentoId(30L);
 
         when(reparoAdicionalRepository.findByOrcamentoId(30L)).thenReturn(Optional.of(reparo));
         when(reparoAdicionalRepository.findById(40L)).thenReturn(Optional.of(reparo));
-        when(ordemServicoService.buscaOrdemServicoPorId(10L)).thenReturn(ordemServico);
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
 
         service.aprovarSeExistirPorOrcamentoId(30L);
 
@@ -345,7 +348,7 @@ class ReparoAdicionalServiceImplTest {
 
     @Test
     void recusarSeExistirPorOrcamentoId_deveRecusarQuandoEncontrarReparo() {
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(10L, 20L, List.of(servico(1L, "Troca", "80.00")));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico(1L, "Troca", "80.00")));
         reparo.setId(40L);
         reparo.setOrcamentoId(30L);
 

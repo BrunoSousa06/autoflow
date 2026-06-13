@@ -8,9 +8,9 @@ import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import com.autoflow.service.ordemservico.reparoadicional.impl.CriarReparoAdicionalResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -30,10 +30,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -68,9 +65,9 @@ class ReparoAdicionalControllerTest {
         List<ItemNecessarioEntity> itens = List.of(itemNecessario(7L, 2));
         when(itensNecessariosMapper.mapToEntities(any())).thenReturn(itens);
         when(reparoAdicionalService.criar(
-                "OS-123",
-                "mecanico@autoflow.com",
-                servicos
+                eq("OS-123"),
+                eq("mecanico@autoflow.com"),
+                any()
         )).thenReturn(new CriarReparoAdicionalResult(
                 5L,
                 20L,
@@ -100,15 +97,15 @@ class ReparoAdicionalControllerTest {
                 .andExpect(jsonPath("$.orcamentoId").value(20L))
                 .andExpect(jsonPath("$.publicUrl").value("http://localhost:8080/public/orcamentos/20?token=abc"));
 
-        verify(servicoSolicitadoMapper).mapToEntities(any());
-        verify(reparoAdicionalService).criar("OS-123", "mecanico@autoflow.com", servicos);
+        verify(itensNecessariosMapper).mapToEntities(any());
+        verify(reparoAdicionalService).criar(eq("OS-123"), eq("mecanico@autoflow.com"), any());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void deveCriarReparoAdicionalComoAdmin() throws Exception {
         when(itensNecessariosMapper.mapToEntities(any())).thenReturn(List.of(itemNecessario(7L, 2)));
-        when(reparoAdicionalService.criar(eq(1L), eq("user"), any()))
+        when(reparoAdicionalService.criar(eq("OS-123"), eq("user"), any()))
                 .thenReturn(new CriarReparoAdicionalResult(5L, 20L, "url"));
 
         mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
@@ -132,7 +129,7 @@ class ReparoAdicionalControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reparoAdicionalId").value(5L));
 
-        verify(reparoAdicionalService).criar("OS-123", "user", servicos);
+        verify(reparoAdicionalService).criar(eq("OS-123"), eq("user"), any());
     }
 
     @Test
@@ -155,7 +152,7 @@ class ReparoAdicionalControllerTest {
     @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarCriarReparoAdicional() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", 1L)
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

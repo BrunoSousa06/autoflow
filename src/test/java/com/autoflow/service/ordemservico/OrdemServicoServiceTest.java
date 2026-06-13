@@ -380,7 +380,8 @@ class OrdemServicoServiceTest {
     void deveIniciarServicoSemRegistrarHistoricoQuandoOsJaEstaEmExecucao() {
         Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
-        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
+        String numeroOs = "OS-123";
+        OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
         os.iniciarExecucao();
         ItemNecessarioEntity itemOriginal = criarItemNecessarioSolicitado(10L, 2);
@@ -389,12 +390,12 @@ class OrdemServicoServiceTest {
                 10L, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 2, StatusItemNecessario.DISPONIVEL
         );
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(pecaInsumoService.verificarDisponibilidadeEBaixar(List.of(itemOriginal)))
                 .thenReturn(new BaixaEstoqueResult(List.of(itemAtualizado)));
         when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.iniciarServico(ordemServicoId, servicoOsId);
+        OrdemServicoEntity resultado = service.iniciarServico(os.getNumeroOs(), servicoOsId);
 
         assertEquals(StatusOrdemServico.EM_EXECUCAO, resultado.getStatus());
         assertEquals(StatusServicoOs.EM_EXECUCAO, resultado.buscarServicoSolicitado(servicoOsId).getStatus());
@@ -404,13 +405,14 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveLancarErroQuandoIniciarServicoComStatusInvalido() {
-        Long ordemServicoId = 1L;
-        Long servicoOsId = 55L;
-        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, servicoOsId);
-        os.setStatus(StatusOrdemServico.RECEBIDA);
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
 
-        assertThrows(IllegalStateException.class, () -> service.iniciarServico(ordemServicoId, servicoOsId));
+        Long servicoOsId = 55L;
+        String numeroOs = "OS-123";
+        OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
+        os.setStatus(StatusOrdemServico.RECEBIDA);
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
+
+        assertThrows(IllegalStateException.class, () -> service.iniciarServico(numeroOs, servicoOsId));
 
         verifyNoInteractions(pecaInsumoService);
         verify(repository, never()).save(any());
@@ -466,7 +468,7 @@ class OrdemServicoServiceTest {
     @Test
     void deveFinalizarDiagnosticoEGerarOrcamento() {
         String numeroOs = "OS-123";
-        Long ordemServicoId = 1L;
+
         String emailAdmin = "admin@autoflow.com";
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, 55L);
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
@@ -502,7 +504,8 @@ class OrdemServicoServiceTest {
     void deveFinalizarDiagnosticoMesmoQuandoNotificacaoFalhar() {
         Long ordemServicoId = 1L;
         String emailAdmin = "admin@autoflow.com";
-        OrdemServicoEntity os = criarOrdemServicoComServico(ordemServicoId, 55L);
+        String numerOs = "OS-123";
+        OrdemServicoEntity os = criarOrdemServicoComServico(numerOs, 55L);
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         DiagnosticoEntity diagnostico = new DiagnosticoEntity();
         diagnostico.setLaudo("Laudo");
@@ -510,9 +513,9 @@ class OrdemServicoServiceTest {
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         OrcamentoEntity orcamento = new OrcamentoEntity();
 
-        when(repository.findById(ordemServicoId)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOs(numerOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
-        when(orcamentoVersioningServiceImpl.proximaVersaoPrincipal(ordemServicoId)).thenReturn(1);
+        when(orcamentoVersioningServiceImpl.proximaVersaoPrincipalNumeroOs(numerOs)).thenReturn(1);
         when(orcamentoFactoryImpl.criarPrincipalDisponivel(eq(os), eq(1), any())).thenReturn(orcamento);
         when(orcamentoRepository.save(orcamento)).thenAnswer(invocation -> {
             orcamento.setId(10L);
@@ -525,7 +528,7 @@ class OrdemServicoServiceTest {
                 .enviarLinkOrcamentoParaCliente(orcamento, os, "http://localhost/orcamento");
         when(repository.save(os)).thenReturn(os);
 
-        FinalizarDiagnosticoResult resultado = service.finalizarDiagnostico(ordemServicoId, emailAdmin);
+        FinalizarDiagnosticoResult resultado = service.finalizarDiagnostico(numerOs, emailAdmin);
 
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.ordemServico().getStatus());
         assertEquals(10L, resultado.orcamentoId());
@@ -535,7 +538,7 @@ class OrdemServicoServiceTest {
     @Test
     void deveFinalizarDiagnosticoComoMecanicoValidandoPermissao() {
         String numeroOs = "OS-123";
-        Long ordemServicoId = 1L;
+
         String emailMecanico = "mecanico@autoflow.com";
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, 55L);
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);

@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -18,7 +17,7 @@ public class ServicoEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @Column(unique = true, nullable = false)
-    ServicoEnum nome;
+    String nome;
     BigDecimal valor ;
     @Column(nullable = false, length = 500)
     String descricao;
