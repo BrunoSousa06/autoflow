@@ -21,6 +21,13 @@ public class OrcamentoVersioningServiceImpl implements OrcamentoVersioningServic
     }
 
     @Override
+    public int proximaVersaoPrincipalNumeroOs(String numeroOs){
+        return repository.findTopByNumeroOsAndTipoOrderByVersaoDesc(numeroOs, TipoOrcamento.PRINCIPAL)
+                .map(o -> o.getVersao() + 1)
+                .orElse(1);
+    }
+
+    @Override
     @Transactional
     public void substituirDisponivelAtual(Long ordemServicoId) {
         repository.findByOrdemServicoIdAndStatus(

@@ -13,7 +13,7 @@ import java.util.List;
 public interface ReparoAdicionalService {
     @Transactional
     CriarReparoAdicionalResult criar(
-            Long ordemServicoId,
+            String numeroOs,
             String emailMecanico,
             List<ServicoSolicitadoEntity> servicos
     );

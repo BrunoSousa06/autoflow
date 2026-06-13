@@ -18,31 +18,33 @@ public interface OrdemServicoService {
             List<ServicoSolicitadoEntity> servicosSolicitados
     );
     @Transactional
-    OrdemServicoEntity incluirServicos(Long ordemServicoId, List<ServicoSolicitadoEntity> servicos);
+    OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos);
 
-    OrdemServicoEntity atribuirMecanico(Long ordemServicoId, Long mecanicoId);
+    OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId);
 
-    OrdemServicoEntity iniciarDiagnostico(Long ordemServicoId, String emailUsuarioLogado);
+    OrdemServicoEntity iniciarDiagnostico(String numeroOs, String emailUsuarioLogado);
 
-    OrdemServicoEntity registrarItemNecessario(Long ordemServicoId, Long servicoId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios);
+    OrdemServicoEntity registrarItemNecessario(String numeroOs, Long servicoOsId, String emailUsuarioLogado, List<ItemNecessarioEntity> itensNecessarios);
 
-    OrdemServicoEntity registrarLaudo(Long ordemServicoId, String emailUsuarioLogado, String laudo);
+    OrdemServicoEntity registrarLaudo(String numeroOs, String emailUsuarioLogado, String laudo);
 
     @Transactional
-    FinalizarDiagnosticoResult finalizarDiagnostico(Long ordemServicoId, String emailUsuarioLogado);
+    FinalizarDiagnosticoResult finalizarDiagnostico(String numeroOs, String emailUsuarioLogado);
 
     OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId);
 
+    OrdemServicoEntity buscaOrdemServicoPorNumeroOs(String numeroOs);
+
     @Transactional
-    OrdemServicoEntity iniciarServico(Long ordemServicoId, Long servicoId);
+    OrdemServicoEntity iniciarServico(String numeroOs, Long servicoId);
 
-    OrdemServicoEntity finalizarServico(Long ordemServicoId, Long servicoId);
+    OrdemServicoEntity finalizarServico(String numeroOs, Long servicoId);
 
-    OrdemServicoEntity entregar(Long ordemServicoId);
+    OrdemServicoEntity entregar(String numeroOs);
 
     List<AcompanhamentoOrdemServicoResponse> listarAcompanhamentoCliente(String username);
 
     List<OrdemServicoEntity> listar();
 
-    OrcamentoEntity buscarOrcamentoAtual(Long ordemServicoId);
+    OrcamentoEntity buscarOrcamentoAtual(String numeroOs);
 }

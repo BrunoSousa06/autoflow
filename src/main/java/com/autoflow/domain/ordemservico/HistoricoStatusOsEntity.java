@@ -21,6 +21,8 @@ public class HistoricoStatusOsEntity {
     @Column(name = "ordem_servico_id", nullable = false)
     private Long ordemServicoId;
 
+    private String numeroOs;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusOrdemServico status;
@@ -34,11 +36,13 @@ public class HistoricoStatusOsEntity {
     public static HistoricoStatusOsEntity criar(
             Long ordemServicoId,
             StatusOrdemServico status,
-            String mensagemCliente
+            String mensagemCliente,
+            String numeroOs
     ) {
         HistoricoStatusOsEntity historico = new HistoricoStatusOsEntity();
         historico.setOrdemServicoId(ordemServicoId);
         historico.setStatus(status);
+        historico.setNumeroOs(numeroOs);
         historico.setMensagemCliente(mensagemCliente);
         historico.setRegistradoEm(LocalDateTime.now());
         return historico;

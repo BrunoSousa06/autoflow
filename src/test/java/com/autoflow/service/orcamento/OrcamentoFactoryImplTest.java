@@ -144,7 +144,7 @@ class OrcamentoFactoryImplTest {
                         null
                 )
         ));
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(99L, 20L, List.of(servicoAdicional));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servicoAdicional));
         reparo.setId(55L);
 
         LocalDateTime now = LocalDateTime.of(2026, 6, 4, 10, 0);
@@ -179,7 +179,7 @@ class OrcamentoFactoryImplTest {
         OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
         os.setId(99L);
 
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(99L, 20L, List.of());
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of());
 
         OrcamentoEntity orc = factory.criarAdicionalDisponivel(os, reparo, 1, LocalDateTime.of(2026, 6, 4, 10, 0));
 

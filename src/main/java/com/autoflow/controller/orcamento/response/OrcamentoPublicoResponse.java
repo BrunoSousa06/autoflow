@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public record OrcamentoPublicoResponse(
         Long id,
         Long ordemServicoId,
+        String numeroOs,
         TipoOrcamento tipo,
         Integer versao,
         StatusOrcamento status,
@@ -22,6 +23,7 @@ public record OrcamentoPublicoResponse(
     public static OrcamentoPublicoResponse from(OrcamentoEntity orcamentoEntity) {
         return new OrcamentoPublicoResponse(orcamentoEntity.getId(),
                 orcamentoEntity.getOrdemServicoId(),
+                orcamentoEntity.getNumeroOs(),
                 orcamentoEntity.getTipo(),
                 orcamentoEntity.getVersao(),
                 orcamentoEntity.getStatus(),

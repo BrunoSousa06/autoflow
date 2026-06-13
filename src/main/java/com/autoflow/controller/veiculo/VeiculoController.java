@@ -39,6 +39,7 @@ public class VeiculoController {
     @ApiResponse(responseCode = "200", description = "Veiculo encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Veiculo não foi encontrado")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'CLIENTE')")
     public ResponseEntity<VeiculoResponse> listar(@PathVariable Long id ){
         return ResponseEntity.ok(veiculoService.listar(id));
     }
@@ -47,6 +48,7 @@ public class VeiculoController {
     @ApiResponse(responseCode = "200", description = "Veiculo encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Veiculo não foi encontrado")
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'CLIENTE')")
     public ResponseEntity<List<VeiculoResponse>> listarTodosVeiculos(){
         return ResponseEntity.ok(veiculoService.listarTodosVeiculos());
 
@@ -57,6 +59,7 @@ public class VeiculoController {
     @ApiResponse(responseCode = "404", description = "Veiculo não foi encontrado")
     @ApiResponse(responseCode = "409", description = "Placa informada ja foi cadastrada")
     @PatchMapping("/{id}/atualizacao")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'CLIENTE')")
     public ResponseEntity<VeiculoResponse> atualizar(@Valid @RequestBody VeiculoRequest request, @PathVariable Long id){
         return ResponseEntity.ok(veiculoService.atualizar(request, id));
 

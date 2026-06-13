@@ -7,4 +7,6 @@ public interface OrcamentoVersioningService {
     void substituirDisponivelAtual(Long ordemServicoId);
 
     int proximaVersaoAdicional(Long ordemServicoId);
+
+    int proximaVersaoPrincipalNumeroOs(String numeroOs);
 }

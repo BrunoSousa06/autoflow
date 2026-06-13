@@ -24,6 +24,9 @@ public class OrcamentoEntity {
     @Column(name = "ordem_servico_id", nullable = false)
     private Long ordemServicoId;
 
+    @Column(name = "numero_os", nullable = false)
+    private String numeroOs;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoOrcamento tipo;

@@ -60,6 +60,80 @@ class ClienteServiceTest {
         );
     }
 
+    @Test
+    void deveCadastrarCliente() {
+        ClienteRequest request = new ClienteRequest(
+                "Bruno",
+                "12345678901",
+                "11999999999",
+                "joao@email.com"
+        );
+
+        ClienteEntity entity = new ClienteEntity();
+        entity.setId(1L);
+        entity.setNome("Bruno");
+        entity.setCpfCnpj("12345678901");
+
+        ClienteResponse response = new ClienteResponse(
+                1L,
+                "Bruno",
+                "12345678901",
+                "11999999999",
+                "joao@email.com",
+                null
+        );
+
+        when(clienteRepository.existsByCpfCnpj("12345678901"))
+                .thenReturn(false);
+
+        when(clienteMapper.mapToEntity(request))
+                .thenReturn(entity);
+
+        when(clienteRepository.save(entity))
+                .thenReturn(entity);
+
+        when(clienteMapper.maptoResponse(entity))
+                .thenReturn(response);
+
+        ClienteResponse resultado = clienteService.cadastrar(request);
+
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.id());
+        assertEquals("Bruno", resultado.nome());
+        assertEquals("12345678901", resultado.cpfCnpj());
+
+        verify(clienteRepository).existsByCpfCnpj("12345678901");
+        verify(clienteMapper).mapToEntity(request);
+        verify(clienteRepository).save(entity);
+        verify(clienteMapper).maptoResponse(entity);
+    }
+
+    @Test
+    void deveLancarConflictQuandoCpfCnpjJaExistir() {
+        ClienteRequest request = new ClienteRequest(
+                "Bruno",
+                "12345678901",
+                "11999999999",
+                "joao@email.com"
+        );
+
+        when(clienteRepository.existsByCpfCnpj("12345678901"))
+                .thenReturn(true);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> clienteService.cadastrar(request)
+        );
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("CPF/CNPJ ja cadastrado", exception.getReason());
+
+        verify(clienteRepository).existsByCpfCnpj("12345678901");
+        verify(clienteRepository, never()).save(any());
+        verify(clienteMapper, never()).mapToEntity(any());
+        verify(clienteMapper, never()).maptoResponse(any());
+    }
+
     @Nested
     class BuscarPorIdTests {
 

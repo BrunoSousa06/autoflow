@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -171,5 +172,25 @@ class PublicOrcamentoControllerTest {
                         .ano(2020)
                         .build())
                 .build();
+    }
+
+    @Test
+    void deveListarOrcamentosPorStatus() throws Exception {
+
+        OrcamentoEntity orcamento = new OrcamentoEntity();
+        orcamento.setId(1L);
+        orcamento.setNumeroOs("OS-123");
+        orcamento.setStatus(StatusOrcamento.DISPONIVEL);
+
+        when(publicOrcamentoService.consultarOrcamentos(StatusOrcamento.DISPONIVEL))
+                .thenReturn(List.of(orcamento));
+
+        mockMvc.perform(get("/public/orcamentos")
+                        .param("token", "abc123")
+                        .param("statusOrcamento", "DISPONIVEL"))
+                .andExpect(status().isOk());
+
+        verify(publicOrcamentoService)
+                .consultarOrcamentos(StatusOrcamento.DISPONIVEL);
     }
 }
