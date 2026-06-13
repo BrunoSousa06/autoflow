@@ -12,10 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Entity
@@ -139,8 +137,33 @@ public class OrdemServicoEntity {
         }
     }
 
-    public void adicionarServicos(List<ServicoSolicitadoEntity> servicosSolicitados) {
-        validarServicos(servicosSolicitados);
+    public void adicionarServicosSolicitados(List<ServicoSolicitadoEntity> servicosSolicitados) {
+        if (servicosSolicitados == null || servicosSolicitados.isEmpty()) {
+            return;
+        }
+
+        Set<Long> idsJaAdicionados = this.servicosSolicitados.stream()
+                .map(ServicoSolicitadoEntity::getServicoId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Set<Long> idsNovos = new HashSet<>();
+
+        for (ServicoSolicitadoEntity servico : servicosSolicitados) {
+            Long servicoId = servico.getServicoId();
+
+            if (servicoId == null) {
+                throw new IllegalArgumentException("Serviço informado sem ID.");
+            }
+
+            if (!idsNovos.add(servicoId)) {
+                throw new IllegalArgumentException("Serviço repetido na requisição: ID " + servicoId);
+            }
+
+            if (idsJaAdicionados.contains(servicoId)) {
+                throw new IllegalArgumentException("Serviço já incluído na ordem de serviço: ID " + servicoId);
+            }
+        }
 
         servicosSolicitados.forEach(servico -> {
             servico.setOrdemServico(this);
@@ -164,12 +187,6 @@ public class OrdemServicoEntity {
     private static void validarVeiculo(VeiculoEntity veiculo) {
         if (veiculo == null) {
             throw new IllegalArgumentException("Veiculo e obrigatorio.");
-        }
-    }
-
-    private static void validarServicos(List<ServicoSolicitadoEntity> servicosSolicitados) {
-        if (servicosSolicitados == null || servicosSolicitados.isEmpty()) {
-            throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
         }
     }
 

@@ -61,6 +61,7 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
 
         ReparoAdicionalEntity reparo =
                 ReparoAdicionalEntity.criar(ordemServico.getNumeroOs(), mecanicoId, servicosComDados);
+        reparo.setOrdemServicoId(ordemServico.getId());
 
         ReparoAdicionalEntity reparoSalvo = reparoAdicionalRepository.save(reparo);
 
@@ -114,7 +115,7 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
                         .map(servico -> copiarServicoParaOrdemServico(servico, ordemServico))
                         .toList();
 
-        ordemServico.adicionarServicos(servicosParaOs);
+        ordemServico.adicionarServicosSolicitados(servicosParaOs);
 
         reparoAdicionalRepository.save(reparo);
 

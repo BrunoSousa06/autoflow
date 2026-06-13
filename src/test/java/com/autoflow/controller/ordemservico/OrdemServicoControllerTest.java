@@ -2,30 +2,25 @@ package com.autoflow.controller.ordemservico;
 
 import com.autoflow.config.security.service.CustomUserDetailsService;
 import com.autoflow.config.security.service.JwtService;
+import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
+import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.StatusItemNecessario;
-import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.domain.ordemservico.StatusServicoOs;
+import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.mapper.ServicoSolicitadoMapperImpl;
-import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -47,19 +42,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -151,6 +137,50 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L));
 
         verify(ordemServicoService).incluirServicos(eq("OS-123"), anyList());
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveAtribuirMecanicoPorEmail() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+
+        when(ordemServicoService.atribuirMecanico(eq("OS-123"), isNull(), eq("mecanico@autoflow.com")))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/mecanico", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "mecanicoEmail": "mecanico@autoflow.com"
+                                }
+                                """))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(ordemServicoService).atribuirMecanico("OS-123", null, "mecanico@autoflow.com");
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveAtribuirMecanicoPorId() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+
+        when(ordemServicoService.atribuirMecanico(eq("OS-123"), eq(2L), isNull()))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/mecanico", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "mecanicoId": 2
+                                }
+                                """))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(ordemServicoService).atribuirMecanico("OS-123", 2L, null);
     }
 
     @Test
@@ -309,6 +339,36 @@ class OrdemServicoControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
+    void deveCalcularTempoMedioFinalizacaoComoAdmin() throws Exception {
+        TempoMedioOrdemServicoResponse response = new TempoMedioOrdemServicoResponse(
+                3L,
+                7200.0,
+                120.0,
+                2.0
+        );
+        when(ordemServicoService.calcularTempoMedioFinalizacao()).thenReturn(response);
+
+        mockMvc.perform(get("/ordens-servico/metricas/tempo-medio"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantidadeOrdensFinalizadas").value(3L))
+                .andExpect(jsonPath("$.tempoMedioSegundos").value(7200.0))
+                .andExpect(jsonPath("$.tempoMedioMinutos").value(120.0))
+                .andExpect(jsonPath("$.tempoMedioHoras").value(2.0));
+
+        verify(ordemServicoService).calcularTempoMedioFinalizacao();
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveRetornarForbiddenQuandoAtendenteTentarCalcularTempoMedioFinalizacao() throws Exception {
+        mockMvc.perform(get("/ordens-servico/metricas/tempo-medio"))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).calcularTempoMedioFinalizacao();
+    }
+
+    @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarListarOrdensServico() throws Exception {
         mockMvc.perform(get("/ordens-servico"))
@@ -448,7 +508,7 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
         ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
-        ordemServico.adicionarServicos(List.of(servico));
+        ordemServico.adicionarServicosSolicitados(List.of(servico));
 
         ordemServico.setId(id);
         ordemServico.setNumeroOs(numeroOs);

@@ -7,7 +7,7 @@ import com.autoflow.domain.orcamento.TipoOrcamento;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record OrcamentoPublicoResponse(
+public record OrcamentoResponse(
         Long id,
         Long ordemServicoId,
         String numeroOs,
@@ -20,8 +20,8 @@ public record OrcamentoPublicoResponse(
         LocalDateTime criadoEm,
         LocalDateTime disponibilizadoEm
 ) {
-    public static OrcamentoPublicoResponse from(OrcamentoEntity orcamentoEntity) {
-        return new OrcamentoPublicoResponse(orcamentoEntity.getId(),
+    public static OrcamentoResponse from(OrcamentoEntity orcamentoEntity) {
+        return new OrcamentoResponse(orcamentoEntity.getId(),
                 orcamentoEntity.getOrdemServicoId(),
                 orcamentoEntity.getNumeroOs(),
                 orcamentoEntity.getTipo(),

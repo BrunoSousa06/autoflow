@@ -2,6 +2,7 @@ package com.autoflow.service.ordemservico;
 
 import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
+import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
@@ -20,7 +21,7 @@ public interface OrdemServicoService {
     @Transactional
     OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos);
 
-    OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId);
+    OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId, String email);
 
     OrdemServicoEntity iniciarDiagnostico(String numeroOs, String emailUsuarioLogado);
 
@@ -30,8 +31,6 @@ public interface OrdemServicoService {
 
     @Transactional
     FinalizarDiagnosticoResult finalizarDiagnostico(String numeroOs, String emailUsuarioLogado);
-
-    OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId);
 
     OrdemServicoEntity buscaOrdemServicoPorNumeroOs(String numeroOs);
 
@@ -47,4 +46,6 @@ public interface OrdemServicoService {
     List<OrdemServicoEntity> listar();
 
     OrcamentoEntity buscarOrcamentoAtual(String numeroOs);
+
+    TempoMedioOrdemServicoResponse calcularTempoMedioFinalizacao();
 }

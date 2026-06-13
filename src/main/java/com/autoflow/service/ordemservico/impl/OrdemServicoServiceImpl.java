@@ -2,6 +2,7 @@ package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
+import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -14,6 +15,7 @@ import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
+import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.orcamento.OrcamentoFactory;
@@ -94,7 +96,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 .map(servico -> preencherDadosDoServico(ordemServico, servico))
                 .toList();
 
-        ordemServico.adicionarServicos(servicosComDados);
+        ordemServico.adicionarServicosSolicitados(servicosComDados);
         return salvarOs(ordemServico);
     }
 
@@ -107,16 +109,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         List<ServicoSolicitadoEntity> servicosComDados =
                 preencherDadosDosServicos(ordemServico, servicos);
 
-        ordemServico.adicionarServicos(servicosComDados);
+        ordemServico.adicionarServicosSolicitados(servicosComDados);
 
         return ordemServicoRepository.save(ordemServico);
     }
 
     @Override
-    public OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId) {
+    public OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId, String email) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
-        UsuarioEntity mecanico = usuarioService.buscarMecanicoPorId(mecanicoId);
+        UsuarioEntity mecanico = buscarMecanicoParaAtribuicao(mecanicoId, email);
 
         if (ordemServico.getDiagnostico() == null) {
             ordemServico.setDiagnostico(new DiagnosticoEntity());
@@ -125,6 +127,33 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServico.getDiagnostico().setMecanico(mecanico);
 
         return ordemServicoRepository.save(ordemServico);
+    }
+
+    private UsuarioEntity buscarMecanicoParaAtribuicao(
+            Long mecanicoId,
+            String mecanicoEmail
+    ) {
+        if (mecanicoId != null) {
+            return usuarioService.buscarMecanicoPorId(mecanicoId);
+        }
+
+        if (mecanicoEmail != null && !mecanicoEmail.isBlank()) {
+            UsuarioEntity usuario = usuarioService.buscarPorEmail(mecanicoEmail);
+
+            if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Usuário informado não é mecânico."
+                );
+            }
+
+            return usuario;
+        }
+
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Informe mecanicoId ou mecanicoEmail."
+        );
     }
 
     @Override
@@ -215,12 +244,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId) {
-        return ordemServicoRepository.findById(ordemServicoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
-    }
-
-    @Override
     public OrdemServicoEntity buscaOrdemServicoPorNumeroOs(String numeroOs) {
         return ordemServicoRepository.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
@@ -307,6 +330,23 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return orcamentoRepository.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
                 .or(() -> orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc(numeroOs))
                 .orElse(null);
+    }
+
+    @Override
+    public TempoMedioOrdemServicoResponse calcularTempoMedioFinalizacao() {
+        TempoMedioOrdemServicoProjection projection =
+                ordemServicoRepository.calcularTempoMedioFinalizacao();
+
+        Double tempoMedioSegundos = projection.getTempoMedioSegundos();
+        Double tempoMedioMinutos = tempoMedioSegundos == null ? null : tempoMedioSegundos / 60;
+        Double tempoMedioHoras = tempoMedioSegundos == null ? null : tempoMedioSegundos / 3600;
+
+        return new TempoMedioOrdemServicoResponse(
+                projection.getQuantidadeOrdensFinalizadas(),
+                tempoMedioSegundos,
+                tempoMedioMinutos,
+                tempoMedioHoras
+        );
     }
 
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {

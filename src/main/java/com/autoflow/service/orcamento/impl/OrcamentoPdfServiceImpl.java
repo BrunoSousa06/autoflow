@@ -3,6 +3,7 @@ package com.autoflow.service.orcamento.impl;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
 import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
+import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPTable;
@@ -32,7 +33,8 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
 
             document.open();
 
-            adicionarTitulo(document, "Orçamento - AutoFlow");
+            adicionarTitulo(document);
+            adicionarAvisoReparoAdicional(document, orcamento);
             adicionarDadosOrcamento(document, orcamento);
             adicionarServicos(document, orcamento.getServicos());
             adicionarItens(document, orcamento.getItens());
@@ -48,10 +50,32 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
         }
     }
 
-    private void adicionarTitulo(Document document, String mensagem) throws DocumentException {
+    private void adicionarAvisoReparoAdicional(
+            Document document,
+            OrcamentoEntity orcamento
+    ) throws DocumentException {
+        if (!TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
+            return;
+        }
+
+        Font avisoFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+
+        Paragraph aviso = new Paragraph(
+                "Este documento se refere a um reparo adicional identificado durante a execução da ordem de serviço. " +
+                        "Ele é complementar ao orçamento principal já aprovado.",
+                avisoFont
+        );
+
+        aviso.setAlignment(Element.ALIGN_CENTER);
+        aviso.setSpacingAfter(15);
+
+        document.add(aviso);
+    }
+
+    private void adicionarTitulo(Document document) throws DocumentException {
         Font tituloFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
 
-        Paragraph titulo = new Paragraph(mensagem, tituloFont);
+        Paragraph titulo = new Paragraph("Orçamento - AutoFlow", tituloFont);
         titulo.setAlignment(Element.ALIGN_CENTER);
         titulo.setSpacingAfter(20);
 
@@ -78,8 +102,9 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
         Font textoFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
 
         adicionarSubTitulo(document, "Dados do Orçamento");
+        document.add(new Paragraph("Orçamento ID: " + orcamento.getId()));
         document.add(new Paragraph("Ordem de Serviço: " + orcamento.getNumeroOs(), textoFont));
-        document.add(new Paragraph("Tipo: " + orcamento.getTipo(), textoFont));
+        document.add(new Paragraph("Tipo: " + descricaoTipoOrcamento(orcamento), textoFont));
         document.add(new Paragraph("Versão: " + orcamento.getVersao(), textoFont));
         document.add(new Paragraph("Status: " + orcamento.getStatus(), textoFont));
         if (orcamento.getCriadoEm() != null) {
@@ -100,6 +125,14 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
         Paragraph espaco = new Paragraph(" ");
         espaco.setSpacingAfter(10);
         document.add(espaco);
+    }
+
+    private String descricaoTipoOrcamento(OrcamentoEntity orcamento) {
+        if (TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
+            return "Reparo adicional";
+        }
+
+        return "Orçamento principal";
     }
 
     private void adicionarServicos(
@@ -220,7 +253,7 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
         BigDecimal valorSeguro = valor != null ? valor : BigDecimal.ZERO;
 
         return NumberFormat
-                .getCurrencyInstance(new Locale("pt", "BR"))
+                .getCurrencyInstance(Locale.of("pt", "BR"))
                 .format(valorSeguro);
     }
 }

@@ -8,7 +8,7 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
 import com.autoflow.service.orcamento.OrcamentoPdfService;
-import com.autoflow.service.orcamento.PublicOrcamentoService;
+import com.autoflow.service.orcamento.OrcamentoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,16 +16,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = PublicOrcamentoController.class)
@@ -36,7 +37,7 @@ class PublicOrcamentoControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private PublicOrcamentoService publicOrcamentoService;
+    private OrcamentoService orcamentoService;
 
     @MockitoBean
     private OrcamentoPdfService orcamentoPdfService;
@@ -48,109 +49,43 @@ class PublicOrcamentoControllerTest {
     private CustomUserDetailsService userDetailsService;
 
     @Test
-    void deveConsultarOrcamentoPublico() throws Exception {
-        OrcamentoEntity orc = baseOrcamento();
+    void deveBaixarPdfValidandoTokenPublico() throws Exception {
+        OrcamentoEntity orcamento = baseOrcamento();
+        byte[] pdf = "%PDF fake".getBytes();
 
-        when(publicOrcamentoService.consultar(10L, "tok"))
-                .thenReturn(orc);
+        when(orcamentoService.consultarPorToken(10L, "tok")).thenReturn(orcamento);
+        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdf);
 
-        mockMvc.perform(get("/public/orcamentos/{id}", 10L)
+        mockMvc.perform(get("/public/orcamentos/{id}/pdf", 10L)
                         .param("token", "tok"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10L))
-                .andExpect(jsonPath("$.ordemServicoId").value(1L))
-                .andExpect(jsonPath("$.tipo").value("PRINCIPAL"))
-                .andExpect(jsonPath("$.versao").value(1))
-                .andExpect(jsonPath("$.status").value("DISPONIVEL"))
-                .andExpect(jsonPath("$.totalGeral").value(150.00));
+                .andExpect(header().string("Content-Type", MediaType.APPLICATION_PDF_VALUE))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"orcamento-10.pdf\""));
 
-        verify(publicOrcamentoService).consultar(10L, "tok");
+        verify(orcamentoService).consultarPorToken(10L, "tok");
+        verify(orcamentoPdfService).gerarPdf(orcamento);
     }
 
     @Test
-    void deveAprovarOrcamentoPublico() throws Exception {
-        OrcamentoEntity orc = baseOrcamento();
-        orc.setStatus(StatusOrcamento.APROVADO);
+    void deveRetornarUnauthorizedQuandoTokenPublicoForInvalido() throws Exception {
 
-        when(publicOrcamentoService.aprovar(10L, "tok", "Maria"))
-                .thenReturn(orc);
 
-        mockMvc.perform(post("/public/orcamentos/{id}/aprovar", 10L)
-                        .param("token", "tok")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"nome":"Maria"}
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("APROVADO"));
+        doThrow(new ResponseStatusException(UNAUTHORIZED, "Token invalido"))
+                .when(orcamentoService)
+                .consultarPorToken(10L, "tok-invalido");
 
-        verify(publicOrcamentoService).aprovar(10L, "tok", "Maria");
-    }
+        mockMvc.perform(get("/public/orcamentos/{id}/pdf", 10L)
+                        .param("token", "tok-invalido"))
+                .andExpect(status().isUnauthorized());
 
-    @Test
-    void deveAprovarOrcamentoConsolidadoSemRegraDeReparoNoController() throws Exception {
-        OrcamentoEntity orc = baseOrcamento();
-        orc.setTipo(TipoOrcamento.PRINCIPAL);
-        orc.setVersao(2);
-        orc.setStatus(StatusOrcamento.APROVADO);
-
-        when(publicOrcamentoService.aprovar(10L, "tok", "Maria"))
-                .thenReturn(orc);
-
-        mockMvc.perform(post("/public/orcamentos/{id}/aprovar", 10L)
-                        .param("token", "tok")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"nome":"Maria"}
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tipo").value("PRINCIPAL"))
-                .andExpect(jsonPath("$.versao").value(2))
-                .andExpect(jsonPath("$.status").value("APROVADO"));
-
-        verify(publicOrcamentoService).aprovar(10L, "tok", "Maria");
-    }
-
-    @Test
-    void deveRecusarOrcamentoPublicoComMotivo() throws Exception {
-        OrcamentoEntity orc = baseOrcamento();
-        orc.setStatus(StatusOrcamento.REPROVADO);
-
-        when(publicOrcamentoService.recusar(10L, "tok", "Nao quero"))
-                .thenReturn(orc);
-
-        mockMvc.perform(post("/public/orcamentos/{id}/recusar", 10L)
-                        .param("token", "tok")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"motivo":"Nao quero"}
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("REPROVADO"));
-
-        verify(publicOrcamentoService).recusar(10L, "tok", "Nao quero");
-    }
-
-    @Test
-    void deveRecusarOrcamentoPublicoSemBody() throws Exception {
-        OrcamentoEntity orc = baseOrcamento();
-        orc.setStatus(StatusOrcamento.REPROVADO);
-
-        when(publicOrcamentoService.recusar(10L, "tok", null))
-                .thenReturn(orc);
-
-        mockMvc.perform(post("/public/orcamentos/{id}/recusar", 10L)
-                        .param("token", "tok"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("REPROVADO"));
-
-        verify(publicOrcamentoService).recusar(10L, "tok", null);
+        verify(orcamentoService).consultarPorToken(10L, "tok-invalido");
     }
 
     private OrcamentoEntity baseOrcamento() {
         return OrcamentoEntity.builder()
                 .id(10L)
                 .ordemServicoId(1L)
+                .numeroOs("OS-123")
                 .tipo(TipoOrcamento.PRINCIPAL)
                 .versao(1)
                 .status(StatusOrcamento.DISPONIVEL)
@@ -172,25 +107,5 @@ class PublicOrcamentoControllerTest {
                         .ano(2020)
                         .build())
                 .build();
-    }
-
-    @Test
-    void deveListarOrcamentosPorStatus() throws Exception {
-
-        OrcamentoEntity orcamento = new OrcamentoEntity();
-        orcamento.setId(1L);
-        orcamento.setNumeroOs("OS-123");
-        orcamento.setStatus(StatusOrcamento.DISPONIVEL);
-
-        when(publicOrcamentoService.consultarOrcamentos(StatusOrcamento.DISPONIVEL))
-                .thenReturn(List.of(orcamento));
-
-        mockMvc.perform(get("/public/orcamentos")
-                        .param("token", "abc123")
-                        .param("statusOrcamento", "DISPONIVEL"))
-                .andExpect(status().isOk());
-
-        verify(publicOrcamentoService)
-                .consultarOrcamentos(StatusOrcamento.DISPONIVEL);
     }
 }

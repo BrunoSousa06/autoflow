@@ -4,6 +4,7 @@ import com.autoflow.controller.ordemservico.request.*;
 import com.autoflow.controller.ordemservico.response.FinalizarDiagnosticoResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoDetalheResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
+import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.mapper.ServicoSolicitadoMapper;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/ordens-servico")
 @Tag(name = "ordens de serviço", description = "Endpoints para gerenciamento das ordens de serviço")
+@SecurityRequirement(name = "bearerAuth")
 public class OrdemServicoController {
 
     private final OrdemServicoService ordemServicoService;
@@ -59,7 +62,7 @@ public class OrdemServicoController {
     }
 
     @Operation(summary = "Incluir serviço na ordem de serviço", description = "Adiciona novos serviços a uma ordem de serviço existente")
-    @ApiResponse(responseCode = "200", description = "Ordem de serviço criada com sucesso")
+    @ApiResponse(responseCode = "202", description = "Serviços incluídos com sucesso")
     @ApiResponse(responseCode = "404", description = "Veiculo pertencente a ordem de serviço não foi encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
@@ -90,7 +93,8 @@ public class OrdemServicoController {
             @Valid @RequestBody IncluirMecanicoRequest request){
         return OrdemServicoResponse.fromDomain(ordemServicoService.atribuirMecanico(
                 numeroOs,
-                request.mecanicoId()));
+                request.mecanicoId(),
+                request.mecanicoEmail()));
     }
 
     @Operation(
@@ -225,8 +229,8 @@ public class OrdemServicoController {
             summary = "Entregar Ordem de Servico",
             description = "Entrega a ordem de Servico e altera seu status para ENTREGUE."
     )
-    @ApiResponse(responseCode = "202", description = "Serviço finalizado com sucesso")
-    @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
+    @ApiResponse(responseCode = "202", description = "Ordem de serviço entregue com sucesso")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{numeroOs}/entregar")
@@ -275,5 +279,18 @@ public class OrdemServicoController {
                 ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs),
                 ordemServicoService.buscarOrcamentoAtual(numeroOs)
         );
+    }
+
+    @Operation(
+            summary = "Consultar tempo médio de finalização das ordens de serviço",
+            description = "Retorna o tempo médio de execução das ordens de serviço finalizadas ou entregues."
+    )
+    @ApiResponse(responseCode = "200", description = "Tempo médio de finalização consultado com sucesso")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping("/metricas/tempo-medio")
+    @PreAuthorize("hasRole('ADMIN')")
+    public TempoMedioOrdemServicoResponse calcularTempoMedioFinalizacao() {
+        return ordemServicoService.calcularTempoMedioFinalizacao();
     }
 }

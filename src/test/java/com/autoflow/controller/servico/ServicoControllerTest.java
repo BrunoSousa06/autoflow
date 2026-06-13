@@ -2,6 +2,7 @@ package com.autoflow.controller.servico;
 
 import com.autoflow.controller.servico.request.ServicoRequest;
 import com.autoflow.controller.servico.response.ServicoResponse;
+import com.autoflow.controller.servico.response.TempoMedioServicoResponse;
 import com.autoflow.service.servico.ServicoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,13 +20,9 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -104,5 +101,27 @@ class ServicoControllerTest {
                 .andExpect(status().isOk());
 
         verify(servicoService).deletar(1L);
+    }
+
+    @Test
+    void deveListarTempoMedioPorServico() throws Exception {
+        TempoMedioServicoResponse tempoMedio = new TempoMedioServicoResponse(
+                1L,
+                "Troca de Ã“leo",
+                2L,
+                3600.0,
+                0.0,
+                0.0
+        );
+        when(servicoService.listarTempoMedioPorServico()).thenReturn(List.of(tempoMedio));
+
+        mockMvc.perform(get("/servicos/metricas/tempo-medio"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].servicoId").value(1L))
+                .andExpect(jsonPath("$[0].nomeServico").value("Troca de Ã“leo"))
+                .andExpect(jsonPath("$[0].quantidadeExecucoes").value(2L))
+                .andExpect(jsonPath("$[0].tempoMedioSegundos").value(3600.0));
+
+        verify(servicoService).listarTempoMedioPorServico();
     }
 }

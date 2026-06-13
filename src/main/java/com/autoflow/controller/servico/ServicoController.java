@@ -3,9 +3,11 @@ package com.autoflow.controller.servico;
 
 import com.autoflow.controller.servico.request.ServicoRequest;
 import com.autoflow.controller.servico.response.ServicoResponse;
+import com.autoflow.controller.servico.response.TempoMedioServicoResponse;
 import com.autoflow.service.servico.ServicoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +22,15 @@ import java.util.List;
 @RequestMapping("/servicos")
 @RequiredArgsConstructor
 @Tag(name = "serviços", description = "Endpoints para gerenciamento dos serviços")
+@SecurityRequirement(name = "bearerAuth")
 public class ServicoController {
 
     private final ServicoService servicoService;
 
     @Operation(summary = "Cadastrar um serviço", description = "Retorna as informações do serviço cadastrado")
-    @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
-    @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
+    @ApiResponse(responseCode = "201", description = "Serviço cadastrado com sucesso")
+    @ApiResponse(responseCode = "400", description = "Dados obrigatórios não informados ou inválidos")
+    @ApiResponse(responseCode = "409", description = "Serviço ja foi cadastrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping
@@ -68,7 +72,6 @@ public class ServicoController {
     @PreAuthorize("hasAnyRole('MECANICO', 'ADMIN')")
     public ResponseEntity<ServicoResponse> atualizar(@Valid @RequestBody ServicoRequest request, @PathVariable Long id){
         return ResponseEntity.ok(servicoService.atualizar(request, id));
-
     }
 
     @Operation(summary = "Deletar um serviço", description = "Deleta um serviço pelo ID")
@@ -78,10 +81,23 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deletar(@PathVariable Long id){
+    public ResponseEntity<String> deletar(@PathVariable Long id){
         servicoService.deletar(id);
         return ResponseEntity.ok().body("serviço deletado com sucesso");
 
+    }
+
+    @Operation(
+            summary = "Consultar tempo médio por serviço",
+            description = "Retorna o tempo médio de execução agrupado por serviço finalizado."
+    )
+    @ApiResponse(responseCode = "200", description = "Tempo médio por serviço consultado com sucesso")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping("/metricas/tempo-medio")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TempoMedioServicoResponse>> listarTempoMedioPorServico() {
+        return ResponseEntity.ok(servicoService.listarTempoMedioPorServico());
     }
 
 

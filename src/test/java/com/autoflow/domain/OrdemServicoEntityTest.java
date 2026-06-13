@@ -26,7 +26,7 @@ class OrdemServicoEntityTest {
         ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisao");
 
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo);
-        ordemServicoEntity.adicionarServicos(List.of(servico));
+        ordemServicoEntity.adicionarServicosSolicitados(List.of(servico));
 
         assertNull(ordemServicoEntity.getId());
         assertTrue(ordemServicoEntity.getNumeroOs().startsWith("OS-"));
@@ -43,16 +43,21 @@ class OrdemServicoEntityTest {
     void deveValidarCamposObrigatorios() {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        List<ServicoSolicitadoEntity> servicosVazios = List.of();
 
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(cliente, null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, veiculo)),
-                () -> {
-                    OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, veiculo);
-                    assertThrows(IllegalArgumentException.class, () -> os.adicionarServicos(servicosVazios));
-                }
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, veiculo))
         );
+    }
+
+    @Test
+    void deveIgnorarListaVaziaAoAdicionarServicos() {
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, veiculo);
+
+        assertDoesNotThrow(() -> os.adicionarServicosSolicitados(List.of()));
+        assertTrue(os.getServicosSolicitados().isEmpty());
     }
 
     @Test
@@ -63,7 +68,7 @@ class OrdemServicoEntityTest {
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
 
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo);
-        ordemServicoEntity.adicionarServicos(servicos);
+        ordemServicoEntity.adicionarServicosSolicitados(servicos);
 
         servicos.clear();
 
@@ -165,7 +170,7 @@ class OrdemServicoEntityTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         OrdemServicoEntity ordemServicoEntity = OrdemServicoEntity.criar(cliente, veiculo);
-        ordemServicoEntity.adicionarServicos(List.of(new ServicoSolicitadoEntity(1L, "Revisao")));
+        ordemServicoEntity.adicionarServicosSolicitados(List.of(new ServicoSolicitadoEntity(1L, "Revisao")));
         return ordemServicoEntity;
     }
 

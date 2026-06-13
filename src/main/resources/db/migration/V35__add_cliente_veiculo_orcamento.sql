@@ -1,4 +1,3 @@
-ALTER TABLE orcamento ADD COLUMN numero_os VARCHAR(50);
 ALTER TABLE orcamento ADD COLUMN cliente_nome VARCHAR(255);
 ALTER TABLE orcamento ADD COLUMN cliente_cpf_cnpj VARCHAR(30);
 ALTER TABLE orcamento ADD COLUMN cliente_email VARCHAR(255);
