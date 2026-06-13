@@ -31,7 +31,7 @@ public class ClienteController {
     @ApiResponse(responseCode = "409", description = "CPF/CNPJ ja cadastrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @PostMapping
-    public ResponseEntity<ClienteResponse> cadastrarCliente(@RequestBody ClienteRequest request){
+    public ResponseEntity<ClienteResponse> cadastrarCliente(@Valid @RequestBody ClienteRequest request){
         return ResponseEntity.ok(clienteService.cadastrar(request));
 
     }
