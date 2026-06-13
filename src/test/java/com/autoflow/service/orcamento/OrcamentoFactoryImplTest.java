@@ -54,7 +54,7 @@ class OrcamentoFactoryImplTest {
         servico2.setId(102L);
 
         OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, veiculo);
-        os.adicionarServicos(List.of(servico1, servico2));
+        os.adicionarServicosSolicitados(List.of(servico1, servico2));
         os.setId(99L);
 
         LocalDateTime now = LocalDateTime.of(2026, 5, 31, 10, 0);
@@ -111,7 +111,7 @@ class OrcamentoFactoryImplTest {
         servico.registrarItensNecessarios(List.of(item));
 
         OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
-        os.adicionarServicos(List.of(servico));
+        os.adicionarServicosSolicitados(List.of(servico));
         os.setId(99L);
 
         OrcamentoEntity orc = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.of(2026, 5, 31, 10, 0));
@@ -129,7 +129,7 @@ class OrcamentoFactoryImplTest {
 
         ServicoSolicitadoEntity servicoOriginal = new ServicoSolicitadoEntity(1L, "Servico original", new BigDecimal("100.00"));
         OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
-        os.adicionarServicos(List.of(servicoOriginal));
+        os.adicionarServicosSolicitados(List.of(servicoOriginal));
         os.setId(99L);
 
         ServicoSolicitadoEntity servicoAdicional = new ServicoSolicitadoEntity(2L, "Servico adicional", new BigDecimal("80.00"));
@@ -209,7 +209,7 @@ class OrcamentoFactoryImplTest {
         ));
 
         OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
-        os.adicionarServicos(List.of(servicoOriginal));
+        os.adicionarServicosSolicitados(List.of(servicoOriginal));
         os.setId(99L);
 
         ServicoSolicitadoEntity servicoAdicional = new ServicoSolicitadoEntity(2L, "Servico adicional", new BigDecimal("80.00"));
@@ -293,7 +293,7 @@ class OrcamentoFactoryImplTest {
         servicoOriginal.registrarItensNecessarios(List.of(item));
 
         OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
-        os.adicionarServicos(List.of(servicoOriginal));
+        os.adicionarServicosSolicitados(List.of(servicoOriginal));
         os.setId(99L);
 
         ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of());

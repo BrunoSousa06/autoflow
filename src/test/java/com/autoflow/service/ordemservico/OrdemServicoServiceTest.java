@@ -805,7 +805,7 @@ class OrdemServicoServiceTest {
         os.setNumeroOs(numeroOs);
         ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(servicoOsId, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
-        os.adicionarServicos(List.of(servico));
+        os.adicionarServicosSolicitados(List.of(servico));
         return os;
     }
 

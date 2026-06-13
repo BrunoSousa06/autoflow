@@ -96,7 +96,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 .map(servico -> preencherDadosDoServico(ordemServico, servico))
                 .toList();
 
-        ordemServico.adicionarServicos(servicosComDados);
+        ordemServico.adicionarServicosSolicitados(servicosComDados);
         return salvarOs(ordemServico);
     }
 
@@ -109,7 +109,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         List<ServicoSolicitadoEntity> servicosComDados =
                 preencherDadosDosServicos(ordemServico, servicos);
 
-        ordemServico.adicionarServicos(servicosComDados);
+        ordemServico.adicionarServicosSolicitados(servicosComDados);
 
         return ordemServicoRepository.save(ordemServico);
     }

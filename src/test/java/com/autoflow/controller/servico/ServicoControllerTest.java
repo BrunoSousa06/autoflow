@@ -109,7 +109,9 @@ class ServicoControllerTest {
                 1L,
                 "Troca de Ã“leo",
                 2L,
-                3600.0
+                3600.0,
+                0.0,
+                0.0
         );
         when(servicoService.listarTempoMedioPorServico()).thenReturn(List.of(tempoMedio));
 

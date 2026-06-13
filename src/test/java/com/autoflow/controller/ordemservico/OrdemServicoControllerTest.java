@@ -508,7 +508,7 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
         ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
-        ordemServico.adicionarServicos(List.of(servico));
+        ordemServico.adicionarServicosSolicitados(List.of(servico));
 
         ordemServico.setId(id);
         ordemServico.setNumeroOs(numeroOs);

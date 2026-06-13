@@ -72,14 +72,24 @@ public class ServicoService {
     }
 
     public List<TempoMedioServicoResponse> listarTempoMedioPorServico() {
+
+
         return servicoSolicitadoRepository.calcularTempoMedioPorServico()
                 .stream()
-                .map(item -> new TempoMedioServicoResponse(
-                        item.getServicoId(),
-                        item.getNomeServico(),
-                        item.getQuantidadeExecucoes(),
-                        item.getTempoMedioSegundos()
-                ))
+                .map(item -> {
+                    Double tempoMedioSegundos = item.getTempoMedioSegundos();
+                    Double tempoMedioMinutos = tempoMedioSegundos == null ? null : tempoMedioSegundos / 60;
+                    Double tempoMedioHoras = tempoMedioSegundos == null ? null : tempoMedioSegundos / 3600;
+
+                    return new TempoMedioServicoResponse(
+                            item.getServicoId(),
+                            item.getNomeServico(),
+                            item.getQuantidadeExecucoes(),
+                            tempoMedioSegundos,
+                            tempoMedioMinutos,
+                            tempoMedioHoras
+                    );
+                })
                 .toList();
     }
 }

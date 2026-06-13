@@ -4,5 +4,7 @@ public record TempoMedioServicoResponse(
         Long servicoId,
         String nomeServico,
         Long quantidadeExecucoes,
-        Double tempoMedioSegundos
+        Double tempoMedioSegundos,
+        Double tempoMedioMinutos,
+        Double tempoMedioHoras
 ) {}

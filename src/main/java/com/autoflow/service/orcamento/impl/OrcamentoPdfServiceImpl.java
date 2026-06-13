@@ -102,6 +102,7 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
         Font textoFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
 
         adicionarSubTitulo(document, "Dados do Orçamento");
+        document.add(new Paragraph("Orçamento ID: " + orcamento.getId()));
         document.add(new Paragraph("Ordem de Serviço: " + orcamento.getNumeroOs(), textoFont));
         document.add(new Paragraph("Tipo: " + descricaoTipoOrcamento(orcamento), textoFont));
         document.add(new Paragraph("Versão: " + orcamento.getVersao(), textoFont));
