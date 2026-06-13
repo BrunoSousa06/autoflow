@@ -3,6 +3,7 @@ package com.autoflow.controller.servico;
 
 import com.autoflow.controller.servico.request.ServicoRequest;
 import com.autoflow.controller.servico.response.ServicoResponse;
+import com.autoflow.controller.servico.response.TempoMedioServicoResponse;
 import com.autoflow.service.servico.ServicoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -71,7 +72,6 @@ public class ServicoController {
     @PreAuthorize("hasAnyRole('MECANICO', 'ADMIN')")
     public ResponseEntity<ServicoResponse> atualizar(@Valid @RequestBody ServicoRequest request, @PathVariable Long id){
         return ResponseEntity.ok(servicoService.atualizar(request, id));
-
     }
 
     @Operation(summary = "Deletar um serviço", description = "Deleta um serviço pelo ID")
@@ -85,6 +85,19 @@ public class ServicoController {
         servicoService.deletar(id);
         return ResponseEntity.ok().body("serviço deletado com sucesso");
 
+    }
+
+    @Operation(
+            summary = "Consultar tempo médio por serviço",
+            description = "Retorna o tempo médio de execução agrupado por serviço finalizado."
+    )
+    @ApiResponse(responseCode = "200", description = "Tempo médio por serviço consultado com sucesso")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping("/metricas/tempo-medio")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TempoMedioServicoResponse>> listarTempoMedioPorServico() {
+        return ResponseEntity.ok(servicoService.listarTempoMedioPorServico());
     }
 
 

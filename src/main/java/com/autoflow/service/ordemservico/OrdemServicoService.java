@@ -2,6 +2,7 @@ package com.autoflow.service.ordemservico;
 
 import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
+import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
@@ -45,4 +46,6 @@ public interface OrdemServicoService {
     List<OrdemServicoEntity> listar();
 
     OrcamentoEntity buscarOrcamentoAtual(String numeroOs);
+
+    TempoMedioOrdemServicoResponse calcularTempoMedioFinalizacao();
 }

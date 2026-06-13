@@ -4,6 +4,7 @@ import com.autoflow.controller.ordemservico.request.*;
 import com.autoflow.controller.ordemservico.response.FinalizarDiagnosticoResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoDetalheResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
+import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.mapper.ServicoSolicitadoMapper;
@@ -278,5 +279,18 @@ public class OrdemServicoController {
                 ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs),
                 ordemServicoService.buscarOrcamentoAtual(numeroOs)
         );
+    }
+
+    @Operation(
+            summary = "Consultar tempo médio de finalização das ordens de serviço",
+            description = "Retorna o tempo médio de execução das ordens de serviço finalizadas ou entregues."
+    )
+    @ApiResponse(responseCode = "200", description = "Tempo médio de finalização consultado com sucesso")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping("/metricas/tempo-medio")
+    @PreAuthorize("hasRole('ADMIN')")
+    public TempoMedioOrdemServicoResponse calcularTempoMedioFinalizacao() {
+        return ordemServicoService.calcularTempoMedioFinalizacao();
     }
 }
