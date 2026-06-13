@@ -147,7 +147,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServicoEntity registrarItemNecessario(
             String numeroOs,
-            Long servicoOsId,
+            Long servicoId,
             String emailUsuarioLogado,
             List<ItemNecessarioEntity> itensNecessarios
             ) {
@@ -159,7 +159,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
 
-        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
 
         List<ItemNecessarioEntity> itensComDados = verificaItensNecessarios(itensNecessarios);
 
@@ -228,18 +228,23 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Transactional
     @Override
-    public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoOsId) {
+    public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
         StatusOrdemServico statusAnterior = ordemServico.getStatus();
 
-        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+        if (statusAnterior == StatusOrdemServico.AGUARDANDO_APROVACAO) {
+            ordemServico.iniciarExecucao();
+        } else if (statusAnterior != StatusOrdemServico.EM_EXECUCAO) {
+            throw new IllegalStateException("OS deve estar aprovada ou em execucao para iniciar servico.");
+        }
+
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
 
         BaixaEstoqueResult baixaEstoqueResult =
                 pecaInsumoService.verificarDisponibilidadeEBaixar(servico.getItensNecessarios());
 
         servico.iniciar(baixaEstoqueResult.itensAtualizados());
 
-        ordemServico.iniciarExecucao();
         if (!statusAnterior.equals(ordemServico.getStatus())) {
             return salvarOs(ordemServico);
         }
@@ -248,10 +253,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Transactional
-    public OrdemServicoEntity finalizarServico(String numeroOs, Long servicoOsId) {
+    public OrdemServicoEntity finalizarServico(String numeroOs, Long servicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
-        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoOsId);
+        ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
 
         servico.finalizar();
         ordemServico.atualizarUltimaAtualizacao();
@@ -307,9 +312,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
         return itensNecessarios.stream()
                 .map(itemNecessario -> {
-                    PecaInsumoEntity itemEstoque = pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
+                    PecaInsumoEntity itemEstoque =
+                            pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
 
-                    boolean disponivel = itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
+                    boolean disponivel =
+                            itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
 
                     StatusItemNecessario status = disponivel
                             ? StatusItemNecessario.DISPONIVEL
@@ -329,7 +336,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                             itemEstoque.getQuantidade(),
                             motivoPendencia
                     );
-                }).toList();
+                })
+                .toList();
     }
 
     private ServicoSolicitadoEntity preencherDadosDoServico(

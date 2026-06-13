@@ -9,5 +9,5 @@ import java.time.LocalDateTime;
 public interface OrcamentoFactory {
     OrcamentoEntity criarPrincipalDisponivel(OrdemServicoEntity ordemServico, int versao, LocalDateTime now);
     OrcamentoEntity criarAdicionalDisponivel(OrdemServicoEntity ordemServico, ReparoAdicionalEntity reparoSalvo, int versao, LocalDateTime now);
-
+    OrcamentoEntity criarPrincipalConsolidadoDisponivel(OrdemServicoEntity ordemServico, ReparoAdicionalEntity reparoSalvo, int versao, LocalDateTime now);
 }

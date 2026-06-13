@@ -123,7 +123,7 @@ public class PecaInsumoService {
                             itemEstoque.getTipo(),
                             itemEstoque.getValor(),
                             item.getQuantidade(),
-                            disponivel ? StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE,
+                            disponivel ? StatusItemNecessario.UTILIZADO : StatusItemNecessario.PENDENTE,
                             itemEstoque.getQuantidade(),
                             disponivel ? null : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE
                     );

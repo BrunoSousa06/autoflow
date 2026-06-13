@@ -1,7 +1,6 @@
 package com.autoflow.controller.ordemservico.reparoadicional;
 
 import com.autoflow.controller.ordemservico.request.ItensNecessariosRequest;
-import com.autoflow.controller.ordemservico.request.ServicoSolicitadoRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.request.CriarReparoAdicionalRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.request.ServicoReparoAdicionalRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.response.CriarReparoAdicionalResponse;
@@ -31,12 +30,16 @@ class ReparoAdicionalDtoTest {
 
     @Test
     void deveManterValoresDoRequestDeCriacao() {
-        ServicoSolicitadoRequest servico = new ServicoSolicitadoRequest(10L);
+        ItensNecessariosRequest item = new ItensNecessariosRequest(7L, 2);
+        ServicoReparoAdicionalRequest servico =
+                new ServicoReparoAdicionalRequest(10L, List.of(item));
 
         CriarReparoAdicionalRequest request = new CriarReparoAdicionalRequest(List.of(servico));
 
         assertEquals(1, request.servicos().size());
         assertEquals(10L, request.servicos().getFirst().servicoId());
+        assertEquals(1, request.servicos().getFirst().itensNecessarios().size());
+        assertEquals(7L, request.servicos().getFirst().itensNecessarios().getFirst().pecaInsumoId());
     }
 
     @Test

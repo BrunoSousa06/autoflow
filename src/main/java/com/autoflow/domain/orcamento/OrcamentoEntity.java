@@ -84,4 +84,13 @@ public class OrcamentoEntity {
     @OrderColumn(name = "ordem")
     private List<OrcamentoItemNecessarioEntity> itens;
 
+    @Embedded
+    @NonNull
+    private ClienteOrcamentoSnapshot cliente;
+
+    @Embedded
+    @NonNull
+    private VeiculoOrcamentoSnapshot veiculo;
+
 }
+

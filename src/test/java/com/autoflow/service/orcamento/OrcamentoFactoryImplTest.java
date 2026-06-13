@@ -189,6 +189,135 @@ class OrcamentoFactoryImplTest {
         assertEquals(BigDecimal.ZERO, orc.getTotalGeral());
     }
 
+    @Test
+    void deveGerarOrcamentoPrincipalConsolidadoComServicosDaOsEReparo() {
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setId(10L);
+        veiculo.setCliente(criarCliente());
+
+        ServicoSolicitadoEntity servicoOriginal = new ServicoSolicitadoEntity(1L, "Servico original", new BigDecimal("100.00"));
+        servicoOriginal.setId(101L);
+        servicoOriginal.registrarItensNecessarios(List.of(
+                ItemNecessarioEntity.criar(
+                        5L,
+                        "Peca original",
+                        CategoriaPecaInsumo.PECA,
+                        new BigDecimal("10.00"),
+                        2,
+                        null
+                )
+        ));
+
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
+        os.adicionarServicos(List.of(servicoOriginal));
+        os.setId(99L);
+
+        ServicoSolicitadoEntity servicoAdicional = new ServicoSolicitadoEntity(2L, "Servico adicional", new BigDecimal("80.00"));
+        servicoAdicional.setId(202L);
+        servicoAdicional.registrarItensNecessarios(List.of(
+                ItemNecessarioEntity.criar(
+                        7L,
+                        "Peca adicional",
+                        CategoriaPecaInsumo.PECA,
+                        new BigDecimal("15.00"),
+                        3,
+                        null
+                )
+        ));
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servicoAdicional));
+        LocalDateTime now = LocalDateTime.of(2026, 6, 4, 11, 0);
+
+        OrcamentoEntity orc = factory.criarPrincipalConsolidadoDisponivel(os, reparo, 4, now);
+
+        assertEquals(99L, orc.getOrdemServicoId());
+        assertEquals(TipoOrcamento.PRINCIPAL, orc.getTipo());
+        assertEquals(StatusOrcamento.DISPONIVEL, orc.getStatus());
+        assertEquals(4, orc.getVersao());
+        assertEquals(now, orc.getCriadoEm());
+        assertEquals(now, orc.getDisponibilizadoEm());
+        assertEquals(2, orc.getServicos().size());
+        assertEquals(2, orc.getItens().size());
+        assertEquals(101L, orc.getItens().getFirst().getServicoOsId());
+        assertEquals(202L, orc.getItens().getLast().getServicoOsId());
+        assertEquals(new BigDecimal("180.00"), orc.getTotalServicos());
+        assertEquals(new BigDecimal("65.00"), orc.getTotalItens());
+        assertEquals(new BigDecimal("245.00"), orc.getTotalGeral());
+        assertNotNull(orc.getCliente());
+        assertNotNull(orc.getVeiculo());
+    }
+
+    @Test
+    void deveGerarOrcamentoPrincipalConsolidadoComTotaisZeradosQuandoOsEReparoNaoTemServicos() {
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setId(10L);
+        veiculo.setCliente(criarCliente());
+
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
+        os.setId(99L);
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of());
+
+        OrcamentoEntity orc = factory.criarPrincipalConsolidadoDisponivel(
+                os,
+                reparo,
+                2,
+                LocalDateTime.of(2026, 6, 4, 11, 0)
+        );
+
+        assertEquals(TipoOrcamento.PRINCIPAL, orc.getTipo());
+        assertEquals(StatusOrcamento.DISPONIVEL, orc.getStatus());
+        assertEquals(0, orc.getServicos().size());
+        assertEquals(0, orc.getItens().size());
+        assertEquals(BigDecimal.ZERO, orc.getTotalServicos());
+        assertEquals(BigDecimal.ZERO, orc.getTotalItens());
+        assertEquals(BigDecimal.ZERO, orc.getTotalGeral());
+        assertNotNull(orc.getCliente());
+        assertNotNull(orc.getVeiculo());
+    }
+
+    @Test
+    void deveManterSnapshotDosItensMesmoQuandoOrigemMudaAposConsolidacao() {
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setId(10L);
+        veiculo.setCliente(criarCliente());
+
+        ItemNecessarioEntity item = ItemNecessarioEntity.criar(
+                5L,
+                "Peca original",
+                CategoriaPecaInsumo.PECA,
+                new BigDecimal("10.00"),
+                2,
+                null
+        );
+        ServicoSolicitadoEntity servicoOriginal = new ServicoSolicitadoEntity(1L, "Servico original", new BigDecimal("100.00"));
+        servicoOriginal.setId(101L);
+        servicoOriginal.registrarItensNecessarios(List.of(item));
+
+        OrdemServicoEntity os = OrdemServicoEntity.criar(veiculo.getCliente(), veiculo);
+        os.adicionarServicos(List.of(servicoOriginal));
+        os.setId(99L);
+
+        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of());
+        OrcamentoEntity orc = factory.criarPrincipalConsolidadoDisponivel(
+                os,
+                reparo,
+                2,
+                LocalDateTime.of(2026, 6, 4, 11, 0)
+        );
+
+        item.setNome("Peca indisponivel");
+        item.setQuantidade(0);
+        item.setValorUnitario(new BigDecimal("99.00"));
+        item.setValorTotal(BigDecimal.ZERO);
+
+        assertEquals(1, orc.getItens().size());
+        assertEquals("Peca original", orc.getItens().getFirst().getNome());
+        assertEquals(2, orc.getItens().getFirst().getQuantidade());
+        assertEquals(new BigDecimal("10.00"), orc.getItens().getFirst().getValorUnitario());
+        assertEquals(new BigDecimal("20.00"), orc.getItens().getFirst().getValorTotal());
+        assertEquals(new BigDecimal("20.00"), orc.getTotalItens());
+        assertEquals(new BigDecimal("120.00"), orc.getTotalGeral());
+    }
+
     private ClienteEntity criarCliente() {
         ClienteEntity cliente = new ClienteEntity();
         cliente.setId(1L);

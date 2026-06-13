@@ -1,10 +1,9 @@
 package com.autoflow.service.ordemservico.reparoadicional.impl;
 
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.StatusServicoOs;
+import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
@@ -16,6 +15,7 @@ import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
+import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
 import jakarta.transaction.Transactional;
@@ -42,6 +42,7 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
     private final OrcamentoPublicacaoService orcamentoPublicacaoService;
     private final OrcamentoNotificacaoService orcamentoNotificacaoService;
     private final ServicoService servicoService;
+    private final PecaInsumoService pecaInsumoService;
 
     @Transactional
     @Override
@@ -65,9 +66,16 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
 
         int versao = orcamentoVersioningService.proximaVersaoPrincipalNumeroOs(numeroOs);
         OrcamentoEntity orcamento =
-                orcamentoFactory.criarAdicionalDisponivel(ordemServico, reparoSalvo, versao, LocalDateTime.now());
+                orcamentoFactory.criarAdicionalDisponivel(
+                        ordemServico,
+                        reparoSalvo,
+                        versao,
+                        LocalDateTime.now()
+                );
 
         OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
+
+
         reparoSalvo.setOrcamentoId(orcamentoSalvo.getId());
 
         PublicacaoOrcamentoResult publicacao =
@@ -132,6 +140,25 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
         aprovar(reparo.getId());
     }
 
+    @Override
+    @Transactional
+    public void aprovarSeExistirPorOrcamentoId(Long orcamentoId) {
+        reparoAdicionalRepository.findByOrcamentoId(orcamentoId)
+                .ifPresent( reparo -> aprovar(reparo.getId()));
+    }
+
+    @Override
+    @Transactional
+    public void recusarSeExistirPorOrcamentoId(Long orcamentoId, String motivo) {
+        reparoAdicionalRepository.findByOrcamentoId(orcamentoId)
+                .ifPresent( reparo -> recusar(reparo.getId(), motivo));
+    }
+
+    @Override
+    public boolean existePorOrcamentoId(Long orcamentoId) {
+        return reparoAdicionalRepository.findByOrcamentoId(orcamentoId).isPresent();
+    }
+
     private ReparoAdicionalEntity buscarPorId(Long id) {
         return reparoAdicionalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reparo adicional não encontrado."));
@@ -155,8 +182,51 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
         servicoReparo.setNome(servico.getNome());
         servicoReparo.setValor(servico.getValor());
         servicoReparo.setStatus(StatusServicoOs.AGUARDANDO);
+        servicoReparo.registrarItensNecessarios(
+                verificarItensNecessarios(servicoSolicitado.getItensNecessarios())
+        );
 
         return servicoReparo;
+    }
+
+    private List<ItemNecessarioEntity> verificarItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
+        if (itensNecessarios == null || itensNecessarios.isEmpty()) {
+            throw new IllegalArgumentException("Servico do reparo adicional deve ter ao menos um item necessario.");
+        }
+
+        return buscaItensNecessarios(itensNecessarios, pecaInsumoService);
+    }
+
+    @Override
+    public List<ItemNecessarioEntity> buscaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios, PecaInsumoService pecaInsumoService) {
+        return itensNecessarios.stream()
+                .map(itemNecessario -> {
+                    PecaInsumoEntity itemEstoque =
+                            pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
+
+                    boolean disponivel =
+                            itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
+
+                    StatusItemNecessario status = disponivel
+                            ? StatusItemNecessario.DISPONIVEL
+                            : StatusItemNecessario.PENDENTE;
+
+                    MotivoPendenciaItem motivoPendencia = disponivel
+                            ? null
+                            : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE;
+
+                    return ItemNecessarioEntity.criar(
+                            itemEstoque.getId(),
+                            itemEstoque.getNome(),
+                            itemEstoque.getTipo(),
+                            itemEstoque.getValor(),
+                            itemNecessario.getQuantidade(),
+                            status,
+                            itemEstoque.getQuantidade(),
+                            motivoPendencia
+                    );
+                })
+                .toList();
     }
 
     private ServicoSolicitadoEntity copiarServicoParaOrdemServico(
@@ -170,9 +240,23 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
         destino.setValor(origem.getValor());
         destino.setStatus(origem.getStatus());
         destino.setOrdemServico(ordemServico);
-        destino.setItensNecessarios(origem.getItensNecessarios());
-
+        destino.registrarItensNecessarios(copiarItens(origem.getItensNecessarios()));
         return destino;
+    }
+
+    private List<ItemNecessarioEntity> copiarItens(List<ItemNecessarioEntity> itens) {
+        return itens.stream()
+                .map(item -> ItemNecessarioEntity.criar(
+                        item.getPecaInsumoId(),
+                        item.getNome(),
+                        item.getTipo(),
+                        item.getValorUnitario(),
+                        item.getQuantidade(),
+                        item.getStatus(),
+                        item.getQuantidadeDisponivel(),
+                        item.getMotivoPendencia()
+                ))
+                .toList();
     }
 
 }

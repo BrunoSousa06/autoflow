@@ -118,19 +118,19 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{numeroOs}/servicos/{servicoOsId}/itens-necessarios")
+    @PatchMapping("/{numeroOs}/servicos/{servicoId}/itens-necessarios")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse registrarItensDoServico(
             @PathVariable String numeroOs,
-            @PathVariable Long servicoOsId,
+            @PathVariable Long servicoId,
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody List<ItensNecessariosRequest> request
     ) {
         return OrdemServicoResponse.fromDomain(
                 ordemServicoService.registrarItemNecessario(
                         numeroOs,
-                        servicoOsId,
+                        servicoId,
                         userDetails.getUsername(),
                         itensNecessariosMapper.mapToEntities(request)
                 )
@@ -189,15 +189,15 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{numeroOs}/servicos/{servicoOsId}/iniciar")
+    @PatchMapping("/{numeroOs}/servicos/{servicoId}/iniciar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO', 'ATENDENTE')")
     public OrdemServicoResponse iniciarServico(
             @PathVariable String numeroOs,
-            @PathVariable Long servicoOsId
+            @PathVariable Long servicoId
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.iniciarServico(numeroOs, servicoOsId)
+                ordemServicoService.iniciarServico(numeroOs, servicoId)
         );
     }
 
@@ -209,15 +209,15 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "404", description = "Ordem de serviço ou serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @PatchMapping("/{numeroOs}/servicos/{servicoOsId}/finalizar")
+    @PatchMapping("/{numeroOs}/servicos/{servicoId}/finalizar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse finalizarServico(
             @PathVariable String numeroOs,
-            @PathVariable Long servicoOsId
+            @PathVariable Long servicoId
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.finalizarServico(numeroOs, servicoOsId)
+                ordemServicoService.finalizarServico(numeroOs, servicoId)
         );
     }
 

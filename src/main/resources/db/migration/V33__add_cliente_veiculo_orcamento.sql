@@ -1,0 +1,9 @@
+ALTER TABLE orcamento ADD COLUMN numero_os VARCHAR(50);
+ALTER TABLE orcamento ADD COLUMN cliente_nome VARCHAR(255);
+ALTER TABLE orcamento ADD COLUMN cliente_cpf_cnpj VARCHAR(30);
+ALTER TABLE orcamento ADD COLUMN cliente_email VARCHAR(255);
+ALTER TABLE orcamento ADD COLUMN cliente_telefone VARCHAR(30);
+ALTER TABLE orcamento ADD COLUMN veiculo_placa VARCHAR(20);
+ALTER TABLE orcamento ADD COLUMN veiculo_marca VARCHAR(100);
+ALTER TABLE orcamento ADD COLUMN veiculo_modelo VARCHAR(100);
+ALTER TABLE orcamento ADD COLUMN veiculo_ano INTEGER;

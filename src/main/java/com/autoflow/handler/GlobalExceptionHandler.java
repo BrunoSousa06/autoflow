@@ -61,5 +61,17 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<Map<String, String>> handleBusinessException(
+            RuntimeException ex) {
+
+        Map<String, String> error = new HashMap<>();
+
+        error.put("erro", ex.getMessage());
+
+        return ResponseEntity
+                .badRequest()
+                .body(error);
+    }
 
 }

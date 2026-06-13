@@ -36,9 +36,9 @@ public interface OrdemServicoService {
     OrdemServicoEntity buscaOrdemServicoPorNumeroOs(String numeroOs);
 
     @Transactional
-    OrdemServicoEntity iniciarServico(String numeroOs, Long servicoOsId);
+    OrdemServicoEntity iniciarServico(String numeroOs, Long servicoId);
 
-    OrdemServicoEntity finalizarServico(String numeroOs, Long servicoOsId);
+    OrdemServicoEntity finalizarServico(String numeroOs, Long servicoId);
 
     OrdemServicoEntity entregar(String numeroOs);
 

@@ -17,7 +17,7 @@ public class VeiculoEntity {
     @JoinColumn(name = "cliente_id")
     private ClienteEntity cliente;
     private String marca;
-    private int ano;
+    private Integer ano;
     @Column(unique = true, nullable = false)
     private String placa;
     private String modelo;

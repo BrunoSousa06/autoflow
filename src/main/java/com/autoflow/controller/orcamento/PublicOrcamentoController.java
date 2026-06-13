@@ -8,7 +8,6 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.autoflow.service.orcamento.PublicOrcamentoService;
-import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +29,6 @@ public class PublicOrcamentoController {
 
 
     private final PublicOrcamentoService publicOrcamentoService;
-    private final ReparoAdicionalService reparoAdicionalService;
     private final OrcamentoPdfService orcamentoPdfService;
 
     @Operation(summary = "Listar o orçamento da ordem de serviço", description = "Retorna as informações do orçamento da ordem de serviço")
@@ -74,12 +72,9 @@ public class PublicOrcamentoController {
     public OrcamentoPublicoResponse aprovar(@PathVariable Long orcamentoId,
                                             @RequestParam String token,
                                             @RequestBody AprovarOrcamentoRequest req) {
-        OrcamentoEntity orcamento = publicOrcamentoService.aprovar(orcamentoId, token, req.nome());
-
-        if (TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
-            reparoAdicionalService.aprovarPorOrcamentoId(orcamento.getId());
-        }
-        return OrcamentoPublicoResponse.from(orcamento);
+        return OrcamentoPublicoResponse.from(
+                publicOrcamentoService.aprovar(orcamentoId, token, req.nome())
+        );
     }
 
     @Operation(summary = "Recusar o orçamento da ordem de serviço", description = "Retorna as informações do orçamento recusado da ordem de serviço com o status atualizado")
