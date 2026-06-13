@@ -5,6 +5,7 @@ import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +20,15 @@ import java.util.List;
 @RequestMapping("/peca-insumo")
 @RequiredArgsConstructor
 @Tag(name = "peças e insumos", description = "Endpoints para gerenciamento das peças e insumos")
+@SecurityRequirement(name = "bearerAuth")
 public class PecaInsumoController {
 
     private final PecaInsumoService pecaInsumoService;
 
 
     @Operation(summary = "Cadastrar uma peça ou insumo", description = "Retorna as informações da peça ou insumo cadastrado")
-    @ApiResponse(responseCode = "200", description = "Peça/Insumo cadastrado com sucesso")
-    @ApiResponse(responseCode = "404", description = "Peça/Insumo ja foi cadastrado")
+    @ApiResponse(responseCode = "201", description = "Peça/Insumo cadastrado com sucesso")
+    @ApiResponse(responseCode = "400", description = "Peça/Insumo ja foi cadastrado ou dados inválidos")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping
@@ -49,7 +51,6 @@ public class PecaInsumoController {
 
     @Operation(summary = "Listar todas peças e insumos cadastrados", description = "Retorna as informações das peças e insumos cadastrados")
     @ApiResponse(responseCode = "200", description = "Peça/Insumos encontrados com sucesso")
-    @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping

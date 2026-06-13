@@ -113,10 +113,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId) {
+    public OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId, String email) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
-        UsuarioEntity mecanico = usuarioService.buscarMecanicoPorId(mecanicoId);
+        UsuarioEntity mecanico = buscarMecanicoParaAtribuicao(mecanicoId, email);
 
         if (ordemServico.getDiagnostico() == null) {
             ordemServico.setDiagnostico(new DiagnosticoEntity());
@@ -125,6 +125,33 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServico.getDiagnostico().setMecanico(mecanico);
 
         return ordemServicoRepository.save(ordemServico);
+    }
+
+    private UsuarioEntity buscarMecanicoParaAtribuicao(
+            Long mecanicoId,
+            String mecanicoEmail
+    ) {
+        if (mecanicoId != null) {
+            return usuarioService.buscarMecanicoPorId(mecanicoId);
+        }
+
+        if (mecanicoEmail != null && !mecanicoEmail.isBlank()) {
+            UsuarioEntity usuario = usuarioService.buscarPorEmail(mecanicoEmail);
+
+            if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Usuário informado não é mecânico."
+                );
+            }
+
+            return usuario;
+        }
+
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Informe mecanicoId ou mecanicoEmail."
+        );
     }
 
     @Override
@@ -212,12 +239,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         validarServicosSolicitados(servicos);
 
         return servicos.stream().map(servico -> preencherDadosDoServico(ordemServico, servico)).toList();
-    }
-
-    @Override
-    public OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId) {
-        return ordemServicoRepository.findById(ordemServicoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
     }
 
     @Override

@@ -20,7 +20,7 @@ public interface OrdemServicoService {
     @Transactional
     OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos);
 
-    OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId);
+    OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId, String email);
 
     OrdemServicoEntity iniciarDiagnostico(String numeroOs, String emailUsuarioLogado);
 
@@ -30,8 +30,6 @@ public interface OrdemServicoService {
 
     @Transactional
     FinalizarDiagnosticoResult finalizarDiagnostico(String numeroOs, String emailUsuarioLogado);
-
-    OrdemServicoEntity buscaOrdemServicoPorId(Long ordemServicoId);
 
     OrdemServicoEntity buscaOrdemServicoPorNumeroOs(String numeroOs);
 

@@ -8,6 +8,7 @@ import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.service.usuario.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @Operation(summary = "Cadastrar um usuario", description = "Retorna as informações do usuario cadastrado")
-    @ApiResponse(responseCode = "200", description = "Usuário cadastrado com sucesso")
+    @ApiResponse(responseCode = "201", description = "Usuário cadastrado com sucesso")
     @ApiResponse(responseCode = "409", description = "CPF/CNPJ ou email ja foram cadastrados")
     @PostMapping("/cadastro")
     public ResponseEntity<UsuarioEntity> cadastrar(@Valid @RequestBody RegistroRequest request) {
@@ -47,6 +48,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Usuarios retornados com sucesso")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/usuarios")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> listarUsuarios() {
@@ -57,6 +59,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Mecanicos retornados com sucesso")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/mecanicos")
     @PreAuthorize("hasAnyRole('ADMIN','ATENDENTE')")
     public ResponseEntity<List<UsuarioResponse>> listarMecanicos() {

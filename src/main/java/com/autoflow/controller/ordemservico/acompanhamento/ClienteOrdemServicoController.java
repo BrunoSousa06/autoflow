@@ -4,6 +4,7 @@ import com.autoflow.controller.ordemservico.acompanhamento.response.Acompanhamen
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,12 +20,13 @@ import java.util.List;
 @RequestMapping("/clientes/me/ordens-servico")
 @RequiredArgsConstructor
 @Tag(name = "ordens de serviço do cliente", description = "Endpoints para gerenciamento das ordens de serviço do cliente autenticado")
+@SecurityRequirement(name = "bearerAuth")
 public class ClienteOrdemServicoController {
 
     private final OrdemServicoService ordemServicoService;
 
     @Operation(summary = "Listar ordem de serviço do cliente", description = "Retorna as ordens de serviço do cliente autenticado")
-    @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
+    @ApiResponse(responseCode = "200", description = "Ordens de serviço encontradas com sucesso")
     @ApiResponse(responseCode = "404", description = "Cliente autenticado nao encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")

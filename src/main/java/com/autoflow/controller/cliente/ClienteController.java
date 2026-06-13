@@ -6,10 +6,10 @@ import com.autoflow.controller.cliente.response.ClienteResponse;
 import com.autoflow.service.cliente.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +20,7 @@ import java.util.List;
 @RequestMapping("/clientes")
 @RequiredArgsConstructor
 @Tag(name = "clientes", description = "Endpoints para gerenciamento de clientes")
+@SecurityRequirement(name = "bearerAuth")
 public class ClienteController {
 
     private final ClienteService clienteService;
@@ -28,6 +29,7 @@ public class ClienteController {
     @Operation(summary = "Criar cadastro do cliente", description = "cria cadastro do cliente")
     @ApiResponse(responseCode = "200", description = "Cliente cadastrado com sucesso")
     @ApiResponse(responseCode = "409", description = "CPF/CNPJ ja cadastrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @PostMapping
     public ResponseEntity<ClienteResponse> cadastrarCliente(@RequestBody ClienteRequest request){
         return ResponseEntity.ok(clienteService.cadastrar(request));
@@ -46,6 +48,7 @@ public class ClienteController {
     }
 
     @Operation(summary = "Listar todos os clientes cadastrados", description = "Retorna a lista de clientes cadastrados")
+    @ApiResponse(responseCode = "200", description = "Clientes listados com sucesso")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping
@@ -58,6 +61,8 @@ public class ClienteController {
     @Operation(summary = "Atualizar as informações de um cliente", description = "Atualiza as informações de um cliente")
     @ApiResponse(responseCode = "200", description = "Cliente atualizado com sucesso")
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{id}/atualizacao")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
     public ResponseEntity<ClienteResponse> atualizar(@Valid @RequestBody ClienteRequest request, @PathVariable Long id){

@@ -52,6 +52,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -151,6 +152,50 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L));
 
         verify(ordemServicoService).incluirServicos(eq("OS-123"), anyList());
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveAtribuirMecanicoPorEmail() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+
+        when(ordemServicoService.atribuirMecanico(eq("OS-123"), isNull(), eq("mecanico@autoflow.com")))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/mecanico", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "mecanicoEmail": "mecanico@autoflow.com"
+                                }
+                                """))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(ordemServicoService).atribuirMecanico("OS-123", null, "mecanico@autoflow.com");
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveAtribuirMecanicoPorId() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+
+        when(ordemServicoService.atribuirMecanico(eq("OS-123"), eq(2L), isNull()))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/mecanico", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "mecanicoId": 2
+                                }
+                                """))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(ordemServicoService).atribuirMecanico("OS-123", 2L, null);
     }
 
     @Test

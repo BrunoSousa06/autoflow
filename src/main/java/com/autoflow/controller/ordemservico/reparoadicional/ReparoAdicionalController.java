@@ -7,6 +7,7 @@ import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.List;
 @RequestMapping("/ordens-servico/{numeroOs}/reparos-adicionais")
 @RequiredArgsConstructor
 @Tag(name = "reparos adicionais", description = "Endpoints para gerenciamento dos reparos adicionais da ordem de serviço")
+@SecurityRequirement(name = "bearerAuth")
 public class ReparoAdicionalController {
 
     private final ReparoAdicionalService reparoAdicionalService;
@@ -29,7 +31,9 @@ public class ReparoAdicionalController {
 
 
     @Operation(summary = "Criar os reparos adicionais", description = "Cria os reparos adicionais da ordem de serviço")
-    @ApiResponse(responseCode = "200", description = "Reparo adicional criado com sucesso")
+    @ApiResponse(responseCode = "201", description = "Reparo adicional criado com sucesso")
+    @ApiResponse(responseCode = "400", description = "Dados obrigatórios não informados ou inválidos")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping

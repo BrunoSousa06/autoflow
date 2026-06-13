@@ -197,10 +197,12 @@ class OrdemServicoServiceTest {
         when(usuarioService.buscarMecanicoPorId(2L)).thenReturn(mecanico);
         when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.atribuirMecanico("OS-123", 2L);
+        OrdemServicoEntity resultado = service.atribuirMecanico("OS-123", 2L, null);
 
         assertNotNull(resultado.getDiagnostico());
         assertEquals(mecanico, resultado.getDiagnostico().getMecanico());
+        verify(usuarioService).buscarMecanicoPorId(2L);
+        verify(usuarioService, never()).buscarPorEmail(anyString());
     }
 
     @Test
@@ -214,10 +216,76 @@ class OrdemServicoServiceTest {
         when(usuarioService.buscarMecanicoPorId(2L)).thenReturn(mecanico);
         when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.atribuirMecanico("OS-123", 2L);
+        OrdemServicoEntity resultado = service.atribuirMecanico("OS-123", 2L, null);
 
         assertSame(diagnostico, resultado.getDiagnostico());
         assertEquals(mecanico, resultado.getDiagnostico().getMecanico());
+    }
+
+    @Test
+    void deveAtribuirMecanicoPorEmailQuandoIdNaoForInformado() {
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
+
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.atribuirMecanico("OS-123", null, "mecanico@autoflow.com");
+
+        assertNotNull(resultado.getDiagnostico());
+        assertEquals(mecanico, resultado.getDiagnostico().getMecanico());
+        verify(usuarioService, never()).buscarMecanicoPorId(anyLong());
+        verify(usuarioService).buscarPorEmail("mecanico@autoflow.com");
+    }
+
+    @Test
+    void devePriorizarIdQuandoIdEEmailForemInformados() {
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
+
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+        when(usuarioService.buscarMecanicoPorId(2L)).thenReturn(mecanico);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.atribuirMecanico("OS-123", 2L, "outro@autoflow.com");
+
+        assertEquals(mecanico, resultado.getDiagnostico().getMecanico());
+        verify(usuarioService).buscarMecanicoPorId(2L);
+        verify(usuarioService, never()).buscarPorEmail(anyString());
+    }
+
+    @Test
+    void deveLancarBadRequestQuandoNaoInformarIdentificadorDoMecanico() {
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.atribuirMecanico("OS-123", null, " ")
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verify(usuarioService, never()).buscarMecanicoPorId(anyLong());
+        verify(usuarioService, never()).buscarPorEmail(anyString());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarBadRequestQuandoEmailNaoForDeMecanico() {
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        UsuarioEntity atendente = criarUsuario(3L, "Atendente", "atendente@autoflow.com", RoleEnum.ATENDENTE);
+
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail("atendente@autoflow.com")).thenReturn(atendente);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.atribuirMecanico("OS-123", null, "atendente@autoflow.com")
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -277,7 +345,6 @@ class OrdemServicoServiceTest {
     @Test
     void deveRegistrarItensNecessariosNoServicoDaOs() {
         String numeroOs = "abc-123";
-        Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         Long pecaInsumoId = 10L;
         String emailAdmin = "admin@autoflow.com";
@@ -309,7 +376,6 @@ class OrdemServicoServiceTest {
     @Test
     void deveRegistrarItemNecessarioPendenteComMotivoQuandoEstoqueForInsuficiente() {
         String numeroOs = "abc-123";
-        Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         Long pecaInsumoId = 10L;
         String emailAdmin = "admin@autoflow.com";
@@ -346,7 +412,6 @@ class OrdemServicoServiceTest {
     @Test
     void deveIniciarServicoEBaixarEstoqueDosItensDoServico() {
         String numeroOs = "OS-123";
-        Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
@@ -378,7 +443,6 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveIniciarServicoSemRegistrarHistoricoQuandoOsJaEstaEmExecucao() {
-        Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         String numeroOs = "OS-123";
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
@@ -421,7 +485,6 @@ class OrdemServicoServiceTest {
     @Test
     void deveFinalizarServicoEFinalizarOsQuandoTodosServicosFinalizados() {
         String numeroOs = "OS-123";
-        Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
@@ -447,7 +510,6 @@ class OrdemServicoServiceTest {
     @Test
     void deveEntregarOrdemServico() {
         String numeroOs = "OS-123";
-        Long ordemServicoId = 1L;
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, 55L);
         os.setStatus(StatusOrdemServico.FINALIZADA);
 
@@ -502,7 +564,6 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveFinalizarDiagnosticoMesmoQuandoNotificacaoFalhar() {
-        Long ordemServicoId = 1L;
         String emailAdmin = "admin@autoflow.com";
         String numerOs = "OS-123";
         OrdemServicoEntity os = criarOrdemServicoComServico(numerOs, 55L);
@@ -682,7 +743,6 @@ class OrdemServicoServiceTest {
     @Test
     void deveValidarPermissaoAoRegistrarItensComoMecanico() {
         String numeroOs = "abc-123";
-        Long ordemServicoId = 1L;
         Long servicoOsId = 55L;
         String email = "mecanico@autoflow.com";
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
