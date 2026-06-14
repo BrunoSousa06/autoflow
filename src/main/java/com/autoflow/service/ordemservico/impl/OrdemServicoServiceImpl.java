@@ -179,9 +179,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             Long servicoId,
             String emailUsuarioLogado,
             List<ItemNecessarioEntity> itensNecessarios
-            ) {
+    ) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-
         UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
 
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
@@ -189,6 +188,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         }
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
+        if (!StatusOrdemServico.EM_DIAGNOSTICO.equals(ordemServico.getStatus())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Só é possível incluir peças e insumos enquanto o serviço está em diagnóstico."
+            );
+        }
 
         List<ItemNecessarioEntity> itensComDados = verificaItensNecessarios(itensNecessarios);
 

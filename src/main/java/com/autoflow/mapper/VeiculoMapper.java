@@ -2,6 +2,7 @@ package com.autoflow.mapper;
 
 
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
@@ -20,7 +21,9 @@ public interface VeiculoMapper {
 
     VeiculoResponse mapToResponse(VeiculoEntity veiculoEntity);
 
-    void updateEntity(VeiculoRequest request, @MappingTarget VeiculoEntity veiculoEntity);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "cliente", ignore = true)
+    void updateEntity(VeiculoUpdateRequest request, @MappingTarget VeiculoEntity veiculoEntity);
 
     List<VeiculoResponse> mapToList(List<VeiculoEntity> veiculos);
 }

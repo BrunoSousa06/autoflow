@@ -2,8 +2,10 @@ package com.autoflow.controller.veiculo;
 
 
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.service.veiculo.VeiculoService;
+import com.autoflow.service.veiculo.dto.VeiculoFiltro;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -49,15 +51,18 @@ public class VeiculoController {
         return ResponseEntity.ok(veiculoService.listar(id));
     }
 
-    @Operation(summary = "Listar todos veiculos", description = "Retorna a lista de veiculos cadastrados")
+    @Operation(summary = "Listar veículos com filtros", description = "Retorna veículos filtrando opcionalmente por placa, marca, modelo e ano")
     @ApiResponse(responseCode = "200", description = "Veiculos listados com sucesso")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'CLIENTE')")
-    public ResponseEntity<List<VeiculoResponse>> listarTodosVeiculos(){
-        return ResponseEntity.ok(veiculoService.listarTodosVeiculos());
-
+    public ResponseEntity<List<VeiculoResponse>> listar(
+            @RequestParam(required = false) String placa,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) String modelo,
+            @RequestParam(required = false) Integer ano) {
+        return ResponseEntity.ok(veiculoService.listarComFiltros(new VeiculoFiltro(placa, marca, modelo, ano, null)));
     }
 
     @Operation(summary = "Atualizar as informações do veiculo", description = "Atualizar as informações do veiculo pelo ID")
@@ -68,9 +73,8 @@ public class VeiculoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{id}/atualizacao")
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'CLIENTE')")
-    public ResponseEntity<VeiculoResponse> atualizar(@Valid @RequestBody VeiculoRequest request, @PathVariable Long id){
+    public ResponseEntity<VeiculoResponse> atualizar(@Valid @RequestBody VeiculoUpdateRequest request, @PathVariable Long id){
         return ResponseEntity.ok(veiculoService.atualizar(request, id));
-
     }
 
     @Operation(summary = "Remover o veiculo cadastrado", description = "Remove o veiculo cadastrado pelo ID")

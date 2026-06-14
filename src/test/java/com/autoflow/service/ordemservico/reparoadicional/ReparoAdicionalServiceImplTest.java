@@ -1,12 +1,7 @@
 package com.autoflow.service.ordemservico.reparoadicional;
 
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.StatusItemNecessario;
-import com.autoflow.domain.ordemservico.StatusServicoOs;
+import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -39,7 +34,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -185,6 +181,42 @@ class ReparoAdicionalServiceImplTest {
         assertEquals(40L, result.reparoAdicionalId());
         assertEquals(30L, result.orcamentoId());
         verify(reparoAdicionalRepository, times(2)).save(any(ReparoAdicionalEntity.class));
+    }
+
+    @Test
+    void criar_deveLancarErroQuandoOsEstiverFinalizada() {
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
+        ordemServico.setStatus(StatusOrdemServico.FINALIZADA);
+
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.criar("OS-123", "mecanico@autoflow.com", List.of())
+        );
+
+        verify(reparoAdicionalRepository, never()).save(any());
+        verifyNoInteractions(orcamentoRepository);
+    }
+
+    @Test
+    void criar_deveLancarErroQuandoOsEstiverEntregue() {
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
+        ordemServico.setStatus(StatusOrdemServico.ENTREGUE);
+
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.criar("OS-123", "mecanico@autoflow.com", List.of())
+        );
+
+        verify(reparoAdicionalRepository, never()).save(any());
+        verifyNoInteractions(orcamentoRepository);
     }
 
     @Test
