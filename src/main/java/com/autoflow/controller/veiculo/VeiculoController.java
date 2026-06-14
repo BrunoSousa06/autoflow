@@ -2,6 +2,7 @@ package com.autoflow.controller.veiculo;
 
 
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.service.veiculo.VeiculoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,7 +69,7 @@ public class VeiculoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{id}/atualizacao")
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'CLIENTE')")
-    public ResponseEntity<VeiculoResponse> atualizar(@Valid @RequestBody VeiculoRequest request, @PathVariable Long id){
+    public ResponseEntity<VeiculoResponse> atualizar(@Valid @RequestBody VeiculoUpdateRequest request, @PathVariable Long id){
         return ResponseEntity.ok(veiculoService.atualizar(request, id));
 
     }

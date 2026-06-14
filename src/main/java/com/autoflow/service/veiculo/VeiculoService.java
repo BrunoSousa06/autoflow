@@ -2,6 +2,7 @@ package com.autoflow.service.veiculo;
 
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
@@ -10,6 +11,8 @@ import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.veiculo.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -46,9 +49,11 @@ public class VeiculoService {
         return veiculoMapper.mapToList(veiculoRepository.findAll());
     }
 
-    public VeiculoResponse atualizar(VeiculoRequest request, Long id) {
+    public VeiculoResponse atualizar(VeiculoUpdateRequest request, Long id) {
 
         VeiculoEntity veiculo = buscarPorId(id);
+
+        validarPermissaoCliente(veiculo);
 
         Optional<VeiculoEntity> veiculoPlaca =
                 veiculoRepository.findByPlaca(request.placa());
@@ -65,6 +70,20 @@ public class VeiculoService {
         return veiculoMapper.mapToResponse(atualizado);
     }
 
+    private void validarPermissaoCliente(VeiculoEntity veiculo) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isCliente = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE"));
+        if (!isCliente) {
+            return;
+        }
+        ClienteEntity clienteLogado = clienteRepository.findByUsuarioEmail(auth.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Cliente não encontrado para o usuário autenticado"));
+        if (!veiculo.getCliente().getId().equals(clienteLogado.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para editar este veículo");
+        }
+    }
+
     public void deletar(Long id) {
 
         if (!veiculoRepository.existsById(id)) {
@@ -78,6 +97,13 @@ public class VeiculoService {
     public VeiculoEntity buscarPorId(Long id) {
         return veiculoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
+    }
+
+    public VeiculoResponse buscarPorPlaca(String placa) {
+        String placaNormalizada = normalizarPlaca(placa);
+        return veiculoRepository.findByPlaca(placaNormalizada)
+                .map(veiculoMapper::mapToResponse)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com a placa: " + placa));
     }
 
     public VeiculoEntity buscarOuCadastrarPorPlacaParaCliente(
