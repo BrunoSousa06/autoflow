@@ -1,0 +1,67 @@
+<div class="login-wrapper">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <mat-card-title>Autoflow</mat-card-title>
+      <mat-card-subtitle>Faça login para continuar</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>E-mail</mat-label>
+          <input matInput formControlName="email" type="email" autocomplete="email" />
+          @if (form.controls.email.hasError('required')) {
+            <mat-error>E-mail obrigatório</mat-error>
+          } @else if (form.controls.email.hasError('email')) {
+            <mat-error>Formato de e-mail inválido</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Senha</mat-label>
+          <input
+            matInput
+            formControlName="senha"
+            [type]="hidePassword() ? 'password' : 'text'"
+            autocomplete="current-password"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword.set(!hidePassword())"
+            [attr.aria-label]="hidePassword() ? 'Mostrar senha' : 'Ocultar senha'"
+          >
+            <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (form.controls.senha.hasError('required')) {
+            <mat-error>Senha obrigatória</mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMsg()) {
+          <div class="error-banner">
+            <mat-icon color="warn">error_outline</mat-icon>
+            <span>{{ errorMsg() }}</span>
+          </div>
+        }
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="full-width submit-btn"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <mat-spinner diameter="22" />
+          } @else {
+            Entrar
+          }
+        </button>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

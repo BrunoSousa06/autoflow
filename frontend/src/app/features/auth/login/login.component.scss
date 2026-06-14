@@ -1,0 +1,45 @@
+.login-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 1rem;
+
+  mat-card-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  mat-card-content {
+    padding-top: 1.5rem;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-form-field {
+  margin-bottom: 0.5rem;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f44336;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.submit-btn {
+  height: 44px;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}

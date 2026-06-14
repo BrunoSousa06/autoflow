@@ -34,10 +34,11 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('backend/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build and analyze
+        working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
