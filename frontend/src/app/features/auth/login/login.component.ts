@@ -10,6 +10,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 
+const ROLE_HOME: Record<string, string> = {
+  CLIENTE: '/minha-conta/minhas-ordens',
+  ADMIN: '/dashboard',
+  ATENDENTE: '/dashboard',
+  MECANICO: '/dashboard',
+};
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -52,7 +59,11 @@ export class LoginComponent {
     const { email, senha } = this.form.value;
 
     this.auth.login(email!, senha!).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => {
+        const role = this.auth.getRole() ?? '';
+        const dest = ROLE_HOME[role] ?? '/dashboard';
+        this.router.navigate([dest]);
+      },
       error: () => {
         this.errorMsg.set('E-mail ou senha inválidos. Verifique suas credenciais.');
         this.loading.set(false);
