@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
@@ -110,6 +111,57 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("deve retornar 403 ao usar token JWT malformado")
     void deveRetornar403ComTokenMalformado() {
         ResponseEntity<String> response = get("/clientes", "Bearer invalido");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("admin deve listar todos os usuários cadastrados")
+    void adminDeveListarUsuarios() {
+        String adminToken = registrarELogar(TestUtils.EMAIL_ADMIN, TestUtils.CPF_ATENDENTE, "ADMIN");
+        registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO, "MECANICO");
+        registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
+
+        ResponseEntity<String> response = get("/auth/usuarios", adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode body = parseJson(response.getBody());
+        assertThat(body.isArray()).isTrue();
+        assertThat(body.size()).isGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("não-admin não deve listar usuários")
+    void mecanicoNaoDeveListarUsuarios() {
+        String mecanicoToken = registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO, "MECANICO");
+
+        ResponseEntity<String> response = get("/auth/usuarios", mecanicoToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("admin deve listar apenas mecânicos")
+    void adminDeveListarMecanicos() {
+        String adminToken = registrarELogar(TestUtils.EMAIL_ADMIN, TestUtils.CPF_ATENDENTE, "ADMIN");
+        registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO, "MECANICO");
+        registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
+
+        ResponseEntity<String> response = get("/auth/mecanicos", adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode body = parseJson(response.getBody());
+        assertThat(body.isArray()).isTrue();
+        assertThat(body.size()).isGreaterThanOrEqualTo(1);
+        body.forEach(u -> assertThat(u.get("role").asText()).isEqualTo("MECANICO"));
+    }
+
+    @Test
+    @DisplayName("cliente não deve listar mecânicos")
+    void clienteNaoDeveListarMecanicos() {
+        String clienteToken = registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
+
+        ResponseEntity<String> response = get("/auth/mecanicos", clienteToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
