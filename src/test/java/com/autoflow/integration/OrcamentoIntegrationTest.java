@@ -26,6 +26,7 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
     private Long mecanicoId;
     private Long servicoId;
     private Long orcamentoId;
+    private String orcamentoPublicUrl;
 
     @BeforeAll
     void configurarAmbiente() {
@@ -64,10 +65,12 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
                 TestUtils.servicoRequest("Revisão Completa", "Revisão geral do veículo", 800.00), adminToken);
         servicoId = parseJson(svcResp.getBody()).get("id").asLong();
 
-        orcamentoId = criarOsAguardandoAprovacao(mecanicoToken, "ABC1234");
+        JsonNode finJson = criarOsAguardandoAprovacao(mecanicoToken, "ABC1234");
+        orcamentoId       = finJson.get("orcamentoId").asLong();
+        orcamentoPublicUrl = finJson.get("publicUrl").asText();
     }
 
-    private Long criarOsAguardandoAprovacao(String mecToken, String placa) {
+    private JsonNode criarOsAguardandoAprovacao(String mecToken, String placa) {
         var osRequest = Map.of(
                 "cpfCnpj", TestUtils.CPF_CLIENTE,
                 "veiculo", Map.of("placa", placa, "marca", "Fiat", "modelo", "Argo", "ano", 2022),
@@ -86,7 +89,11 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
                 TestUtils.registrarLaudoRequest("Revisão geral necessária."), mecToken);
 
         ResponseEntity<String> finResp = patch("/ordens-servico/" + numOs + "/diagnostico/finalizar", null, mecToken);
-        return parseJson(finResp.getBody()).get("orcamentoId").asLong();
+        return parseJson(finResp.getBody());
+    }
+
+    private Long orcamentoIdDe(String mecToken, String placa) {
+        return criarOsAguardandoAprovacao(mecToken, placa).get("orcamentoId").asLong();
     }
 
     @Test
@@ -122,7 +129,7 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
                 Map.of("email", TestUtils.EMAIL_MECANICO, "senha", TestUtils.SENHA_PADRAO)
         ), String.class).getBody(), "token");
 
-        Long outroOrcamentoId = criarOsAguardandoAprovacao(mecLogin, "DEF5678");
+        Long outroOrcamentoId = orcamentoIdDe(mecLogin, "DEF5678");
 
         var recusa = TestUtils.recusarOrcamentoRequest("Preço muito alto, vou buscar outro orçamento.");
         ResponseEntity<String> response = post("/orcamentos/" + outroOrcamentoId + "/recusar", recusa, clienteToken);
@@ -140,7 +147,7 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
                 Map.of("email", TestUtils.EMAIL_MECANICO, "senha", TestUtils.SENHA_PADRAO)
         ), String.class).getBody(), "token");
 
-        Long novoOrcamentoId = criarOsAguardandoAprovacao(mecLogin, "GHI9012");
+        Long novoOrcamentoId = orcamentoIdDe(mecLogin, "GHI9012");
 
         ResponseEntity<String> response = post("/orcamentos/" + novoOrcamentoId + "/aprovar", null, clienteToken);
 
@@ -187,7 +194,7 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
                 Map.of("email", TestUtils.EMAIL_MECANICO, "senha", TestUtils.SENHA_PADRAO)
         ), String.class).getBody(), "token");
 
-        Long idParaRecusar = criarOsAguardandoAprovacao(mecLogin, "JKL3456");
+        Long idParaRecusar = orcamentoIdDe(mecLogin, "JKL3456");
 
         // Reprova sem motivo (body vazio)
         ResponseEntity<String> response = post("/orcamentos/" + idParaRecusar + "/recusar",
@@ -209,5 +216,29 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
         for (JsonNode orc : json) {
             assertThat(orc.get("status").asText()).isEqualTo("DISPONIVEL");
         }
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("deve gerar PDF do orçamento via link público")
+    void deveGerarPdfDoOrcamento() {
+        String token = orcamentoPublicUrl.split("token=")[1];
+        String path  = "/public/orcamentos/" + orcamentoId + "/pdf?token=" + token;
+
+        ResponseEntity<byte[]> response = restTemplate.getForEntity(path, byte[].class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentType()).isEqualTo(org.springframework.http.MediaType.APPLICATION_PDF);
+        assertThat(response.getBody()).isNotEmpty();
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("deve retornar 404 ao solicitar PDF de orçamento inexistente")
+    void deveRetornar404PdfOrcamentoInexistente() {
+        ResponseEntity<byte[]> response = restTemplate.getForEntity(
+                "/public/orcamentos/999999/pdf?token=token-invalido", byte[].class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }
