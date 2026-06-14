@@ -11,8 +11,7 @@ import org.springframework.http.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Cliente - Testes de Integração")
-class ClienteI
-        ntegrationTest extends AbstractIntegrationTest {
+class ClienteIntegrationTest extends AbstractIntegrationTest {
 
     private String adminToken;
     private String mecanicoToken;

@@ -86,7 +86,7 @@ class OrdemServicoControllerTest {
                                 {
                                   "cpfCnpj": "52998224725",
                                   "veiculo": {
-                                    "placa": "abc-1d23",
+                                    "placa": "NEX0517",
                                     "marca": "Honda",
                                     "modelo": "Civic",
                                     "ano": 2020
@@ -107,7 +107,7 @@ class OrdemServicoControllerTest {
         ArgumentCaptor<VeiculoOrdemServicoRequest> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoRequest.class);
         ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
         verify(ordemServicoService).criar(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
-        assertEquals("abc-1d23", veiculoCaptor.getValue().placa());
+        assertEquals("NEX0517", veiculoCaptor.getValue().placa());
         assertEquals("Honda", veiculoCaptor.getValue().marca());
         assertEquals("Civic", veiculoCaptor.getValue().modelo());
         assertEquals(2020, veiculoCaptor.getValue().ano());

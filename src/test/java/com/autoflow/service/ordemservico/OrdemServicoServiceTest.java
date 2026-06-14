@@ -351,6 +351,7 @@ class OrdemServicoServiceTest {
         Long pecaInsumoId = 10L;
         String emailAdmin = "admin@autoflow.com";
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 5);
 
@@ -382,6 +383,7 @@ class OrdemServicoServiceTest {
         Long pecaInsumoId = 10L;
         String emailAdmin = "admin@autoflow.com";
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 1);
 
@@ -409,6 +411,77 @@ class OrdemServicoServiceTest {
                 )
         );
         verify(repository).save(os);
+    }
+
+    @Test
+    void deveLancarExcecaoAoRegistrarItemNecessarioQuandoOsNaoEstaEmDiagnostico() {
+        String numeroOs = "abc-123";
+        Long servicoOsId = 55L;
+        String emailAdmin = "admin@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
+        UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
+        os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
+
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.registrarItemNecessario(numeroOs, servicoOsId, emailAdmin, List.of()));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deveChamarValidacaoDeAcessoAoRegistrarItemNecessarioComUsuarioNaoAdmin() {
+        String numeroOs = "abc-123";
+        Long servicoOsId = 55L;
+        Long pecaInsumoId = 10L;
+        String emailMecanico = "mecanico@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", emailMecanico, RoleEnum.MECANICO);
+        PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 5);
+
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
+        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
+        when(repository.save(os)).thenReturn(os);
+
+        service.registrarItemNecessario(numeroOs, servicoOsId, emailMecanico,
+                List.of(criarItemNecessarioSolicitado(pecaInsumoId, 1)));
+
+        verify(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
+    }
+
+    @Test
+    void deveLancarExcecaoAoRegistrarItemNecessarioQuandoOsNaoExiste() {
+        String numeroOs = "os-inexistente";
+        Long servicoOsId = 55L;
+        String emailAdmin = "admin@autoflow.com";
+
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.registrarItemNecessario(numeroOs, servicoOsId, emailAdmin, List.of()));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
+    void deveLancarExcecaoAoRegistrarItemNecessarioQuandoServicoNaoExisteNaOs() {
+        String numeroOs = "abc-123";
+        Long servicoOsId = 55L;
+        Long servicoInexistenteId = 99L;
+        String emailAdmin = "admin@autoflow.com";
+        OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
+        UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
+
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.registrarItemNecessario(numeroOs, servicoInexistenteId, emailAdmin, List.of()));
     }
 
     @Test
