@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
@@ -117,7 +118,6 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("deve retornar 404 ao cadastrar veículo para cliente inexistente")
     void deveRetornar404ClienteInexistente() {
-        var body = TestUtils.veiculoRequest(TestUtils.CPF_INVALIDO, placa, "BMW", "X5", 2023);
         Map<String, Object> bodyComCpfInexistente = Map.of(
                 "cpfCnpj", "98765432100",
                 "placa", placa,

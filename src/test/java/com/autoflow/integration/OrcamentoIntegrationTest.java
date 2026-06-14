@@ -4,7 +4,8 @@ import com.autoflow.integration.config.AbstractIntegrationTest;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.*;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
@@ -53,10 +54,9 @@ class OrcamentoIntegrationTest extends AbstractIntegrationTest {
         restTemplate.postForEntity("/auth/cadastro", jsonEntity(
                 TestUtils.registroRequest("Outro Cliente", TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_CLIENTE_2, "CLIENTE")
         ), String.class);
-        ResponseEntity<String> cli2Login = restTemplate.postForEntity("/auth/login", jsonEntity(
+        restTemplate.postForEntity("/auth/login", jsonEntity(
                 Map.of("email", TestUtils.EMAIL_ATENDENTE, "senha", TestUtils.SENHA_PADRAO)
         ), String.class);
-        String cliente2Token = extrairCampo(cli2Login.getBody(), "token");
 
         post("/clientes", TestUtils.clienteRequest("Cliente Orçamento", TestUtils.CPF_CLIENTE, TestUtils.EMAIL_CLIENTE), adminToken);
 

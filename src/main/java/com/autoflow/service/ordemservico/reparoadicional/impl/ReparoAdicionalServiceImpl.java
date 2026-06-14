@@ -54,6 +54,11 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
         OrdemServicoEntity ordemServico =
                 ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs);
 
+        if (ordemServico.getStatus() == StatusOrdemServico.FINALIZADA
+                || ordemServico.getStatus() == StatusOrdemServico.ENTREGUE) {
+            throw new IllegalStateException("Não é possível registrar reparo adicional em uma OS finalizada.");
+        }
+
         Long mecanicoId =
                 usuarioService.buscarPorEmail(emailMecanico).getId();
 
