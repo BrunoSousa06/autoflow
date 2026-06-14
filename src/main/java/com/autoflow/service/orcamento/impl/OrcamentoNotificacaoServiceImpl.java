@@ -1,0 +1,111 @@
+package com.autoflow.service.orcamento.impl;
+
+import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.TipoOrcamento;
+import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.service.notificacao.MensagemNotificacao;
+import com.autoflow.service.notificacao.NotificacaoService;
+import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+@Service
+@RequiredArgsConstructor
+public class OrcamentoNotificacaoServiceImpl implements OrcamentoNotificacaoService {
+
+    private final NotificacaoService notificacaoService;
+
+    @Override
+    public void enviarLinkOrcamentoParaCliente(
+            OrcamentoEntity orcamento,
+            OrdemServicoEntity ordemServico,
+            String urlPublica
+    ) {
+        String emailCliente = ordemServico.getCliente().getEmail();
+
+        if (!StringUtils.hasText(emailCliente)) {
+            return;
+        }
+
+        MensagemNotificacao mensagem = new MensagemNotificacao(
+                emailCliente,
+                montarAssunto(orcamento),
+                montarMensagem(ordemServico, orcamento, urlPublica)
+        );
+
+        notificacaoService.enviar(mensagem);
+    }
+
+    private String montarAssunto(OrcamentoEntity orcamento) {
+        if (TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
+            return "Reparo adicional aguardando aprovação - AutoFlow";
+        }
+
+        return "Orçamento disponível - AutoFlow";
+    }
+
+    private String montarMensagem(
+            OrdemServicoEntity ordemServico,
+            OrcamentoEntity orcamento,
+            String urlPublica
+    ) {
+        if (TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
+            return montarMensagemReparoAdicional(ordemServico, orcamento, urlPublica);
+        }
+
+        return montarMensagemOrcamentoPrincipal(ordemServico, orcamento, urlPublica);
+    }
+
+    private String montarMensagemOrcamentoPrincipal(
+            OrdemServicoEntity ordemServico,
+            OrcamentoEntity orcamento,
+            String urlPublica
+    ) {
+        return """
+            Olá, %s.
+
+            O orçamento #%d da sua ordem de serviço %s está disponível.
+
+            Para baixar o PDF do orçamento, acesse o link abaixo:
+
+            %s
+
+            Atenciosamente,
+            AutoFlow
+            """.formatted(
+                ordemServico.getCliente().getNome(),
+                orcamento.getId(),
+                ordemServico.getNumeroOs(),
+                urlPublica
+        );
+    }
+
+    private String montarMensagemReparoAdicional(
+            OrdemServicoEntity ordemServico,
+            OrcamentoEntity orcamento,
+            String urlPublica
+    ) {
+        return """
+            Olá, %s.
+
+            Durante a execução da ordem de serviço %s, identificamos a necessidade de um reparo adicional.
+
+            O orçamento adicional #%d está disponível para sua análise e aprovação.
+
+            Para baixar o PDF do orçamento adicional, acesse o link abaixo:
+
+            %s
+
+            Importante: este orçamento é adicional ao orçamento principal já aprovado.
+
+            Atenciosamente,
+            AutoFlow
+            """.formatted(
+                ordemServico.getCliente().getNome(),
+                ordemServico.getNumeroOs(),
+                orcamento.getId(),
+                urlPublica
+        );
+    }
+}
