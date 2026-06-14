@@ -12,13 +12,14 @@ import com.autoflow.repository.veiculo.VeiculoRepository;
 import com.autoflow.repository.veiculo.VeiculoSpecifications;
 import com.autoflow.service.veiculo.dto.VeiculoFiltro;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -49,13 +50,13 @@ public class VeiculoService {
         return veiculoMapper.mapToResponse(veiculo);
     }
 
-    public List<VeiculoResponse> listarComFiltros(VeiculoFiltro filtro) {
+    public Page<VeiculoResponse> listarComFiltros(VeiculoFiltro filtro, Pageable pageable) {
         Long clienteId = getClienteIdSeCliente();
         VeiculoFiltro filtroEfetivo = new VeiculoFiltro(
                 filtro.placa(), filtro.marca(), filtro.modelo(), filtro.ano(), clienteId);
-        return veiculoMapper.mapToList(
-                veiculoRepository.findAll(VeiculoSpecifications.comFiltros(filtroEfetivo))
-        );
+        return veiculoRepository
+                .findAll(VeiculoSpecifications.comFiltros(filtroEfetivo), pageable)
+                .map(veiculoMapper::mapToResponse);
     }
 
     private Long getClienteIdSeCliente() {

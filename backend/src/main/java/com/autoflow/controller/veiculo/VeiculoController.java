@@ -12,12 +12,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 @RestController
@@ -57,12 +59,17 @@ public class VeiculoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'CLIENTE')")
-    public ResponseEntity<List<VeiculoResponse>> listar(
+    public ResponseEntity<Page<VeiculoResponse>> listar(
             @RequestParam(required = false) String placa,
             @RequestParam(required = false) String marca,
             @RequestParam(required = false) String modelo,
-            @RequestParam(required = false) Integer ano) {
-        return ResponseEntity.ok(veiculoService.listarComFiltros(new VeiculoFiltro(placa, marca, modelo, ano, null)));
+            @RequestParam(required = false) Integer ano,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return ResponseEntity.ok(
+                veiculoService.listarComFiltros(new VeiculoFiltro(placa, marca, modelo, ano, null), pageable)
+        );
     }
 
     @Operation(summary = "Atualizar as informações do veiculo", description = "Atualizar as informações do veiculo pelo ID")
