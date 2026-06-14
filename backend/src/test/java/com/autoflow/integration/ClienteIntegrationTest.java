@@ -15,12 +15,23 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
 
     private String adminToken;
     private String mecanicoToken;
+    private String clienteToken;
 
     @BeforeEach
     void configurar() {
         limparBancoDeDados();
         adminToken    = registrarELogar(TestUtils.EMAIL_ADMIN,    TestUtils.CPF_ATENDENTE, "ADMIN");
         mecanicoToken = registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO,  "MECANICO");
+
+        registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
+        clienteToken  = logar(TestUtils.EMAIL_CLIENTE);
+        post("/clientes", TestUtils.clienteRequest("Cliente Teste", TestUtils.CPF_CLIENTE, TestUtils.EMAIL_CLIENTE), adminToken);
+    }
+
+    private String logar(String email) {
+        var resp = restTemplate.postForEntity("/auth/login",
+                jsonEntity(TestUtils.loginRequest(email)), String.class);
+        return extrairCampo(resp.getBody(), "token");
     }
 
     @Test
@@ -119,6 +130,38 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = restTemplate.getForEntity("/clientes", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("deve retornar os dados do próprio cliente autenticado via /me")
+    void deveRetornarMeuPerfil() {
+        ResponseEntity<String> response = get("/clientes/me", clienteToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode json = parseJson(response.getBody());
+        assertThat(json.get("cpfCnpj").asText()).isEqualTo(TestUtils.CPF_CLIENTE);
+        assertThat(json.get("email").asText()).isEqualTo(TestUtils.EMAIL_CLIENTE);
+    }
+
+    @Test
+    @DisplayName("deve retornar 403 quando ADMIN tenta acessar /me")
+    void deveRetornar403QuandoAdminAcessaMeuPerfil() {
+        ResponseEntity<String> response = get("/clientes/me", adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("deve retornar 404 quando CLIENTE não tem cadastro vinculado ao usuário")
+    void deveRetornar404QuandoClienteSemCadastro() {
+        String emailSemCadastro = TestUtils.emailUnico();
+        registrarELogar(emailSemCadastro, TestUtils.CPF_CLIENTE_2, "CLIENTE");
+        String semCadastroToken = logar(emailSemCadastro);
+
+        // Não criamos ClienteEntity para este usuário
+        ResponseEntity<String> response = get("/clientes/me", semCadastroToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test

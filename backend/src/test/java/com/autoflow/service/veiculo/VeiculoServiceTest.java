@@ -18,6 +18,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -149,32 +152,36 @@ class VeiculoServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void deveListarTodosQuandoFiltroVazioComoAdmin() {
+        Pageable pageable = PageRequest.of(0, 20);
         var filtroVazio = new VeiculoFiltro(null, null, null, null, null);
-        when(veiculoRepository.findAll(any(Specification.class))).thenReturn(List.of(veiculoEntity));
-        when(veiculoMapper.mapToList(List.of(veiculoEntity))).thenReturn(List.of(response));
+        when(veiculoRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(veiculoEntity)));
+        when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
 
-        List<VeiculoResponse> resultado = veiculoService.listarComFiltros(filtroVazio);
+        var resultado = veiculoService.listarComFiltros(filtroVazio, pageable);
 
-        assertEquals(1, resultado.size());
-        verify(veiculoRepository).findAll(any(Specification.class));
+        assertEquals(1, resultado.getContent().size());
+        verify(veiculoRepository).findAll(any(Specification.class), any(Pageable.class));
         verifyNoInteractions(clienteRepository);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void deveRepassarFiltroAoRepositoryComoAdmin() {
+        Pageable pageable = PageRequest.of(0, 20);
         var filtro = new VeiculoFiltro("ABC1234", "Honda", null, null, null);
-        when(veiculoRepository.findAll(any(Specification.class))).thenReturn(List.of());
-        when(veiculoMapper.mapToList(List.of())).thenReturn(List.of());
+        when(veiculoRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
 
-        veiculoService.listarComFiltros(filtro);
+        veiculoService.listarComFiltros(filtro, pageable);
 
-        verify(veiculoRepository).findAll(any(Specification.class));
+        verify(veiculoRepository).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void deveAdicionarClienteIdImplicitoQuandoListarComoCliente() {
+        Pageable pageable = PageRequest.of(0, 20);
         UsuarioEntity usuario = new UsuarioEntity();
         usuario.setEmail("cliente@test.com");
         clienteEntity.setUsuario(usuario);
@@ -182,13 +189,14 @@ class VeiculoServiceTest {
         autenticarComo("cliente@test.com", "ROLE_CLIENTE");
 
         when(clienteRepository.findByUsuarioEmail("cliente@test.com")).thenReturn(Optional.of(clienteEntity));
-        when(veiculoRepository.findAll(any(Specification.class))).thenReturn(List.of(veiculoEntity));
-        when(veiculoMapper.mapToList(List.of(veiculoEntity))).thenReturn(List.of(response));
+        when(veiculoRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(veiculoEntity)));
+        when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
 
-        veiculoService.listarComFiltros(new VeiculoFiltro(null, null, null, null, null));
+        veiculoService.listarComFiltros(new VeiculoFiltro(null, null, null, null, null), pageable);
 
         verify(clienteRepository).findByUsuarioEmail("cliente@test.com");
-        verify(veiculoRepository).findAll(any(Specification.class));
+        verify(veiculoRepository).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test

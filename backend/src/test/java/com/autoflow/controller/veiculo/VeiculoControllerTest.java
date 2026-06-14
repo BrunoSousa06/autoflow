@@ -15,6 +15,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -68,7 +72,8 @@ class VeiculoControllerTest {
 
     @Test
     void deveListarVeiculosSemFiltros() throws Exception {
-        when(veiculoService.listarComFiltros(any(VeiculoFiltro.class))).thenReturn(List.of(response));
+        when(veiculoService.listarComFiltros(any(VeiculoFiltro.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(response), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/veiculos"))
                 .andExpect(status().isOk());
@@ -76,7 +81,8 @@ class VeiculoControllerTest {
 
     @Test
     void deveListarVeiculosComFiltrosDePlacaEMarca() throws Exception {
-        when(veiculoService.listarComFiltros(any(VeiculoFiltro.class))).thenReturn(List.of(response));
+        when(veiculoService.listarComFiltros(any(VeiculoFiltro.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(response), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/veiculos").param("placa", "ABC1234").param("marca", "Honda"))
                 .andExpect(status().isOk());

@@ -12,6 +12,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -52,11 +56,33 @@ class ClienteControllerTest {
     void setup() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(clienteController)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
 
         clienteRequest = new ClienteRequest("João Silva", "52998224725", "12312321321", "bruno@hotmail.com");
         response = new ClienteResponse(1L, "Bruno", "52998224725", "12312321321", "bruno@hotmail.com", null);
         responses = List.of(response);
+    }
+
+    @Test
+    void deveBuscarMeuPerfil() throws Exception {
+        when(clienteService.buscarPorEmail("bruno@hotmail.com")).thenReturn(response);
+
+        var userDetails = User.withUsername("bruno@hotmail.com").password("").roles("CLIENTE").build();
+        var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        try {
+            mockMvc.perform(get("/clientes/me"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.nome").value("Bruno"))
+                    .andExpect(jsonPath("$.email").value("bruno@hotmail.com"));
+
+            verify(clienteService).buscarPorEmail("bruno@hotmail.com");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     @Test

@@ -10,9 +10,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,10 +28,15 @@ public class ClienteController {
     private final ClienteService clienteService;
 
 
+    @Operation(summary = "Retornar os dados do cliente autenticado", description = "Retorna as informações do cliente logado. Exclusivo para usuários com role CLIENTE.")
+    @ApiResponse(responseCode = "200", description = "Dados do cliente retornados com sucesso")
+    @ApiResponse(responseCode = "404", description = "Nenhum cliente vinculado ao usuário autenticado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão — apenas CLIENTE pode acessar este endpoint")
     @GetMapping("/me")
     @PreAuthorize("hasRole('CLIENTE')")
-    public ResponseEntity<ClienteResponse> meuPerfil(Authentication authentication) {
-        return ResponseEntity.ok(clienteService.buscarPorEmail(authentication.name()));
+    public ResponseEntity<ClienteResponse> meuPerfil(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(clienteService.buscarPorEmail(userDetails.getUsername()));
     }
 
     @Operation(summary = "Criar cadastro do cliente", description = "cria cadastro do cliente")

@@ -135,6 +135,40 @@ class ClienteServiceTest {
     }
 
     @Nested
+    class BuscarPorEmailTests {
+
+        @Test
+        void deveBuscarClientePorEmail() {
+            when(clienteRepository.findByUsuarioEmail("bruno@hotmail.com"))
+                    .thenReturn(Optional.of(clienteEntity));
+
+            when(clienteMapper.maptoResponse(clienteEntity))
+                    .thenReturn(clienteResponse);
+
+            ClienteResponse resultado = clienteService.buscarPorEmail("bruno@hotmail.com");
+
+            assertEquals(clienteResponse, resultado);
+            verify(clienteRepository).findByUsuarioEmail("bruno@hotmail.com");
+            verify(clienteMapper).maptoResponse(clienteEntity);
+        }
+
+        @Test
+        void deveLancarNotFoundQuandoEmailNaoEstiverVinculadoACliente() {
+            when(clienteRepository.findByUsuarioEmail("naoexiste@test.com"))
+                    .thenReturn(Optional.empty());
+
+            ResponseStatusException exception = assertThrows(
+                    ResponseStatusException.class,
+                    () -> clienteService.buscarPorEmail("naoexiste@test.com")
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+            verify(clienteRepository).findByUsuarioEmail("naoexiste@test.com");
+            verifyNoInteractions(clienteMapper);
+        }
+    }
+
+    @Nested
     class BuscarPorIdTests {
 
         @Test
