@@ -9,6 +9,10 @@ export class ClienteService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/clientes`;
 
+  meuPerfil(): Observable<ClienteResponse> {
+    return this.http.get<ClienteResponse>(`${this.base}/me`);
+  }
+
   listarTodos(): Observable<ClienteResponse[]> {
     return this.http.get<ClienteResponse[]>(this.base);
   }

@@ -20,7 +20,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',         icon: 'dashboard',       route: '/dashboard',                   roles: ['ADMIN', 'ATENDENTE', 'MECANICO'] },
   { label: 'Clientes',          icon: 'people',          route: '/clientes',                    roles: ['ADMIN', 'ATENDENTE'] },
-  { label: 'Veículos',          icon: 'directions_car',  route: '/veiculos',                    roles: ['ADMIN', 'ATENDENTE'] },
+  { label: 'Veículos',          icon: 'directions_car',  route: '/veiculos',                    roles: ['ADMIN', 'ATENDENTE', 'CLIENTE'] },
   { label: 'Ordens de Serviço', icon: 'assignment',      route: '/ordens-servico',              roles: ['ADMIN', 'ATENDENTE', 'MECANICO'] },
   { label: 'Orçamentos',        icon: 'receipt_long',    route: '/orcamentos',                  roles: ['ADMIN', 'ATENDENTE'] },
   { label: 'Reparos Adicionais',icon: 'construction',    route: '/reparos-adicionais',          roles: ['ADMIN', 'ATENDENTE'] },

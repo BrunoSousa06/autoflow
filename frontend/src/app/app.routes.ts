@@ -39,7 +39,7 @@ export const routes: Routes = [
       },
       {
         path: 'veiculos',
-        canActivate: [roleGuard(['ADMIN', 'ATENDENTE'])],
+        canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'CLIENTE'])],
         loadComponent: () =>
           import('./features/veiculos/veiculos.component').then(m => m.VeiculosComponent)
       },
