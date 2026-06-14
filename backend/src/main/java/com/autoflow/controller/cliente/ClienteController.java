@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,12 @@ public class ClienteController {
 
     private final ClienteService clienteService;
 
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<ClienteResponse> meuPerfil(Authentication authentication) {
+        return ResponseEntity.ok(clienteService.buscarPorEmail(authentication.name()));
+    }
 
     @Operation(summary = "Criar cadastro do cliente", description = "cria cadastro do cliente")
     @ApiResponse(responseCode = "200", description = "Cliente cadastrado com sucesso")

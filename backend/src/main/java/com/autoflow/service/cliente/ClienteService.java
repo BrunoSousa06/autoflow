@@ -21,6 +21,12 @@ public class ClienteService {
 
     final ClienteMapper clienteMapper;
 
+    public ClienteResponse buscarPorEmail(String email) {
+        ClienteEntity cliente = clienteRepository.findByUsuarioEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado"));
+        return clienteMapper.maptoResponse(cliente);
+    }
+
     public ClienteResponse cadastrar(ClienteRequest request) {
 
         if (clienteRepository.existsByCpfCnpj(request.cpfCnpj())){
