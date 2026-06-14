@@ -4,7 +4,7 @@ Sistema para gerenciamento de ordens de serviço de manutenção automotiva.
 
 ## Sobre o Projeto
 
-O AutoFlow é um sistema  desenvolvida para controlar o ciclo completo de atendimento de oficinas mecânicas, por meio de ordens de serviço permitindo o gerenciamento de clientes, veículos, serviços e itens necessários.
+O AutoFlow é um sistema desenvolvido em Java para controlar o ciclo completo de atendimento de oficinas mecânicas, por meio de ordens de serviço permitindo o gerenciamento de clientes, veículos, serviços, ordens de serviços e itens necessários.
 
 O objetivo do sistema é centralizar o processo operacional da oficina, permitindo um melhor controle de atendimento com priorizações corretas e atendimentos mais eficientes
 
@@ -32,9 +32,8 @@ O objetivo do sistema é centralizar o processo operacional da oficina, permitin
 
 ### Arquitetura em Camadas
 
-O AutoFlow foi desenvolvido utilizando a arquitetura em camadas (Layered Architecture), um dos padrões arquiteturais mais consolidados no desenvolvimento de aplicações corporativas.
-
-A aplicação está organizada em responsabilidades bem definidas, promovendo separação de responsabilidades, facilidade de manutenção e evolução do sistema.
+O AutoFlow foi desenvolvido utilizando a arquitetura em camadas (Layered Architecture), devido a facilidade de manutenção, escalabilidade e baixo acoplamento entre os componentes, fazendo com que a evolução do projeto tenham um menor impacto em partes ja existentes no sistema. Devido a cada camada ter as suas responsabilidades definidas isso tambem faz com que as regras de negocio sejam validadas com os testes unitarios e testes integrados de forma mais simples e direta.
+Como essa arquitetura é uma arquitetura padrão do mercado isso faz com que a aprendizagem não seja um impediditivo para o desenvolvimento.
 
 Estrutura simplificada:
 
@@ -85,30 +84,6 @@ Responsável por:
 
 ---
 
-### Benefícios da Arquitetura em Camadas
-
-#### Facilidade de manutenção
-
-Cada camada possui uma responsabilidade específica, tornando o código mais organizado e reduzindo o acoplamento entre componentes.
-
-#### Maior legibilidade
-
-Novos desenvolvedores conseguem compreender rapidamente a estrutura do sistema devido à padronização amplamente adotada pelo mercado.
-
-#### Testabilidade
-
-A separação entre camadas facilita a criação de testes unitários e de integração, permitindo validar regras de negócio sem dependência direta da camada web ou do banco de dados.
-
-#### Evolução simplificada
-
-Novas funcionalidades podem ser adicionadas com menor impacto em partes já existentes do sistema.
-
-#### Compatibilidade com o ecossistema Spring
-
-A arquitetura em camadas se integra naturalmente com os padrões e recursos fornecidos pelo Spring Boot, Spring Data JPA e Spring Security.
-
----
-
 ### Banco de Dados PostgreSQL
 
 O PostgreSQL foi escolhido como sistema gerenciador de banco de dados por sua confiabilidade e facilidade de uso e integração com o Spring Boot
@@ -122,11 +97,6 @@ O PostgreSQL possui alta estabilidade e mecanismos avançados de integridade de 
 ##### Integração com Spring Data JPA
 
 PostgreSQL possui uma boa integração com SPring Data JPA facilitando o desenvolvimento e manutenção
-
-
-##### Código aberto
-
-É uma solução open source amplamente utilizada pela indústria, sem custos.
 
 ---
 
