@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,7 +70,7 @@ class ServicoIntegrationTest extends AbstractIntegrationTest {
     void deveAtualizarServico() {
         ResponseEntity<String> criado = post("/servicos",
                 TestUtils.servicoRequest("Revisão Geral", "Revisão completa", 500.00), adminToken);
-        Long servicoId = parseJson(criado.getBody()).get("id").asLong();
+        long servicoId = parseJson(criado.getBody()).get("id").asLong();
 
         var atualizacao = TestUtils.servicoRequest("Revisão Geral Premium", "Revisão completa premium", 750.00);
         ResponseEntity<String> response = patch("/servicos/" + servicoId + "/atualizacao", atualizacao, adminToken);
@@ -85,7 +86,7 @@ class ServicoIntegrationTest extends AbstractIntegrationTest {
     void deveDeletarServico() {
         ResponseEntity<String> criado = post("/servicos",
                 TestUtils.servicoRequest("Limpeza do Bico", "Limpeza de injetores", 200.00), adminToken);
-        Long servicoId = parseJson(criado.getBody()).get("id").asLong();
+        long servicoId = parseJson(criado.getBody()).get("id").asLong();
 
         ResponseEntity<String> response = delete("/servicos/" + servicoId, adminToken);
 
@@ -125,9 +126,26 @@ class ServicoIntegrationTest extends AbstractIntegrationTest {
     void deveRetornar403QuandoAtendenteDeletaServico() {
         ResponseEntity<String> criado = post("/servicos",
                 TestUtils.servicoRequest("Higienização", "Higienização interna", 180.00), adminToken);
-        Long servicoId = parseJson(criado.getBody()).get("id").asLong();
+        long servicoId = parseJson(criado.getBody()).get("id").asLong();
 
         ResponseEntity<String> response = delete("/servicos/" + servicoId, atendenteToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("admin deve consultar tempo médio por serviço")
+    void adminDeveConsultarTempoMedioPorServico() {
+        ResponseEntity<String> response = get("/servicos/metricas/tempo-medio", adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parseJson(response.getBody()).isArray()).isTrue();
+    }
+
+    @Test
+    @DisplayName("cliente não deve acessar métricas de tempo médio de serviços")
+    void clienteNaoDeveAcessarMetricasServico() {
+        ResponseEntity<String> response = get("/servicos/metricas/tempo-medio", clienteToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }

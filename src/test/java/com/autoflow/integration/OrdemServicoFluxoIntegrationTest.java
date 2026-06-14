@@ -412,4 +412,25 @@ class OrdemServicoFluxoIntegrationTest extends AbstractIntegrationTest {
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isFalse();
     }
+
+    @Test
+    @Order(70)
+    @DisplayName("17 - admin deve consultar tempo médio de finalização das ordens de serviço")
+    void adminDeveConsultarTempoMedioOs() {
+        ResponseEntity<String> response = get("/ordens-servico/metricas/tempo-medio", adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode json = parseJson(response.getBody());
+        assertThat(json.get("quantidadeOrdensFinalizadas").asLong()).isGreaterThanOrEqualTo(1);
+        assertThat(json.get("tempoMedioSegundos")).isNotNull();
+    }
+
+    @Test
+    @Order(71)
+    @DisplayName("N8 - cliente não deve acessar métricas de tempo médio das OSs")
+    void clienteNaoDeveAcessarMetricasOs() {
+        ResponseEntity<String> response = get("/ordens-servico/metricas/tempo-medio", clienteToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
 }
