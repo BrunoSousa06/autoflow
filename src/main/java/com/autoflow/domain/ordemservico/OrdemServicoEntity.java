@@ -243,8 +243,17 @@ public class OrdemServicoEntity {
     }
 
     public void finalizarSeTodosServicosFinalizados() {
+        if (this.status == StatusOrdemServico.FINALIZADA || this.status == StatusOrdemServico.ENTREGUE) {
+            return;
+        }
+
         boolean todosFinalizados = servicosSolicitados.stream()
-                .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO);
+                .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO 
+                                  || servico.getStatus() == StatusServicoOs.CANCELADO);
+
+        if (servicosSolicitados.isEmpty()) {
+            return;
+        }
 
         if (todosFinalizados) {
             this.status = StatusOrdemServico.FINALIZADA;
