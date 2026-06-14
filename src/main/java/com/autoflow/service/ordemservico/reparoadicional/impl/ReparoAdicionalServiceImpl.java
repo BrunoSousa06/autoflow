@@ -3,6 +3,7 @@ package com.autoflow.service.ordemservico.reparoadicional.impl;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
@@ -54,6 +55,11 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
         OrdemServicoEntity ordemServico =
                 ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs);
 
+        if (ordemServico.getStatus() == StatusOrdemServico.FINALIZADA || 
+            ordemServico.getStatus() == StatusOrdemServico.ENTREGUE) {
+            throw new IllegalStateException("Não é possível criar um reparo adicional para uma ordem de serviço finalizada ou entregue.");
+        }
+
         Long mecanicoId =
                 usuarioService.buscarPorEmail(emailMecanico).getId();
 
@@ -61,9 +67,11 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
 
         ReparoAdicionalEntity reparo =
                 ReparoAdicionalEntity.criar(ordemServico.getNumeroOs(), mecanicoId, servicosComDados);
-        reparo.setOrdemServicoId(ordemServico.getId());
 
         ReparoAdicionalEntity reparoSalvo = reparoAdicionalRepository.save(reparo);
+
+        ordemServico.marcarReparoAdicionalPendente();
+        ordemServicoRepository.save(ordemServico);
 
         int versao = orcamentoVersioningService.proximaVersaoPrincipalNumeroOs(numeroOs);
         OrcamentoEntity orcamento =
@@ -107,6 +115,11 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
         OrdemServicoEntity ordemServico =
                 ordemServicoService.buscaOrdemServicoPorNumeroOs(reparo.getNumeroOs());
 
+        if (ordemServico.getStatus() == StatusOrdemServico.FINALIZADA || 
+            ordemServico.getStatus() == StatusOrdemServico.ENTREGUE) {
+            throw new IllegalStateException("Não é possível aprovar um reparo adicional para uma ordem de serviço finalizada ou entregue.");
+        }
+
         reparo.aprovar();
 
         List<ServicoSolicitadoEntity> servicosParaOs =
@@ -116,11 +129,9 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
                         .toList();
 
         ordemServico.adicionarServicosSolicitados(servicosParaOs);
+        atualizarStatusPendenteOs(ordemServico);
 
         reparoAdicionalRepository.save(reparo);
-
-        ordemServicoRepository.save(ordemServico);
-
         return ordemServico;
     }
 
@@ -129,7 +140,22 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
     public ReparoAdicionalEntity recusar(Long reparoAdicionalId, String motivo) {
         ReparoAdicionalEntity reparo = buscarPorId(reparoAdicionalId);
         reparo.recusar(motivo);
-        return reparoAdicionalRepository.save(reparo);
+        reparoAdicionalRepository.save(reparo);
+
+        OrdemServicoEntity ordemServico = ordemServicoService.buscaOrdemServicoPorNumeroOs(reparo.getNumeroOs());
+        atualizarStatusPendenteOs(ordemServico);
+
+        return reparo;
+    }
+
+    private void atualizarStatusPendenteOs(OrdemServicoEntity ordemServico) {
+        boolean temOutrosPendentes = reparoAdicionalRepository.existsByNumeroOsAndStatus(
+                ordemServico.getNumeroOs(), StatusReparoAdicional.PENDENTE_APROVACAO);
+
+        if (!temOutrosPendentes) {
+            ordemServico.limparReparoAdicionalPendente();
+            ordemServicoRepository.save(ordemServico);
+        }
     }
 
     @Transactional

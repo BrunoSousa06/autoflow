@@ -64,6 +64,9 @@ public class OrdemServicoEntity {
     @Column(name = "ultima_atualizacao", nullable = false)
     private LocalDateTime ultimaAtualizacao;
 
+    @Column(name = "possui_reparo_pendente")
+    private boolean possuiReparoPendente = false;
+
     private OrdemServicoEntity(
             String numeroOs,
             VeiculoEntity veiculo,
@@ -137,7 +140,37 @@ public class OrdemServicoEntity {
         }
     }
 
+    public void validarSePodeRegistrarItensDiretamente() {
+        if (this.status == StatusOrdemServico.FINALIZADA || this.status == StatusOrdemServico.ENTREGUE) {
+            throw new IllegalStateException("Não é possível registrar itens em uma ordem de serviço finalizada ou entregue.");
+        }
+
+        if (this.status == StatusOrdemServico.EM_EXECUCAO) {
+            throw new IllegalStateException("O serviço já foi iniciado. Para incluir novas peças ou insumos, " +
+                    "é necessário gerar um orçamento de reparo adicional.");
+        }
+    }
+
+    public void validarSePodeAdicionarServicoDiretamente() {
+        if (this.status == StatusOrdemServico.FINALIZADA || this.status == StatusOrdemServico.ENTREGUE) {
+            throw new IllegalStateException("Não é possível adicionar serviços a uma ordem de serviço finalizada ou entregue.");
+        }
+
+        if (this.status == StatusOrdemServico.EM_EXECUCAO) {
+            throw new IllegalStateException("A execução já foi iniciada. Para incluir novos serviços, " +
+                    "é necessário utilizar o fluxo de Reparo Adicional para gerar um novo orçamento.");
+        }
+    }
+
+    public void validarSePodeFinalizar() {
+        if (this.possuiReparoPendente) {
+            throw new IllegalStateException("Não é possível finalizar o serviço. Existe um orçamento de reparo adicional aguardando aprovação.");
+        }
+    }
+
     public void adicionarServicosSolicitados(List<ServicoSolicitadoEntity> servicosSolicitados) {
+        validarSePodeAdicionarServicoDiretamente();
+
         if (servicosSolicitados == null || servicosSolicitados.isEmpty()) {
             return;
         }
@@ -238,7 +271,23 @@ public class OrdemServicoEntity {
         this.status = StatusOrdemServico.EM_EXECUCAO;
     }
 
+    public void marcarReparoAdicionalPendente() {
+        this.possuiReparoPendente = true;
+        this.atualizarUltimaAtualizacao();
+    }
+
+    public void limparReparoAdicionalPendente() {
+        this.possuiReparoPendente = false;
+        this.atualizarUltimaAtualizacao();
+    }
+
     public void finalizarSeTodosServicosFinalizados() {
+        if (this.possuiReparoPendente) return;
+
+        if (servicosSolicitados.isEmpty()) {
+            return;
+        }
+
         boolean todosFinalizados = servicosSolicitados.stream()
                 .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO);
 

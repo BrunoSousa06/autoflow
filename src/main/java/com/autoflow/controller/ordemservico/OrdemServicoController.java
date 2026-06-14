@@ -5,6 +5,7 @@ import com.autoflow.controller.ordemservico.response.FinalizarDiagnosticoRespons
 import com.autoflow.controller.ordemservico.response.OrdemServicoDetalheResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
+import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.mapper.ServicoSolicitadoMapper;
@@ -73,6 +74,9 @@ public class OrdemServicoController {
             @PathVariable String numeroOs,
             @Valid @RequestBody List<ServicoSolicitadoRequest> request
     ) {
+        OrdemServicoEntity os = ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs);
+        os.validarSePodeAdicionarServicoDiretamente();
+
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request);
         return OrdemServicoResponse.fromDomain(ordemServicoService.incluirServicos(numeroOs, servicos));
     }
@@ -131,6 +135,9 @@ public class OrdemServicoController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody List<ItensNecessariosRequest> request
     ) {
+        OrdemServicoEntity os = ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs);
+        os.validarSePodeRegistrarItensDiretamente();
+
         return OrdemServicoResponse.fromDomain(
                 ordemServicoService.registrarItemNecessario(
                         numeroOs,
@@ -220,6 +227,9 @@ public class OrdemServicoController {
             @PathVariable String numeroOs,
             @PathVariable Long servicoId
     ) {
+        OrdemServicoEntity os = ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs);
+        os.validarSePodeFinalizar();
+
         return OrdemServicoResponse.fromDomain(
                 ordemServicoService.finalizarServico(numeroOs, servicoId)
         );
