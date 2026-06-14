@@ -142,6 +142,10 @@ public class OrdemServicoEntity {
             return;
         }
 
+        if (this.status == StatusOrdemServico.FINALIZADA || this.status == StatusOrdemServico.ENTREGUE) {
+            throw new IllegalStateException("Não é permitido adicionar serviços a uma ordem de serviço já finalizada ou entregue.");
+        }
+
         Set<Long> idsJaAdicionados = this.servicosSolicitados.stream()
                 .map(ServicoSolicitadoEntity::getServicoId)
                 .filter(Objects::nonNull)
