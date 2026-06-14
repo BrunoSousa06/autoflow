@@ -1,0 +1,268 @@
+.dashboard {
+  padding: 2rem;
+  max-width: 1100px;
+}
+
+// ── Banner de boas-vindas ────────────────────────────────────────────────
+.welcome-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
+  color: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  .user-email {
+    margin: 0;
+    opacity: 0.85;
+    font-size: 0.9rem;
+  }
+}
+
+.role-chip {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 0.35rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+// ── Seções ───────────────────────────────────────────────────────────────
+.section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #1565c0;
+  }
+}
+
+.section-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  border-radius: 12px;
+  padding: 0.1rem 0.6rem;
+  letter-spacing: 0.3px;
+  margin-left: 0.25rem;
+}
+
+// ── Métricas ─────────────────────────────────────────────────────────────
+.metrics-loading,
+.metrics-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #666;
+  background: #f5f5f5;
+  margin-bottom: 1rem;
+}
+
+.metrics-error {
+  color: #c62828;
+  background: #fdecea;
+
+  mat-icon { color: #c62828; }
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.metric-card {
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem !important;
+  }
+}
+
+.metric-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: white;
+  }
+
+  &.accent-blue  { background: #1565c0; }
+  &.accent-green { background: #2e7d32; }
+}
+
+.metric-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+// ── Top serviços ──────────────────────────────────────────────────────────
+.top-servicos-card {
+  mat-card-header { padding-bottom: 0.5rem; }
+}
+
+.top-servicos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.top-servico-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child { border-bottom: none; }
+}
+
+.rank {
+  font-weight: 700;
+  color: #1565c0;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.servico-nome {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.servico-stats {
+  font-size: 0.8rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+// ── Contexto por role ─────────────────────────────────────────────────────
+.role-context {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #e3f2fd;
+  color: #1565c0;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+}
+
+// ── Atalhos ───────────────────────────────────────────────────────────────
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.shortcut-link {
+  text-decoration: none;
+  display: block;
+}
+
+.shortcut-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  height: 100%;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem 1rem !important;
+    gap: 0.5rem;
+  }
+}
+
+.shortcut-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #e3f2fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+    color: #1565c0;
+  }
+}
+
+.shortcut-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.shortcut-desc {
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1.3;
+}
