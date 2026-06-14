@@ -48,8 +48,9 @@ class ServicoIntegrationTest extends AbstractIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode json = parseJson(response.getBody());
-        assertThat(json.isArray()).isTrue();
-        assertThat(json.size()).isGreaterThanOrEqualTo(1);
+        assertThat(json.get("content").isArray()).isTrue();
+        assertThat(json.get("content").size()).isGreaterThanOrEqualTo(1);
+        assertThat(json.get("totalElements").asLong()).isGreaterThanOrEqualTo(1);
     }
 
     @Test

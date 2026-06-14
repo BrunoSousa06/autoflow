@@ -9,6 +9,8 @@ import com.autoflow.mapper.ServicoMapper;
 import com.autoflow.repository.servico.ServicoRepository;
 import com.autoflow.repository.servico.ServicoSolicitadoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,8 +35,9 @@ public class ServicoService {
         return servicoMapper.toResponse(entity);
     }
 
-    public List<ServicoResponse> listar() {
-        return servicoMapper.toResponseList(servicoRepository.findAll());
+    public Page<ServicoResponse> listar(Pageable pageable) {
+        return servicoRepository.findAll(pageable)
+                .map(servicoMapper::toResponse);
     }
 
     public ServicoResponse buscarPorId(Long id) {

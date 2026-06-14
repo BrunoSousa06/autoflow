@@ -41,6 +41,10 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         return extrairCampo(resp.getBody(), "token");
     }
 
+    private JsonNode content(ResponseEntity<String> response) {
+        return parseJson(response.getBody()).get("content");
+    }
+
     // ── cadastrar ─────────────────────────────────────────────────────────────
 
     @Test
@@ -103,7 +107,7 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = get("/veiculos", adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode json = parseJson(response.getBody());
+        JsonNode json = content(response);
         assertThat(json.isArray()).isTrue();
         assertThat(json.size()).isGreaterThanOrEqualTo(1);
     }
@@ -139,8 +143,8 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = get("/veiculos", adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(parseJson(response.getBody()).isArray()).isTrue();
-        assertThat(parseJson(response.getBody()).size()).isGreaterThanOrEqualTo(1);
+        assertThat(content(response).isArray()).isTrue();
+        assertThat(content(response).size()).isGreaterThanOrEqualTo(1);
     }
 
     @Test
@@ -153,7 +157,7 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = get("/veiculos?placa=" + placa, adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode json = parseJson(response.getBody());
+        JsonNode json = content(response);
         assertThat(json.size()).isEqualTo(1);
         assertThat(json.get(0).get("placa").asText()).isEqualTo(placa);
     }
@@ -168,7 +172,7 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = get("/veiculos?marca=honda", adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode json = parseJson(response.getBody());
+        JsonNode json = content(response);
         assertThat(json.size()).isEqualTo(1);
         assertThat(json.get(0).get("marca").asText()).isEqualTo("Honda");
     }
@@ -183,7 +187,7 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = get("/veiculos?ano=2021", adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode json = parseJson(response.getBody());
+        JsonNode json = content(response);
         assertThat(json.size()).isEqualTo(1);
         assertThat(json.get(0).get("ano").asInt()).isEqualTo(2021);
     }
@@ -196,7 +200,7 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = get("/veiculos?marca=Lamborghini", adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(parseJson(response.getBody()).size()).isZero();
+        assertThat(content(response).size()).isZero();
     }
 
     // ── isolamento de CLIENTE ─────────────────────────────────────────────────
@@ -215,7 +219,7 @@ class VeiculoIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> response = get("/veiculos", clienteToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode json = parseJson(response.getBody());
+        JsonNode json = content(response);
         assertThat(json.size()).isEqualTo(1);
         assertThat(json.get(0).get("placa").asText()).isEqualTo(placa);
     }

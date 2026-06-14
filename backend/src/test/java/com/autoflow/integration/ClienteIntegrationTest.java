@@ -25,7 +25,6 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
 
         registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
         clienteToken  = logar(TestUtils.EMAIL_CLIENTE);
-        post("/clientes", TestUtils.clienteRequest("Cliente Teste", TestUtils.CPF_CLIENTE, TestUtils.EMAIL_CLIENTE), adminToken);
     }
 
     private String logar(String email) {
@@ -37,21 +36,21 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("deve cadastrar cliente com sucesso")
     void deveCadastrarCliente() {
-        var body = TestUtils.clienteRequest("Ana Lima", TestUtils.CPF_CLIENTE, "ana@test.com");
+        var body = TestUtils.clienteRequest("Ana Lima", TestUtils.CPF_CLIENTE_2, "ana@test.com");
 
         ResponseEntity<String> response = post("/clientes", body, adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode json = parseJson(response.getBody());
         assertThat(json.get("nome").asText()).isEqualTo("Ana Lima");
-        assertThat(json.get("cpfCnpj").asText()).isEqualTo(TestUtils.CPF_CLIENTE);
+        assertThat(json.get("cpfCnpj").asText()).isEqualTo(TestUtils.CPF_CLIENTE_2);
         assertThat(json.get("email").asText()).isEqualTo("ana@test.com");
     }
 
     @Test
     @DisplayName("deve listar todos os clientes")
     void deveListarClientes() {
-        post("/clientes", TestUtils.clienteRequest("Carlos", TestUtils.CPF_CLIENTE, "carlos@test.com"), adminToken);
+        post("/clientes", TestUtils.clienteRequest("Carlos", TestUtils.CPF_CLIENTE_2, "carlos@test.com"), adminToken);
 
         ResponseEntity<String> response = get("/clientes", adminToken);
 
@@ -64,22 +63,22 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("deve buscar cliente por CPF")
     void deveBuscarClientePorCpf() {
-        post("/clientes", TestUtils.clienteRequest("Beatriz", TestUtils.CPF_CLIENTE, "bea@test.com"), adminToken);
+        post("/clientes", TestUtils.clienteRequest("Beatriz", TestUtils.CPF_CLIENTE_2, "bea@test.com"), adminToken);
 
-        ResponseEntity<String> response = get("/clientes/" + TestUtils.CPF_CLIENTE, adminToken);
+        ResponseEntity<String> response = get("/clientes/" + TestUtils.CPF_CLIENTE_2, adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode json = parseJson(response.getBody());
-        assertThat(json.get("cpfCnpj").asText()).isEqualTo(TestUtils.CPF_CLIENTE);
+        assertThat(json.get("cpfCnpj").asText()).isEqualTo(TestUtils.CPF_CLIENTE_2);
     }
 
     @Test
     @DisplayName("deve atualizar dados do cliente")
     void deveAtualizarCliente() {
-        ResponseEntity<String> criado = post("/clientes", TestUtils.clienteRequest("Pedro", TestUtils.CPF_CLIENTE, "pedro@test.com"), adminToken);
+        ResponseEntity<String> criado = post("/clientes", TestUtils.clienteRequest("Pedro", TestUtils.CPF_CLIENTE_2, "pedro@test.com"), adminToken);
         Long clienteId = parseJson(criado.getBody()).get("id").asLong();
 
-        var atualizacao = TestUtils.clienteRequest("Pedro Atualizado", TestUtils.CPF_CLIENTE, "pedro@test.com");
+        var atualizacao = TestUtils.clienteRequest("Pedro Atualizado", TestUtils.CPF_CLIENTE_2, "pedro@test.com");
         ResponseEntity<String> response = patch("/clientes/" + clienteId + "/atualizacao", atualizacao, adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -89,7 +88,7 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("deve deletar cliente com sucesso")
     void deveDeletarCliente() {
-        ResponseEntity<String> criado = post("/clientes", TestUtils.clienteRequest("Lucas", TestUtils.CPF_CLIENTE, "lucas@test.com"), adminToken);
+        ResponseEntity<String> criado = post("/clientes", TestUtils.clienteRequest("Lucas", TestUtils.CPF_CLIENTE_2, "lucas@test.com"), adminToken);
         Long clienteId = parseJson(criado.getBody()).get("id").asLong();
 
         ResponseEntity<String> response = delete("/clientes/" + clienteId, adminToken);
@@ -108,9 +107,9 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("deve retornar 409 ao cadastrar CPF duplicado")
     void deveRetornar409CpfDuplicado() {
-        post("/clientes", TestUtils.clienteRequest("Fernanda", TestUtils.CPF_CLIENTE, "fernanda@test.com"), adminToken);
+        post("/clientes", TestUtils.clienteRequest("Fernanda", TestUtils.CPF_CLIENTE_2, "fernanda@test.com"), adminToken);
 
-        var duplicado = TestUtils.clienteRequest("Fernanda 2", TestUtils.CPF_CLIENTE, "fernanda2@test.com");
+        var duplicado = TestUtils.clienteRequest("Fernanda 2", TestUtils.CPF_CLIENTE_2, "fernanda2@test.com");
         ResponseEntity<String> response = post("/clientes", duplicado, adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
@@ -157,6 +156,7 @@ class ClienteIntegrationTest extends AbstractIntegrationTest {
         String emailSemCadastro = TestUtils.emailUnico();
         registrarELogar(emailSemCadastro, TestUtils.CPF_CLIENTE_2, "CLIENTE");
         String semCadastroToken = logar(emailSemCadastro);
+        jdbcTemplate.update("DELETE FROM clientes WHERE cpf_cnpj = ?", TestUtils.CPF_CLIENTE_2);
 
         // Não criamos ClienteEntity para este usuário
         ResponseEntity<String> response = get("/clientes/me", semCadastroToken);

@@ -24,7 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Ordens de Serviço', icon: 'assignment',      route: '/ordens-servico',              roles: ['ADMIN', 'ATENDENTE', 'MECANICO'] },
   { label: 'Orçamentos',        icon: 'receipt_long',    route: '/orcamentos',                  roles: ['ADMIN', 'ATENDENTE'] },
   { label: 'Reparos Adicionais',icon: 'construction',    route: '/reparos-adicionais',          roles: ['ADMIN', 'ATENDENTE'] },
-  { label: 'Serviços',          icon: 'build',           route: '/servicos',                    roles: ['ADMIN'] },
+  { label: 'Serviços',          icon: 'build',           route: '/servicos',                    roles: ['ADMIN', 'ATENDENTE', 'MECANICO'] },
   { label: 'Peças & Insumos',   icon: 'inventory_2',     route: '/peca-insumo',                 roles: ['ADMIN'] },
   { label: 'Minhas Ordens',     icon: 'list_alt',        route: '/minha-conta/minhas-ordens',   roles: ['CLIENTE'] },
 ];

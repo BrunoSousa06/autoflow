@@ -14,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -79,16 +82,16 @@ class ServicoServiceTest {
     @Test
     void deveListarTodosOsServicos() {
         List<ServicoEntity> listaEntities = List.of(entity);
-        List<ServicoResponse> listaResponses = List.of(response);
+        PageRequest pageable = PageRequest.of(0, 20);
 
-        when(servicoRepository.findAll()).thenReturn(listaEntities);
-        when(servicoMapper.toResponseList(listaEntities)).thenReturn(listaResponses);
+        when(servicoRepository.findAll(pageable)).thenReturn(new PageImpl<>(listaEntities));
+        when(servicoMapper.toResponse(entity)).thenReturn(response);
 
-        List<ServicoResponse> resultado = servicoService.listar();
+        Page<ServicoResponse> resultado = servicoService.listar(pageable);
 
         assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        verify(servicoRepository).findAll();
+        assertEquals(1, resultado.getContent().size());
+        verify(servicoRepository).findAll(pageable);
     }
 
     @Test

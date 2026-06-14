@@ -45,7 +45,7 @@ export const routes: Routes = [
       },
       {
         path: 'servicos',
-        canActivate: [roleGuard(['ADMIN'])],
+        canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'MECANICO'])],
         loadComponent: () =>
           import('./features/servicos/servicos.component').then(m => m.ServicosComponent)
       },
