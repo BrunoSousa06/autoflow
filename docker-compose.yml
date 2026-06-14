@@ -20,6 +20,18 @@ services:
     networks:
       - app-network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: autoflow_frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - app
+    networks:
+      - app-network
+
   db:
     image: postgres:16
     container_name: autoflow_db
