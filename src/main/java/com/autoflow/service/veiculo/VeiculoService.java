@@ -9,6 +9,8 @@ import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.VeiculoMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.veiculo.VeiculoRepository;
+import com.autoflow.repository.veiculo.VeiculoSpecifications;
+import com.autoflow.service.veiculo.dto.VeiculoFiltro;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -42,11 +44,30 @@ public class VeiculoService {
     }
 
     public VeiculoResponse listar(Long id) {
-        return veiculoMapper.mapToResponse(buscarPorId(id));
+        VeiculoEntity veiculo = buscarPorId(id);
+        validarPermissaoCliente(veiculo);
+        return veiculoMapper.mapToResponse(veiculo);
     }
 
-    public List<VeiculoResponse> listarTodosVeiculos() {
-        return veiculoMapper.mapToList(veiculoRepository.findAll());
+    public List<VeiculoResponse> listarComFiltros(VeiculoFiltro filtro) {
+        Long clienteId = getClienteIdSeCliente();
+        VeiculoFiltro filtroEfetivo = new VeiculoFiltro(
+                filtro.placa(), filtro.marca(), filtro.modelo(), filtro.ano(), clienteId);
+        return veiculoMapper.mapToList(
+                veiculoRepository.findAll(VeiculoSpecifications.comFiltros(filtroEfetivo))
+        );
+    }
+
+    private Long getClienteIdSeCliente() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isCliente = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE"));
+        if (!isCliente) {
+            return null;
+        }
+        return clienteRepository.findByUsuarioEmail(auth.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Cliente não encontrado para o usuário autenticado"))
+                .getId();
     }
 
     public VeiculoResponse atualizar(VeiculoUpdateRequest request, Long id) {
@@ -97,13 +118,6 @@ public class VeiculoService {
     public VeiculoEntity buscarPorId(Long id) {
         return veiculoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com o ID: " + id));
-    }
-
-    public VeiculoResponse buscarPorPlaca(String placa) {
-        String placaNormalizada = normalizarPlaca(placa);
-        return veiculoRepository.findByPlaca(placaNormalizada)
-                .map(veiculoMapper::mapToResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veículo não encontrado com a placa: " + placa));
     }
 
     public VeiculoEntity buscarOuCadastrarPorPlacaParaCliente(

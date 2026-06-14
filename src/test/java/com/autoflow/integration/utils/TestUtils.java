@@ -55,6 +55,15 @@ public final class TestUtils {
         );
     }
 
+    public static Map<String, Object> veiculoUpdateRequest(String placa, String marca, String modelo, int ano) {
+        return Map.of(
+                "placa", placa,
+                "marca", marca,
+                "modelo", modelo,
+                "ano", ano
+        );
+    }
+
     public static Map<String, Object> servicoRequest(String nome, String descricao, double valor) {
         return Map.of("nome", nome, "descricao", descricao, "valor", valor);
     }

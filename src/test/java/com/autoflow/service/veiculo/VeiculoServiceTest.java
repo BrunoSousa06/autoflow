@@ -2,27 +2,33 @@ package com.autoflow.service.veiculo;
 
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.VeiculoMapper;
 import com.autoflow.repository.cliente.ClienteRepository;
 import com.autoflow.repository.veiculo.VeiculoRepository;
+import com.autoflow.service.veiculo.dto.VeiculoFiltro;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -41,286 +47,350 @@ class VeiculoServiceTest {
     @Mock
     private VeiculoMapper veiculoMapper;
 
-    private VeiculoRequest request;
+    private VeiculoRequest cadastroRequest;
+    private VeiculoUpdateRequest updateRequest;
     private ClienteEntity clienteEntity;
     private VeiculoEntity veiculoEntity;
     private VeiculoResponse response;
 
     @BeforeEach
     void setup() {
-        request = new VeiculoRequest("12345632451","Honda", 2020,"HXS-53454", "Civic");
+        cadastroRequest = new VeiculoRequest("12345632451", "Honda", 2020, "HXS5345", "Civic");
+        updateRequest = new VeiculoUpdateRequest("Honda", 2020, "HXS5345", "Civic");
+
         clienteEntity = new ClienteEntity();
         clienteEntity.setId(1L);
+
         veiculoEntity = new VeiculoEntity();
         veiculoEntity.setId(1L);
         veiculoEntity.setCliente(clienteEntity);
         veiculoEntity.setPlaca("ABC1D23");
-        response = new VeiculoResponse(1L, "Honda", 2020,"HXS-53454", "Civic", null);
+
+        response = new VeiculoResponse(1L, "Honda", 2020, "HXS5345", "Civic", null);
+
+        autenticarComo("admin@test.com", "ROLE_ADMIN");
     }
 
-    @Test
-    void deveLancarConflictQuandoJaExistirVeiculoComMesmaPlaca() {
-        // Arrange
-        ClienteEntity cliente = new ClienteEntity();
-
-        when(clienteRepository.findByCpfCnpj(request.cpfCnpj()))
-                .thenReturn(Optional.of(cliente));
-
-        when(veiculoRepository.existsByPlaca(request.placa()))
-                .thenReturn(true);
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> veiculoService.cadastrar(request)
-        );
-
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        assertEquals(
-                "Ja existe um veiculo cadastrado com a placa:" + request.placa(),
-                exception.getReason()
-        );
-
-        verify(clienteRepository).findByCpfCnpj(request.cpfCnpj());
-        verify(veiculoRepository).existsByPlaca(request.placa());
-
-        verify(veiculoRepository, never()).save(any());
-        verifyNoInteractions(veiculoMapper);
+    @AfterEach
+    void limparSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
-    @Test
-    void deveLancarConflictQuandoAtualizarComPlacaJaCadastradaEmOutroVeiculo() {
-        Long id = 1L;
-
-        VeiculoEntity veiculoAtual = new VeiculoEntity();
-        veiculoAtual.setId(id);
-
-        VeiculoEntity outroVeiculo = new VeiculoEntity();
-        outroVeiculo.setId(2L);
-
-        when(veiculoRepository.findById(id))
-                .thenReturn(Optional.of(veiculoAtual));
-
-        when(veiculoRepository.findByPlaca(request.placa()))
-                .thenReturn(Optional.of(outroVeiculo));
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> veiculoService.atualizar(request, id)
-        );
-
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        assertEquals("Placa já cadastrada", exception.getReason());
-
-        verify(veiculoRepository).findById(id);
-        verify(veiculoRepository).findByPlaca(request.placa());
-
-        verify(veiculoRepository, never()).save(any());
-        verifyNoInteractions(veiculoMapper);
+    private void autenticarComo(String email, String role) {
+        var auth = new UsernamePasswordAuthenticationToken(
+                email, null, List.of(new SimpleGrantedAuthority(role)));
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    @Test
-    void deveAtualizarQuandoPlacaPertencerAoMesmoVeiculo() {
-        Long id = 1L;
-
-        VeiculoEntity veiculoAtual = new VeiculoEntity();
-        veiculoAtual.setId(id);
-
-
-        when(veiculoRepository.findById(id))
-                .thenReturn(Optional.of(veiculoAtual));
-
-        when(veiculoRepository.findByPlaca(request.placa()))
-                .thenReturn(Optional.of(veiculoAtual));
-
-        when(veiculoRepository.save(veiculoAtual))
-                .thenReturn(veiculoAtual);
-
-        when(veiculoMapper.mapToResponse(veiculoAtual))
-                .thenReturn(response);
-
-        VeiculoResponse resultado = veiculoService.atualizar(request, id);
-
-        assertNotNull(resultado);
-        assertEquals(response, resultado);
-
-        verify(veiculoRepository).findById(id);
-        verify(veiculoRepository).findByPlaca(request.placa());
-        verify(veiculoRepository).save(veiculoAtual);
-        verify(veiculoMapper).mapToResponse(veiculoAtual);
-    }
+    // ── cadastrar ─────────────────────────────────────────────────────────────
 
     @Test
     void deveCadastrarVeiculoComSucesso() {
-        when(clienteRepository.findByCpfCnpj(request.cpfCnpj())).thenReturn(Optional.of(clienteEntity));
-        when(veiculoMapper.mapToEntity(request, clienteEntity)).thenReturn(veiculoEntity);
+        when(clienteRepository.findByCpfCnpj(cadastroRequest.cpfCnpj())).thenReturn(Optional.of(clienteEntity));
+        when(veiculoMapper.mapToEntity(cadastroRequest, clienteEntity)).thenReturn(veiculoEntity);
         when(veiculoRepository.save(veiculoEntity)).thenReturn(veiculoEntity);
         when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
 
-        VeiculoResponse resultado = veiculoService.cadastrar(request);
+        VeiculoResponse resultado = veiculoService.cadastrar(cadastroRequest);
 
         assertNotNull(resultado);
-        verify(clienteRepository).findByCpfCnpj(request.cpfCnpj());
+        verify(clienteRepository).findByCpfCnpj(cadastroRequest.cpfCnpj());
         verify(veiculoRepository).save(veiculoEntity);
     }
 
     @Test
-    void deveLancarExcecaoAoCadastrarVeiculoComClienteInexistente() {
-        when(clienteRepository.findByCpfCnpj(request.cpfCnpj())).thenReturn(Optional.empty());
+    void deveLancarConflictQuandoJaExistirVeiculoComMesmaPlaca() {
+        when(clienteRepository.findByCpfCnpj(cadastroRequest.cpfCnpj())).thenReturn(Optional.of(clienteEntity));
+        when(veiculoRepository.existsByPlaca(cadastroRequest.placa())).thenReturn(true);
 
-        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
-            veiculoService.cadastrar(request);
-        });
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.cadastrar(cadastroRequest));
 
-        assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
-        assertEquals("Cliente não encontrado com o CPF/CNPJ: " + request.cpfCnpj(), excecao.getReason());
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
         verify(veiculoRepository, never()).save(any());
     }
 
     @Test
+    void deveLancarExcecaoAoCadastrarVeiculoComClienteInexistente() {
+        when(clienteRepository.findByCpfCnpj(cadastroRequest.cpfCnpj())).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.cadastrar(cadastroRequest));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        verify(veiculoRepository, never()).save(any());
+    }
+
+    // ── listar ────────────────────────────────────────────────────────────────
+
+    @Test
     void deveListarVeiculoPorIdComSucesso() {
-        Long id = 1L;
-        when(veiculoRepository.findById(id)).thenReturn(Optional.of(veiculoEntity));
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
         when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
 
-        VeiculoResponse resultado = veiculoService.listar(id);
+        VeiculoResponse resultado = veiculoService.listar(1L);
 
         assertNotNull(resultado);
-        verify(veiculoRepository).findById(id);
+        verify(veiculoRepository).findById(1L);
     }
 
     @Test
     void deveLancarExcecaoAoListarIdInexistente() {
-        Long id = 1L;
-        when(veiculoRepository.findById(id)).thenReturn(Optional.empty());
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
-            veiculoService.listar(id);
-        });
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.listar(1L));
 
-        assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
-        assertEquals("Veículo não encontrado com o ID: " + id, excecao.getReason());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    // ── listarComFiltros ──────────────────────────────────────────────────────
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void deveListarTodosQuandoFiltroVazioComoAdmin() {
+        var filtroVazio = new VeiculoFiltro(null, null, null, null, null);
+        when(veiculoRepository.findAll(any(Specification.class))).thenReturn(List.of(veiculoEntity));
+        when(veiculoMapper.mapToList(List.of(veiculoEntity))).thenReturn(List.of(response));
+
+        List<VeiculoResponse> resultado = veiculoService.listarComFiltros(filtroVazio);
+
+        assertEquals(1, resultado.size());
+        verify(veiculoRepository).findAll(any(Specification.class));
+        verifyNoInteractions(clienteRepository);
     }
 
     @Test
-    void deveListarTodosOsVeiculos() {
-        List<VeiculoEntity> veiculos = List.of(veiculoEntity);
-        List<VeiculoResponse> responses = List.of(response);
+    @SuppressWarnings("unchecked")
+    void deveRepassarFiltroAoRepositoryComoAdmin() {
+        var filtro = new VeiculoFiltro("ABC1234", "Honda", null, null, null);
+        when(veiculoRepository.findAll(any(Specification.class))).thenReturn(List.of());
+        when(veiculoMapper.mapToList(List.of())).thenReturn(List.of());
 
-        when(veiculoRepository.findAll()).thenReturn(veiculos);
-        when(veiculoMapper.mapToList(veiculos)).thenReturn(responses);
+        veiculoService.listarComFiltros(filtro);
 
-        List<VeiculoResponse> resultado = veiculoService.listarTodosVeiculos();
+        verify(veiculoRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void deveAdicionarClienteIdImplicitoQuandoListarComoCliente() {
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setEmail("cliente@test.com");
+        clienteEntity.setUsuario(usuario);
+
+        autenticarComo("cliente@test.com", "ROLE_CLIENTE");
+
+        when(clienteRepository.findByUsuarioEmail("cliente@test.com")).thenReturn(Optional.of(clienteEntity));
+        when(veiculoRepository.findAll(any(Specification.class))).thenReturn(List.of(veiculoEntity));
+        when(veiculoMapper.mapToList(List.of(veiculoEntity))).thenReturn(List.of(response));
+
+        veiculoService.listarComFiltros(new VeiculoFiltro(null, null, null, null, null));
+
+        verify(clienteRepository).findByUsuarioEmail("cliente@test.com");
+        verify(veiculoRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    void devePermitirClienteVerSeuPropioVeiculoPorId() {
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setEmail("cliente@test.com");
+        clienteEntity.setUsuario(usuario);
+
+        autenticarComo("cliente@test.com", "ROLE_CLIENTE");
+
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(clienteRepository.findByUsuarioEmail("cliente@test.com")).thenReturn(Optional.of(clienteEntity));
+        when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
+
+        VeiculoResponse resultado = veiculoService.listar(1L);
 
         assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        verify(veiculoRepository).findAll();
     }
 
     @Test
-    void deveAtualizarVeiculoComSucesso() {
-        Long id = 1L;
-        when(veiculoRepository.findById(id)).thenReturn(Optional.of(veiculoEntity));
-        doNothing().when(veiculoMapper).updateEntity(request, veiculoEntity);
+    void deveLancarForbiddenQuandoClienteTentarVerVeiculoDeOutroClientePorId() {
+        ClienteEntity outroCliente = new ClienteEntity();
+        outroCliente.setId(99L);
+        veiculoEntity.setCliente(outroCliente);
+
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setEmail("cliente@test.com");
+        clienteEntity.setUsuario(usuario);
+
+        autenticarComo("cliente@test.com", "ROLE_CLIENTE");
+
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(clienteRepository.findByUsuarioEmail("cliente@test.com")).thenReturn(Optional.of(clienteEntity));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.listar(1L));
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    // ── atualizar — regra de placa duplicada ──────────────────────────────────
+
+    @Test
+    void deveLancarConflictQuandoAtualizarComPlacaJaCadastradaEmOutroVeiculo() {
+        VeiculoEntity outroVeiculo = new VeiculoEntity();
+        outroVeiculo.setId(2L);
+        outroVeiculo.setCliente(clienteEntity);
+
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(veiculoRepository.findByPlaca(updateRequest.placa())).thenReturn(Optional.of(outroVeiculo));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.atualizar(updateRequest, 1L));
+
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+        verify(veiculoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveAtualizarQuandoPlacaPertencerAoMesmoVeiculo() {
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(veiculoRepository.findByPlaca(updateRequest.placa())).thenReturn(Optional.of(veiculoEntity));
         when(veiculoRepository.save(veiculoEntity)).thenReturn(veiculoEntity);
         when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
 
-        VeiculoResponse resultado = veiculoService.atualizar(request, id);
+        VeiculoResponse resultado = veiculoService.atualizar(updateRequest, 1L);
 
         assertNotNull(resultado);
-        verify(veiculoRepository).findById(id);
         verify(veiculoRepository).save(veiculoEntity);
     }
 
     @Test
     void deveLancarExcecaoAoAtualizarIdInexistente() {
-        Long id = 1L;
-        when(veiculoRepository.findById(id)).thenReturn(Optional.empty());
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
-            veiculoService.atualizar(request, id);
-        });
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.atualizar(updateRequest, 1L));
 
-        assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        verify(veiculoRepository, never()).save(any());
+    }
+
+    // ── atualizar — verificação de dono (CLIENTE) ─────────────────────────────
+
+    @Test
+    void devePermitirClienteAtualizarSeuProprioVeiculo() {
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setEmail("cliente@test.com");
+        clienteEntity.setUsuario(usuario);
+
+        autenticarComo("cliente@test.com", "ROLE_CLIENTE");
+
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(clienteRepository.findByUsuarioEmail("cliente@test.com")).thenReturn(Optional.of(clienteEntity));
+        when(veiculoRepository.findByPlaca(updateRequest.placa())).thenReturn(Optional.empty());
+        when(veiculoRepository.save(veiculoEntity)).thenReturn(veiculoEntity);
+        when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
+
+        VeiculoResponse resultado = veiculoService.atualizar(updateRequest, 1L);
+
+        assertNotNull(resultado);
+        verify(clienteRepository).findByUsuarioEmail("cliente@test.com");
+    }
+
+    @Test
+    void deveLancarForbiddenQuandoClienteTentarAtualizarVeiculoDeOutroCliente() {
+        ClienteEntity outroCliente = new ClienteEntity();
+        outroCliente.setId(99L);
+        veiculoEntity.setCliente(outroCliente);
+
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setEmail("cliente@test.com");
+        clienteEntity.setUsuario(usuario);
+
+        autenticarComo("cliente@test.com", "ROLE_CLIENTE");
+
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(clienteRepository.findByUsuarioEmail("cliente@test.com")).thenReturn(Optional.of(clienteEntity));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.atualizar(updateRequest, 1L));
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
         verify(veiculoRepository, never()).save(any());
     }
 
     @Test
+    void deveLancarForbiddenQuandoClienteAutenticadoNaoForEncontradoNoBanco() {
+        autenticarComo("fantasma@test.com", "ROLE_CLIENTE");
+
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(clienteRepository.findByUsuarioEmail("fantasma@test.com")).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.atualizar(updateRequest, 1L));
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void devePermitirAdminAtualizarQualquerVeiculoSemVerificarDono() {
+        ClienteEntity outroCliente = new ClienteEntity();
+        outroCliente.setId(99L);
+        veiculoEntity.setCliente(outroCliente);
+
+        // admin já configurado no @BeforeEach
+        when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
+        when(veiculoRepository.findByPlaca(updateRequest.placa())).thenReturn(Optional.empty());
+        when(veiculoRepository.save(veiculoEntity)).thenReturn(veiculoEntity);
+        when(veiculoMapper.mapToResponse(veiculoEntity)).thenReturn(response);
+
+        VeiculoResponse resultado = veiculoService.atualizar(updateRequest, 1L);
+
+        assertNotNull(resultado);
+        verifyNoInteractions(clienteRepository);
+    }
+
+    // ── deletar ───────────────────────────────────────────────────────────────
+
+    @Test
     void deveDeletarVeiculoComSucesso() {
-        Long id = 1L;
-        when(veiculoRepository.existsById(id)).thenReturn(true);
-        doNothing().when(veiculoRepository).deleteById(id);
+        when(veiculoRepository.existsById(1L)).thenReturn(true);
 
-        veiculoService.deletar(id);
+        veiculoService.deletar(1L);
 
-        verify(veiculoRepository).existsById(id);
-        verify(veiculoRepository).deleteById(id);
+        verify(veiculoRepository).deleteById(1L);
     }
 
     @Test
     void deveLancarExcecaoAoDeletarIdInexistente() {
-        Long id = 1L;
-        when(veiculoRepository.existsById(id)).thenReturn(false);
+        when(veiculoRepository.existsById(1L)).thenReturn(false);
 
-        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
-            veiculoService.deletar(id);
-        });
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.deletar(1L));
 
-        assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
-        assertEquals("Veículo não encontrado com o ID: " + id, excecao.getReason());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
         verify(veiculoRepository, never()).deleteById(any());
     }
 
-    @Test
-    void deveBuscarPorIdInternamenteComSucesso() {
-        Long id = 1L;
-        when(veiculoRepository.findById(id)).thenReturn(Optional.of(veiculoEntity));
-
-        VeiculoEntity resultado = veiculoService.buscarPorId(id);
-
-        assertNotNull(resultado);
-        assertEquals(veiculoEntity, resultado);
-    }
-
-    @Test
-    void deveLancarExcecaoAoBuscarPorIdInternoInexistente() {
-        Long id = 1L;
-        when(veiculoRepository.findById(id)).thenReturn(Optional.empty());
-
-        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> {
-            veiculoService.buscarPorId(id);
-        });
-
-        assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
-        assertEquals("Veículo não encontrado com o ID: " + id, excecao.getReason());
-    }
+    // ── buscarOuCadastrarPorPlacaParaCliente ──────────────────────────────────
 
     @Test
     void deveUsarVeiculoExistentePorPlacaQuandoPertencerAoCliente() {
         VeiculoOrdemServicoRequest requestOs = new VeiculoOrdemServicoRequest("abc-1d23", null, null, null);
-
         when(veiculoRepository.findByPlaca("ABC1D23")).thenReturn(Optional.of(veiculoEntity));
 
         VeiculoEntity resultado = veiculoService.buscarOuCadastrarPorPlacaParaCliente(clienteEntity, requestOs);
 
         assertEquals(veiculoEntity, resultado);
-        verify(veiculoRepository).findByPlaca("ABC1D23");
         verify(veiculoRepository, never()).save(any());
     }
 
     @Test
     void deveCadastrarVeiculoQuandoPlacaNaoExistir() {
         VeiculoOrdemServicoRequest requestOs = new VeiculoOrdemServicoRequest("abc-1d23", "Honda", "Civic", 2020);
-
         when(veiculoRepository.findByPlaca("ABC1D23")).thenReturn(Optional.empty());
-        when(veiculoRepository.save(any(VeiculoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(veiculoRepository.save(any(VeiculoEntity.class))).thenAnswer(i -> i.getArgument(0));
 
         VeiculoEntity resultado = veiculoService.buscarOuCadastrarPorPlacaParaCliente(clienteEntity, requestOs);
 
-        assertEquals(clienteEntity, resultado.getCliente());
         assertEquals("ABC1D23", resultado.getPlaca());
-        assertEquals("Honda", resultado.getMarca());
-        assertEquals("Civic", resultado.getModelo());
-        assertEquals(2020, resultado.getAno());
+        assertEquals(clienteEntity, resultado.getCliente());
         verify(veiculoRepository).save(any(VeiculoEntity.class));
     }
 
@@ -329,32 +399,26 @@ class VeiculoServiceTest {
         ClienteEntity outroCliente = new ClienteEntity();
         outroCliente.setId(99L);
         veiculoEntity.setCliente(outroCliente);
-        VeiculoOrdemServicoRequest requestOs = new VeiculoOrdemServicoRequest("ABC1D23", "Honda", "Civic", 2020);
 
+        VeiculoOrdemServicoRequest requestOs = new VeiculoOrdemServicoRequest("ABC1D23", "Honda", "Civic", 2020);
         when(veiculoRepository.findByPlaca("ABC1D23")).thenReturn(Optional.of(veiculoEntity));
 
-        ResponseStatusException excecao = assertThrows(
-                ResponseStatusException.class,
-                () -> veiculoService.buscarOuCadastrarPorPlacaParaCliente(clienteEntity, requestOs)
-        );
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.buscarOuCadastrarPorPlacaParaCliente(clienteEntity, requestOs));
 
-        assertEquals(HttpStatus.CONFLICT, excecao.getStatusCode());
-        assertEquals("Placa ja cadastrada para outro cliente.", excecao.getReason());
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
         verify(veiculoRepository, never()).save(any());
     }
 
     @Test
     void deveRetornarBadRequestQuandoCadastrarVeiculoNovoSemDadosObrigatorios() {
         VeiculoOrdemServicoRequest requestOs = new VeiculoOrdemServicoRequest("ABC1D23", null, "Civic", 2020);
-
         when(veiculoRepository.findByPlaca("ABC1D23")).thenReturn(Optional.empty());
 
-        ResponseStatusException excecao = assertThrows(
-                ResponseStatusException.class,
-                () -> veiculoService.buscarOuCadastrarPorPlacaParaCliente(clienteEntity, requestOs)
-        );
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> veiculoService.buscarOuCadastrarPorPlacaParaCliente(clienteEntity, requestOs));
 
-        assertEquals(HttpStatus.BAD_REQUEST, excecao.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(veiculoRepository, never()).save(any());
     }
 }

@@ -1,8 +1,10 @@
 package com.autoflow.controller.veiculo;
 
 import com.autoflow.controller.veiculo.request.VeiculoRequest;
+import com.autoflow.controller.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.controller.veiculo.response.VeiculoResponse;
 import com.autoflow.service.veiculo.VeiculoService;
+import com.autoflow.service.veiculo.dto.VeiculoFiltro;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,9 +33,9 @@ class VeiculoControllerTest {
     @Mock
     private VeiculoService veiculoService;
 
-    private VeiculoRequest request;
+    private VeiculoRequest cadastroRequest;
+    private VeiculoUpdateRequest updateRequest;
     private VeiculoResponse response;
-    private List<VeiculoResponse> responses;
 
     @BeforeEach
     void setup() {
@@ -41,20 +43,18 @@ class VeiculoControllerTest {
                 .standaloneSetup(new VeiculoController(veiculoService))
                 .build();
 
-        request = new VeiculoRequest("11222333000181","Honda",2020,"ABC1234", "Civic");
-        response = new VeiculoResponse(1L,"Honda",2020,"ABC1234", "Civic", null);
-        responses = List.of(response);
+        cadastroRequest = new VeiculoRequest("11222333000181", "Honda", 2020, "ABC1234", "Civic");
+        updateRequest = new VeiculoUpdateRequest("Honda", 2020, "ABC1234", "Civic");
+        response = new VeiculoResponse(1L, "Honda", 2020, "ABC1234", "Civic", null);
     }
 
     @Test
     void deveCadastrarVeiculo() throws Exception {
-        when(veiculoService.cadastrar(request)).thenReturn(response);
-
-        String jsonBody = objectMapper.writeValueAsString(request);
+        when(veiculoService.cadastrar(cadastroRequest)).thenReturn(response);
 
         mockMvc.perform(post("/veiculos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonBody))
+                        .content(objectMapper.writeValueAsString(cadastroRequest)))
                 .andExpect(status().isCreated());
     }
 
@@ -67,23 +67,43 @@ class VeiculoControllerTest {
     }
 
     @Test
-    void deveListarTodosVeiculos() throws Exception {
-        when(veiculoService.listarTodosVeiculos()).thenReturn(responses);
+    void deveListarVeiculosSemFiltros() throws Exception {
+        when(veiculoService.listarComFiltros(any(VeiculoFiltro.class))).thenReturn(List.of(response));
 
         mockMvc.perform(get("/veiculos"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void deveAtualizarVeiculo() throws Exception {
-        when(veiculoService.atualizar(any(VeiculoRequest.class), eq(1L))).thenReturn(response);
+    void deveListarVeiculosComFiltrosDePlacaEMarca() throws Exception {
+        when(veiculoService.listarComFiltros(any(VeiculoFiltro.class))).thenReturn(List.of(response));
 
-        String jsonBody = objectMapper.writeValueAsString(request);
+        mockMvc.perform(get("/veiculos").param("placa", "ABC1234").param("marca", "Honda"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void deveAtualizarVeiculo() throws Exception {
+        when(veiculoService.atualizar(any(VeiculoUpdateRequest.class), eq(1L))).thenReturn(response);
 
         mockMvc.perform(patch("/veiculos/1/atualizacao")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonBody))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk());
+
+        verify(veiculoService).atualizar(any(VeiculoUpdateRequest.class), eq(1L));
+    }
+
+    @Test
+    void deveRetornar400QuandoAtualizarSemPlaca() throws Exception {
+        var requestSemPlaca = new VeiculoUpdateRequest("Honda", 2020, "", "Civic");
+
+        mockMvc.perform(patch("/veiculos/1/atualizacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestSemPlaca)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(veiculoService);
     }
 
     @Test
