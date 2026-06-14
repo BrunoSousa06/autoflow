@@ -85,13 +85,22 @@ public class ServicoSolicitadoEntity {
     }
 
     public void registrarItensNecessarios(List<ItemNecessarioEntity> itens) {
+        if (this.status != StatusServicoOs.AGUARDANDO) {
+            throw new IllegalStateException("Não é permitido modificar itens de um serviço que já foi iniciado ou finalizado. " +
+                    "Para novos itens após o início, utilize o fluxo de reparo adicional para gerar um novo orçamento.");
+        }
+
         this.itensNecessarios.clear();
         this.itensNecessarios.addAll(itens);
     }
 
     public void iniciar(List<ItemNecessarioEntity> itensAtualizados) {
-        if (this.status == StatusServicoOs.FINALIZADO) {
-            throw new IllegalStateException("Servico ja finalizado.");
+        if (this.status != StatusServicoOs.AGUARDANDO) {
+            throw new IllegalStateException("O serviço só pode ser iniciado se estiver no status AGUARDANDO. Status atual: " + this.status);
+        }
+
+        if (this.ordemServico != null && this.ordemServico.getStatus() != StatusOrdemServico.EM_EXECUCAO) {
+            throw new IllegalStateException("Um serviço só pode ser iniciado se a Ordem de Serviço estiver em execução (após a aprovação do orçamento).");
         }
 
         this.itensNecessarios.clear();

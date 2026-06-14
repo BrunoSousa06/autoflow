@@ -142,6 +142,10 @@ public class OrdemServicoEntity {
             return;
         }
 
+        if (this.status == StatusOrdemServico.FINALIZADA || this.status == StatusOrdemServico.ENTREGUE) {
+            throw new IllegalStateException("Não é permitido adicionar serviços a uma ordem de serviço já finalizada ou entregue.");
+        }
+
         Set<Long> idsJaAdicionados = this.servicosSolicitados.stream()
                 .map(ServicoSolicitadoEntity::getServicoId)
                 .filter(Objects::nonNull)
@@ -239,8 +243,17 @@ public class OrdemServicoEntity {
     }
 
     public void finalizarSeTodosServicosFinalizados() {
+        if (this.status == StatusOrdemServico.FINALIZADA || this.status == StatusOrdemServico.ENTREGUE) {
+            return;
+        }
+
         boolean todosFinalizados = servicosSolicitados.stream()
-                .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO);
+                .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO 
+                                  || servico.getStatus() == StatusServicoOs.CANCELADO);
+
+        if (servicosSolicitados.isEmpty()) {
+            return;
+        }
 
         if (todosFinalizados) {
             this.status = StatusOrdemServico.FINALIZADA;
