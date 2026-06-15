@@ -80,9 +80,20 @@ export const routes: Routes = [
       },
       {
         path: 'orcamentos',
-        canActivate: [roleGuard(['ADMIN', 'ATENDENTE'])],
-        loadComponent: () =>
-          import('./features/orcamentos/orcamentos.component').then(m => m.OrcamentosComponent)
+        canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'CLIENTE'])],
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./features/orcamentos/orcamentos.component').then(m => m.OrcamentosComponent)
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./features/orcamentos/orcamento-detalhe.component').then(m => m.OrcamentoDetalheComponent)
+          },
+        ]
       },
       {
         path: 'reparos-adicionais',

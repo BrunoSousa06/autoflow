@@ -4,9 +4,12 @@ import com.autoflow.config.security.service.CustomUserDetailsService;
 import com.autoflow.config.security.service.JwtService;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
+import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.autoflow.service.orcamento.OrcamentoService;
 import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
@@ -59,7 +62,17 @@ class OrcamentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(10L))
                 .andExpect(jsonPath("$.numeroOs").value("OS-123"))
-                .andExpect(jsonPath("$.status").value("DISPONIVEL"));
+                .andExpect(jsonPath("$.status").value("DISPONIVEL"))
+                .andExpect(jsonPath("$.servicos[0].servicoId").value(20L))
+                .andExpect(jsonPath("$.servicos[0].nome").value("Revisao"))
+                .andExpect(jsonPath("$.servicos[0].valor").value(100.00))
+                .andExpect(jsonPath("$.itens[0].pecaInsumoId").value(30L))
+                .andExpect(jsonPath("$.itens[0].servicoOsId").value(40L))
+                .andExpect(jsonPath("$.itens[0].nome").value("Filtro"))
+                .andExpect(jsonPath("$.itens[0].tipo").value("PECA"))
+                .andExpect(jsonPath("$.itens[0].valorUnitario").value(25.00))
+                .andExpect(jsonPath("$.itens[0].quantidade").value(2))
+                .andExpect(jsonPath("$.itens[0].valorTotal").value(50.00));
 
         verify(orcamentoService).consultarAutenticado(10L, "admin@autoflow.com");
     }
@@ -158,6 +171,20 @@ class OrcamentoControllerTest {
                 .totalServicos(new BigDecimal("100.00"))
                 .totalItens(new BigDecimal("50.00"))
                 .totalGeral(new BigDecimal("150.00"))
+                .servicos(List.of(OrcamentoServicoEntity.builder()
+                        .servicoId(20L)
+                        .nome("Revisao")
+                        .valor(new BigDecimal("100.00"))
+                        .build()))
+                .itens(List.of(OrcamentoItemNecessarioEntity.builder()
+                        .pecaInsumoId(30L)
+                        .servicoOsId(40L)
+                        .nome("Filtro")
+                        .tipo(CategoriaPecaInsumo.PECA)
+                        .valorUnitario(new BigDecimal("25.00"))
+                        .quantidade(2)
+                        .valorTotal(new BigDecimal("50.00"))
+                        .build()))
                 .cliente(ClienteOrcamentoSnapshot.builder()
                         .nome("Cliente")
                         .cpfCnpj("12345678901")

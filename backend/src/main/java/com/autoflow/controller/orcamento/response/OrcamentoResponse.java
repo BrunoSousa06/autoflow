@@ -6,6 +6,7 @@ import com.autoflow.domain.orcamento.TipoOrcamento;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record OrcamentoResponse(
         Long id,
@@ -17,6 +18,8 @@ public record OrcamentoResponse(
         BigDecimal totalServicos,
         BigDecimal totalItens,
         BigDecimal totalGeral,
+        List<OrcamentoServicoResponse> servicos,
+        List<OrcamentoItemNecessarioResponse> itens,
         LocalDateTime criadoEm,
         LocalDateTime disponibilizadoEm
 ) {
@@ -30,7 +33,31 @@ public record OrcamentoResponse(
                 orcamentoEntity.getTotalServicos(),
                 orcamentoEntity.getTotalItens(),
                 orcamentoEntity.getTotalGeral(),
+                mapServicos(orcamentoEntity),
+                mapItens(orcamentoEntity),
                 orcamentoEntity.getCriadoEm(),
                 orcamentoEntity.getDisponibilizadoEm());
+    }
+
+    private static List<OrcamentoServicoResponse> mapServicos(OrcamentoEntity orcamentoEntity) {
+        if (orcamentoEntity.getServicos() == null) {
+            return List.of();
+        }
+
+        return orcamentoEntity.getServicos()
+                .stream()
+                .map(OrcamentoServicoResponse::from)
+                .toList();
+    }
+
+    private static List<OrcamentoItemNecessarioResponse> mapItens(OrcamentoEntity orcamentoEntity) {
+        if (orcamentoEntity.getItens() == null) {
+            return List.of();
+        }
+
+        return orcamentoEntity.getItens()
+                .stream()
+                .map(OrcamentoItemNecessarioResponse::from)
+                .toList();
     }
 }
