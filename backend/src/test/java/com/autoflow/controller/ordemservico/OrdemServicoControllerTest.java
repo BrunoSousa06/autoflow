@@ -224,7 +224,7 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.EM_EXECUCAO);
         ServicoSolicitadoEntity servico = ordemServico.getServicosSolicitados().getFirst();
-        servico.setStatus(StatusServicoOs.EM_EXECUCAO);
+        servico.setStatus(StatusServicoOs.AGUARDANDO);
         servico.registrarItensNecessarios(List.of(ItemNecessarioEntity.criar(
                 10L,
                 "Filtro",
@@ -244,7 +244,7 @@ class OrdemServicoControllerTest {
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.status").value("EM_EXECUCAO"))
-                .andExpect(jsonPath("$.servicos[0].status").value("EM_EXECUCAO"))
+                .andExpect(jsonPath("$.servicos[0].status").value("AGUARDANDO"))
                 .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].status").value("PENDENTE"))
                 .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].motivoPendencia").value("ESTOQUE_INSUFICIENTE"))
                 .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].quantidadeDisponivel").value(1))
