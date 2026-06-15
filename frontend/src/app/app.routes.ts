@@ -80,16 +80,17 @@ export const routes: Routes = [
       },
       {
         path: 'orcamentos',
-        canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'CLIENTE'])],
         children: [
           {
             path: '',
             pathMatch: 'full',
+            canActivate: [roleGuard(['ADMIN', 'ATENDENTE'])],
             loadComponent: () =>
               import('./features/orcamentos/orcamentos.component').then(m => m.OrcamentosComponent)
           },
           {
             path: ':id',
+            canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'CLIENTE'])],
             loadComponent: () =>
               import('./features/orcamentos/orcamento-detalhe.component').then(m => m.OrcamentoDetalheComponent)
           },
@@ -107,11 +108,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/minha-conta/minha-conta.component').then(m => m.MinhaContaComponent),
         children: [
-          { path: '', redirectTo: 'minhas-ordens', pathMatch: 'full' },
           {
             path: 'minhas-ordens',
             loadComponent: () =>
               import('./features/minha-conta/minhas-ordens/minhas-ordens.component').then(m => m.MinhasOrdensComponent)
+          },
+          {
+            path: 'minhas-ordens/:numeroOs',
+            loadComponent: () =>
+              import('./features/minha-conta/minhas-ordens/minha-ordem-detalhe.component').then(m => m.MinhaOrdemDetalheComponent)
           }
         ]
       },
