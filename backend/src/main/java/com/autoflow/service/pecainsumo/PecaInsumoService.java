@@ -4,6 +4,8 @@ package com.autoflow.service.pecainsumo;
 import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
 import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
@@ -44,6 +46,10 @@ public class PecaInsumoService {
 
     public List<PecaInsumoResponse> listar() {
         return pecaInsumoMapper.toResponseList(pecaInsumoRepository.findAll());
+    }
+
+    public Page<PecaInsumoResponse> listarPaginado(Pageable pageable) {
+        return pecaInsumoRepository.findAll(pageable).map(pecaInsumoMapper::toResponse);
     }
 
     public PecaInsumoResponse buscarPorId(Long id) {

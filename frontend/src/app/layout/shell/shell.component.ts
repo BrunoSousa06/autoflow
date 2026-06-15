@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -25,7 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Orçamentos',        icon: 'receipt_long',    route: '/orcamentos',                  roles: ['ADMIN', 'ATENDENTE'] },
   { label: 'Reparos Adicionais',icon: 'construction',    route: '/reparos-adicionais',          roles: ['ADMIN', 'ATENDENTE'] },
   { label: 'Serviços',          icon: 'build',           route: '/servicos',                    roles: ['ADMIN', 'ATENDENTE', 'MECANICO'] },
-  { label: 'Peças & Insumos',   icon: 'inventory_2',     route: '/peca-insumo',                 roles: ['ADMIN'] },
+  { label: 'Pecas & Insumos',   icon: 'inventory_2',     route: '/peca-insumo',                 roles: ['ADMIN', 'ATENDENTE', 'MECANICO'] },
   { label: 'Minhas Ordens',     icon: 'list_alt',        route: '/minha-conta/minhas-ordens',   roles: ['CLIENTE'] },
 ];
 

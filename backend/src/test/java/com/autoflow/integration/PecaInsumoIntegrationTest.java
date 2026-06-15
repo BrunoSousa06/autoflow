@@ -49,7 +49,7 @@ class PecaInsumoIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("deve listar peças e insumos")
+    @DisplayName("deve listar peças e insumos paginado")
     void deveListarPecas() {
         post("/peca-insumo", TestUtils.pecaRequest("Vela de Ignição", 30, 25.00, "PECA"), adminToken);
 
@@ -57,8 +57,10 @@ class PecaInsumoIntegrationTest extends AbstractIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode json = parseJson(response.getBody());
-        assertThat(json.isArray()).isTrue();
-        assertThat(json.size()).isGreaterThanOrEqualTo(1);
+        assertThat(json.has("content")).isTrue();
+        assertThat(json.get("content").isArray()).isTrue();
+        assertThat(json.get("content").size()).isGreaterThanOrEqualTo(1);
+        assertThat(json.get("totalElements").asInt()).isGreaterThanOrEqualTo(1);
     }
 
     @Test

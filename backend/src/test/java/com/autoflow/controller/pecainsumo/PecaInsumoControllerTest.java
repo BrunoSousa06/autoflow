@@ -8,8 +8,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -30,6 +35,9 @@ class PecaInsumoControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @InjectMocks
+    private PecaInsumoController pecaInsumoController;
+
     @Mock
     private PecaInsumoService pecaInsumoService;
 
@@ -40,7 +48,7 @@ class PecaInsumoControllerTest {
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new PecaInsumoController(pecaInsumoService))
+                .standaloneSetup(pecaInsumoController)
                 .build();
 
         request = new PecaInsumoRequest("Óleo 5W30", BigDecimal.valueOf(49.90), 10, CategoriaPecaInsumo.INSUMO);
@@ -70,7 +78,8 @@ class PecaInsumoControllerTest {
 
     @Test
     void deveListarTodasPecasEInsumos() throws Exception {
-        when(pecaInsumoService.listar()).thenReturn(responses);
+        Page<PecaInsumoResponse> page = new PageImpl<>(responses, PageRequest.of(0, 10), responses.size());
+        when(pecaInsumoService.listarPaginado(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/peca-insumo"))
                 .andExpect(status().isOk());

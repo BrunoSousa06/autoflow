@@ -51,7 +51,7 @@ export const routes: Routes = [
       },
       {
         path: 'peca-insumo',
-        canActivate: [roleGuard(['ADMIN'])],
+        canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'MECANICO'])],
         loadComponent: () =>
           import('./features/peca-insumo/peca-insumo.component').then(m => m.PecaInsumoComponent)
       },

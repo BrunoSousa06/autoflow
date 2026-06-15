@@ -9,12 +9,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/peca-insumo")
@@ -49,15 +50,17 @@ public class PecaInsumoController {
         return ResponseEntity.ok(pecaInsumoService.buscarPorId(id));
     }
 
-    @Operation(summary = "Listar todas peças e insumos cadastrados", description = "Retorna as informações das peças e insumos cadastrados")
+    @Operation(summary = "Listar todas peças e insumos cadastrados", description = "Retorna as informações das peças e insumos cadastrados de forma paginada")
     @ApiResponse(responseCode = "200", description = "Peça/Insumos encontrados com sucesso")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
-    public ResponseEntity<List<PecaInsumoResponse>> listarTodasPecasEInsumos() {
-        return ResponseEntity.ok(pecaInsumoService.listar());
-
+    public ResponseEntity<Page<PecaInsumoResponse>> listarTodasPecasEInsumos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        var pageable = PageRequest.of(page, size, Sort.by("nome").ascending());
+        return ResponseEntity.ok(pecaInsumoService.listarPaginado(pageable));
     }
 
     @Operation(summary = "Atualizar uma peça ou insumo", description = "Atualiza as informações de uma peça ou insumo")

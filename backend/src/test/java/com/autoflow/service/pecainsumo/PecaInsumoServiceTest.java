@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -164,6 +168,68 @@ class PecaInsumoServiceTest {
 
             verify(repository).findAll();
             verify(mapper).toResponseList(entities);
+        }
+    }
+
+    @Nested
+    class ListarPaginadoTests {
+
+        @Test
+        void deveListarPaginadoComSucesso() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<PecaInsumoEntity> pageEntidades = new PageImpl<>(List.of(entity), pageable, 1);
+
+            when(repository.findAll(pageable)).thenReturn(pageEntidades);
+            when(mapper.toResponse(entity)).thenReturn(response);
+
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable);
+
+            assertAll(
+                    () -> assertNotNull(resultado),
+                    () -> assertEquals(1, resultado.getTotalElements()),
+                    () -> assertEquals(1, resultado.getContent().size()),
+                    () -> assertEquals(response, resultado.getContent().getFirst())
+            );
+
+            verify(repository).findAll(pageable);
+            verify(mapper).toResponse(entity);
+        }
+
+        @Test
+        void deveRetornarPaginaVaziaQuandoNaoHouverItens() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<PecaInsumoEntity> pageVazia = new PageImpl<>(List.of(), pageable, 0);
+
+            when(repository.findAll(pageable)).thenReturn(pageVazia);
+
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable);
+
+            assertAll(
+                    () -> assertNotNull(resultado),
+                    () -> assertEquals(0, resultado.getTotalElements()),
+                    () -> assertTrue(resultado.getContent().isEmpty())
+            );
+
+            verify(repository).findAll(pageable);
+            verify(mapper, never()).toResponse(any());
+        }
+
+        @Test
+        void deveRespeitarParametrosDePaginacao() {
+            Pageable pageable = PageRequest.of(1, 5);
+            Page<PecaInsumoEntity> page = new PageImpl<>(List.of(entity), pageable, 6);
+
+            when(repository.findAll(pageable)).thenReturn(page);
+            when(mapper.toResponse(entity)).thenReturn(response);
+
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable);
+
+            assertAll(
+                    () -> assertEquals(1, resultado.getNumber()),
+                    () -> assertEquals(5, resultado.getSize()),
+                    () -> assertEquals(6, resultado.getTotalElements()),
+                    () -> assertEquals(2, resultado.getTotalPages())
+            );
         }
     }
 
