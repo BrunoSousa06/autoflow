@@ -79,6 +79,19 @@ class OrdemServicoEntityTest {
     }
 
     @Test
+    void deveBuscarServicoSolicitadoPeloIdDoCatalogoENaoPeloIdDaLinhaDaOs() {
+        ClienteEntity cliente = criarCliente(1L);
+        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
+        OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, veiculo);
+        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(10L, "Revisao");
+        servico.setId(55L);
+        os.adicionarServicosSolicitados(List.of(servico));
+
+        assertSame(servico, os.buscarServicoSolicitado(10L));
+        assertThrows(IllegalArgumentException.class, () -> os.buscarServicoSolicitado(55L));
+    }
+
+    @Test
     void deveEntregarOrdemServico() {
         OrdemServicoEntity ordemServicoEntity = criarOrdemServico();
         ordemServicoEntity.setStatus(StatusOrdemServico.FINALIZADA);

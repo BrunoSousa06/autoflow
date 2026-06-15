@@ -173,9 +173,9 @@ public class OrdemServicoEntity {
         });
     }
 
-    public ServicoSolicitadoEntity buscarServicoSolicitado(Long servicoOsId) {
+    public ServicoSolicitadoEntity buscarServicoSolicitado(Long servicoId) {
         return servicosSolicitados.stream()
-                .filter(servico -> Objects.equals(servico.getServicoId(), servicoOsId))
+                .filter(servico -> Objects.equals(servico.getServicoId(), servicoId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado na OS."));
     }

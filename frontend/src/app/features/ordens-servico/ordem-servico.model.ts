@@ -57,6 +57,21 @@ export interface IncluirMecanicoRequest {
   mecanicoEmail?: string | null;
 }
 
+export interface RegistrarLaudoRequest {
+  laudo: string;
+}
+
+export interface ItensNecessariosRequest {
+  pecaInsumoId: number;
+  quantidade: number;
+}
+
+export interface FinalizarDiagnosticoResponse {
+  ordemServico: OrdemServicoResponse;
+  orcamentoId: number;
+  publicUrl: string;
+}
+
 export interface ItemNecessarioOs {
   pecaInsumoId: number;
   nome: string;
@@ -110,6 +125,15 @@ export interface VeiculoDetalheOs {
   ano: number;
 }
 
+export interface DiagnosticoDetalheOs {
+  mecanicoId: number | null;
+  mecanicoNome: string | null;
+  mecanicoEmail: string | null;
+  laudo: string | null;
+  iniciadoEm: string | null;
+  concluidoEm: string | null;
+}
+
 export interface OrcamentoResumoOs {
   id: number;
   tipo: TipoOrcamento;
@@ -138,6 +162,7 @@ export interface OrdemServicoDetalheResponse {
   veiculo: VeiculoDetalheOs;
   servicos: ServicoOsResponse[];
   orcamentoAtual: OrcamentoResumoOs | null;
+  diagnostico: DiagnosticoDetalheOs | null;
 }
 
 export interface Page<T> {

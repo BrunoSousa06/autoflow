@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -28,6 +28,14 @@ import {
   ConfirmacaoDialogComponent,
   ConfirmacaoDialogData,
 } from '../../../shared/dialogs/confirmacao-dialog.component';
+import {
+  RegistrarLaudoDialogComponent,
+  RegistrarLaudoDialogResult,
+} from './registrar-laudo-dialog.component';
+import {
+  ItensServicoDialogComponent,
+} from './itens-servico-dialog.component';
+import { ItensNecessariosRequest, ServicoOsResponse } from '../ordem-servico.model';
 
 type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 
@@ -277,25 +285,72 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
                   <mat-icon>construction</mat-icon>
                   Ações do Mecânico
                 </mat-card-title>
-                <mat-card-subtitle>Ações disponíveis em breve</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content class="painel-acoes">
-                <button mat-stroked-button disabled>
-                  <mat-icon>manage_search</mat-icon>
+
+                <!-- Iniciar Diagnóstico -->
+                <button
+                  mat-stroked-button
+                  [disabled]="os()!.status !== 'RECEBIDA' || !podeAlterarDiagnostico() || salvando()"
+                  [matTooltip]="tooltipDiagnostico('RECEBIDA')"
+                  (click)="iniciarDiagnostico()"
+                >
+                  @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                  @else { <mat-icon>manage_search</mat-icon> }
                   Iniciar Diagnóstico
                 </button>
-                <button mat-stroked-button disabled>
-                  <mat-icon>description</mat-icon>
-                  Registrar Laudo
+
+                <!-- Registrar Laudo -->
+                <button
+                  mat-stroked-button
+                  [disabled]="os()!.status !== 'EM_DIAGNOSTICO' || !podeAlterarDiagnostico() || salvando()"
+                  [matTooltip]="tooltipDiagnostico('EM_DIAGNOSTICO')"
+                  (click)="abrirRegistrarLaudo()"
+                >
+                  @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                  @else { <mat-icon>description</mat-icon> }
+                  {{ os()!.diagnostico?.laudo ? 'Atualizar Laudo' : 'Registrar Laudo' }}
                 </button>
-                <button mat-stroked-button disabled>
-                  <mat-icon>fact_check</mat-icon>
+
+                <!-- Itens necessários por serviço -->
+                @if (os()!.status === 'EM_DIAGNOSTICO' && podeAlterarDiagnostico()) {
+                  <div class="secao-itens">
+                    <p class="secao-label">Itens necessários por serviço</p>
+                    @for (srv of os()!.servicos; track srv.id) {
+                      <button
+                        mat-stroked-button
+                        [disabled]="salvando()"
+                        (click)="abrirItensServico(srv)"
+                        class="btn-servico"
+                      >
+                        <mat-icon>inventory_2</mat-icon>
+                        <span class="btn-servico-nome">{{ srv.nome }}</span>
+                        <span class="btn-servico-qtd">({{ srv.itensNecessarios.length }} item(s))</span>
+                      </button>
+                    }
+                  </div>
+                }
+
+                <!-- Finalizar Diagnóstico -->
+                <button
+                  mat-stroked-button
+                  color="accent"
+                  [disabled]="os()!.status !== 'EM_DIAGNOSTICO' || !podeAlterarDiagnostico() || salvando()"
+                  [matTooltip]="tooltipDiagnostico('EM_DIAGNOSTICO')"
+                  (click)="confirmarFinalizarDiagnostico()"
+                >
+                  @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                  @else { <mat-icon>fact_check</mat-icon> }
                   Finalizar Diagnóstico
                 </button>
-                <button mat-stroked-button disabled>
+
+                <!-- Execução de serviços — próximo prompt -->
+                <button mat-stroked-button disabled
+                  matTooltip="Disponível na próxima etapa">
                   <mat-icon>play_circle</mat-icon>
                   Iniciar / Finalizar Serviço
                 </button>
+
               </mat-card-content>
             </mat-card>
           }
@@ -619,6 +674,45 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
       display: inline-block;
     }
 
+    .secao-itens {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px 0 2px;
+      border-top: 1px dashed #e0e0e0;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+
+    .secao-label {
+      margin: 0 0 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-servico {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-align: left;
+
+      .btn-servico-nome {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.85rem;
+      }
+
+      .btn-servico-qtd {
+        font-size: 0.75rem;
+        color: #888;
+        flex-shrink: 0;
+      }
+    }
+
     .orc-resumo-cliente {
       display: flex;
       flex-direction: column;
@@ -688,9 +782,18 @@ export class DetalheOsComponent implements OnInit {
   readonly salvando = signal(false);
 
   readonly role = this.auth.getRole();
+  readonly loggedEmail = this.auth.getUsuarioLogado()?.email ?? null;
   readonly podeVerPainelAtendente = ['ADMIN', 'ATENDENTE'].includes(this.role ?? '');
   readonly podeVerPainelMecanico  = ['ADMIN', 'MECANICO'].includes(this.role ?? '');
   readonly podeVerPainelCliente   = ['ADMIN', 'CLIENTE'].includes(this.role ?? '');
+
+  // ADMIN sempre pode; MECANICO só pode se for o mecânico atribuído à OS
+  readonly podeAlterarDiagnostico = computed(() => {
+    if (this.role === 'ADMIN') return true;
+    if (this.role !== 'MECANICO') return false;
+    const mecEmail = this.os()?.diagnostico?.mecanicoEmail ?? null;
+    return mecEmail !== null && this.loggedEmail !== null && mecEmail.toLowerCase() === this.loggedEmail.toLowerCase();
+  });
 
   readonly ORDEM_STATUS: StatusOrdemServico[] = [
     'RECEBIDA', 'EM_DIAGNOSTICO', 'AGUARDANDO_APROVACAO',
@@ -746,6 +849,135 @@ export class DetalheOsComponent implements OnInit {
 
   labelStatusOrcamento(status: StatusOrcamento): string {
     return STATUS_ORCAMENTO_LABEL[status] ?? status;
+  }
+
+  tooltipDiagnostico(statusNecessario: StatusOrdemServico): string {
+    const os = this.os();
+    if (!os) return '';
+    if (os.status !== statusNecessario) return '';
+    if (this.podeAlterarDiagnostico()) return '';
+
+    if (!os.diagnostico?.mecanicoEmail) {
+      return 'Atribua um mecânico antes de alterar o diagnóstico.';
+    }
+
+    return 'Somente o mecânico atribuído pode alterar o diagnóstico.';
+  }
+
+  iniciarDiagnostico(): void {
+    const ref = this.dialog.open<ConfirmacaoDialogComponent, ConfirmacaoDialogData, boolean>(
+      ConfirmacaoDialogComponent,
+      {
+        width: '400px',
+        data: {
+          titulo: 'Iniciar Diagnóstico',
+          mensagem: `Confirma o início do diagnóstico da OS ${this.os()!.numeroOs}? O status será alterado para Em Diagnóstico.`,
+          labelConfirmar: 'Iniciar',
+        },
+      },
+    );
+    ref.afterClosed().subscribe((confirmado) => {
+      if (!confirmado) return;
+      this.salvando.set(true);
+      this.service.iniciarDiagnostico(this.os()!.numeroOs).subscribe({
+        next: () => {
+          this.snackBar.open('Diagnóstico iniciado.', 'Fechar', { duration: 3000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao iniciar diagnóstico.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao iniciar diagnóstico.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  abrirRegistrarLaudo(): void {
+    const ref = this.dialog.open(RegistrarLaudoDialogComponent, {
+      width: '540px',
+      disableClose: true,
+      data: {
+        numeroOs: this.os()!.numeroOs,
+        laudoAtual: this.os()!.diagnostico?.laudo ?? null,
+      },
+    });
+    ref.afterClosed().subscribe((resultado: RegistrarLaudoDialogResult | null) => {
+      if (!resultado) return;
+      this.salvando.set(true);
+      this.service.registrarLaudo(this.os()!.numeroOs, { laudo: resultado.laudo }).subscribe({
+        next: () => {
+          this.snackBar.open('Laudo registrado com sucesso.', 'Fechar', { duration: 3000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao registrar laudo.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao registrar laudo.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  abrirItensServico(srv: ServicoOsResponse): void {
+    const ref = this.dialog.open(ItensServicoDialogComponent, {
+      width: '600px',
+      disableClose: true,
+      data: {
+        numeroOs: this.os()!.numeroOs,
+        servicoId: srv.servicoId,
+        nomeServico: srv.nome,
+        itensAtuais: srv.itensNecessarios,
+      },
+    });
+    ref.afterClosed().subscribe((itens: ItensNecessariosRequest[] | null) => {
+      if (!itens) return;
+      this.salvando.set(true);
+      this.service.registrarItensServico(this.os()!.numeroOs, srv.servicoId, itens).subscribe({
+        next: () => {
+          this.snackBar.open('Itens registrados com sucesso.', 'Fechar', { duration: 3000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao registrar itens.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao registrar itens.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  confirmarFinalizarDiagnostico(): void {
+    const ref = this.dialog.open<ConfirmacaoDialogComponent, ConfirmacaoDialogData, boolean>(
+      ConfirmacaoDialogComponent,
+      {
+        width: '440px',
+        data: {
+          titulo: 'Finalizar Diagnóstico',
+          mensagem: 'Isso irá gerar o orçamento automaticamente e notificar o cliente por e-mail. O laudo deve estar registrado. Confirma?',
+          labelConfirmar: 'Finalizar',
+        },
+      },
+    );
+    ref.afterClosed().subscribe((confirmado) => {
+      if (!confirmado) return;
+      this.salvando.set(true);
+      this.service.finalizarDiagnostico(this.os()!.numeroOs).subscribe({
+        next: () => {
+          this.snackBar.open(
+            `Diagnóstico finalizado. Orçamento gerado e enviado ao cliente.`,
+            'Fechar',
+            { duration: 5000 },
+          );
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao finalizar diagnóstico.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao finalizar diagnóstico.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
   }
 
   abrirAtribuirMecanico(): void {

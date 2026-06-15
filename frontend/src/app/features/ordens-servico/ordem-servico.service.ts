@@ -1,15 +1,19 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   CriarOrdemServicoRequest,
+  FinalizarDiagnosticoResponse,
   IncluirMecanicoRequest,
+  ItensNecessariosRequest,
   OrdemServicoDetalheResponse,
   OrdemServicoFiltro,
   OrdemServicoResponse,
   Page,
+  RegistrarLaudoRequest,
 } from './ordem-servico.model';
+import { SUPPRESS_GLOBAL_ERROR_SNACKBAR } from '../../core/interceptors/error.interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class OrdemServicoService {
@@ -38,7 +42,47 @@ export class OrdemServicoService {
     return this.http.patch<OrdemServicoResponse>(`${this.base}/${numeroOs}/entregar`, {});
   }
 
+  iniciarDiagnostico(numeroOs: string): Observable<OrdemServicoResponse> {
+    return this.http.patch<OrdemServicoResponse>(
+      `${this.base}/${numeroOs}/diagnostico/iniciar`,
+      {},
+      { context: this.suppressGlobalErrorSnackbarContext() },
+    );
+  }
+
+  registrarLaudo(numeroOs: string, req: RegistrarLaudoRequest): Observable<OrdemServicoResponse> {
+    return this.http.patch<OrdemServicoResponse>(
+      `${this.base}/${numeroOs}/diagnostico/laudo`,
+      req,
+      { context: this.suppressGlobalErrorSnackbarContext() },
+    );
+  }
+
+  registrarItensServico(
+    numeroOs: string,
+    servicoId: number,
+    itens: ItensNecessariosRequest[],
+  ): Observable<OrdemServicoResponse> {
+    return this.http.patch<OrdemServicoResponse>(
+      `${this.base}/${numeroOs}/servicos/${servicoId}/itens-necessarios`,
+      itens,
+      { context: this.suppressGlobalErrorSnackbarContext() },
+    );
+  }
+
+  finalizarDiagnostico(numeroOs: string): Observable<FinalizarDiagnosticoResponse> {
+    return this.http.patch<FinalizarDiagnosticoResponse>(
+      `${this.base}/${numeroOs}/diagnostico/finalizar`,
+      {},
+      { context: this.suppressGlobalErrorSnackbarContext() },
+    );
+  }
+
   criar(req: CriarOrdemServicoRequest): Observable<OrdemServicoResponse> {
     return this.http.post<OrdemServicoResponse>(this.base, req);
+  }
+
+  private suppressGlobalErrorSnackbarContext(): HttpContext {
+    return new HttpContext().set(SUPPRESS_GLOBAL_ERROR_SNACKBAR, true);
   }
 }

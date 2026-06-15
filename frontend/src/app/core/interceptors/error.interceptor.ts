@@ -1,9 +1,11 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+
+export const SUPPRESS_GLOBAL_ERROR_SNACKBAR = new HttpContextToken<boolean>(() => false);
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
@@ -24,11 +26,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           break;
 
         case 403:
-          snackBar.open(
-            'Sem permissão para acessar este recurso.',
-            'Fechar',
-            { duration: 4000 }
-          );
+          if (!req.context.get(SUPPRESS_GLOBAL_ERROR_SNACKBAR)) {
+            snackBar.open(
+              'Sem permissão para acessar este recurso.',
+              'Fechar',
+              { duration: 4000 }
+            );
+          }
           break;
 
         default:

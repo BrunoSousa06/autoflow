@@ -20,7 +20,8 @@ public record OrdemServicoDetalheResponse(
         ClienteOrdemServicoResponse cliente,
         VeiculoOrdemServicoResponse veiculo,
         List<ServicoOsResponse> servicos,
-        OrcamentoResumoResponse orcamentoAtual
+        OrcamentoResumoResponse orcamentoAtual,
+        DiagnosticoDetalheResponse diagnostico
 ) {
     public static OrdemServicoDetalheResponse fromDomain(
             OrdemServicoEntity os,
@@ -40,7 +41,8 @@ public record OrdemServicoDetalheResponse(
                 os.getServicosSolicitados().stream()
                         .map(ServicoOsResponse::fromDomain)
                         .toList(),
-                orcamentoAtual == null ? null : OrcamentoResumoResponse.from(orcamentoAtual)
+                orcamentoAtual == null ? null : OrcamentoResumoResponse.from(orcamentoAtual),
+                DiagnosticoDetalheResponse.fromDomain(os.getDiagnostico())
         );
     }
 }
