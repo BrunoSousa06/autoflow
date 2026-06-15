@@ -151,7 +151,7 @@ import { OrdemServicoFiltro, OrdemServicoResponse, STATUS_OS_LABEL, StatusOrdemS
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="colunas"></tr>
-            <tr mat-row *matRowDef="let row; columns: colunas" class="os-row"></tr>
+            <tr mat-row *matRowDef="let row; columns: colunas" class="os-row" (click)="verDetalhe(row)"></tr>
           </table>
 
           <mat-paginator
@@ -317,6 +317,7 @@ import { OrdemServicoFiltro, OrdemServicoResponse, STATUS_OS_LABEL, StatusOrdemS
 
     .os-row {
       transition: background 0.15s;
+      cursor: pointer;
       &:hover { background: #f5f5f5; }
     }
 
@@ -419,6 +420,10 @@ export class OrdensServicoComponent implements OnInit, OnDestroy {
 
   novaOs(): void {
     this.router.navigate(['/ordens-servico/nova']);
+  }
+
+  verDetalhe(os: OrdemServicoResponse): void {
+    this.router.navigate(['/ordens-servico', os.numeroOs]);
   }
 
   labelStatus(status: StatusOrdemServico): string {

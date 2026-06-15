@@ -71,6 +71,11 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/ordens-servico/nova-os/criar-os.component').then(m => m.CriarOsComponent)
           },
+          {
+            path: ':numeroOs',
+            loadComponent: () =>
+              import('./features/ordens-servico/detalhe-os/detalhe-os.component').then(m => m.DetalheOsComponent)
+          },
         ]
       },
       {

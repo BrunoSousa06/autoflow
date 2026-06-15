@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CriarOrdemServicoRequest, OrdemServicoFiltro, OrdemServicoResponse, Page } from './ordem-servico.model';
+import {
+  CriarOrdemServicoRequest,
+  IncluirMecanicoRequest,
+  OrdemServicoDetalheResponse,
+  OrdemServicoFiltro,
+  OrdemServicoResponse,
+  Page,
+} from './ordem-servico.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrdemServicoService {
@@ -17,6 +24,18 @@ export class OrdemServicoService {
     if (filtro.page !== undefined) params = params.set('page', String(filtro.page));
     if (filtro.size !== undefined) params = params.set('size', String(filtro.size));
     return this.http.get<Page<OrdemServicoResponse>>(this.base, { params });
+  }
+
+  buscarPorNumeroOs(numeroOs: string): Observable<OrdemServicoDetalheResponse> {
+    return this.http.get<OrdemServicoDetalheResponse>(`${this.base}/${numeroOs}`);
+  }
+
+  atribuirMecanico(numeroOs: string, req: IncluirMecanicoRequest): Observable<OrdemServicoResponse> {
+    return this.http.patch<OrdemServicoResponse>(`${this.base}/${numeroOs}/mecanico`, req);
+  }
+
+  entregar(numeroOs: string): Observable<OrdemServicoResponse> {
+    return this.http.patch<OrdemServicoResponse>(`${this.base}/${numeroOs}/entregar`, {});
   }
 
   criar(req: CriarOrdemServicoRequest): Observable<OrdemServicoResponse> {
