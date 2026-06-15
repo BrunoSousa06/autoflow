@@ -1,6 +1,6 @@
 package com.autoflow.integration;
 
-import com.autoflow.integration.config.AbstractIntegrationTest;
+import com.autoflow.integration.config.AbstractIT;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.*;
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Ordem de Serviço - Fluxo Completo de Integração")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class OrdemServicoFluxoIntegrationTest extends AbstractIntegrationTest {
+class OrdemServicoFluxoIT extends AbstractIT {
 
     private String adminToken;
     private String mecanicoToken;
@@ -247,9 +247,10 @@ class OrdemServicoFluxoIntegrationTest extends AbstractIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode json = parseJson(response.getBody());
-        assertThat(json.isArray()).isTrue();
+        JsonNode content = json.get("content");
+        assertThat(content.isArray()).isTrue();
         boolean encontrou = false;
-        for (JsonNode os : json) {
+        for (JsonNode os : content) {
             if (os.get("numeroOs").asText().equals(numeroOs)) {
                 encontrou = true;
                 break;

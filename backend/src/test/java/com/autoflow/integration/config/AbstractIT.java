@@ -18,7 +18,7 @@ import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public abstract class AbstractIntegrationTest {
+public abstract class AbstractIT {
 
     static final PostgreSQLContainer<?> POSTGRES;
 

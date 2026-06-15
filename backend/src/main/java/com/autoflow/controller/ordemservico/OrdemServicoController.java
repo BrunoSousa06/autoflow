@@ -6,6 +6,8 @@ import com.autoflow.controller.ordemservico.response.OrdemServicoDetalheResponse
 import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.mapper.ItensNecessariosMapper;
 import com.autoflow.mapper.ServicoSolicitadoMapper;
 import com.autoflow.service.ordemservico.OrdemServicoService;
@@ -17,6 +19,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -246,18 +251,23 @@ public class OrdemServicoController {
 
     @Operation(
             summary = "Listar ordens de serviço",
-            description = "Lista as ordens de serviço cadastradas para gestão administrativa."
+            description = "Lista as ordens de serviço com suporte a paginação e filtragem por cliente (nome/CPF/CNPJ), número da OS e status. Ordenação padrão por data de abertura decrescente."
     )
     @ApiResponse(responseCode = "200", description = "Ordens de serviço listadas com sucesso")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
-    public List<OrdemServicoResponse> listar() {
-        return ordemServicoService.listar()
-                .stream()
-                .map(OrdemServicoResponse::fromDomain)
-                .toList();
+    public Page<OrdemServicoResponse> listar(
+            @RequestParam(required = false) String cliente,
+            @RequestParam(required = false) String numeroOs,
+            @RequestParam(required = false) StatusOrdemServico status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        OrdemServicoFiltro filtro = new OrdemServicoFiltro(cliente, numeroOs, status);
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataAbertura"));
+        return ordemServicoService.listar(filtro, pageable).map(OrdemServicoResponse::fromDomain);
     }
 
     @Operation(

@@ -14,6 +14,7 @@ import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.mapper.ServicoSolicitadoMapperImpl;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
+import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +40,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -290,19 +294,59 @@ class OrdemServicoControllerTest {
     void deveListarOrdensServicoComoAdmin() throws Exception {
         OrdemServicoEntity primeiraOrdem = criarOrdemServico(1L, 55L, "OS-123");
         OrdemServicoEntity segundaOrdem = criarOrdemServico(2L, 66L, "OS-456");
+        var page = new PageImpl<>(List.of(primeiraOrdem, segundaOrdem));
 
-        when(ordemServicoService.listar()).thenReturn(List.of(primeiraOrdem, segundaOrdem));
+        when(ordemServicoService.listar(any(OrdemServicoFiltro.class), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/ordens-servico"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].status").value("RECEBIDA"))
-                .andExpect(jsonPath("$[0].servicos[0].id").value(55L))
-                .andExpect(jsonPath("$[1].id").value(2L))
-                .andExpect(jsonPath("$[1].numeroOs").value("OS-456"))
-                .andExpect(jsonPath("$[1].servicos[0].id").value(66L));
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].status").value("RECEBIDA"))
+                .andExpect(jsonPath("$.content[0].clienteNome").value("Cliente 1"))
+                .andExpect(jsonPath("$.content[0].servicos[0].id").value(55L))
+                .andExpect(jsonPath("$.content[1].id").value(2L))
+                .andExpect(jsonPath("$.content[1].numeroOs").value("OS-456"))
+                .andExpect(jsonPath("$.content[1].servicos[0].id").value(66L))
+                .andExpect(jsonPath("$.page.totalElements").value(2));
 
-        verify(ordemServicoService).listar();
+        verify(ordemServicoService).listar(any(OrdemServicoFiltro.class), any(Pageable.class));
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveListarOrdensServicoComFiltroDeCliente() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        var page = new PageImpl<>(List.of(ordemServico));
+
+        when(ordemServicoService.listar(any(OrdemServicoFiltro.class), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/ordens-servico").param("cliente", "Cliente 1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].clienteNome").value("Cliente 1"))
+                .andExpect(jsonPath("$.page.totalElements").value(1));
+
+        verify(ordemServicoService).listar(
+                argThat(f -> "Cliente 1".equals(f.cliente())),
+                any(Pageable.class)
+        );
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveListarOrdensServicoComFiltroDeStatus() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        var page = new PageImpl<>(List.of(ordemServico));
+
+        when(ordemServicoService.listar(any(OrdemServicoFiltro.class), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/ordens-servico").param("status", "RECEBIDA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("RECEBIDA"));
+
+        verify(ordemServicoService).listar(
+                argThat(f -> StatusOrdemServico.RECEBIDA.equals(f.status())),
+                any(Pageable.class)
+        );
     }
 
     @Test
@@ -376,7 +420,7 @@ class OrdemServicoControllerTest {
         mockMvc.perform(get("/ordens-servico"))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).listar();
+        verify(ordemServicoService, never()).listar(any(), any());
     }
 
     @Test

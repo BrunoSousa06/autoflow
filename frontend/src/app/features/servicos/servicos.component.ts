@@ -284,9 +284,9 @@ export class ServicosComponent implements OnInit {
     this.servicoService.listar(page, size).subscribe({
       next: (pagina) => {
         this.servicos.set(pagina.content);
-        this.totalElements.set(pagina.totalElements);
-        this.pageIndex.set(pagina.number);
-        this.pageSize.set(pagina.size);
+        this.totalElements.set(pagina.page.totalElements);
+        this.pageIndex.set(pagina.page.number);
+        this.pageSize.set(pagina.page.size);
         this.loading.set(false);
       },
       error: () => {

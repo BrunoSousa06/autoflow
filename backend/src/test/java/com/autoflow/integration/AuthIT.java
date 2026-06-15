@@ -1,6 +1,6 @@
 package com.autoflow.integration;
 
-import com.autoflow.integration.config.AbstractIntegrationTest;
+import com.autoflow.integration.config.AbstractIT;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Auth - Testes de Integração")
-class AuthIntegrationTest extends AbstractIntegrationTest {
+class AuthIT extends AbstractIT {
 
     @BeforeEach
     void limpar() {

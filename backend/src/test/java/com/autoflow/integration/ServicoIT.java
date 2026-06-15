@@ -1,6 +1,6 @@
 package com.autoflow.integration;
 
-import com.autoflow.integration.config.AbstractIntegrationTest;
+import com.autoflow.integration.config.AbstractIT;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Serviço - Testes de Integração")
-class ServicoIntegrationTest extends AbstractIntegrationTest {
+class ServicoIT extends AbstractIT {
 
     private String adminToken;
     private String atendenteToken;
@@ -50,7 +50,7 @@ class ServicoIntegrationTest extends AbstractIntegrationTest {
         JsonNode json = parseJson(response.getBody());
         assertThat(json.get("content").isArray()).isTrue();
         assertThat(json.get("content").size()).isGreaterThanOrEqualTo(1);
-        assertThat(json.get("totalElements").asLong()).isGreaterThanOrEqualTo(1);
+        assertThat(json.get("page").get("totalElements").asLong()).isGreaterThanOrEqualTo(1);
     }
 
     @Test

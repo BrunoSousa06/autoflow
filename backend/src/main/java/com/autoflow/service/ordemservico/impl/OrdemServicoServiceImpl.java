@@ -22,8 +22,10 @@ import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
+import com.autoflow.repository.ordemservico.OrdemServicoSpecifications;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
+import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
@@ -33,6 +35,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -326,8 +330,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public List<OrdemServicoEntity> listar() {
-        return ordemServicoRepository.findAllByOrderByDataAberturaDesc();
+    public Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable) {
+        return ordemServicoRepository.findAll(OrdemServicoSpecifications.comFiltros(filtro), pageable);
     }
 
     @Override

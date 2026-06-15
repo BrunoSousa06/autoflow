@@ -10,6 +10,8 @@ import java.util.List;
 public record OrdemServicoResponse(
         Long id,
         String numeroOs,
+        String clienteNome,
+        String clienteCpfCnpj,
         StatusOrdemServico status,
         LocalDateTime dataAbertura,
         LocalDateTime execucaoIniciadaEm,
@@ -21,6 +23,8 @@ public record OrdemServicoResponse(
         return new OrdemServicoResponse(
                 os.getId(),
                 os.getNumeroOs(),
+                os.getCliente().getNome(),
+                os.getCliente().getCpfCnpj(),
                 os.getStatus(),
                 os.getDataAbertura(),
                 os.getExecucaoIniciadaEm(),

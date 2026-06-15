@@ -1,6 +1,6 @@
 package com.autoflow.integration;
 
-import com.autoflow.integration.config.AbstractIntegrationTest;
+import com.autoflow.integration.config.AbstractIT;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.*;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Orçamento - Testes de Integração")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class OrcamentoIntegrationTest extends AbstractIntegrationTest {
+class OrcamentoIT extends AbstractIT {
 
     private String adminToken;
     private String clienteToken;

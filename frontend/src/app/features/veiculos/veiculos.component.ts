@@ -416,8 +416,8 @@ export class VeiculosComponent implements OnInit {
       .subscribe({
         next: (pagina) => {
           this.veiculos.set(pagina.content);
-          this.totalElements.set(pagina.totalElements);
-          this.pageIndex.set(pagina.number);
+          this.totalElements.set(pagina.page.totalElements);
+          this.pageIndex.set(pagina.page.number);
           this.loading.set(false);
         },
         error: () => {

@@ -1,6 +1,6 @@
 package com.autoflow.integration;
 
-import com.autoflow.integration.config.AbstractIntegrationTest;
+import com.autoflow.integration.config.AbstractIT;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +11,7 @@ import org.springframework.http.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Peça/Insumo - Testes de Integração")
-class PecaInsumoIntegrationTest extends AbstractIntegrationTest {
+class PecaInsumoIT extends AbstractIT {
 
     private String adminToken;
     private String clienteToken;
@@ -60,7 +60,7 @@ class PecaInsumoIntegrationTest extends AbstractIntegrationTest {
         assertThat(json.has("content")).isTrue();
         assertThat(json.get("content").isArray()).isTrue();
         assertThat(json.get("content").size()).isGreaterThanOrEqualTo(1);
-        assertThat(json.get("totalElements").asInt()).isGreaterThanOrEqualTo(1);
+        assertThat(json.get("page").get("totalElements").asInt()).isGreaterThanOrEqualTo(1);
     }
 
     @Test

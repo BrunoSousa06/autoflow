@@ -1,6 +1,6 @@
 package com.autoflow.integration;
 
-import com.autoflow.integration.config.AbstractIntegrationTest;
+import com.autoflow.integration.config.AbstractIT;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +11,7 @@ import org.springframework.http.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Cliente - Testes de Integração")
-class ClienteIntegrationTest extends AbstractIntegrationTest {
+class ClienteIT extends AbstractIT {
 
     private String adminToken;
     private String mecanicoToken;

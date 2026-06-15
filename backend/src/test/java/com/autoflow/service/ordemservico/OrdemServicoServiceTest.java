@@ -24,6 +24,7 @@ import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
+import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.ordemservico.impl.OrdemServicoAccessPolicy;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
@@ -42,6 +43,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -746,15 +753,34 @@ class OrdemServicoServiceTest {
     }
 
     @Test
-    void deveListarOrdensServicoOrdenadasPorDataAberturaDesc() {
+    void deveListarOrdensServicoComFiltroVazio() {
         OrdemServicoEntity primeiraOrdem = criarOrdemServicoComServico("OS-123", 55L);
-        OrdemServicoEntity segundaOrdem = criarOrdemServicoComServico("OS-123", 66L);
-        when(repository.findAllByOrderByDataAberturaDesc()).thenReturn(List.of(segundaOrdem, primeiraOrdem));
+        OrdemServicoEntity segundaOrdem = criarOrdemServicoComServico("OS-456", 66L);
+        PageImpl<OrdemServicoEntity> page = new PageImpl<>(List.of(primeiraOrdem, segundaOrdem));
+        var pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "dataAbertura"));
 
-        List<OrdemServicoEntity> resultado = service.listar();
+        when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        assertEquals(List.of(segundaOrdem, primeiraOrdem), resultado);
-        verify(repository).findAllByOrderByDataAberturaDesc();
+        Page<OrdemServicoEntity> resultado = service.listar(new OrdemServicoFiltro(null, null, null), pageable);
+
+        assertEquals(2, resultado.getTotalElements());
+        assertEquals(List.of(primeiraOrdem, segundaOrdem), resultado.getContent());
+        verify(repository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void deveListarOrdensServicoFiltrandoPorStatus() {
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-789", 77L);
+        PageImpl<OrdemServicoEntity> page = new PageImpl<>(List.of(os));
+        var pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "dataAbertura"));
+
+        when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
+        Page<OrdemServicoEntity> resultado = service.listar(
+                new OrdemServicoFiltro(null, null, StatusOrdemServico.RECEBIDA), pageable);
+
+        assertEquals(1, resultado.getTotalElements());
+        verify(repository).findAll(any(Specification.class), eq(pageable));
     }
 
     @Test

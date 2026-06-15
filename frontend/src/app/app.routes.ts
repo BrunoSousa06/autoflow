@@ -58,8 +58,20 @@ export const routes: Routes = [
       {
         path: 'ordens-servico',
         canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'MECANICO'])],
-        loadComponent: () =>
-          import('./features/ordens-servico/ordens-servico.component').then(m => m.OrdensServicoComponent)
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./features/ordens-servico/ordens-servico.component').then(m => m.OrdensServicoComponent)
+          },
+          {
+            path: 'nova',
+            canActivate: [roleGuard(['ADMIN', 'ATENDENTE'])],
+            loadComponent: () =>
+              import('./features/ordens-servico/nova-os/criar-os.component').then(m => m.CriarOsComponent)
+          },
+        ]
       },
       {
         path: 'orcamentos',

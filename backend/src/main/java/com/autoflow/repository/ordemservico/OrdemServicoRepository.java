@@ -2,13 +2,14 @@ package com.autoflow.repository.ordemservico;
 
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
 
-public interface OrdemServicoRepository extends JpaRepository<OrdemServicoEntity, Long> {
+public interface OrdemServicoRepository extends JpaRepository<OrdemServicoEntity, Long>, JpaSpecificationExecutor<OrdemServicoEntity> {
 
     List<OrdemServicoEntity> findByCliente_IdOrderByDataAberturaDesc(Long clienteId);
 
