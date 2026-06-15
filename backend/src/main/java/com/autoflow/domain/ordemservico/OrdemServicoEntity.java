@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -50,6 +51,7 @@ public class OrdemServicoEntity {
     private DiagnosticoEntity diagnostico;
 
     @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     private List<ServicoSolicitadoEntity> servicosSolicitados = new ArrayList<>();
 
     @Column(name = "execucao_iniciada_em")
