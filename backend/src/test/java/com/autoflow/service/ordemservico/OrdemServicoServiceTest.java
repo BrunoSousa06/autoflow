@@ -178,13 +178,57 @@ class OrdemServicoServiceTest {
         when(servicoService.buscarEntityPorId(20L)).thenReturn(servicoCatalogo);
         when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.incluirServicos("OS-123", List.of(solicitado));
+        OrdemServicoEntity resultado = service.incluirServicos("OS-123", List.of(solicitado), "atendente@autoflow.com");
 
         assertEquals(2, resultado.getServicosSolicitados().size());
         ServicoSolicitadoEntity servicoIncluido = resultado.getServicosSolicitados().get(1);
         assertEquals(20L, servicoIncluido.getServicoId());
         assertEquals("Troca oleo", servicoIncluido.getNome());
         assertEquals(os, servicoIncluido.getOrdemServico());
+        verify(usuarioService, never()).buscarPorEmail(anyString());
+    }
+
+    @Test
+    void deveIncluirServicosNaOrdemServicoEmDiagnosticoComoMecanicoAtribuido() {
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanico);
+        os.setDiagnostico(diagnostico);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+        ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(20L);
+        ServicoEntity servicoCatalogo = criarServico(20L, "Troca oleo", new BigDecimal("80.00"));
+
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(servicoService.buscarEntityPorId(20L)).thenReturn(servicoCatalogo);
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.incluirServicos("OS-123", List.of(solicitado), "mecanico@autoflow.com");
+
+        assertEquals(2, resultado.getServicosSolicitados().size());
+        verify(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
+    }
+
+    @Test
+    void deveBloquearInclusaoDeServicosEmDiagnosticoParaMecanicoNaoAtribuido() {
+        UsuarioEntity mecanicoAtribuido = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
+        UsuarioEntity outroMecanico = criarUsuario(3L, "Outro", "outro@autoflow.com", RoleEnum.MECANICO);
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        diagnostico.setMecanico(mecanicoAtribuido);
+        os.setDiagnostico(diagnostico);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+        when(usuarioService.buscarPorEmail("outro@autoflow.com")).thenReturn(outroMecanico);
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
+                .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, outroMecanico);
+
+        assertThrows(ResponseStatusException.class,
+                () -> service.incluirServicos("OS-123", List.of(new ServicoSolicitadoEntity(20L)), "outro@autoflow.com"));
+
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -193,7 +237,7 @@ class OrdemServicoServiceTest {
         List<ServicoSolicitadoEntity> servicosVazios = List.of();
         when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
 
-        assertThrows(IllegalArgumentException.class, () -> service.incluirServicos("OS-123", servicosVazios));
+        assertThrows(IllegalArgumentException.class, () -> service.incluirServicos("OS-123", servicosVazios, "atendente@autoflow.com"));
         verify(repository, never()).save(any());
     }
 

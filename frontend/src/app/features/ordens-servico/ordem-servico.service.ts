@@ -12,6 +12,7 @@ import {
   OrdemServicoResponse,
   Page,
   RegistrarLaudoRequest,
+  ServicoSolicitadoRequest,
 } from './ordem-servico.model';
 import { SUPPRESS_GLOBAL_ERROR_SNACKBAR } from '../../core/interceptors/error.interceptor';
 
@@ -74,6 +75,14 @@ export class OrdemServicoService {
     return this.http.patch<FinalizarDiagnosticoResponse>(
       `${this.base}/${numeroOs}/diagnostico/finalizar`,
       {},
+      { context: this.suppressGlobalErrorSnackbarContext() },
+    );
+  }
+
+  incluirServicos(numeroOs: string, servicos: ServicoSolicitadoRequest[]): Observable<OrdemServicoResponse> {
+    return this.http.post<OrdemServicoResponse>(
+      `${this.base}/${numeroOs}/servicos`,
+      servicos,
       { context: this.suppressGlobalErrorSnackbarContext() },
     );
   }

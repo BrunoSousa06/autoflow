@@ -106,15 +106,18 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Transactional
     @Override
-    public OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos) {
-
+    public OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos, String emailUsuarioLogado) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
-        List<ServicoSolicitadoEntity> servicosComDados =
-                preencherDadosDosServicos(ordemServico, servicos);
+        if (StatusOrdemServico.EM_DIAGNOSTICO.equals(ordemServico.getStatus())) {
+            UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+            if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
+                ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
+            }
+        }
 
+        List<ServicoSolicitadoEntity> servicosComDados = preencherDadosDosServicos(ordemServico, servicos);
         ordemServico.adicionarServicosSolicitados(servicosComDados);
-
         return ordemServicoRepository.save(ordemServico);
     }
 

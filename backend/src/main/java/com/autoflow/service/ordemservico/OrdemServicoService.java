@@ -22,7 +22,7 @@ public interface OrdemServicoService {
             List<ServicoSolicitadoEntity> servicosSolicitados
     );
     @Transactional
-    OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos);
+    OrdemServicoEntity incluirServicos(String numeroOs, List<ServicoSolicitadoEntity> servicos, String emailUsuarioLogado);
 
     OrdemServicoEntity atribuirMecanico(String numeroOs, Long mecanicoId, String email);
 

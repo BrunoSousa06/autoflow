@@ -76,10 +76,11 @@ public class OrdemServicoController {
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
     public OrdemServicoResponse incluirServico(
             @PathVariable String numeroOs,
-            @Valid @RequestBody List<ServicoSolicitadoRequest> request
+            @Valid @RequestBody List<ServicoSolicitadoRequest> request,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request);
-        return OrdemServicoResponse.fromDomain(ordemServicoService.incluirServicos(numeroOs, servicos));
+        return OrdemServicoResponse.fromDomain(ordemServicoService.incluirServicos(numeroOs, servicos, userDetails.getUsername()));
     }
 
     @Operation(

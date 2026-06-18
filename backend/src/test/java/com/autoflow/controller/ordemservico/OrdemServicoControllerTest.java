@@ -120,11 +120,11 @@ class OrdemServicoControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "MECANICO")
+    @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveIncluirServicosNaOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.incluirServicos(eq("OS-123"), anyList()))
+        when(ordemServicoService.incluirServicos(eq("OS-123"), anyList(), eq("mecanico@autoflow.com")))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(post("/ordens-servico/{numeroOs}/servicos", "OS-123")
@@ -140,7 +140,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        verify(ordemServicoService).incluirServicos(eq("OS-123"), anyList());
+        verify(ordemServicoService).incluirServicos(eq("OS-123"), anyList(), eq("mecanico@autoflow.com"));
     }
 
     @Test

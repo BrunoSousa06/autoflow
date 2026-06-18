@@ -35,7 +35,10 @@ import {
 import {
   ItensServicoDialogComponent,
 } from './itens-servico-dialog.component';
-import { ItensNecessariosRequest, ServicoOsResponse } from '../ordem-servico.model';
+import {
+  AdicionarServicoDiagnosticoDialogComponent,
+} from './adicionar-servico-dialog.component';
+import { ItensNecessariosRequest, ServicoOsResponse, ServicoSolicitadoRequest } from '../ordem-servico.model';
 
 type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 
@@ -311,6 +314,19 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
                   @else { <mat-icon>description</mat-icon> }
                   {{ os()!.diagnostico?.laudo ? 'Atualizar Laudo' : 'Registrar Laudo' }}
                 </button>
+
+                <!-- Adicionar serviços durante o diagnóstico -->
+                @if (os()!.status === 'EM_DIAGNOSTICO' && podeAlterarDiagnostico()) {
+                  <button
+                    mat-stroked-button
+                    [disabled]="salvando()"
+                    (click)="abrirAdicionarServico()"
+                  >
+                    @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                    @else { <mat-icon>add_task</mat-icon> }
+                    Adicionar Serviço
+                  </button>
+                }
 
                 <!-- Itens necessários por serviço -->
                 @if (os()!.status === 'EM_DIAGNOSTICO' && podeAlterarDiagnostico()) {
@@ -916,6 +932,31 @@ export class DetalheOsComponent implements OnInit {
         error: (err) => {
           const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao registrar laudo.';
           this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao registrar laudo.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  abrirAdicionarServico(): void {
+    const os = this.os()!;
+    const servicosJaAdicionados = os.servicos.map((s) => s.servicoId);
+    const ref = this.dialog.open(AdicionarServicoDiagnosticoDialogComponent, {
+      width: '480px',
+      disableClose: true,
+      data: { numeroOs: os.numeroOs, servicosJaAdicionados },
+    });
+    ref.afterClosed().subscribe((servicos: ServicoSolicitadoRequest[] | null) => {
+      if (!servicos || servicos.length === 0) return;
+      this.salvando.set(true);
+      this.service.incluirServicos(os.numeroOs, servicos).subscribe({
+        next: () => {
+          this.snackBar.open('Serviço(s) adicionado(s) com sucesso.', 'Fechar', { duration: 3000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao adicionar serviços.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao adicionar serviços.', 'Fechar', { duration: 5000 });
           this.salvando.set(false);
         },
       });
