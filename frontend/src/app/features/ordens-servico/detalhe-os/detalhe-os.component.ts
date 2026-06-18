@@ -39,6 +39,8 @@ import {
   AdicionarServicoDiagnosticoDialogComponent,
 } from './adicionar-servico-dialog.component';
 import { ItensNecessariosRequest, ServicoOsResponse, ServicoSolicitadoRequest } from '../ordem-servico.model';
+import { OrcamentoService } from '../../orcamentos/orcamento.service';
+import { RecusarOrcamentoDialogComponent } from '../../orcamentos/recusar-orcamento-dialog.component';
 
 type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 
@@ -408,7 +410,6 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
                   <mat-icon>account_balance_wallet</mat-icon>
                   Aprovação de Orçamento
                 </mat-card-title>
-                <mat-card-subtitle>Ações disponíveis em breve</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content class="painel-acoes">
                 @if (os()!.orcamentoAtual; as orc) {
@@ -416,17 +417,40 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
                     <span>Status: <strong>{{ labelStatusOrcamento(orc.status) }}</strong></span>
                     <span>Total: <strong>{{ orc.totalGeral | currency:'BRL' }}</strong></span>
                   </div>
+                  <button
+                    mat-stroked-button
+                    [disabled]="salvando()"
+                    (click)="baixarPdfOrcamento(orc.id)"
+                  >
+                    @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                    @else { <mat-icon>picture_as_pdf</mat-icon> }
+                    Baixar PDF
+                  </button>
+                  @if (orc.status === 'DISPONIVEL') {
+                    <button
+                      mat-stroked-button
+                      color="primary"
+                      [disabled]="salvando()"
+                      (click)="aprovarOrcamento(orc.id)"
+                    >
+                      @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                      @else { <mat-icon>thumb_up</mat-icon> }
+                      Aprovar Orçamento
+                    </button>
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      [disabled]="salvando()"
+                      (click)="recusarOrcamento(orc.id)"
+                    >
+                      @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                      @else { <mat-icon>thumb_down</mat-icon> }
+                      Recusar Orçamento
+                    </button>
+                  }
                 } @else {
                   <p class="sem-info">Aguardando geração do orçamento.</p>
                 }
-                <button mat-stroked-button color="primary" disabled>
-                  <mat-icon>thumb_up</mat-icon>
-                  Aprovar Orçamento
-                </button>
-                <button mat-stroked-button color="warn" disabled>
-                  <mat-icon>thumb_down</mat-icon>
-                  Reprovar Orçamento
-                </button>
               </mat-card-content>
             </mat-card>
           }
@@ -834,6 +858,7 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 })
 export class DetalheOsComponent implements OnInit {
   private readonly service = inject(OrdemServicoService);
+  private readonly orcamentoService = inject(OrcamentoService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -1182,6 +1207,77 @@ export class DetalheOsComponent implements OnInit {
         error: (err) => {
           const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao finalizar serviço.';
           this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao finalizar serviço.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  baixarPdfOrcamento(orcamentoId: number): void {
+    this.salvando.set(true);
+    this.orcamentoService.baixarPdf(orcamentoId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orcamento-${orcamentoId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.salvando.set(false);
+      },
+      error: (err) => {
+        const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao baixar PDF.';
+        this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao baixar PDF.', 'Fechar', { duration: 5000 });
+        this.salvando.set(false);
+      },
+    });
+  }
+
+  aprovarOrcamento(orcamentoId: number): void {
+    const ref = this.dialog.open<ConfirmacaoDialogComponent, ConfirmacaoDialogData, boolean>(
+      ConfirmacaoDialogComponent,
+      {
+        width: '400px',
+        data: {
+          titulo: 'Aprovar Orçamento',
+          mensagem: 'Confirma a aprovação do orçamento? A OS entrará em execução.',
+          labelConfirmar: 'Aprovar',
+        },
+      },
+    );
+    ref.afterClosed().subscribe((confirmado) => {
+      if (!confirmado) return;
+      this.salvando.set(true);
+      this.orcamentoService.aprovar(orcamentoId).subscribe({
+        next: () => {
+          this.snackBar.open('Orçamento aprovado. OS em execução.', 'Fechar', { duration: 3000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao aprovar orçamento.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao aprovar orçamento.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  recusarOrcamento(orcamentoId: number): void {
+    const ref = this.dialog.open(RecusarOrcamentoDialogComponent, {
+      data: { numeroOs: this.os()!.numeroOs },
+      width: '520px',
+    });
+    ref.afterClosed().subscribe((motivo: string | null | undefined) => {
+      if (motivo === null || motivo === undefined) return;
+      this.salvando.set(true);
+      this.orcamentoService.recusar(orcamentoId, motivo ?? null).subscribe({
+        next: () => {
+          this.snackBar.open('Orçamento recusado.', 'Fechar', { duration: 3000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao recusar orçamento.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao recusar orçamento.', 'Fechar', { duration: 5000 });
           this.salvando.set(false);
         },
       });

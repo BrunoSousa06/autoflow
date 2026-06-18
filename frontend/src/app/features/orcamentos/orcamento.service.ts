@@ -34,4 +34,8 @@ export class OrcamentoService {
     const body: RecusarOrcamentoRequest = motivo?.trim() ? { motivo: motivo.trim() } : {};
     return this.http.post<OrcamentoResponse>(`${this.baseUrl}/${orcamentoId}/recusar`, body);
   }
+
+  baixarPdf(orcamentoId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${orcamentoId}/pdf`, { responseType: 'blob' });
+  }
 }

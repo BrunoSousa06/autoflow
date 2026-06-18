@@ -122,13 +122,19 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
           </mat-card-content>
         </mat-card>
 
-        <div class="actions" *ngIf="podeAprovarRecusar()">
-          <button mat-raised-button color="primary" type="button" [disabled]="acao()" (click)="aprovar(item)">
-            Aprovar orcamento
+        <div class="actions">
+          <button mat-stroked-button type="button" [disabled]="acao()" (click)="baixarPdf(item)">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Baixar PDF
           </button>
-          <button mat-stroked-button color="warn" type="button" [disabled]="acao()" (click)="recusar(item)">
-            Recusar orcamento
-          </button>
+          <ng-container *ngIf="podeAprovarRecusar()">
+            <button mat-raised-button color="primary" type="button" [disabled]="acao()" (click)="aprovar(item)">
+              Aprovar orcamento
+            </button>
+            <button mat-stroked-button color="warn" type="button" [disabled]="acao()" (click)="recusar(item)">
+              Recusar orcamento
+            </button>
+          </ng-container>
         </div>
       </ng-container>
     </section>
@@ -250,6 +256,23 @@ export class OrcamentoDetalheComponent implements OnInit {
     if (tipo === 'PECA') return 'Peca';
     if (tipo === 'INSUMO') return 'Insumo';
     return tipo;
+  }
+
+  baixarPdf(orcamento: OrcamentoResponse): void {
+    this.acao.set(true);
+    this.service.baixarPdf(orcamento.id)
+      .pipe(finalize(() => this.acao.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `orcamento-${orcamento.id}.pdf`;
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        error: (erro) => this.exibirErro(erro, 'Não foi possível baixar o PDF.'),
+      });
   }
 
   private exibirErro(erro: unknown, fallback: string): void {

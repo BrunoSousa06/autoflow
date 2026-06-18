@@ -17,25 +17,52 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = OrcamentoController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({
+        OrcamentoControllerTest.MethodSecurityTestConfig.class,
+        OrcamentoControllerTest.SecurityExceptionHandler.class
+})
 class OrcamentoControllerTest {
+
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class MethodSecurityTestConfig {}
+
+    @RestControllerAdvice
+    static class SecurityExceptionHandler {
+        @ExceptionHandler(AuthorizationDeniedException.class)
+        public ResponseEntity<Void> handle(AuthorizationDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -156,6 +183,74 @@ class OrcamentoControllerTest {
                 "atendente@autoflow.com",
                 filtroEsperado
         );
+    }
+
+    @Test
+    @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
+    void deveBaixarPdfComoAdmin() throws Exception {
+        OrcamentoEntity orcamento = baseOrcamento();
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        when(orcamentoService.consultarAutenticado(10L, "admin@autoflow.com")).thenReturn(orcamento);
+        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdfBytes);
+
+        mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"orcamento-10.pdf\""));
+
+        verify(orcamentoService).consultarAutenticado(10L, "admin@autoflow.com");
+        verify(orcamentoPdfService).gerarPdf(orcamento);
+    }
+
+    @Test
+    @WithMockUser(username = "cliente@exemplo.com", roles = "CLIENTE")
+    void deveBaixarPdfComoCliente() throws Exception {
+        OrcamentoEntity orcamento = baseOrcamento();
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        when(orcamentoService.consultarAutenticado(10L, "cliente@exemplo.com")).thenReturn(orcamento);
+        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdfBytes);
+
+        mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+
+        verify(orcamentoService).consultarAutenticado(10L, "cliente@exemplo.com");
+    }
+
+    @Test
+    @WithMockUser(username = "atendente@autoflow.com", roles = "ATENDENTE")
+    void deveBaixarPdfComoAtendente() throws Exception {
+        OrcamentoEntity orcamento = baseOrcamento();
+        byte[] pdfBytes = new byte[]{1, 2, 3};
+        when(orcamentoService.consultarAutenticado(10L, "atendente@autoflow.com")).thenReturn(orcamento);
+        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdfBytes);
+
+        mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+
+        verify(orcamentoService).consultarAutenticado(10L, "atendente@autoflow.com");
+    }
+
+    @Test
+    @WithMockUser(roles = "MECANICO")
+    void deveBloquearDownloadPdfParaMecanico() throws Exception {
+        mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
+                .andExpect(status().isForbidden());
+
+        verify(orcamentoService, never()).consultarAutenticado(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        verify(orcamentoPdfService, never()).gerarPdf(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
+    void deveRetornar404AoBaixarPdfDeOrcamentoInexistente() throws Exception {
+        when(orcamentoService.consultarAutenticado(99L, "admin@autoflow.com"))
+                .thenThrow(new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Orçamento não encontrado"));
+
+        mockMvc.perform(get("/orcamentos/{id}/pdf", 99L))
+                .andExpect(status().isNotFound());
     }
 
     private OrcamentoEntity baseOrcamento() {

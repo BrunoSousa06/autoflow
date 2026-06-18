@@ -2,8 +2,10 @@ package com.autoflow.controller.orcamento;
 
 import com.autoflow.controller.orcamento.request.RecusarOrcamentoRequest;
 import com.autoflow.controller.orcamento.response.OrcamentoResponse;
+import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
+import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.autoflow.service.orcamento.OrcamentoService;
 import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,8 +30,8 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class OrcamentoController {
 
-
     private final OrcamentoService orcamentoService;
+    private final OrcamentoPdfService orcamentoPdfService;
 
     @Operation(summary = "Listar o orçamento da ordem de serviço", description = "Retorna as informações do orçamento da ordem de serviço")
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
@@ -109,5 +114,24 @@ public class OrcamentoController {
                 .stream()
                 .map(OrcamentoResponse::from)
                 .toList();
+    }
+
+    @Operation(summary = "Baixar PDF do orçamento", description = "Retorna o PDF do orçamento para o usuário autenticado. ADMIN e ATENDENTE acessam qualquer orçamento; CLIENTE só acessa orçamentos da sua própria OS.")
+    @ApiResponse(responseCode = "200", description = "PDF gerado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
+    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
+    @GetMapping(value = "/{orcamentoId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE', 'ATENDENTE')")
+    public ResponseEntity<byte[]> baixarPdf(
+            @PathVariable Long orcamentoId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        OrcamentoEntity orcamento = orcamentoService.consultarAutenticado(orcamentoId, userDetails.getUsername());
+        byte[] pdf = orcamentoPdfService.gerarPdf(orcamento);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"orcamento-" + orcamentoId + ".pdf\"")
+                .body(pdf);
     }
 }
