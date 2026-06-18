@@ -46,7 +46,7 @@ public interface OrdemServicoService {
 
     List<AcompanhamentoOrdemServicoResponse> listarAcompanhamentoCliente(String username);
 
-    Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable);
+    Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable, String emailUsuarioLogado);
 
     OrcamentoEntity buscarOrcamentoAtual(String numeroOs);
 

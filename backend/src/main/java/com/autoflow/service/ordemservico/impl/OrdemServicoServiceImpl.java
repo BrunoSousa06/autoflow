@@ -330,8 +330,10 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     @Override
-    public Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable) {
-        return ordemServicoRepository.findAll(OrdemServicoSpecifications.comFiltros(filtro), pageable);
+    public Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable, String emailUsuarioLogado) {
+        UsuarioEntity usuario = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        String emailMecanico = RoleEnum.MECANICO.equals(usuario.getRole()) ? emailUsuarioLogado : null;
+        return ordemServicoRepository.findAll(OrdemServicoSpecifications.comFiltros(filtro, emailMecanico), pageable);
     }
 
     @Override

@@ -18,5 +18,7 @@ public interface UsuarioMapper {
 
     ClienteEntity mapToClienteEntity(RegistroRequest request);
 
+    UsuarioResponse mapToResponse(UsuarioEntity usuario);
+
     List<UsuarioResponse> mapToResponse(List<UsuarioEntity> usuarios);
 }

@@ -110,4 +110,14 @@ public class UsuarioService {
 
         return usuarioMapper.mapToResponse(usuarios);
     }
+
+    @Transactional
+    public UsuarioResponse cadastrarComoStaff(RegistroRequest request, RoleEnum callerRole) {
+        if (RoleEnum.ATENDENTE.equals(callerRole) &&
+                (RoleEnum.ADMIN.equals(request.role()) || RoleEnum.MECANICO.equals(request.role()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Atendente não pode cadastrar usuários com esta função");
+        }
+        return usuarioMapper.mapToResponse(cadastrar(request));
+    }
 }

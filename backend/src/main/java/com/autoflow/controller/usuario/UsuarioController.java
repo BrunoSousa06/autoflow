@@ -4,6 +4,7 @@ import com.autoflow.controller.usuario.request.LoginRequest;
 import com.autoflow.controller.usuario.request.RegistroRequest;
 import com.autoflow.controller.usuario.response.LoginResponse;
 import com.autoflow.controller.usuario.response.UsuarioResponse;
+import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.service.usuario.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -32,6 +34,10 @@ public class UsuarioController {
     @ApiResponse(responseCode = "409", description = "CPF/CNPJ ou email ja foram cadastrados")
     @PostMapping("/cadastro")
     public ResponseEntity<UsuarioEntity> cadastrar(@Valid @RequestBody RegistroRequest request) {
+        if (!RoleEnum.CLIENTE.equals(request.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Cadastro público permite apenas a role CLIENTE");
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.cadastrar(request));
     }
 

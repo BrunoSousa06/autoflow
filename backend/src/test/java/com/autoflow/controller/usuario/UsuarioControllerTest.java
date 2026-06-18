@@ -47,7 +47,7 @@ class UsuarioControllerTest {
                 .standaloneSetup(new UsuarioController(usuarioService))
                 .build();
 
-        registroRequest = new RegistroRequest("Bruno","usuario@email.com", "52998224725","32131221","Senha@123", RoleEnum.ADMIN);
+        registroRequest = new RegistroRequest("Bruno","usuario@email.com", "52998224725","32131221","Senha@123", RoleEnum.CLIENTE);
         usuarioEntity = new UsuarioEntity();
         usuarioResponse = new UsuarioResponse(1L, "Bruno1", "usuario@email.com", RoleEnum.ADMIN);
         usuarioResponses = List.of(usuarioResponse);
@@ -90,6 +90,17 @@ class UsuarioControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonBody))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void deveRetornarForbiddenAoCadastrarComRoleNaoCliente() throws Exception {
+        RegistroRequest adminRequest = new RegistroRequest("Admin","admin@email.com", "52998224725","32131221","Senha@123", RoleEnum.ADMIN);
+        String jsonBody = objectMapper.writeValueAsString(adminRequest);
+
+        mockMvc.perform(post("/auth/cadastro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isForbidden());
     }
 
     @Test

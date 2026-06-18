@@ -257,17 +257,18 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO')")
     public Page<OrdemServicoResponse> listar(
             @RequestParam(required = false) String cliente,
             @RequestParam(required = false) String numeroOs,
             @RequestParam(required = false) StatusOrdemServico status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
         OrdemServicoFiltro filtro = new OrdemServicoFiltro(cliente, numeroOs, status);
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataAbertura"));
-        return ordemServicoService.listar(filtro, pageable).map(OrdemServicoResponse::fromDomain);
+        return ordemServicoService.listar(filtro, pageable, userDetails.getUsername()).map(OrdemServicoResponse::fromDomain);
     }
 
     @Operation(
@@ -283,7 +284,7 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping("/{numeroOs}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO')")
     public OrdemServicoDetalheResponse detalhar(@PathVariable String numeroOs) {
         return OrdemServicoDetalheResponse.fromDomain(
                 ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs),

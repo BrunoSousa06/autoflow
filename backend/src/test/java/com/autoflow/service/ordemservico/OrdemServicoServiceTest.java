@@ -754,14 +754,16 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveListarOrdensServicoComFiltroVazio() {
+        UsuarioEntity admin = criarUsuario(1L, "Admin", "admin@autoflow.com", RoleEnum.ADMIN);
         OrdemServicoEntity primeiraOrdem = criarOrdemServicoComServico("OS-123", 55L);
         OrdemServicoEntity segundaOrdem = criarOrdemServicoComServico("OS-456", 66L);
         PageImpl<OrdemServicoEntity> page = new PageImpl<>(List.of(primeiraOrdem, segundaOrdem));
         var pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "dataAbertura"));
 
+        when(usuarioService.buscarPorEmail("admin@autoflow.com")).thenReturn(admin);
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        Page<OrdemServicoEntity> resultado = service.listar(new OrdemServicoFiltro(null, null, null), pageable);
+        Page<OrdemServicoEntity> resultado = service.listar(new OrdemServicoFiltro(null, null, null), pageable, "admin@autoflow.com");
 
         assertEquals(2, resultado.getTotalElements());
         assertEquals(List.of(primeiraOrdem, segundaOrdem), resultado.getContent());
@@ -770,16 +772,35 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveListarOrdensServicoFiltrandoPorStatus() {
+        UsuarioEntity admin = criarUsuario(1L, "Admin", "admin@autoflow.com", RoleEnum.ADMIN);
         OrdemServicoEntity os = criarOrdemServicoComServico("OS-789", 77L);
         PageImpl<OrdemServicoEntity> page = new PageImpl<>(List.of(os));
         var pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "dataAbertura"));
 
+        when(usuarioService.buscarPorEmail("admin@autoflow.com")).thenReturn(admin);
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
         Page<OrdemServicoEntity> resultado = service.listar(
-                new OrdemServicoFiltro(null, null, StatusOrdemServico.RECEBIDA), pageable);
+                new OrdemServicoFiltro(null, null, StatusOrdemServico.RECEBIDA), pageable, "admin@autoflow.com");
 
         assertEquals(1, resultado.getTotalElements());
+        verify(repository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void deveListarApenasOsAtribuidasAoMecanicoLogado() {
+        UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        PageImpl<OrdemServicoEntity> page = new PageImpl<>(List.of(os));
+        var pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "dataAbertura"));
+
+        when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
+        when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
+        Page<OrdemServicoEntity> resultado = service.listar(new OrdemServicoFiltro(null, null, null), pageable, "mecanico@autoflow.com");
+
+        assertEquals(1, resultado.getTotalElements());
+        verify(usuarioService).buscarPorEmail("mecanico@autoflow.com");
         verify(repository).findAll(any(Specification.class), eq(pageable));
     }
 

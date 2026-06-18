@@ -223,6 +223,73 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void deveCadastrarComoStaffComAdminCriandoQualquerRole() {
+        when(usuarioMapper.mapToEntity(registroAdminRequest)).thenReturn(usuarioEntity);
+        when(usuarioRepository.save(usuarioEntity)).thenReturn(usuarioEntity);
+        UsuarioResponse response = new UsuarioResponse(1L, "Admin", "admin@email.com", RoleEnum.ADMIN);
+        when(usuarioMapper.mapToResponse(usuarioEntity)).thenReturn(response);
+
+        UsuarioResponse resultado = usuarioService.cadastrarComoStaff(registroAdminRequest, RoleEnum.ADMIN);
+
+        assertNotNull(resultado);
+        assertEquals(RoleEnum.ADMIN, resultado.role());
+        verify(usuarioRepository).save(usuarioEntity);
+    }
+
+    @Test
+    void deveCadastrarComoStaffComAtendenteCriandoAtendente() {
+        RegistroRequest registroAtendente = new RegistroRequest("atendente@email.com", "bruno@hotmail.com", "432523432", "321321321", "teste21321", RoleEnum.ATENDENTE);
+        when(usuarioMapper.mapToEntity(registroAtendente)).thenReturn(usuarioEntity);
+        when(usuarioRepository.save(usuarioEntity)).thenReturn(usuarioEntity);
+        UsuarioResponse response = new UsuarioResponse(1L, "Atendente", "atendente@email.com", RoleEnum.ATENDENTE);
+        when(usuarioMapper.mapToResponse(usuarioEntity)).thenReturn(response);
+
+        UsuarioResponse resultado = usuarioService.cadastrarComoStaff(registroAtendente, RoleEnum.ATENDENTE);
+
+        assertNotNull(resultado);
+        verify(usuarioRepository).save(usuarioEntity);
+    }
+
+    @Test
+    void deveCadastrarComoStaffComAtendenteCriandoCliente() {
+        when(usuarioMapper.mapToEntity(registroClienteRequest)).thenReturn(usuarioEntity);
+        when(usuarioRepository.save(usuarioEntity)).thenReturn(usuarioEntity);
+        when(usuarioMapper.mapToClienteEntity(registroClienteRequest)).thenReturn(clienteEntity);
+        when(clienteRepository.save(clienteEntity)).thenReturn(clienteEntity);
+        UsuarioResponse response = new UsuarioResponse(1L, "Cliente", "cliente@email.com", RoleEnum.CLIENTE);
+        when(usuarioMapper.mapToResponse(usuarioEntity)).thenReturn(response);
+
+        UsuarioResponse resultado = usuarioService.cadastrarComoStaff(registroClienteRequest, RoleEnum.ATENDENTE);
+
+        assertNotNull(resultado);
+        verify(usuarioRepository).save(usuarioEntity);
+    }
+
+    @Test
+    void deveLancarForbiddenQuandoAtendenteCreateAdmin() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.cadastrarComoStaff(registroAdminRequest, RoleEnum.ATENDENTE)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarForbiddenQuandoAtendenteCreateMecanico() {
+        RegistroRequest registroMecanico = new RegistroRequest("mecanico@email.com", "bruno@hotmail.com", "432523432", "321321321", "teste21321", RoleEnum.MECANICO);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> usuarioService.cadastrarComoStaff(registroMecanico, RoleEnum.ATENDENTE)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
     void deveListarUsuariosComSucesso() {
         UsuarioEntity usuario = new UsuarioEntity();
         usuario.setId(1L);

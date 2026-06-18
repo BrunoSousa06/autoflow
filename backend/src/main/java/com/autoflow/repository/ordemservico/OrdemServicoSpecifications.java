@@ -8,11 +8,12 @@ public final class OrdemServicoSpecifications {
 
     private OrdemServicoSpecifications() {}
 
-    public static Specification<OrdemServicoEntity> comFiltros(OrdemServicoFiltro filtro) {
+    public static Specification<OrdemServicoEntity> comFiltros(OrdemServicoFiltro filtro, String emailMecanico) {
         return Specification.allOf(
                 status(filtro.status()),
                 numeroOs(filtro.numeroOs()),
-                cliente(filtro.cliente())
+                cliente(filtro.cliente()),
+                mecanico(emailMecanico)
         );
     }
 
@@ -36,6 +37,13 @@ public final class OrdemServicoSpecifications {
                     cb.like(cb.lower(root.get("cliente").get("nome")), pattern),
                     cb.like(cb.lower(root.get("cliente").get("cpfCnpj")), pattern)
             );
+        };
+    }
+
+    private static Specification<OrdemServicoEntity> mecanico(String emailMecanico) {
+        return (root, query, cb) -> {
+            if (isBlank(emailMecanico)) return null;
+            return cb.equal(root.get("diagnostico").get("mecanico").get("email"), emailMecanico);
         };
     }
 

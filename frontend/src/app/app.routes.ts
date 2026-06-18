@@ -38,6 +38,12 @@ export const routes: Routes = [
           import('./features/clientes/clientes.component').then(m => m.ClientesComponent)
       },
       {
+        path: 'usuarios',
+        canActivate: [roleGuard(['ADMIN', 'ATENDENTE'])],
+        loadComponent: () =>
+          import('./features/usuarios/usuarios.component').then(m => m.UsuariosComponent)
+      },
+      {
         path: 'veiculos',
         canActivate: [roleGuard(['ADMIN', 'ATENDENTE', 'CLIENTE'])],
         loadComponent: () =>

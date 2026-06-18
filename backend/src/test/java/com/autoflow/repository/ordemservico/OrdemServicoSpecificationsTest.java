@@ -27,6 +27,9 @@ class OrdemServicoSpecificationsTest {
     @Mock private Path<String> nomePath;
     @Mock private Path<String> cpfCnpjPath;
     @Mock private Path<String> numeroOsPath;
+    @Mock private Path<Object> diagnosticoPath;
+    @Mock private Path<Object> mecanicoPath;
+    @Mock private Path<String> mecanicoEmailPath;
 
     @Mock private Expression<String> lowerNome;
     @Mock private Expression<String> lowerCpfCnpj;
@@ -42,6 +45,9 @@ class OrdemServicoSpecificationsTest {
         lenient().doReturn(nomePath).when(clientePath).get("nome");
         lenient().doReturn(cpfCnpjPath).when(clientePath).get("cpfCnpj");
         lenient().doReturn(numeroOsPath).when(root).get("numeroOs");
+        lenient().when(root.get("diagnostico")).thenReturn(diagnosticoPath);
+        lenient().when(diagnosticoPath.get("mecanico")).thenReturn(mecanicoPath);
+        lenient().doReturn(mecanicoEmailPath).when(mecanicoPath).get("email");
 
         lenient().when(cb.lower(nomePath)).thenReturn(lowerNome);
         lenient().when(cb.lower(cpfCnpjPath)).thenReturn(lowerCpfCnpj);
@@ -53,7 +59,11 @@ class OrdemServicoSpecificationsTest {
     }
 
     private void aplicarSpec(OrdemServicoFiltro filtro) {
-        OrdemServicoSpecifications.comFiltros(filtro).toPredicate(root, query, cb);
+        aplicarSpec(filtro, null);
+    }
+
+    private void aplicarSpec(OrdemServicoFiltro filtro, String emailMecanico) {
+        OrdemServicoSpecifications.comFiltros(filtro, emailMecanico).toPredicate(root, query, cb);
     }
 
     // --- filtro vazio ---
@@ -148,6 +158,22 @@ class OrdemServicoSpecificationsTest {
 
         verify(cb, never()).lower(nomePath);
         verify(cb, never()).lower(cpfCnpjPath);
+    }
+
+    // --- mecânico ---
+
+    @Test
+    void comFiltros_comEmailMecanico_geraPredicadoDeIgualdade() {
+        aplicarSpec(new OrdemServicoFiltro(null, null, null), "mecanico@autoflow.com");
+
+        verify(cb).equal(mecanicoEmailPath, "mecanico@autoflow.com");
+    }
+
+    @Test
+    void comFiltros_comEmailMecanicoNulo_naoGeraPredicadoDeMecanico() {
+        aplicarSpec(new OrdemServicoFiltro(null, null, null), null);
+
+        verify(root, never()).get("diagnostico");
     }
 
     // --- combinação completa ---
