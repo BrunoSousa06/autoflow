@@ -42,8 +42,8 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
     <section class="page">
       <header class="header">
         <div>
-          <h1>{{ isCliente() ? 'Meus orcamentos' : 'Orcamentos' }}</h1>
-          <p>{{ isCliente() ? 'Orcamentos vinculados as suas ordens de servico.' : 'Consulta administrativa de orcamentos.' }}</p>
+          <h1>{{ isCliente() ? 'Meus orçamentos' : 'Orçamentos' }}</h1>
+          <p>{{ isCliente() ? 'Orçamentos vinculados às suas ordens de serviço.' : 'Consulta administrativa de orçamentos.' }}</p>
         </div>
         <button mat-stroked-button color="primary" type="button" (click)="carregar()">
           <mat-icon>refresh</mat-icon>
@@ -73,7 +73,7 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Numero da OS</mat-label>
+          <mat-label>Número da OS</mat-label>
           <input matInput name="numeroOs" [(ngModel)]="filtro.numeroOs">
         </mat-form-field>
 
@@ -105,7 +105,7 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
       </div>
 
       <div *ngIf="!loading() && !orcamentos().length" class="empty">
-        Nenhum orcamento encontrado.
+        Nenhum orçamento encontrado.
       </div>
 
       <div *ngIf="!loading() && orcamentos().length" class="list">
@@ -118,10 +118,10 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
           <mat-card-content>
             <span class="status" [ngClass]="orcamento.status.toLowerCase()">{{ statusLabel(orcamento.status) }}</span>
             <dl>
-              <div><dt>Servicos</dt><dd>{{ orcamento.totalServicos | currency:'BRL' }}</dd></div>
-              <div><dt>Pecas/Insumos</dt><dd>{{ orcamento.totalItens | currency:'BRL' }}</dd></div>
+              <div><dt>Serviços</dt><dd>{{ orcamento.totalServicos | currency:'BRL' }}</dd></div>
+              <div><dt>Peças/Insumos</dt><dd>{{ orcamento.totalItens | currency:'BRL' }}</dd></div>
               <div><dt>Total</dt><dd>{{ orcamento.totalGeral | currency:'BRL' }}</dd></div>
-              <div><dt>Disponivel em</dt><dd>{{ orcamento.disponibilizadoEm ? (orcamento.disponibilizadoEm | date:'short') : '-' }}</dd></div>
+              <div><dt>Disponível em</dt><dd>{{ orcamento.disponibilizadoEm ? (orcamento.disponibilizadoEm | date:'short') : '-' }}</dd></div>
             </dl>
           </mat-card-content>
 
@@ -203,7 +203,7 @@ export class OrcamentosComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: orcamentos => this.orcamentos.set(orcamentos),
-        error: erro => this.exibirErro(erro, 'Nao foi possivel carregar os orcamentos.'),
+        error: erro => this.exibirErro(erro, 'Não foi possível carregar os orçamentos.'),
       });
   }
 
@@ -228,9 +228,9 @@ export class OrcamentosComponent implements OnInit {
       .subscribe({
         next: atualizado => {
           this.atualizarNaLista(atualizado);
-          this.snackBar.open('Orcamento aprovado com sucesso.', 'Fechar', { duration: 3000 });
+          this.snackBar.open('Orçamento aprovado com sucesso.', 'Fechar', { duration: 3000 });
         },
-        error: erro => this.exibirErro(erro, 'Nao foi possivel aprovar o orcamento.'),
+        error: erro => this.exibirErro(erro, 'Não foi possível aprovar o orçamento.'),
       });
   }
 
@@ -249,9 +249,9 @@ export class OrcamentosComponent implements OnInit {
         .subscribe({
           next: atualizado => {
             this.atualizarNaLista(atualizado);
-            this.snackBar.open('Orcamento recusado com sucesso.', 'Fechar', { duration: 3000 });
+            this.snackBar.open('Orçamento recusado com sucesso.', 'Fechar', { duration: 3000 });
           },
-          error: erro => this.exibirErro(erro, 'Nao foi possivel recusar o orcamento.'),
+          error: erro => this.exibirErro(erro, 'Não foi possível recusar o orçamento.'),
         });
     });
   }

@@ -37,7 +37,7 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
       <ng-container *ngIf="!loading() && orcamento() as item">
         <header class="header">
           <div>
-            <h1>Orcamento OS {{ item.numeroOs }}</h1>
+            <h1>Orçamento OS {{ item.numeroOs }}</h1>
             <p>{{ tipoLabel(item.tipo) }} v{{ item.versao }}</p>
           </div>
           <span class="status" [ngClass]="item.status.toLowerCase()">{{ statusLabel(item.status) }}</span>
@@ -46,8 +46,8 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
         <mat-card class="summary">
           <mat-card-content>
             <dl>
-              <div><dt>ID do orcamento</dt><dd>{{ item.id }}</dd></div>
-              <div><dt>ID da ordem de servico</dt><dd>{{ item.ordemServicoId }}</dd></div>
+              <div><dt>ID do orçamento</dt><dd>{{ item.id }}</dd></div>
+              <div><dt>ID da ordem de serviço</dt><dd>{{ item.ordemServicoId }}</dd></div>
               <div><dt>Criado em</dt><dd>{{ item.criadoEm | date:'short' }}</dd></div>
               <div><dt>Disponibilizado em</dt><dd>{{ item.disponibilizadoEm ? (item.disponibilizadoEm | date:'short') : '-' }}</dd></div>
             </dl>
@@ -55,22 +55,22 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
         </mat-card>
 
         <div class="totals">
-          <mat-card><mat-card-content><span>Servicos</span><strong>{{ item.totalServicos | currency:'BRL' }}</strong></mat-card-content></mat-card>
-          <mat-card><mat-card-content><span>Pecas/Insumos</span><strong>{{ item.totalItens | currency:'BRL' }}</strong></mat-card-content></mat-card>
+          <mat-card><mat-card-content><span>Serviços</span><strong>{{ item.totalServicos | currency:'BRL' }}</strong></mat-card-content></mat-card>
+          <mat-card><mat-card-content><span>Peças/Insumos</span><strong>{{ item.totalItens | currency:'BRL' }}</strong></mat-card-content></mat-card>
           <mat-card><mat-card-content><span>Total</span><strong>{{ item.totalGeral | currency:'BRL' }}</strong></mat-card-content></mat-card>
         </div>
 
         <mat-card>
           <mat-card-header>
-            <mat-card-title>Servicos</mat-card-title>
+            <mat-card-title>Serviços</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div *ngIf="item.servicos.length; else semServicos" class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Servico</th>
-                    <th>ID catalogo</th>
+                    <th>Serviço</th>
+                    <th>ID catálogo</th>
                     <th class="money">Valor</th>
                   </tr>
                 </thead>
@@ -84,14 +84,14 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
               </table>
             </div>
             <ng-template #semServicos>
-              <p class="notice">Nenhum servico vinculado ao orcamento.</p>
+              <p class="notice">Nenhum serviço vinculado ao orçamento.</p>
             </ng-template>
           </mat-card-content>
         </mat-card>
 
         <mat-card>
           <mat-card-header>
-            <mat-card-title>Pecas e insumos</mat-card-title>
+            <mat-card-title>Peças e insumos</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div *ngIf="item.itens.length; else semItens" class="table-wrap">
@@ -117,7 +117,7 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
               </table>
             </div>
             <ng-template #semItens>
-              <p class="notice">Nenhuma peca ou insumo vinculado ao orcamento.</p>
+              <p class="notice">Nenhuma peça ou insumo vinculado ao orçamento.</p>
             </ng-template>
           </mat-card-content>
         </mat-card>
@@ -129,10 +129,10 @@ import { RecusarOrcamentoDialogComponent } from './recusar-orcamento-dialog.comp
           </button>
           <ng-container *ngIf="podeAprovarRecusar()">
             <button mat-raised-button color="primary" type="button" [disabled]="acao()" (click)="aprovar(item)">
-              Aprovar orcamento
+              Aprovar orçamento
             </button>
             <button mat-stroked-button color="warn" type="button" [disabled]="acao()" (click)="recusar(item)">
-              Recusar orcamento
+              Recusar orçamento
             </button>
           </ng-container>
         </div>
@@ -191,7 +191,7 @@ export class OrcamentoDetalheComponent implements OnInit {
   carregar(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) {
-      this.snackBar.open('Orcamento invalido.', 'Fechar', { duration: 4000 });
+      this.snackBar.open('Orçamento inválido.', 'Fechar', { duration: 4000 });
       this.voltar();
       return;
     }
@@ -201,7 +201,7 @@ export class OrcamentoDetalheComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: orcamento => this.orcamento.set(orcamento),
-        error: erro => this.exibirErro(erro, 'Nao foi possivel carregar o orcamento.'),
+        error: erro => this.exibirErro(erro, 'Não foi possível carregar o orçamento.'),
       });
   }
 
@@ -216,9 +216,9 @@ export class OrcamentoDetalheComponent implements OnInit {
       .subscribe({
         next: atualizado => {
           this.orcamento.set(atualizado);
-          this.snackBar.open('Orcamento aprovado com sucesso.', 'Fechar', { duration: 3000 });
+          this.snackBar.open('Orçamento aprovado com sucesso.', 'Fechar', { duration: 3000 });
         },
-        error: erro => this.exibirErro(erro, 'Nao foi possivel aprovar o orcamento.'),
+        error: erro => this.exibirErro(erro, 'Não foi possível aprovar o orçamento.'),
       });
   }
 
@@ -237,9 +237,9 @@ export class OrcamentoDetalheComponent implements OnInit {
         .subscribe({
           next: atualizado => {
             this.orcamento.set(atualizado);
-            this.snackBar.open('Orcamento recusado com sucesso.', 'Fechar', { duration: 3000 });
+            this.snackBar.open('Orçamento recusado com sucesso.', 'Fechar', { duration: 3000 });
           },
-          error: erro => this.exibirErro(erro, 'Nao foi possivel recusar o orcamento.'),
+          error: erro => this.exibirErro(erro, 'Não foi possível recusar o orçamento.'),
         });
     });
   }
@@ -253,7 +253,7 @@ export class OrcamentoDetalheComponent implements OnInit {
   }
 
   tipoItemLabel(tipo: string): string {
-    if (tipo === 'PECA') return 'Peca';
+    if (tipo === 'PECA') return 'Peça';
     if (tipo === 'INSUMO') return 'Insumo';
     return tipo;
   }

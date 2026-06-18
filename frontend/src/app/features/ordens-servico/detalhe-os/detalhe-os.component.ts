@@ -1167,7 +1167,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.service.iniciarServico(this.os()!.numeroOs, srv.id).subscribe({
+      this.service.iniciarServico(this.os()!.numeroOs, srv.servicoId).subscribe({
         next: () => {
           this.snackBar.open(`Serviço "${srv.nome}" iniciado.`, 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -1196,7 +1196,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.service.finalizarServico(this.os()!.numeroOs, srv.id).subscribe({
+      this.service.finalizarServico(this.os()!.numeroOs, srv.servicoId).subscribe({
         next: (result) => {
           const osStatus = result.servicos.every((s) => s.status === 'FINALIZADO')
             ? 'Serviço finalizado. OS finalizada automaticamente.'
