@@ -1,0 +1,99 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ edicao ? 'edit' : 'person_add' }}</mat-icon>
+  {{ edicao ? 'Editar Cliente' : 'Novo Cliente' }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" novalidate>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nome completo</mat-label>
+      <mat-icon matPrefix>person</mat-icon>
+      <input matInput formControlName="nome" autocomplete="off" />
+      @if (f['nome'].hasError('required')) {
+        <mat-error>Nome é obrigatório</mat-error>
+      } @else if (f['nome'].hasError('backend')) {
+        <mat-error>{{ f['nome'].getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>CPF / CNPJ</mat-label>
+      <mat-icon matPrefix>badge</mat-icon>
+      <input
+        matInput
+        formControlName="cpfCnpj"
+        placeholder="000.000.000-00 ou 00.000.000/0000-00"
+        autocomplete="off"
+        (input)="mascaraCpfCnpj($event)"
+      />
+      @if (edicao) {
+        <mat-hint>CPF/CNPJ não pode ser alterado após o cadastro</mat-hint>
+      }
+      @if (f['cpfCnpj'].hasError('required')) {
+        <mat-error>CPF/CNPJ é obrigatório</mat-error>
+      } @else if (f['cpfCnpj'].hasError('cpfCnpj')) {
+        <mat-error>{{ f['cpfCnpj'].getError('cpfCnpj') }}</mat-error>
+      } @else if (f['cpfCnpj'].hasError('backend')) {
+        <mat-error>{{ f['cpfCnpj'].getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Telefone</mat-label>
+      <mat-icon matPrefix>phone</mat-icon>
+      <input
+        matInput
+        formControlName="telefone"
+        placeholder="(00) 90000-0000"
+        autocomplete="off"
+        (input)="mascaraTelefone($event)"
+      />
+      @if (f['telefone'].hasError('required')) {
+        <mat-error>Telefone é obrigatório</mat-error>
+      } @else if (f['telefone'].hasError('backend')) {
+        <mat-error>{{ f['telefone'].getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>E-mail</mat-label>
+      <mat-icon matPrefix>email</mat-icon>
+      <input matInput formControlName="email" type="email" autocomplete="off" />
+      @if (f['email'].hasError('required')) {
+        <mat-error>E-mail é obrigatório</mat-error>
+      } @else if (f['email'].hasError('email')) {
+        <mat-error>Formato de e-mail inválido</mat-error>
+      } @else if (f['email'].hasError('backend')) {
+        <mat-error>{{ f['email'].getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (erroBackend()) {
+      <div class="error-banner">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ erroBackend() }}</span>
+      </div>
+    }
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()" [disabled]="loading()">
+    Cancelar
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="salvar()"
+    [disabled]="loading()"
+  >
+    @if (loading()) {
+      <mat-spinner diameter="18" />
+    } @else {
+      <mat-icon>save</mat-icon>
+    }
+    {{ edicao ? 'Salvar alterações' : 'Cadastrar' }}
+  </button>
+</mat-dialog-actions>

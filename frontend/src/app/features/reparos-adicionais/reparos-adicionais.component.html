@@ -1,0 +1,74 @@
+<section class="page">
+  <header class="header">
+    <div>
+      <h1>Reparos Adicionais</h1>
+      <p>Orçamentos adicionais gerados durante a execução das ordens de serviço.</p>
+    </div>
+    <button mat-stroked-button color="primary" type="button" (click)="carregar()">
+      <mat-icon>refresh</mat-icon>
+      Atualizar
+    </button>
+  </header>
+
+  <form class="filters" (ngSubmit)="carregar()">
+    <mat-form-field appearance="outline">
+      <mat-label>Status do orçamento</mat-label>
+      <mat-select name="status" [(ngModel)]="filtroStatus">
+        <mat-option value="">Todos</mat-option>
+        <mat-option *ngFor="let s of statusOptions" [value]="s">
+          {{ statusLabel(s) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Número da OS</mat-label>
+      <input matInput name="numeroOs" [(ngModel)]="filtroNumeroOs">
+    </mat-form-field>
+
+    <div class="filter-actions">
+      <button mat-raised-button color="primary" type="submit">Buscar</button>
+      <button mat-button type="button" (click)="limpar()">Limpar</button>
+    </div>
+  </form>
+
+  <div *ngIf="loading()" class="loading">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading() && !itens().length" class="empty">
+    <mat-icon class="icon-vazio">construction</mat-icon>
+    <p>Nenhum reparo adicional encontrado.</p>
+  </div>
+
+  <div *ngIf="!loading() && itens().length" class="list">
+    <mat-card *ngFor="let item of itens()" class="card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>construction</mat-icon>
+        <mat-card-title>OS {{ item.numeroOs }}</mat-card-title>
+        <mat-card-subtitle>Orçamento Adicional — ID #{{ item.id }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <span class="status" [ngClass]="item.status.toLowerCase()">{{ statusLabel(item.status) }}</span>
+        <dl>
+          <div><dt>Serviços</dt><dd>{{ item.totalServicos | currency:'BRL' }}</dd></div>
+          <div><dt>Peças/Insumos</dt><dd>{{ item.totalItens | currency:'BRL' }}</dd></div>
+          <div><dt>Total</dt><dd>{{ item.totalGeral | currency:'BRL' }}</dd></div>
+          <div><dt>Criado em</dt><dd>{{ item.criadoEm | date:'short' }}</dd></div>
+        </dl>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button color="primary" type="button" (click)="verOrcamento(item.id)">
+          <mat-icon>receipt_long</mat-icon>
+          Ver orçamento
+        </button>
+        <button mat-button color="primary" type="button" (click)="verOs(item.numeroOs)">
+          <mat-icon>assignment</mat-icon>
+          Ver OS
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</section>

@@ -1,0 +1,81 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ edicao ? 'edit' : 'inventory_2' }}</mat-icon>
+  {{ edicao ? 'Editar Peça/Insumo' : 'Nova Peça/Insumo' }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" novalidate>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nome</mat-label>
+      <mat-icon matPrefix>label</mat-icon>
+      <input matInput formControlName="nome" autocomplete="off" placeholder="Ex: Filtro de óleo" />
+      @if (f.nome.touched && f.nome.hasError('required')) {
+        <mat-error>Nome é obrigatório</mat-error>
+      } @else if (f.nome.hasError('backend')) {
+        <mat-error>{{ f.nome.getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Tipo</mat-label>
+      <mat-icon matPrefix>category</mat-icon>
+      <mat-select formControlName="tipo">
+        @for (tipo of categorias; track tipo) {
+          <mat-option [value]="tipo">{{ tipo }}</mat-option>
+        }
+      </mat-select>
+      @if (f.tipo.touched && f.tipo.hasError('required')) {
+        <mat-error>Tipo é obrigatório</mat-error>
+      } @else if (f.tipo.hasError('backend')) {
+        <mat-error>{{ f.tipo.getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Valor (R$)</mat-label>
+        <mat-icon matPrefix>attach_money</mat-icon>
+        <input matInput formControlName="valor" type="number" min="0" step="0.01" />
+        @if (f.valor.hasError('min')) {
+          <mat-error>Valor não pode ser negativo</mat-error>
+        } @else if (f.valor.hasError('backend')) {
+          <mat-error>{{ f.valor.getError('backend') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Quantidade</mat-label>
+        <mat-icon matPrefix>numbers</mat-icon>
+        <input matInput formControlName="quantidade" type="number" min="0" step="1" />
+        @if (f.quantidade.hasError('required')) {
+          <mat-error>Quantidade é obrigatória</mat-error>
+        } @else if (f.quantidade.hasError('min')) {
+          <mat-error>Quantidade não pode ser negativa</mat-error>
+        } @else if (f.quantidade.hasError('pattern')) {
+          <mat-error>Informe um número inteiro</mat-error>
+        } @else if (f.quantidade.hasError('backend')) {
+          <mat-error>{{ f.quantidade.getError('backend') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    @if (erroBackend()) {
+      <div class="error-banner">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ erroBackend() }}</span>
+      </div>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()" [disabled]="loading()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="salvar()" [disabled]="loading()">
+    @if (loading()) {
+      <mat-spinner diameter="18" />
+    } @else {
+      <mat-icon>save</mat-icon>
+    }
+    {{ edicao ? 'Salvar alterações' : 'Cadastrar' }}
+  </button>
+</mat-dialog-actions>

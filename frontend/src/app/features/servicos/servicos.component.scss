@@ -1,0 +1,51 @@
+.page-header {
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.col-nome {
+  font-weight: 500;
+  width: 220px;
+}
+
+.col-descricao {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.col-valor {
+  width: 130px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: #2e7d32;
+}
+
+.sem-valor { color: #bbb; }
+
+.col-acoes {
+  width: 100px;
+  white-space: nowrap;
+}
+
+.icon-vazio { color: #ccc; }
+
+.servico-row {
+  transition: background 0.15s;
+  &:hover { background: #f5f5f5; }
+}

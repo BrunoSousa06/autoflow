@@ -26,77 +26,8 @@ export interface RegistrarLaudoDialogResult {
     MatInputModule,
     MatIconModule,
   ],
-  template: `
-    <h2 mat-dialog-title>
-      <mat-icon class="titulo-icon">description</mat-icon>
-      Registrar Laudo de Diagnóstico
-    </h2>
-
-    <mat-dialog-content>
-      <p class="sub">OS: <strong>{{ data.numeroOs }}</strong></p>
-
-      <mat-form-field appearance="outline" class="campo-laudo">
-        <mat-label>Laudo técnico</mat-label>
-        <textarea
-          matInput
-          [(ngModel)]="laudo"
-          name="laudo"
-          rows="6"
-          placeholder="Descreva o diagnóstico técnico do veículo..."
-        ></textarea>
-        <mat-hint>Descreva os problemas identificados e os serviços necessários.</mat-hint>
-      </mat-form-field>
-    </mat-dialog-content>
-
-    <mat-dialog-actions align="end">
-      <button mat-button [mat-dialog-close]="null">Cancelar</button>
-      <button
-        mat-raised-button
-        color="primary"
-        [disabled]="!laudo.trim()"
-        (click)="confirmar()"
-      >
-        <mat-icon>save</mat-icon>
-        Salvar Laudo
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    h2[mat-dialog-title] {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.1rem;
-
-      .titulo-icon {
-        font-size: 22px;
-        width: 22px;
-        height: 22px;
-        color: #1976d2;
-      }
-    }
-
-    .sub {
-      margin: 0 0 16px;
-      font-size: 0.875rem;
-      color: #666;
-    }
-
-    .campo-laudo {
-      width: 100%;
-    }
-
-    mat-dialog-actions {
-      gap: 8px;
-      padding-top: 8px;
-
-      button {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-    }
-  `],
+  templateUrl: './registrar-laudo-dialog.component.html',
+  styleUrl: './registrar-laudo-dialog.component.scss',
 })
 export class RegistrarLaudoDialogComponent implements OnInit {
   private readonly dialogRef = inject(MatDialogRef<RegistrarLaudoDialogComponent>);

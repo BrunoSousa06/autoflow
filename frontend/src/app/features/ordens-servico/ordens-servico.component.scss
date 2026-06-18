@@ -1,0 +1,106 @@
+.page {
+  max-width: 1200px;
+}
+
+.page-header {
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.filtros-card {
+  margin-bottom: 16px;
+  padding: 16px 16px 8px;
+}
+
+.filtro-campo {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filtro-status {
+  min-width: 190px;
+  max-width: 220px;
+}
+
+.btn-limpar {
+  margin-top: 4px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-vazio { color: #ccc; }
+
+.col-numero {
+  font-weight: 600;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #1565c0;
+  width: 160px;
+}
+
+.col-cliente {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+  .cliente-nome {
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .cliente-doc {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 2px;
+  }
+}
+
+.col-data {
+  width: 150px;
+  color: #555;
+  font-size: 0.875rem;
+}
+
+.col-servicos {
+  width: 120px;
+  color: #555;
+  font-size: 0.875rem;
+}
+
+.os-row {
+  transition: background 0.15s;
+  cursor: pointer;
+
+  &:hover { background: #f5f5f5; }
+}
+
+mat-chip {
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.status-RECEBIDA             { background: #e3f2fd; color: #1565c0; }
+  &.status-EM_DIAGNOSTICO       { background: #fff3e0; color: #e65100; }
+  &.status-AGUARDANDO_APROVACAO { background: #fce4ec; color: #c62828; }
+  &.status-EM_EXECUCAO          { background: #f3e5f5; color: #6a1b9a; }
+  &.status-FINALIZADA           { background: #e8f5e9; color: #2e7d32; }
+  &.status-ENTREGUE             { background: #e8f5e9; color: #1b5e20; }
+}

@@ -2,3 +2,188 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+// ── Layout utilities ──────────────────────────────────────────────────────────
+
+.page {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+  color: #666;
+
+  p { margin: 0; }
+}
+
+.estado-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px;
+  gap: 14px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  p {
+    margin: 0;
+    color: #555;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.card-title-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #555;
+  }
+}
+
+.sem-info {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic;
+}
+
+// ── Info list (dl) ────────────────────────────────────────────────────────────
+
+.info-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 16px;
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+
+  dt {
+    color: #888;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    color: #222;
+    word-break: break-word;
+  }
+}
+
+// ── Tabela padrão ─────────────────────────────────────────────────────────────
+
+.tabela-card {
+  padding: 0;
+  overflow: hidden;
+
+  table { width: 100%; }
+}
+
+.tabela-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 0;
+}
+
+.filtros-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+// ── Error banner ──────────────────────────────────────────────────────────────
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdecea;
+  color: #c62828;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-top: 8px;
+  font-size: 0.9rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Dialog padrão ─────────────────────────────────────────────────────────────
+
+.full-width {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+// ── Status chips ──────────────────────────────────────────────────────────────
+
+mat-chip {
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  // OS status
+  &.status-os-RECEBIDA             { background: #e3f2fd; color: #1565c0; }
+  &.status-os-EM_DIAGNOSTICO       { background: #fff3e0; color: #e65100; }
+  &.status-os-AGUARDANDO_APROVACAO { background: #fce4ec; color: #c62828; }
+  &.status-os-EM_EXECUCAO          { background: #f3e5f5; color: #6a1b9a; }
+  &.status-os-FINALIZADA           { background: #e8f5e9; color: #2e7d32; }
+  &.status-os-ENTREGUE             { background: #e0f2f1; color: #00695c; }
+
+  // Serviço status
+  &.status-srv-AGUARDANDO  { background: #fffde7; color: #f57f17; }
+  &.status-srv-EM_EXECUCAO { background: #f3e5f5; color: #6a1b9a; }
+  &.status-srv-FINALIZADO  { background: #e8f5e9; color: #2e7d32; }
+  &.status-srv-CANCELADO   { background: #ffebee; color: #b71c1c; }
+
+  // Orçamento status
+  &.status-orc-DISPONIVEL  { background: #e3f2fd; color: #1565c0; }
+  &.status-orc-APROVADO    { background: #e8f5e9; color: #2e7d32; }
+  &.status-orc-REPROVADO   { background: #ffebee; color: #b71c1c; }
+  &.status-orc-SUBSTITUIDO { background: #f5f5f5; color: #757575; }
+
+  // Item status
+  &.status-item-DISPONIVEL { background: #e8f5e9; color: #2e7d32; }
+  &.status-item-PENDENTE   { background: #fff3e0; color: #e65100; }
+  &.status-item-UTILIZADO  { background: #e3f2fd; color: #1565c0; }
+  &.status-item-CANCELADO  { background: #ffebee; color: #b71c1c; }
+
+  // Tamanhos
+  &.chip-sm { font-size: 0.72rem; }
+  &.chip-xs { font-size: 0.68rem; padding: 0 6px; height: 20px; min-height: 20px; }
+}

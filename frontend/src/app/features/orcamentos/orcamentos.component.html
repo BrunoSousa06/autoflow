@@ -1,0 +1,110 @@
+<section class="page">
+  <header class="header">
+    <div>
+      <h1>{{ isCliente() ? 'Meus orçamentos' : 'Orçamentos' }}</h1>
+      <p>{{ isCliente() ? 'Orçamentos vinculados às suas ordens de serviço.' : 'Consulta administrativa de orçamentos.' }}</p>
+    </div>
+    <button mat-stroked-button color="primary" type="button" (click)="carregar()">
+      <mat-icon>refresh</mat-icon>
+      Atualizar
+    </button>
+  </header>
+
+  <form class="filters" (ngSubmit)="carregar()">
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select name="statusOrcamento" [(ngModel)]="filtro.statusOrcamento">
+        <mat-option value="">Todos</mat-option>
+        <mat-option *ngFor="let status of statusOptions" [value]="status">
+          {{ statusLabel(status) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo</mat-label>
+      <mat-select name="tipo" [(ngModel)]="filtro.tipo">
+        <mat-option value="">Todos</mat-option>
+        <mat-option *ngFor="let tipo of tipoOptions" [value]="tipo">
+          {{ tipoLabel(tipo) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Número da OS</mat-label>
+      <input matInput name="numeroOs" [(ngModel)]="filtro.numeroOs">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Placa</mat-label>
+      <input matInput name="placa" [(ngModel)]="filtro.placa">
+    </mat-form-field>
+
+    <ng-container *ngIf="!isCliente()">
+      <mat-form-field appearance="outline">
+        <mat-label>Email do cliente</mat-label>
+        <input matInput name="clienteEmail" [(ngModel)]="filtro.clienteEmail">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Documento do cliente</mat-label>
+        <input matInput name="clienteDocumento" [(ngModel)]="filtro.clienteDocumento">
+      </mat-form-field>
+    </ng-container>
+
+    <div class="filter-actions">
+      <button mat-raised-button color="primary" type="submit">Buscar</button>
+      <button mat-button type="button" (click)="limpar()">Limpar</button>
+    </div>
+  </form>
+
+  <div *ngIf="loading()" class="loading">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading() && !orcamentos().length" class="empty">
+    Nenhum orçamento encontrado.
+  </div>
+
+  <div *ngIf="!loading() && orcamentos().length" class="list">
+    <mat-card *ngFor="let orcamento of orcamentos()" class="card">
+      <mat-card-header>
+        <mat-card-title>OS {{ orcamento.numeroOs }}</mat-card-title>
+        <mat-card-subtitle>{{ tipoLabel(orcamento.tipo) }} v{{ orcamento.versao }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <span class="status" [ngClass]="orcamento.status.toLowerCase()">{{ statusLabel(orcamento.status) }}</span>
+        <dl>
+          <div><dt>Serviços</dt><dd>{{ orcamento.totalServicos | currency:'BRL' }}</dd></div>
+          <div><dt>Peças/Insumos</dt><dd>{{ orcamento.totalItens | currency:'BRL' }}</dd></div>
+          <div><dt>Total</dt><dd>{{ orcamento.totalGeral | currency:'BRL' }}</dd></div>
+          <div><dt>Disponível em</dt><dd>{{ orcamento.disponibilizadoEm ? (orcamento.disponibilizadoEm | date:'short') : '-' }}</dd></div>
+        </dl>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button color="primary" type="button" (click)="detalhar(orcamento.id)">Detalhes</button>
+        <button
+          *ngIf="podeAprovarRecusar(orcamento)"
+          mat-button
+          color="primary"
+          type="button"
+          [disabled]="acaoId() === orcamento.id"
+          (click)="aprovar(orcamento)">
+          Aprovar
+        </button>
+        <button
+          *ngIf="podeAprovarRecusar(orcamento)"
+          mat-button
+          color="warn"
+          type="button"
+          [disabled]="acaoId() === orcamento.id"
+          (click)="recusar(orcamento)">
+          Recusar
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</section>

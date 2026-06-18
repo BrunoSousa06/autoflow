@@ -1,0 +1,18 @@
+.page { padding: 24px; display: grid; gap: 16px; }
+.header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+h1, h2 { margin: 0; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.15rem; }
+p { margin: 4px 0 0; color: #666; }
+nav { display: flex; gap: 8px; flex-wrap: wrap; }
+a.active { background: #e3f2fd; color: #1565c0; }
+.profile { border-radius: 8px; }
+.loading { display: flex; justify-content: center; padding: 20px; }
+.identity { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.identity mat-icon { width: 40px; height: 40px; font-size: 40px; color: #607d8b; }
+dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+dt { color: #666; font-size: .8rem; }
+dd { margin: 3px 0 0; font-weight: 600; }
+.vehicles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.vehicles span { padding: 6px 10px; border-radius: 999px; background: #eef2f7; }
+@media (max-width: 700px) { .header { flex-direction: column; } .page { padding: 16px; } }

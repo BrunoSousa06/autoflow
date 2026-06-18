@@ -1,0 +1,110 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1>Serviços</h1>
+      @if (!loading() && !erroCarregamento()) {
+        <p class="subtitle">{{ totalElements() }} serviço(s) cadastrado(s)</p>
+      }
+    </div>
+    @if (podeGerenciar) {
+      <button mat-raised-button color="primary" (click)="abrirFormulario()">
+        <mat-icon>add</mat-icon>
+        Novo Serviço
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Carregando serviços…</p>
+    </div>
+  } @else if (erroCarregamento()) {
+    <mat-card class="estado-card">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>{{ erroCarregamento() }}</p>
+      <button mat-stroked-button (click)="carregar()">
+        <mat-icon>refresh</mat-icon>
+        Tentar novamente
+      </button>
+    </mat-card>
+  } @else if (servicos().length === 0) {
+    <mat-card class="estado-card">
+      <mat-icon class="icon-vazio">build</mat-icon>
+      <p>Nenhum serviço cadastrado.</p>
+      @if (podeGerenciar) {
+        <button mat-raised-button color="primary" (click)="abrirFormulario()">
+          <mat-icon>add</mat-icon>
+          Cadastrar serviço
+        </button>
+      }
+    </mat-card>
+  } @else {
+    <mat-card class="tabela-card">
+      <table mat-table [dataSource]="servicos()">
+
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Nome</th>
+          <td mat-cell *matCellDef="let s" class="col-nome">{{ s.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="descricao">
+          <th mat-header-cell *matHeaderCellDef>Descrição</th>
+          <td mat-cell *matCellDef="let s" class="col-descricao">{{ s.descricao }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="valor">
+          <th mat-header-cell *matHeaderCellDef>Valor</th>
+          <td mat-cell *matCellDef="let s" class="col-valor">
+            @if (s.valor != null) {
+              {{ s.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            } @else {
+              <span class="sem-valor">—</span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+          <td mat-cell *matCellDef="let s" class="col-acoes">
+            @if (podeGerenciar) {
+              <button
+                mat-icon-button
+                color="primary"
+                matTooltip="Editar serviço"
+                (click)="abrirFormulario(s)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+            }
+            @if (isAdmin) {
+              <button
+                mat-icon-button
+                color="warn"
+                matTooltip="Excluir serviço"
+                (click)="confirmarExclusao(s)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunas" class="servico-row"></tr>
+
+      </table>
+
+      <mat-paginator
+        [length]="totalElements()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        [pageIndex]="pageIndex()"
+        (page)="onPage($event)"
+        showFirstLastButtons
+      />
+    </mat-card>
+  }
+
+</div>

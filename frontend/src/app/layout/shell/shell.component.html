@@ -1,0 +1,54 @@
+<mat-sidenav-container class="shell-container">
+
+  <!-- ── Sidenav ─────────────────────────────────────────────────── -->
+  <mat-sidenav mode="side" opened class="shell-sidenav">
+
+    <div class="sidenav-header">
+      <mat-icon class="logo-icon">directions_car</mat-icon>
+      <span class="logo-text">AutoFlow</span>
+    </div>
+
+    <mat-divider />
+
+    <mat-nav-list>
+      @for (item of navItems; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="active-link"
+          [matTooltip]="item.label"
+          matTooltipPosition="right"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      <mat-divider />
+      <div class="user-info">
+        <mat-icon>account_circle</mat-icon>
+        <div class="user-details">
+          <span class="user-email">{{ usuario?.email }}</span>
+          <span class="user-role">{{ roleLabel }}</span>
+        </div>
+      </div>
+      <button
+        mat-stroked-button
+        class="logout-btn"
+        (click)="logout()"
+      >
+        <mat-icon>logout</mat-icon>
+        Sair
+      </button>
+    </div>
+
+  </mat-sidenav>
+
+  <!-- ── Conteúdo principal ──────────────────────────────────────── -->
+  <mat-sidenav-content class="shell-content">
+    <router-outlet />
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

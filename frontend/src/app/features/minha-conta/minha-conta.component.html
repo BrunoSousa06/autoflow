@@ -1,0 +1,50 @@
+<section class="page">
+  <header class="header">
+    <div>
+      <h1>Minha conta</h1>
+      <p>Dados cadastrais e acompanhamento das suas ordens de servico.</p>
+    </div>
+    <nav>
+      <a mat-button routerLink="/minha-conta" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon>person</mat-icon>
+        Dados
+      </a>
+      <a mat-button routerLink="/minha-conta/minhas-ordens" routerLinkActive="active">
+        <mat-icon>list_alt</mat-icon>
+        Minhas ordens
+      </a>
+    </nav>
+  </header>
+
+  <mat-card class="profile">
+    <mat-card-content>
+      <div *ngIf="loading()" class="loading">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+
+      <ng-container *ngIf="!loading() && cliente() as item">
+        <div class="identity">
+          <mat-icon>account_circle</mat-icon>
+          <div>
+            <h2>{{ item.nome }}</h2>
+            <p>{{ item.email }}</p>
+          </div>
+        </div>
+
+        <dl>
+          <div><dt>CPF/CNPJ</dt><dd>{{ item.cpfCnpj }}</dd></div>
+          <div><dt>Telefone</dt><dd>{{ item.telefone || '-' }}</dd></div>
+          <div><dt>Veiculos</dt><dd>{{ item.veiculos.length }}</dd></div>
+        </dl>
+
+        <div *ngIf="item.veiculos.length" class="vehicles">
+          <span *ngFor="let veiculo of item.veiculos">
+            {{ veiculo.placa }} - {{ veiculo.marca || '-' }} {{ veiculo.modelo || '' }}
+          </span>
+        </div>
+      </ng-container>
+    </mat-card-content>
+  </mat-card>
+
+  <router-outlet />
+</section>

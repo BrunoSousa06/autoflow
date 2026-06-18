@@ -1,0 +1,153 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Peças e Insumos</h1>
+      @if (!loading() && !erroCarregamento()) {
+        <p class="subtitle">{{ totalElements() }} item(ns) em estoque</p>
+      }
+    </div>
+    @if (podeGerenciar) {
+      <button mat-raised-button color="primary" (click)="abrirFormulario()">
+        <mat-icon>add</mat-icon>
+        Novo Item
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Carregando peças e insumos...</p>
+    </div>
+  } @else if (erroCarregamento()) {
+    <mat-card class="estado-card">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>{{ erroCarregamento() }}</p>
+      <button mat-stroked-button (click)="carregar()">
+        <mat-icon>refresh</mat-icon>
+        Tentar novamente
+      </button>
+    </mat-card>
+  } @else if (itens().length === 0) {
+    <mat-card class="estado-card">
+      <mat-icon class="icon-vazio">inventory_2</mat-icon>
+      <p>Nenhuma peça ou insumo cadastrado.</p>
+      @if (podeGerenciar) {
+        <button mat-raised-button color="primary" (click)="abrirFormulario()">
+          <mat-icon>add</mat-icon>
+          Cadastrar item
+        </button>
+      }
+    </mat-card>
+  } @else {
+    <mat-card class="tabela-card">
+      <table mat-table [dataSource]="itens()" multiTemplateDataRows class="tabela-peca">
+        <ng-container matColumnDef="expandir">
+          <th mat-header-cell *matHeaderCellDef class="col-expandir"></th>
+          <td mat-cell *matCellDef="let item" class="col-expandir">
+            <button
+              mat-icon-button
+              (click)="toggleDetalhe(item, $event)"
+              [matTooltip]="detalhe()?.id === item.id ? 'Ocultar detalhe' : 'Ver detalhe'"
+            >
+              <mat-icon>{{ detalhe()?.id === item.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Nome</th>
+          <td mat-cell *matCellDef="let item" class="col-nome">{{ item.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="tipo">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let item">
+            <mat-chip>{{ item.tipo }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="valor">
+          <th mat-header-cell *matHeaderCellDef>Valor</th>
+          <td mat-cell *matCellDef="let item" class="col-valor">
+            @if (item.valor != null) {
+              {{ item.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            } @else {
+              <span class="sem-valor">-</span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantidade">
+          <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+          <td mat-cell *matCellDef="let item" class="col-quantidade">{{ item.quantidade }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+          <td mat-cell *matCellDef="let item" class="col-acoes">
+            @if (podeGerenciar) {
+              <button
+                mat-icon-button
+                color="primary"
+                matTooltip="Editar item"
+                (click)="abrirFormulario(item)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="detalhe">
+          <td mat-cell *matCellDef="let item" [attr.colspan]="colunas.length" class="detalhe-cell">
+            @if (detalhe()?.id === item.id) {
+              <div class="detalhe-content">
+                <mat-divider />
+                @if (loadingDetalhe()) {
+                  <div class="detalhe-loading">
+                    <mat-spinner diameter="24" />
+                    <span>Carregando detalhe...</span>
+                  </div>
+                } @else {
+                  <div class="detalhe-grid">
+                    <span><strong>ID:</strong> {{ detalhe()?.id }}</span>
+                    <span><strong>Nome:</strong> {{ detalhe()?.nome }}</span>
+                    <span><strong>Tipo:</strong> {{ detalhe()?.tipo }}</span>
+                    <span><strong>Quantidade:</strong> {{ detalhe()?.quantidade }}</span>
+                    <span>
+                      <strong>Valor:</strong>
+                      @if (detalhe()?.valor != null) {
+                        {{ detalhe()?.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                      } @else {
+                        -
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: colunas"
+          class="item-row"
+          [class.expandida]="detalhe()?.id === row.id"
+        ></tr>
+        <tr mat-row *matRowDef="let row; columns: ['detalhe']" class="detalhe-row"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="totalElements()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        [pageIndex]="pageIndex()"
+        (page)="onPage($event)"
+        showFirstLastButtons
+      />
+    </mat-card>
+  }
+</div>

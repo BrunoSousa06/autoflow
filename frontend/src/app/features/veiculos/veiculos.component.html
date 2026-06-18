@@ -1,0 +1,154 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1>Veículos</h1>
+      @if (!loading() && !erroCarregamento()) {
+        <p class="subtitle">{{ totalElements() }} veículo(s) encontrado(s)</p>
+      }
+    </div>
+    <button mat-raised-button color="primary" (click)="abrirFormulario()">
+      <mat-icon>add</mat-icon>
+      Novo Veículo
+    </button>
+  </div>
+
+  <mat-card class="filtros-card">
+    <form [formGroup]="filtrosForm" class="filtros-form">
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Placa</mat-label>
+        <mat-icon matPrefix>pin</mat-icon>
+        <input matInput formControlName="placa" placeholder="ABC1234" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Marca</mat-label>
+        <mat-icon matPrefix>business</mat-icon>
+        <input matInput formControlName="marca" placeholder="Toyota" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Modelo</mat-label>
+        <mat-icon matPrefix>directions_car</mat-icon>
+        <input matInput formControlName="modelo" placeholder="Corolla" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filtro-field filtro-ano">
+        <mat-label>Ano</mat-label>
+        <mat-icon matPrefix>calendar_today</mat-icon>
+        <input matInput formControlName="ano" type="number" placeholder="2022" />
+      </mat-form-field>
+
+      <div class="filtros-acoes">
+        <button mat-raised-button color="primary" type="button" (click)="buscar()" [disabled]="loading()">
+          <mat-icon>search</mat-icon>
+          Buscar
+        </button>
+        <button mat-stroked-button type="button" (click)="limparFiltros()" [disabled]="loading()">
+          <mat-icon>clear</mat-icon>
+          Limpar
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Carregando veículos…</p>
+    </div>
+  } @else if (erroCarregamento()) {
+    <mat-card class="estado-card">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>{{ erroCarregamento() }}</p>
+      <button mat-stroked-button (click)="carregar()">
+        <mat-icon>refresh</mat-icon>
+        Tentar novamente
+      </button>
+    </mat-card>
+  } @else if (veiculos().length === 0) {
+    <mat-card class="estado-card">
+      <mat-icon class="icon-vazio">directions_car</mat-icon>
+      <p>Nenhum veículo encontrado.</p>
+      <button mat-raised-button color="primary" (click)="abrirFormulario()">
+        <mat-icon>add</mat-icon>
+        Cadastrar veículo
+      </button>
+    </mat-card>
+  } @else {
+    <mat-card class="tabela-card">
+      <table mat-table [dataSource]="veiculos()">
+
+        <ng-container matColumnDef="placa">
+          <th mat-header-cell *matHeaderCellDef>Placa</th>
+          <td mat-cell *matCellDef="let v" class="mono placa-cell">{{ v.placa }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="marca">
+          <th mat-header-cell *matHeaderCellDef>Marca</th>
+          <td mat-cell *matCellDef="let v" class="col-nome">{{ v.marca }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="modelo">
+          <th mat-header-cell *matHeaderCellDef>Modelo</th>
+          <td mat-cell *matCellDef="let v">{{ v.modelo }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="ano">
+          <th mat-header-cell *matHeaderCellDef>Ano</th>
+          <td mat-cell *matCellDef="let v" class="mono">{{ v.ano }}</td>
+        </ng-container>
+
+        @if (!isCliente) {
+          <ng-container matColumnDef="cliente">
+            <th mat-header-cell *matHeaderCellDef>Cliente</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="cliente-nome">{{ v.cliente?.nome ?? '—' }}</span>
+              @if (v.cliente?.cpfCnpj) {
+                <span class="cliente-doc mono">{{ v.cliente.cpfCnpj }}</span>
+              }
+            </td>
+          </ng-container>
+        }
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+          <td mat-cell *matCellDef="let v" class="col-acoes">
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Editar veículo"
+              (click)="abrirFormulario(v)"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            @if (isAdmin) {
+              <button
+                mat-icon-button
+                color="warn"
+                matTooltip="Excluir veículo"
+                (click)="confirmarExclusao(v)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunas" class="veiculo-row"></tr>
+
+      </table>
+
+      <mat-paginator
+        [length]="totalElements()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        [pageIndex]="pageIndex()"
+        (page)="onPage($event)"
+        showFirstLastButtons
+      />
+    </mat-card>
+  }
+
+</div>

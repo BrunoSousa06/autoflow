@@ -1,0 +1,78 @@
+<h2 mat-dialog-title>
+  <mat-icon class="titulo-icon">inventory_2</mat-icon>
+  Itens Necessários
+</h2>
+
+<mat-dialog-content>
+  <p class="sub">
+    Serviço: <strong>{{ data.nomeServico }}</strong>
+    &nbsp;·&nbsp; OS: <strong>{{ data.numeroOs }}</strong>
+  </p>
+
+  @if (carregando()) {
+    <div class="loading">
+      <mat-spinner diameter="32" />
+      <span>Carregando catálogo de peças e insumos...</span>
+    </div>
+  } @else if (erroCarregamento()) {
+    <div class="erro-inline">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <span>{{ erroCarregamento() }}</span>
+    </div>
+  } @else {
+    <div class="linhas-container">
+      @for (linha of linhas; track linha.uid) {
+        <div class="linha-item">
+          <mat-form-field appearance="outline" class="campo-peca">
+            <mat-label>Peça / Insumo</mat-label>
+            <mat-select [(ngModel)]="linha.pecaInsumoId" [name]="'peca-' + linha.uid">
+              @for (p of pecas(); track p.id) {
+                <mat-option [value]="p.id">
+                  {{ p.nome }}
+                  <span class="peca-info">· {{ p.tipo }} · Estoque: {{ p.quantidade }}</span>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="campo-qtd">
+            <mat-label>Qtd.</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="linha.quantidade"
+              [name]="'qtd-' + linha.uid"
+              min="1"
+            />
+          </mat-form-field>
+
+          <button mat-icon-button color="warn" (click)="removerLinha(linha.uid)" matTooltip="Remover">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      }
+
+      @if (linhas.length === 0) {
+        <p class="sem-itens">Nenhum item adicionado. Clique em "Adicionar Item" para começar.</p>
+      }
+    </div>
+
+    <button mat-stroked-button (click)="adicionarLinha()" class="btn-adicionar">
+      <mat-icon>add</mat-icon>
+      Adicionar Item
+    </button>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="null">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="carregando() || !linhasValidas().length"
+    (click)="confirmar()"
+  >
+    <mat-icon>save</mat-icon>
+    Salvar Itens
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,90 @@
+<h2 mat-dialog-title>
+  <mat-icon>construction</mat-icon>
+  Criar Reparo Adicional
+</h2>
+<p class="subtitulo">OS {{ data.numeroOs }}</p>
+
+<mat-dialog-content>
+  @if (carregando()) {
+    <div class="loading">
+      <mat-spinner diameter="36" />
+      <span>Carregando catálogo...</span>
+    </div>
+  } @else {
+
+    <section class="secao">
+      <h3>Serviço</h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Selecione o serviço</mat-label>
+        <mat-select [(ngModel)]="servicoId" name="servico">
+          <mat-option *ngFor="let s of servicos()" [value]="s.id">
+            {{ s.nome }} — {{ s.valor != null ? (s.valor | currency:'BRL') : 'Sob consulta' }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <mat-divider />
+
+    <section class="secao">
+      <h3>Peças e Insumos <small>(ao menos 1 obrigatório)</small></h3>
+
+      <div class="itens-lista">
+        @for (item of itens; track $index) {
+          <div class="item-linha">
+            <mat-form-field appearance="outline" class="item-peca">
+              <mat-label>Peça / Insumo</mat-label>
+              <mat-select [(ngModel)]="item.pecaInsumoId" [name]="'peca-' + $index">
+                <mat-option *ngFor="let p of pecasInsumos()" [value]="p.id">
+                  {{ p.nome }} ({{ p.tipo }}) — Estoque: {{ p.quantidade }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="item-qtd">
+              <mat-label>Qtd.</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                [(ngModel)]="item.quantidade"
+                [name]="'qtd-' + $index"
+              >
+            </mat-form-field>
+
+            <button
+              mat-icon-button
+              color="warn"
+              type="button"
+              (click)="removerItem($index)"
+              [disabled]="itens.length === 1"
+              matTooltip="Remover"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+
+      <button mat-stroked-button type="button" (click)="adicionarItem()" class="btn-add-item">
+        <mat-icon>add</mat-icon>
+        Adicionar peça/insumo
+      </button>
+    </section>
+
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancelar()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="!podeSalvar || carregando()"
+    (click)="confirmar()"
+  >
+    <mat-icon>send</mat-icon>
+    Criar e enviar para aprovação
+  </button>
+</mat-dialog-actions>

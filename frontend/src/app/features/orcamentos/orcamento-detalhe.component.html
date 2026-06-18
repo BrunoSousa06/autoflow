@@ -1,0 +1,114 @@
+<section class="page">
+  <button mat-button type="button" class="back" (click)="voltar()">
+    <mat-icon>arrow_back</mat-icon>
+    Voltar
+  </button>
+
+  <div *ngIf="loading()" class="loading">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="!loading() && orcamento() as item">
+    <header class="header">
+      <div>
+        <h1>Orçamento OS {{ item.numeroOs }}</h1>
+        <p>{{ tipoLabel(item.tipo) }} v{{ item.versao }}</p>
+      </div>
+      <span class="status" [ngClass]="item.status.toLowerCase()">{{ statusLabel(item.status) }}</span>
+    </header>
+
+    <mat-card class="summary">
+      <mat-card-content>
+        <dl>
+          <div><dt>ID do orçamento</dt><dd>{{ item.id }}</dd></div>
+          <div><dt>ID da ordem de serviço</dt><dd>{{ item.ordemServicoId }}</dd></div>
+          <div><dt>Criado em</dt><dd>{{ item.criadoEm | date:'short' }}</dd></div>
+          <div><dt>Disponibilizado em</dt><dd>{{ item.disponibilizadoEm ? (item.disponibilizadoEm | date:'short') : '-' }}</dd></div>
+        </dl>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="totals">
+      <mat-card><mat-card-content><span>Serviços</span><strong>{{ item.totalServicos | currency:'BRL' }}</strong></mat-card-content></mat-card>
+      <mat-card><mat-card-content><span>Peças/Insumos</span><strong>{{ item.totalItens | currency:'BRL' }}</strong></mat-card-content></mat-card>
+      <mat-card><mat-card-content><span>Total</span><strong>{{ item.totalGeral | currency:'BRL' }}</strong></mat-card-content></mat-card>
+    </div>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Serviços</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="item.servicos.length; else semServicos" class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Serviço</th>
+                <th>ID catálogo</th>
+                <th class="money">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let servico of item.servicos">
+                <td>{{ servico.nome }}</td>
+                <td>{{ servico.servicoId }}</td>
+                <td class="money">{{ servico.valor | currency:'BRL' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #semServicos>
+          <p class="notice">Nenhum serviço vinculado ao orçamento.</p>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Peças e insumos</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="item.itens.length; else semItens" class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Tipo</th>
+                <th>Qtd.</th>
+                <th class="money">Valor unitario</th>
+                <th class="money">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let peca of item.itens">
+                <td>{{ peca.nome }}</td>
+                <td>{{ tipoItemLabel(peca.tipo) }}</td>
+                <td>{{ peca.quantidade }}</td>
+                <td class="money">{{ peca.valorUnitario | currency:'BRL' }}</td>
+                <td class="money">{{ peca.valorTotal | currency:'BRL' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #semItens>
+          <p class="notice">Nenhuma peça ou insumo vinculado ao orçamento.</p>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="actions">
+      <button mat-stroked-button type="button" [disabled]="acao()" (click)="baixarPdf(item)">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Baixar PDF
+      </button>
+      <ng-container *ngIf="podeAprovarRecusar()">
+        <button mat-raised-button color="primary" type="button" [disabled]="acao()" (click)="aprovar(item)">
+          Aprovar orçamento
+        </button>
+        <button mat-stroked-button color="warn" type="button" [disabled]="acao()" (click)="recusar(item)">
+          Recusar orçamento
+        </button>
+      </ng-container>
+    </div>
+  </ng-container>
+</section>
