@@ -79,6 +79,22 @@ export class OrdemServicoService {
     );
   }
 
+  iniciarServico(numeroOs: string, servicoId: number): Observable<OrdemServicoResponse> {
+    return this.http.patch<OrdemServicoResponse>(
+      `${this.base}/${numeroOs}/servicos/${servicoId}/iniciar`,
+      {},
+      { context: this.suppressGlobalErrorSnackbarContext() },
+    );
+  }
+
+  finalizarServico(numeroOs: string, servicoId: number): Observable<OrdemServicoResponse> {
+    return this.http.patch<OrdemServicoResponse>(
+      `${this.base}/${numeroOs}/servicos/${servicoId}/finalizar`,
+      {},
+      { context: this.suppressGlobalErrorSnackbarContext() },
+    );
+  }
+
   incluirServicos(numeroOs: string, servicos: ServicoSolicitadoRequest[]): Observable<OrdemServicoResponse> {
     return this.http.post<OrdemServicoResponse>(
       `${this.base}/${numeroOs}/servicos`,

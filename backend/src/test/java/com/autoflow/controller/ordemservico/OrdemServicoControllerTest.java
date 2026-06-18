@@ -9,7 +9,6 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
-import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import com.autoflow.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.mapper.ServicoSolicitadoMapperImpl;
@@ -220,38 +219,12 @@ class OrdemServicoControllerTest {
 
     @Test
     @WithMockUser(roles = "ATENDENTE")
-    void deveIniciarServicoComoAtendente() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
-        ordemServico.setStatus(StatusOrdemServico.EM_EXECUCAO);
-        ServicoSolicitadoEntity servico = ordemServico.getServicosSolicitados().getFirst();
-        servico.setStatus(StatusServicoOs.AGUARDANDO);
-        servico.registrarItensNecessarios(List.of(ItemNecessarioEntity.criar(
-                10L,
-                "Filtro",
-                CategoriaPecaInsumo.PECA,
-                new BigDecimal("50.00"),
-                2,
-                StatusItemNecessario.PENDENTE,
-                new SituacaoEstoque(
-                        1,
-                        MotivoPendenciaItem.ESTOQUE_INSUFICIENTE
-                )
-        )));
-
-        when(ordemServicoService.iniciarServico("OS-123", 55L)).thenReturn(ordemServico);
-
+    void deveBloquearInicioServicoParaAtendente() throws Exception {
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", "OS-123", 55L)
                         .with(csrf()))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.status").value("EM_EXECUCAO"))
-                .andExpect(jsonPath("$.servicos[0].status").value("AGUARDANDO"))
-                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].status").value("PENDENTE"))
-                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].motivoPendencia").value("ESTOQUE_INSUFICIENTE"))
-                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].quantidadeDisponivel").value(1))
-                .andExpect(jsonPath("$.servicos[0].itensNecessarios[0].mensagemStatus")
-                        .value("Estoque insuficiente. Solicitado: 2, disponivel: 1."));
+                .andExpect(status().isForbidden());
 
-        verify(ordemServicoService).iniciarServico("OS-123", 55L);
+        verify(ordemServicoService, never()).iniciarServico(any(), any());
     }
 
     @Test

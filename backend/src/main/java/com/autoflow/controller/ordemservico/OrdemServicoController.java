@@ -201,7 +201,7 @@ public class OrdemServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{numeroOs}/servicos/{servicoId}/iniciar")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO', 'ATENDENTE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse iniciarServico(
             @PathVariable String numeroOs,
             @PathVariable Long servicoId

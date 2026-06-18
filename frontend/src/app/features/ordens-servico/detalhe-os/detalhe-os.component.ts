@@ -360,12 +360,42 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
                   Finalizar Diagnóstico
                 </button>
 
-                <!-- Execução de serviços — próximo prompt -->
-                <button mat-stroked-button disabled
-                  matTooltip="Disponível na próxima etapa">
-                  <mat-icon>play_circle</mat-icon>
-                  Iniciar / Finalizar Serviço
-                </button>
+                <!-- Execução de serviços -->
+                @if (os()!.status === 'AGUARDANDO_APROVACAO' || os()!.status === 'EM_EXECUCAO') {
+                  <div class="secao-itens">
+                    <p class="secao-label">Execução de serviços</p>
+                    @for (srv of os()!.servicos; track srv.id) {
+                      @if (srv.status === 'AGUARDANDO') {
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          [disabled]="salvando()"
+                          (click)="iniciarExecucaoServico(srv)"
+                          class="btn-servico"
+                        >
+                          <mat-icon>play_arrow</mat-icon>
+                          <span class="btn-servico-nome">Iniciar: {{ srv.nome }}</span>
+                        </button>
+                      } @else if (srv.status === 'EM_EXECUCAO') {
+                        <button
+                          mat-stroked-button
+                          color="accent"
+                          [disabled]="salvando()"
+                          (click)="finalizarExecucaoServico(srv)"
+                          class="btn-servico"
+                        >
+                          <mat-icon>stop_circle</mat-icon>
+                          <span class="btn-servico-nome">Finalizar: {{ srv.nome }}</span>
+                        </button>
+                      } @else if (srv.status === 'FINALIZADO') {
+                        <div class="srv-concluido">
+                          <mat-icon class="icon-ok">check_circle</mat-icon>
+                          <span>{{ srv.nome }}</span>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
 
               </mat-card-content>
             </mat-card>
@@ -729,6 +759,24 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
       }
     }
 
+    .srv-concluido {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      color: #4caf50;
+      border: 1px solid #c8e6c9;
+      border-radius: 4px;
+      background: #f1f8e9;
+
+      .icon-ok {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
     .orc-resumo-cliente {
       display: flex;
       flex-direction: column;
@@ -1073,6 +1121,67 @@ export class DetalheOsComponent implements OnInit {
         error: (err) => {
           const raw = err?.error?.erro ?? 'Erro ao registrar entrega.';
           this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao registrar entrega.', 'Fechar', { duration: 4000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  iniciarExecucaoServico(srv: ServicoOsResponse): void {
+    const ref = this.dialog.open<ConfirmacaoDialogComponent, ConfirmacaoDialogData, boolean>(
+      ConfirmacaoDialogComponent,
+      {
+        width: '400px',
+        data: {
+          titulo: 'Iniciar Serviço',
+          mensagem: `Confirma o início da execução de "${srv.nome}"?`,
+          labelConfirmar: 'Iniciar',
+        },
+      },
+    );
+    ref.afterClosed().subscribe((confirmado) => {
+      if (!confirmado) return;
+      this.salvando.set(true);
+      this.service.iniciarServico(this.os()!.numeroOs, srv.id).subscribe({
+        next: () => {
+          this.snackBar.open(`Serviço "${srv.nome}" iniciado.`, 'Fechar', { duration: 3000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao iniciar serviço.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao iniciar serviço.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  finalizarExecucaoServico(srv: ServicoOsResponse): void {
+    const ref = this.dialog.open<ConfirmacaoDialogComponent, ConfirmacaoDialogData, boolean>(
+      ConfirmacaoDialogComponent,
+      {
+        width: '400px',
+        data: {
+          titulo: 'Finalizar Serviço',
+          mensagem: `Confirma a conclusão de "${srv.nome}"? Se for o último serviço, a OS será finalizada automaticamente.`,
+          labelConfirmar: 'Finalizar',
+        },
+      },
+    );
+    ref.afterClosed().subscribe((confirmado) => {
+      if (!confirmado) return;
+      this.salvando.set(true);
+      this.service.finalizarServico(this.os()!.numeroOs, srv.id).subscribe({
+        next: (result) => {
+          const osStatus = result.servicos.every((s) => s.status === 'FINALIZADO')
+            ? 'Serviço finalizado. OS finalizada automaticamente.'
+            : `Serviço "${srv.nome}" finalizado.`;
+          this.snackBar.open(osStatus, 'Fechar', { duration: 4000 });
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao finalizar serviço.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao finalizar serviço.', 'Fechar', { duration: 5000 });
           this.salvando.set(false);
         },
       });
