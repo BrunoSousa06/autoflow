@@ -131,7 +131,7 @@ Todos os usuários abaixo são criados pelo seed do banco (senha padrão: `Senha
 | `/ordens-servico/:numeroOs`             | ADMIN, ATENDENTE, MECANICO  | Detalhe e ações da OS              |
 | `/orcamentos`                           | ADMIN, ATENDENTE            | Lista de orçamentos                |
 | `/orcamentos/:id`                       | ADMIN, ATENDENTE, CLIENTE   | Detalhe do orçamento + PDF         |
-| `/reparos-adicionais`                   | ADMIN, ATENDENTE            | Lista de reparos adicionais        |
+| `/reparos-adicionais`                   | ADMIN, ATENDENTE            | Lista de orçamentos adicionais     |
 | `/servicos`                             | ADMIN, ATENDENTE, MECANICO  | Catálogo de serviços               |
 | `/peca-insumo`                          | ADMIN, ATENDENTE, MECANICO  | Catálogo de peças e insumos        |
 | `/minha-conta`                          | CLIENTE                     | Perfil do cliente                  |
@@ -159,14 +159,19 @@ Todos os usuários abaixo são criados pelo seed do banco (senha padrão: `Senha
 
 ### Reparo adicional
 
-1. Durante a execução da OS, o mecânico pode adicionar serviços extras
-2. Um novo orçamento (ADICIONAL) é criado e enviado ao cliente para aprovação
+1. Login como **mecânico** → abra uma OS em status `EM_EXECUCAO`
+2. No painel do mecânico, clique em **"Identificar reparo adicional"**
+3. Selecione o serviço e as peças/insumos necessários → clique em **"Criar e enviar para aprovação"**
+4. O backend gera um orçamento do tipo ADICIONAL e envia e-mail ao cliente
+5. Login como **cliente** → acesse "Minhas Ordens" → OS → aprove ou recuse o orçamento adicional
+6. Login como **ADMIN ou ATENDENTE** → `/reparos-adicionais` lista todos os orçamentos adicionais com filtro por status
 
 ---
 
 ## Limitações conhecidas
 
 - **Acompanhamento público**: Não há endpoint público de rastreamento de OS. A rota `/public/acompanhamento` informa o cliente para fazer login.
+- **Detalhe de reparo adicional**: Não há endpoint `GET /reparos-adicionais/:id`. O detalhe é visualizado via `/orcamentos/:orcamentoId` (link direto a partir da listagem de reparos adicionais).
 - **Refresh de token**: O JWT não tem renovação automática. Após expirar, o usuário é redirecionado para o login.
 - **apiUrl em produção**: O arquivo `environment.prod.ts` aponta para `localhost:8080`. Para deploys em ambiente diferente, altere a variável antes do build.
 - **CORS**: O backend precisa estar configurado para aceitar requisições do domínio do frontend.

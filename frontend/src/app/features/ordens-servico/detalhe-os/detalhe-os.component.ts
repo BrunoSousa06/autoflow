@@ -9,6 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/services/auth.service';
 import { OrdemServicoService } from '../ordem-servico.service';
 import {
@@ -41,6 +42,12 @@ import {
 import { ItensNecessariosRequest, ServicoOsResponse, ServicoSolicitadoRequest } from '../ordem-servico.model';
 import { OrcamentoService } from '../../orcamentos/orcamento.service';
 import { RecusarOrcamentoDialogComponent } from '../../orcamentos/recusar-orcamento-dialog.component';
+import { ReparoAdicionalService } from '../../reparos-adicionais/reparo-adicional.service';
+import {
+  CriarReparoAdicionalDialogComponent,
+  CriarReparoAdicionalDialogData,
+} from '../../reparos-adicionais/criar-reparo-adicional-dialog.component';
+import { CriarReparoAdicionalRequest } from '../../reparos-adicionais/reparo-adicional.model';
 
 type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 
@@ -57,6 +64,7 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
     MatChipsModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatDividerModule,
   ],
   template: `
     <div class="page">
@@ -396,6 +404,24 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
                         </div>
                       }
                     }
+                  </div>
+                }
+
+                <!-- Reparo adicional (durante execução) -->
+                @if (os()!.status === 'EM_EXECUCAO' && podeAlterarDiagnostico()) {
+                  <mat-divider style="margin: 12px 0" />
+                  <div class="secao-itens">
+                    <p class="secao-label">Reparo Adicional</p>
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      [disabled]="salvando()"
+                      (click)="criarReparoAdicional()"
+                      class="btn-servico"
+                    >
+                      <mat-icon>construction</mat-icon>
+                      <span class="btn-servico-nome">Identificar reparo adicional</span>
+                    </button>
                   </div>
                 }
 
@@ -859,6 +885,7 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 export class DetalheOsComponent implements OnInit {
   private readonly service = inject(OrdemServicoService);
   private readonly orcamentoService = inject(OrcamentoService);
+  private readonly reparoAdicionalService = inject(ReparoAdicionalService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -1278,6 +1305,38 @@ export class DetalheOsComponent implements OnInit {
         error: (err) => {
           const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao recusar orçamento.';
           this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao recusar orçamento.', 'Fechar', { duration: 5000 });
+          this.salvando.set(false);
+        },
+      });
+    });
+  }
+
+  criarReparoAdicional(): void {
+    const os = this.os();
+    if (!os) return;
+
+    const ref = this.dialog.open(CriarReparoAdicionalDialogComponent, {
+      data: { numeroOs: os.numeroOs } as CriarReparoAdicionalDialogData,
+      width: '580px',
+    });
+
+    ref.afterClosed().subscribe((req: CriarReparoAdicionalRequest | null) => {
+      if (!req) return;
+
+      this.salvando.set(true);
+      this.reparoAdicionalService.criar(os.numeroOs, req).subscribe({
+        next: (resultado) => {
+          this.salvando.set(false);
+          this.snackBar.open(
+            `Reparo adicional criado. Orçamento #${resultado.orcamentoId} enviado para aprovação do cliente.`,
+            'Fechar',
+            { duration: 6000 },
+          );
+          this.recarregar();
+        },
+        error: (err) => {
+          const raw = err?.error?.erro ?? err?.error?.message ?? 'Erro ao criar reparo adicional.';
+          this.snackBar.open(typeof raw === 'string' ? raw : 'Erro ao criar reparo adicional.', 'Fechar', { duration: 5000 });
           this.salvando.set(false);
         },
       });

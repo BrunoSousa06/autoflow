@@ -48,10 +48,10 @@ export interface RecusarOrcamentoRequest {
 }
 
 export const STATUS_ORCAMENTO_LABEL: Record<StatusOrcamento, string> = {
-  DISPONIVEL: 'Disponivel',
+  DISPONIVEL: 'Disponível',
   APROVADO: 'Aprovado',
   REPROVADO: 'Reprovado',
-  SUBSTITUIDO: 'Substituido',
+  SUBSTITUIDO: 'Substituído',
 };
 
 export const TIPO_ORCAMENTO_LABEL: Record<TipoOrcamento, string> = {
