@@ -184,6 +184,18 @@ Validações implementadas utilizando Jakarta Validation:
 
 ---
 
+## Documentação Complementar
+
+A documentação funcional e técnica de apoio está organizada na pasta [`docs`](docs):
+
+* [Requisitos funcionais](docs/requisitos-funcionais.md): descreve os fluxos esperados do sistema, atores, critérios de aceite e regras de negócio.
+* [Requisitos não funcionais](docs/requisitos-nao-funcionais.md): consolida requisitos de arquitetura, segurança, qualidade, infraestrutura e operação local.
+* [Diagramas de sequência](docs/diagrama-sequencia.md): centraliza os principais fluxos de interação da aplicação e aponta para os arquivos Mermaid separados por cenário.
+
+Os diagramas foram separados em arquivos `.mermaid` para facilitar manutenção, versionamento e visualização individual dos fluxos.
+
+---
+
 ## Documentação da API via Swagger
 
 Após iniciar a aplicação:

@@ -23,6 +23,7 @@ Este repositório possui três arquivos README, cada um com um objetivo específ
 | `README.md` | Documentação principal do projeto AutoFlow, com visão geral, arquitetura, execução completa, fluxos principais e aderência ao Tech Challenge. |
 | `backend/README.md` | Documentação técnica da API Spring Boot, incluindo execução local, variáveis de ambiente, testes, Swagger, Flyway e Docker. |
 | `frontend/README.md` | Documentação técnica do frontend Angular, incluindo execução local, estrutura, environments, build e Docker/Nginx. |
+| `backend/docs/diagrama-sequencia.md` | Diagramas de sequência dos principais fluxos do sistema: OS, orçamento e reparo adicional. |
 
 Para uma visão geral da solução, comece por este arquivo. Para detalhes técnicos de cada aplicação, consulte o README correspondente.
 
