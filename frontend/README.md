@@ -76,8 +76,6 @@ docker run -p 4200:80 autoflow-frontend
 
 Acesse: **http://localhost:4200**
 
-> O container serve o build de produção via nginx com roteamento SPA configurado (`try_files $uri /index.html`).
-
 ---
 
 ## Como configurar a URL da API
@@ -149,7 +147,7 @@ Todos os usuários abaixo são criados pelo seed do banco (senha padrão: `Senha
 2. Login como **mecânico** → inicia diagnóstico, adiciona serviços → finaliza diagnóstico (gera orçamento)
 3. Login como **cliente** → acessa "Minhas Ordens" → aprova ou recusa o orçamento
 4. Login como **mecânico** → inicia e finaliza cada serviço da OS
-5. Login como **atendente** → finaliza a OS
+5. Login como **atendente** → entrega a os
 
 ### Download do orçamento em PDF
 
@@ -165,37 +163,3 @@ Todos os usuários abaixo são criados pelo seed do banco (senha padrão: `Senha
 4. O backend gera um orçamento do tipo ADICIONAL e envia e-mail ao cliente
 5. Login como **cliente** → acesse "Minhas Ordens" → OS → aprove ou recuse o orçamento adicional
 6. Login como **ADMIN ou ATENDENTE** → `/reparos-adicionais` lista todos os orçamentos adicionais com filtro por status
-
----
-
-## Limitações conhecidas
-
-- **Acompanhamento público**: Não há endpoint público de rastreamento de OS. A rota `/public/acompanhamento` informa o cliente para fazer login.
-- **Detalhe de reparo adicional**: Não há endpoint `GET /reparos-adicionais/:id`. O detalhe é visualizado via `/orcamentos/:orcamentoId` (link direto a partir da listagem de reparos adicionais).
-- **Refresh de token**: O JWT não tem renovação automática. Após expirar, o usuário é redirecionado para o login.
-- **apiUrl em produção**: O arquivo `environment.prod.ts` aponta para `localhost:8080`. Para deploys em ambiente diferente, altere a variável antes do build.
-- **CORS**: O backend precisa estar configurado para aceitar requisições do domínio do frontend.
-
----
-
-## Troubleshooting
-
-**`npm install` falha com erro de SSL**
-```bash
-npm config set strict-ssl false
-npm install
-```
-
-**Tela em branco após `docker run`**
-- Verifique se o build passou: `docker build` deve exibir `Successfully built`
-- Verifique se a porta não está em uso: `docker run -p 4201:80 autoflow-frontend`
-
-**Erros 401 ao usar a aplicação**
-- Confirme que o backend está rodando em `http://localhost:8080`
-- Confirme que o token JWT não expirou (faça logout e login novamente)
-
-**Rota retorna 404 ao atualizar a página (Docker)**
-- O `nginx.conf` já possui `try_files $uri $uri/ /index.html` — se a página 404 aparecer, verifique se o `nginx.conf` foi copiado corretamente para a imagem
-
-**Erro de CORS no browser**
-- Configure o backend para liberar a origem `http://localhost:4200` (ou a URL do frontend)
