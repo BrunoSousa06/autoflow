@@ -1,9 +1,13 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -13,7 +17,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/services/auth.service';
 import { PecaInsumoService } from './peca-insumo.service';
-import { PecaInsumoResponse } from './peca-insumo.model';
+import { CategoriaPecaInsumo, PecaInsumoResponse } from './peca-insumo.model';
 import { PecaInsumoFormDialogComponent } from './peca-insumo-form-dialog.component';
 
 @Component({
@@ -22,10 +26,14 @@ import { PecaInsumoFormDialogComponent } from './peca-insumo-form-dialog.compone
   imports: [
     CommonModule,
     CurrencyPipe,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
+    MatFormFieldModule,
     MatIconModule,
+    MatInputModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
     MatTooltipModule,
     MatCardModule,
     MatChipsModule,
@@ -50,6 +58,13 @@ export class PecaInsumoComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
 
+  filtroNome = '';
+  filtroTipo: CategoriaPecaInsumo | '' = '';
+
+  get temFiltrosAtivos(): boolean {
+    return !!(this.filtroNome.trim() || this.filtroTipo);
+  }
+
   readonly role = this.auth.getRole();
   readonly podeGerenciar = ['ADMIN', 'ATENDENTE'].includes(this.role ?? '');
   readonly colunas = ['expandir', 'nome', 'tipo', 'valor', 'quantidade', 'acoes'];
@@ -62,7 +77,7 @@ export class PecaInsumoComponent implements OnInit {
     this.detalhe.set(null);
     this.loading.set(true);
     this.erroCarregamento.set(null);
-    this.service.listar(page, size).subscribe({
+    this.service.listar(page, size, this.filtroNome, this.filtroTipo).subscribe({
       next: (pagina) => {
         this.itens.set(pagina.content);
         this.totalElements.set(pagina.page.totalElements);
@@ -79,6 +94,16 @@ export class PecaInsumoComponent implements OnInit {
 
   onPage(event: PageEvent): void {
     this.carregar(event.pageIndex, event.pageSize);
+  }
+
+  buscar(): void {
+    this.carregar(0, this.pageSize());
+  }
+
+  limparFiltros(): void {
+    this.filtroNome = '';
+    this.filtroTipo = '';
+    this.carregar(0, this.pageSize());
   }
 
   abrirFormulario(item?: PecaInsumoResponse): void {

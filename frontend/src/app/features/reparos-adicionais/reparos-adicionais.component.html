@@ -68,6 +68,26 @@
           <mat-icon>assignment</mat-icon>
           Ver OS
         </button>
+        <button
+          *ngIf="podeAprovarRecusar(item)"
+          mat-button
+          color="primary"
+          type="button"
+          [disabled]="acaoId() === item.id"
+          (click)="aprovar(item)">
+          <mat-icon>check_circle</mat-icon>
+          Aprovar
+        </button>
+        <button
+          *ngIf="podeAprovarRecusar(item)"
+          mat-button
+          color="warn"
+          type="button"
+          [disabled]="acaoId() === item.id"
+          (click)="recusar(item)">
+          <mat-icon>cancel</mat-icon>
+          Recusar
+        </button>
       </mat-card-actions>
     </mat-card>
   </div>

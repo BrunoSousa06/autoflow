@@ -2,6 +2,7 @@ package com.autoflow.controller.pecainsumo;
 
 import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
 import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -58,9 +59,11 @@ public class PecaInsumoController {
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
     public ResponseEntity<Page<PecaInsumoResponse>> listarTodasPecasEInsumos(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) CategoriaPecaInsumo tipo) {
         var pageable = PageRequest.of(page, size, Sort.by("nome").ascending());
-        return ResponseEntity.ok(pecaInsumoService.listarPaginado(pageable));
+        return ResponseEntity.ok(pecaInsumoService.listarPaginado(pageable, nome, tipo));
     }
 
     @Operation(summary = "Atualizar uma peça ou insumo", description = "Atualiza as informações de uma peça ou insumo")

@@ -79,9 +79,20 @@ class PecaInsumoControllerTest {
     @Test
     void deveListarTodasPecasEInsumos() throws Exception {
         Page<PecaInsumoResponse> page = new PageImpl<>(responses, PageRequest.of(0, 10), responses.size());
-        when(pecaInsumoService.listarPaginado(any(Pageable.class))).thenReturn(page);
+        when(pecaInsumoService.listarPaginado(any(Pageable.class), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/peca-insumo"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void deveListarFiltrandoPorNomeETipo() throws Exception {
+        Page<PecaInsumoResponse> page = new PageImpl<>(responses, PageRequest.of(0, 10), responses.size());
+        when(pecaInsumoService.listarPaginado(any(Pageable.class), any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/peca-insumo")
+                        .param("nome", "Óleo")
+                        .param("tipo", "INSUMO"))
                 .andExpect(status().isOk());
     }
 

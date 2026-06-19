@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,6 +31,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -175,14 +177,14 @@ class PecaInsumoServiceTest {
     class ListarPaginadoTests {
 
         @Test
-        void deveListarPaginadoComSucesso() {
+        void deveListarPaginadoSemFiltros() {
             Pageable pageable = PageRequest.of(0, 10);
             Page<PecaInsumoEntity> pageEntidades = new PageImpl<>(List.of(entity), pageable, 1);
 
-            when(repository.findAll(pageable)).thenReturn(pageEntidades);
+            when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(pageEntidades);
             when(mapper.toResponse(entity)).thenReturn(response);
 
-            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable);
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable, null, null);
 
             assertAll(
                     () -> assertNotNull(resultado),
@@ -191,7 +193,7 @@ class PecaInsumoServiceTest {
                     () -> assertEquals(response, resultado.getContent().getFirst())
             );
 
-            verify(repository).findAll(pageable);
+            verify(repository).findAll(any(Specification.class), eq(pageable));
             verify(mapper).toResponse(entity);
         }
 
@@ -200,9 +202,9 @@ class PecaInsumoServiceTest {
             Pageable pageable = PageRequest.of(0, 10);
             Page<PecaInsumoEntity> pageVazia = new PageImpl<>(List.of(), pageable, 0);
 
-            when(repository.findAll(pageable)).thenReturn(pageVazia);
+            when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(pageVazia);
 
-            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable);
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable, null, null);
 
             assertAll(
                     () -> assertNotNull(resultado),
@@ -210,7 +212,7 @@ class PecaInsumoServiceTest {
                     () -> assertTrue(resultado.getContent().isEmpty())
             );
 
-            verify(repository).findAll(pageable);
+            verify(repository).findAll(any(Specification.class), eq(pageable));
             verify(mapper, never()).toResponse(any());
         }
 
@@ -219,10 +221,10 @@ class PecaInsumoServiceTest {
             Pageable pageable = PageRequest.of(1, 5);
             Page<PecaInsumoEntity> page = new PageImpl<>(List.of(entity), pageable, 6);
 
-            when(repository.findAll(pageable)).thenReturn(page);
+            when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
             when(mapper.toResponse(entity)).thenReturn(response);
 
-            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable);
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable, null, null);
 
             assertAll(
                     () -> assertEquals(1, resultado.getNumber()),
@@ -230,6 +232,42 @@ class PecaInsumoServiceTest {
                     () -> assertEquals(6, resultado.getTotalElements()),
                     () -> assertEquals(2, resultado.getTotalPages())
             );
+        }
+
+        @Test
+        void deveListarFiltrandoPorNome() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<PecaInsumoEntity> pageEntidades = new PageImpl<>(List.of(entity), pageable, 1);
+
+            when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(pageEntidades);
+            when(mapper.toResponse(entity)).thenReturn(response);
+
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable, "filtro", null);
+
+            assertAll(
+                    () -> assertNotNull(resultado),
+                    () -> assertEquals(1, resultado.getTotalElements())
+            );
+
+            verify(repository).findAll(any(Specification.class), eq(pageable));
+        }
+
+        @Test
+        void deveListarFiltrandoPorTipo() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<PecaInsumoEntity> pageEntidades = new PageImpl<>(List.of(entity), pageable, 1);
+
+            when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(pageEntidades);
+            when(mapper.toResponse(entity)).thenReturn(response);
+
+            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable, null, CategoriaPecaInsumo.PECA);
+
+            assertAll(
+                    () -> assertNotNull(resultado),
+                    () -> assertEquals(1, resultado.getTotalElements())
+            );
+
+            verify(repository).findAll(any(Specification.class), eq(pageable));
         }
     }
 

@@ -14,6 +14,30 @@
     }
   </div>
 
+  <form class="filtros" (ngSubmit)="buscar()">
+    <mat-form-field appearance="outline" class="filtro-nome">
+      <mat-label>Buscar por nome</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput name="nome" [(ngModel)]="filtroNome" placeholder="Digite o nome...">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filtro-tipo">
+      <mat-label>Tipo</mat-label>
+      <mat-select name="tipo" [(ngModel)]="filtroTipo">
+        <mat-option value="">Todos</mat-option>
+        <mat-option value="PECA">Peça</mat-option>
+        <mat-option value="INSUMO">Insumo</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="filtro-acoes">
+      <button mat-raised-button color="primary" type="submit">Buscar</button>
+      @if (temFiltrosAtivos) {
+        <button mat-button type="button" (click)="limparFiltros()">Limpar</button>
+      }
+    </div>
+  </form>
+
   @if (loading()) {
     <div class="loading-center">
       <mat-spinner diameter="48" />
@@ -30,13 +54,18 @@
     </mat-card>
   } @else if (itens().length === 0) {
     <mat-card class="estado-card">
-      <mat-icon class="icon-vazio">inventory_2</mat-icon>
-      <p>Nenhuma peça ou insumo cadastrado.</p>
-      @if (podeGerenciar) {
-        <button mat-raised-button color="primary" (click)="abrirFormulario()">
-          <mat-icon>add</mat-icon>
-          Cadastrar item
-        </button>
+      @if (temFiltrosAtivos) {
+        <mat-icon class="icon-vazio">search_off</mat-icon>
+        <p>Nenhum item corresponde aos filtros aplicados.</p>
+      } @else {
+        <mat-icon class="icon-vazio">inventory_2</mat-icon>
+        <p>Nenhuma peça ou insumo cadastrado.</p>
+        @if (podeGerenciar) {
+          <button mat-raised-button color="primary" (click)="abrirFormulario()">
+            <mat-icon>add</mat-icon>
+            Cadastrar item
+          </button>
+        }
       }
     </mat-card>
   } @else {
