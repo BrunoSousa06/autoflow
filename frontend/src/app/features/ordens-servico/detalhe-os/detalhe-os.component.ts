@@ -151,9 +151,6 @@ export class DetalheOsComponent implements OnInit {
   }
 
   labelStatusOrcamento(status: StatusOrcamento): string {
-    if (status === 'DISPONIVEL') {
-      return 'Aguardando aprovação';
-    }
     return STATUS_ORCAMENTO_LABEL[status] ?? status;
   }
 

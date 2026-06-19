@@ -29,7 +29,7 @@ export const STATUS_SERVICO_OS_LABEL: Record<StatusServicoOs, string> = {
 };
 
 export const STATUS_ORCAMENTO_LABEL: Record<StatusOrcamento, string> = {
-  DISPONIVEL: 'Disponível',
+  DISPONIVEL: 'Pendente',
   APROVADO: 'Aprovado',
   REPROVADO: 'Reprovado',
   SUBSTITUIDO: 'Substituído',
