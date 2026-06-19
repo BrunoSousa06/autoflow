@@ -243,11 +243,11 @@ class OrcamentoSpecificationsTest {
 
     @Test
     void comFiltros_comTipoAdicional_geraPredicadoDeTipo() {
-        var filtro = new OrcamentoFiltro(null, null, null, null, null, TipoOrcamento.ADICIONAL);
+        var filtro = new OrcamentoFiltro(null, null, null, null, null, TipoOrcamento.COMPLEMENTAR);
 
         aplicarSpec(filtro);
 
-        verify(cb).equal(tipoPath, TipoOrcamento.ADICIONAL);
+        verify(cb).equal(tipoPath, TipoOrcamento.COMPLEMENTAR);
     }
 
     @Test
@@ -269,7 +269,7 @@ class OrcamentoSpecificationsTest {
                 "DEF-5678",
                 "test@test.com",
                 "98765432100",
-                TipoOrcamento.ADICIONAL
+                TipoOrcamento.COMPLEMENTAR
         );
 
         aplicarSpec(filtro);
@@ -279,6 +279,6 @@ class OrcamentoSpecificationsTest {
         verify(cb).equal(lowerPlaca, "def-5678");
         verify(cb).equal(lowerEmail, "test@test.com");
         verify(cb).equal(cpfCnpjPath, "98765432100");
-        verify(cb).equal(tipoPath, TipoOrcamento.ADICIONAL);
+        verify(cb).equal(tipoPath, TipoOrcamento.COMPLEMENTAR);
     }
 }

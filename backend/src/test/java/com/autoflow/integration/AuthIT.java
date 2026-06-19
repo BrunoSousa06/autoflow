@@ -25,25 +25,25 @@ class AuthIT extends AbstractIT {
     @DisplayName("deve registrar usuário com sucesso e retornar 201")
     void deveRegistrarUsuario() {
         Map<String, Object> request = TestUtils.registroRequest(
-                "João Silva", TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_ATENDENTE, "ATENDENTE");
+                "João Silva", TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
 
         ResponseEntity<String> response = restTemplate.postForEntity("/auth/cadastro", jsonEntity(request), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         JsonNode body = parseJson(response.getBody());
-        assertThat(body.get("email").asText()).isEqualTo(TestUtils.EMAIL_ATENDENTE);
-        assertThat(body.get("role").asText()).isEqualTo("ATENDENTE");
+        assertThat(body.get("email").asText()).isEqualTo(TestUtils.EMAIL_CLIENTE);
+        assertThat(body.get("role").asText()).isEqualTo("CLIENTE");
     }
 
     @Test
     @DisplayName("deve fazer login e retornar token JWT")
     void deveFazerLoginERetornarToken() {
         restTemplate.postForEntity("/auth/cadastro", jsonEntity(
-                TestUtils.registroRequest("Maria", TestUtils.EMAIL_ADMIN, TestUtils.CPF_ATENDENTE, "ADMIN")
+                TestUtils.registroRequest("Maria", TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE")
         ), String.class);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_ADMIN)), String.class);
+                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode body = parseJson(response.getBody());

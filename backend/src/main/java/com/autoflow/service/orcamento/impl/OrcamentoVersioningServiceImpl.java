@@ -44,7 +44,7 @@ public class OrcamentoVersioningServiceImpl implements OrcamentoVersioningServic
         return repository
                 .findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(
                         ordemServicoId,
-                        TipoOrcamento.ADICIONAL
+                        TipoOrcamento.COMPLEMENTAR
                 )
                 .map(orcamento -> orcamento.getVersao() + 1)
                 .orElse(1);

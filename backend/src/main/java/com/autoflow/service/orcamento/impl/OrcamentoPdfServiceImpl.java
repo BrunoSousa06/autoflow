@@ -54,14 +54,14 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
             Document document,
             OrcamentoEntity orcamento
     ) throws DocumentException {
-        if (!TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
+        if (!TipoOrcamento.COMPLEMENTAR.equals(orcamento.getTipo())) {
             return;
         }
 
         Font avisoFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
 
         Paragraph aviso = new Paragraph(
-                "Este documento se refere a um reparo adicional identificado durante a execução da ordem de serviço. " +
+                "Este documento se refere a um orçamento complementar identificado durante a execução da ordem de serviço. " +
                         "Ele é complementar ao orçamento principal já aprovado.",
                 avisoFont
         );
@@ -128,8 +128,8 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
     }
 
     private String descricaoTipoOrcamento(OrcamentoEntity orcamento) {
-        if (TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
-            return "Reparo adicional";
+        if (TipoOrcamento.COMPLEMENTAR.equals(orcamento.getTipo())) {
+            return "Orçamento complementar";
         }
 
         return "Orçamento principal";

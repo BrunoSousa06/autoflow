@@ -49,7 +49,7 @@ export class OrcamentosComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
 
   readonly statusOptions: StatusOrcamento[] = ['DISPONIVEL', 'APROVADO', 'REPROVADO', 'SUBSTITUIDO'];
-  readonly tipoOptions: TipoOrcamento[] = ['PRINCIPAL', 'ADICIONAL'];
+  readonly tipoOptions: TipoOrcamento[] = ['PRINCIPAL', 'COMPLEMENTAR'];
   readonly orcamentos = signal<OrcamentoResponse[]>([]);
   readonly loading = signal(false);
   readonly acaoId = signal<number | null>(null);

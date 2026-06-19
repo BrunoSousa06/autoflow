@@ -59,7 +59,7 @@ export class ReparosAdicionaisComponent implements OnInit {
   carregar(): void {
     this.loading.set(true);
     this.orcamentoService.listar({
-      tipo: 'ADICIONAL',
+      tipo: 'COMPLEMENTAR',
       statusOrcamento: this.filtroStatus || undefined,
       numeroOs: this.filtroNumeroOs.trim() || undefined,
     }).pipe(finalize(() => this.loading.set(false))).subscribe({

@@ -9,6 +9,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -47,6 +48,9 @@ public abstract class AbstractIT {
     @Autowired
     protected ObjectMapper objectMapper;
 
+    @Autowired
+    protected PasswordEncoder passwordEncoder;
+
     protected void limparBancoDeDados() {
         jdbcTemplate.execute("""
             DO $$ DECLARE r RECORD;
@@ -62,15 +66,23 @@ public abstract class AbstractIT {
     }
 
     protected String registrarELogar(String email, String cpfCnpj, String role) {
-        Map<String, Object> registro = Map.of(
-                "nome", "Usuario Teste",
-                "email", email,
-                "cpfCnpj", cpfCnpj,
-                "telefone", "11999999999",
-                "senha", "Senha@1234",
-                "role", role
-        );
-        restTemplate.postForEntity("/auth/cadastro", jsonEntity(registro), String.class);
+        if ("CLIENTE".equals(role)) {
+            Map<String, Object> registro = Map.of(
+                    "nome", "Usuario Teste",
+                    "email", email,
+                    "cpfCnpj", cpfCnpj,
+                    "telefone", "11999999999",
+                    "senha", "Senha@1234",
+                    "role", role
+            );
+            restTemplate.postForEntity("/auth/cadastro", jsonEntity(registro), String.class);
+        } else {
+            // /auth/cadastro restringe cadastro público a CLIENTE; inserimos staff diretamente
+            jdbcTemplate.update(
+                    "INSERT INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+                    "Usuario Teste", email, passwordEncoder.encode("Senha@1234"), role
+            );
+        }
 
         Map<String, Object> login = Map.of("email", email, "senha", "Senha@1234");
         ResponseEntity<String> resp = restTemplate.postForEntity("/auth/login", jsonEntity(login), String.class);

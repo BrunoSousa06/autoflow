@@ -1,6 +1,6 @@
 export type StatusOrcamento = 'DISPONIVEL' | 'APROVADO' | 'REPROVADO' | 'SUBSTITUIDO';
 
-export type TipoOrcamento = 'PRINCIPAL' | 'ADICIONAL';
+export type TipoOrcamento = 'PRINCIPAL' | 'COMPLEMENTAR';
 
 export interface OrcamentoResponse {
   id: number;
@@ -56,5 +56,5 @@ export const STATUS_ORCAMENTO_LABEL: Record<StatusOrcamento, string> = {
 
 export const TIPO_ORCAMENTO_LABEL: Record<TipoOrcamento, string> = {
   PRINCIPAL: 'Principal',
-  ADICIONAL: 'Adicional',
+  COMPLEMENTAR: 'Complementar',
 };

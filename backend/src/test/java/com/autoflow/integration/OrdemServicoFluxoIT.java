@@ -45,16 +45,15 @@ class OrdemServicoFluxoIT extends AbstractIT {
         clienteToken = registrarELogar(TestUtils.EMAIL_CLIENTE,   TestUtils.CPF_CLIENTE,   "CLIENTE");
 
         mecanicoEmail = TestUtils.EMAIL_MECANICO;
-        ResponseEntity<String> mecResp = restTemplate.postForEntity("/auth/cadastro", jsonEntity(
-                TestUtils.registroRequest("Mecânico Principal", mecanicoEmail, TestUtils.CPF_MECANICO, "MECANICO")
-        ), String.class);
-        mecanicoId = parseJson(mecResp.getBody()).get("id").asLong();
-        mecanicoToken = registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_CLIENTE_2, "ATENDENTE");
+        registrarELogar(mecanicoEmail, TestUtils.CPF_MECANICO, "MECANICO");
+        mecanicoId = jdbcTemplate.queryForObject(
+                "SELECT id FROM usuarios WHERE email = ?", Long.class, mecanicoEmail);
 
-        // Cria o token de mecânico corretamente via login
         Map<String, Object> loginMec = Map.of("email", mecanicoEmail, "senha", TestUtils.SENHA_PADRAO);
         ResponseEntity<String> loginResp = restTemplate.postForEntity("/auth/login", jsonEntity(loginMec), String.class);
         mecanicoToken = extrairCampo(loginResp.getBody(), "token");
+
+        registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_CLIENTE_2, "ATENDENTE");
 
         // Cria cliente
         post("/clientes", TestUtils.clienteRequest("José Santos", TestUtils.CPF_CLIENTE, "jose@test.com"), adminToken);

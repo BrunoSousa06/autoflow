@@ -57,15 +57,15 @@ class OrcamentoNotificacaoServiceImplTest {
 
     @Test
     void deveEnviarLinkDoReparoAdicionalParaCliente() {
-        OrcamentoEntity orcamento = orcamento(TipoOrcamento.ADICIONAL);
+        OrcamentoEntity orcamento = orcamento(TipoOrcamento.COMPLEMENTAR);
         OrdemServicoEntity ordemServico = ordemServico("cliente@exemplo.com");
 
         service.enviarLinkOrcamentoParaCliente(orcamento, ordemServico, "https://autoflow.test/orcamentos/10");
 
         MensagemNotificacao mensagem = capturarMensagemEnviada();
         assertEquals("cliente@exemplo.com", mensagem.destinatario());
-        assertTrue(mensagem.assunto().contains("Reparo adicional"));
-        assertTrue(mensagem.corpo().contains("reparo adicional"));
+        assertTrue(mensagem.assunto().contains("Orçamento complementar"));
+        assertTrue(mensagem.corpo().contains("orçamento complementar"));
         assertTrue(mensagem.corpo().contains("#10"));
         assertTrue(mensagem.corpo().contains("https://autoflow.test/orcamentos/10"));
     }

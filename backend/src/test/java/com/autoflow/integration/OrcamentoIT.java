@@ -34,30 +34,18 @@ class OrcamentoIT extends AbstractIT {
 
         adminToken = registrarELogar(TestUtils.EMAIL_ADMIN, TestUtils.CPF_ATENDENTE, "ADMIN");
 
-        ResponseEntity<String> mecResp = restTemplate.postForEntity("/auth/cadastro", jsonEntity(
-                TestUtils.registroRequest("Mecânico Orçamento", TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO, "MECANICO")
-        ), String.class);
-        mecanicoId = parseJson(mecResp.getBody()).get("id").asLong();
+        registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO, "MECANICO");
+        mecanicoId = jdbcTemplate.queryForObject(
+                "SELECT id FROM usuarios WHERE email = ?", Long.class, TestUtils.EMAIL_MECANICO);
 
         ResponseEntity<String> mecLogin = restTemplate.postForEntity("/auth/login", jsonEntity(
                 Map.of("email", TestUtils.EMAIL_MECANICO, "senha", TestUtils.SENHA_PADRAO)
         ), String.class);
         String mecanicoToken = extrairCampo(mecLogin.getBody(), "token");
 
-        restTemplate.postForEntity("/auth/cadastro", jsonEntity(
-                TestUtils.registroRequest("Cliente Orcamento", TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE")
-        ), String.class);
-        ResponseEntity<String> cli1Login = restTemplate.postForEntity("/auth/login", jsonEntity(
-                Map.of("email", TestUtils.EMAIL_CLIENTE, "senha", TestUtils.SENHA_PADRAO)
-        ), String.class);
-        clienteToken = extrairCampo(cli1Login.getBody(), "token");
+        clienteToken = registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
 
-        restTemplate.postForEntity("/auth/cadastro", jsonEntity(
-                TestUtils.registroRequest("Outro Cliente", TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_CLIENTE_2, "CLIENTE")
-        ), String.class);
-        restTemplate.postForEntity("/auth/login", jsonEntity(
-                Map.of("email", TestUtils.EMAIL_ATENDENTE, "senha", TestUtils.SENHA_PADRAO)
-        ), String.class);
+        registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_CLIENTE_2, "CLIENTE");
 
         post("/clientes", TestUtils.clienteRequest("Cliente Orçamento", TestUtils.CPF_CLIENTE, TestUtils.EMAIL_CLIENTE), adminToken);
 

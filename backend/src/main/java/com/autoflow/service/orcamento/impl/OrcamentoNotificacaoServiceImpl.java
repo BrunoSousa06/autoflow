@@ -38,8 +38,8 @@ public class OrcamentoNotificacaoServiceImpl implements OrcamentoNotificacaoServ
     }
 
     private String montarAssunto(OrcamentoEntity orcamento) {
-        if (TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
-            return "Reparo adicional aguardando aprovação - AutoFlow";
+        if (TipoOrcamento.COMPLEMENTAR.equals(orcamento.getTipo())) {
+            return "Orçamento complementar aguardando aprovação - AutoFlow";
         }
 
         return "Orçamento disponível - AutoFlow";
@@ -50,7 +50,7 @@ public class OrcamentoNotificacaoServiceImpl implements OrcamentoNotificacaoServ
             OrcamentoEntity orcamento,
             String urlPublica
     ) {
-        if (TipoOrcamento.ADICIONAL.equals(orcamento.getTipo())) {
+        if (TipoOrcamento.COMPLEMENTAR.equals(orcamento.getTipo())) {
             return montarMensagemReparoAdicional(ordemServico, orcamento, urlPublica);
         }
 
@@ -89,15 +89,15 @@ public class OrcamentoNotificacaoServiceImpl implements OrcamentoNotificacaoServ
         return """
             Olá, %s.
 
-            Durante a execução da ordem de serviço %s, identificamos a necessidade de um reparo adicional.
+            Durante a execução da ordem de serviço %s, identificamos a necessidade de um orçamento complementar.
 
-            O orçamento adicional #%d está disponível para sua análise e aprovação.
+            O orçamento complementar #%d está disponível para sua análise e aprovação.
 
-            Para baixar o PDF do orçamento adicional, acesse o link abaixo:
+            Para baixar o PDF do orçamento complementar, acesse o link abaixo:
 
             %s
 
-            Importante: este orçamento é adicional ao orçamento principal já aprovado.
+            Importante: este orçamento é complementar ao orçamento principal já aprovado.
 
             Atenciosamente,
             AutoFlow

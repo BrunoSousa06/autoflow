@@ -152,7 +152,7 @@ class OrcamentoFactoryImplTest {
         OrcamentoEntity orc = factory.criarAdicionalDisponivel(os, reparo, 3, now);
 
         assertEquals(99L, orc.getOrdemServicoId());
-        assertEquals(TipoOrcamento.ADICIONAL, orc.getTipo());
+        assertEquals(TipoOrcamento.COMPLEMENTAR, orc.getTipo());
         assertEquals(StatusOrcamento.DISPONIVEL, orc.getStatus());
         assertEquals(3, orc.getVersao());
         assertEquals(now, orc.getCriadoEm());
@@ -183,7 +183,7 @@ class OrcamentoFactoryImplTest {
 
         OrcamentoEntity orc = factory.criarAdicionalDisponivel(os, reparo, 1, LocalDateTime.of(2026, 6, 4, 10, 0));
 
-        assertEquals(TipoOrcamento.ADICIONAL, orc.getTipo());
+        assertEquals(TipoOrcamento.COMPLEMENTAR, orc.getTipo());
         assertEquals(BigDecimal.ZERO, orc.getTotalServicos());
         assertEquals(BigDecimal.ZERO, orc.getTotalItens());
         assertEquals(BigDecimal.ZERO, orc.getTotalGeral());

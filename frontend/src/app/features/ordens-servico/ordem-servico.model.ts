@@ -8,7 +8,7 @@ export type StatusOrdemServico =
 
 export type StatusServicoOs = 'AGUARDANDO' | 'EM_EXECUCAO' | 'FINALIZADO' | 'CANCELADO';
 export type StatusOrcamento = 'DISPONIVEL' | 'APROVADO' | 'REPROVADO' | 'SUBSTITUIDO';
-export type TipoOrcamento = 'PRINCIPAL' | 'ADICIONAL';
+export type TipoOrcamento = 'PRINCIPAL' | 'COMPLEMENTAR';
 export type StatusItemNecessario = 'DISPONIVEL' | 'PENDENTE' | 'UTILIZADO' | 'CANCELADO';
 export type CategoriaPecaInsumo = string;
 
