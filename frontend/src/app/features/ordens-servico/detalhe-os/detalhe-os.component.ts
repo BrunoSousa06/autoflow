@@ -17,9 +17,11 @@ import {
   StatusOrdemServico,
   StatusServicoOs,
   StatusOrcamento,
+  StatusItemNecessario,
   STATUS_OS_LABEL,
   STATUS_SERVICO_OS_LABEL,
   STATUS_ORCAMENTO_LABEL,
+  STATUS_ITEM_NECESSARIO_LABEL,
 } from '../ordem-servico.model';
 import {
   AtribuirMecanicoDialogComponent,
@@ -152,6 +154,10 @@ export class DetalheOsComponent implements OnInit {
 
   labelStatusOrcamento(status: StatusOrcamento): string {
     return STATUS_ORCAMENTO_LABEL[status] ?? status;
+  }
+
+  labelStatusItem(status: StatusItemNecessario): string {
+    return STATUS_ITEM_NECESSARIO_LABEL[status] ?? status;
   }
 
   tooltipDiagnostico(statusNecessario: StatusOrdemServico): string {

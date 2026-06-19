@@ -28,6 +28,13 @@ export const STATUS_SERVICO_OS_LABEL: Record<StatusServicoOs, string> = {
   CANCELADO: 'Cancelado',
 };
 
+export const STATUS_ITEM_NECESSARIO_LABEL: Record<StatusItemNecessario, string> = {
+  DISPONIVEL: 'Disponível',
+  PENDENTE:   'Pendência de peça',
+  UTILIZADO:  'Baixa de estoque',
+  CANCELADO:  'Cancelado',
+};
+
 export const STATUS_ORCAMENTO_LABEL: Record<StatusOrcamento, string> = {
   DISPONIVEL: 'Pendente',
   APROVADO: 'Aprovado',

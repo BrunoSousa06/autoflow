@@ -169,7 +169,7 @@
                     <span class="item-qtd">{{ item.quantidade }}x</span>
                     <span class="item-valor">{{ item.valorTotal | currency:'BRL' }}</span>
                     <mat-chip [class]="'status-item-' + item.status" class="chip-xs">
-                      {{ item.mensagemStatus ?? item.status }}
+                      {{ item.mensagemStatus ?? labelStatusItem(item.status) }}
                     </mat-chip>
                   </div>
                 }
