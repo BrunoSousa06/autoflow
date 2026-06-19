@@ -22,7 +22,7 @@ export const STATUS_OS_LABEL: Record<StatusOrdemServico, string> = {
 };
 
 export const STATUS_SERVICO_OS_LABEL: Record<StatusServicoOs, string> = {
-  AGUARDANDO: 'Aguardando',
+  AGUARDANDO: 'Aprovado',
   EM_EXECUCAO: 'Em Execução',
   FINALIZADO: 'Finalizado',
   CANCELADO: 'Cancelado',
