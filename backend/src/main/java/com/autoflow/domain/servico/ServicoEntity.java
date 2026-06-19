@@ -18,8 +18,10 @@ public class ServicoEntity {
     Long id;
     @Column(unique = true, nullable = false)
     String nome;
-    BigDecimal valor ;
+    BigDecimal valor;
     @Column(nullable = false, length = 500)
     String descricao;
+    @Column(nullable = false)
+    boolean ativo = true;
 
 }

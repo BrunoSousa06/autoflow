@@ -90,7 +90,7 @@ export class ServicosComponent implements OnInit {
     });
   }
 
-  confirmarExclusao(servico: ServicoResponse): void {
+  confirmarInativacao(servico: ServicoResponse): void {
     const ref = this.dialog.open<
       ConfirmacaoDialogComponent,
       ConfirmacaoDialogData,
@@ -98,9 +98,9 @@ export class ServicosComponent implements OnInit {
     >(ConfirmacaoDialogComponent, {
       width: '400px',
       data: {
-        titulo: 'Excluir serviço',
-        mensagem: `Tem certeza que deseja excluir "${servico.nome}"? Esta ação não pode ser desfeita.`,
-        labelConfirmar: 'Excluir',
+        titulo: 'Inativar serviço',
+        mensagem: `Tem certeza que deseja inativar "${servico.nome}"? O serviço deixará de estar disponível para novas ordens de serviço.`,
+        labelConfirmar: 'Inativar',
       },
     });
 
@@ -108,11 +108,11 @@ export class ServicosComponent implements OnInit {
       if (!confirmado) return;
       this.servicoService.deletar(servico.id).subscribe({
         next: () => {
-          this.snackBar.open('Serviço excluído com sucesso.', 'Fechar', { duration: 3000 });
+          this.snackBar.open('Serviço inativado com sucesso.', 'Fechar', { duration: 3000 });
           this.carregar();
         },
         error: (err) => {
-          const msg = err?.error?.erro ?? 'Erro ao excluir o serviço.';
+          const msg = err?.error?.erro ?? 'Erro ao inativar o serviço.';
           this.snackBar.open(msg, 'Fechar', { duration: 4000 });
         },
       });

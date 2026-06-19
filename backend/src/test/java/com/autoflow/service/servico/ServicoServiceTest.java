@@ -51,7 +51,7 @@ class ServicoServiceTest {
     void setup() {
         request = new ServicoRequest("Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(80.00));
         entity = new ServicoEntity();
-        response = new ServicoResponse(1L, "Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(80.00));
+        response = new ServicoResponse(1L, "Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(80.00), true);
     }
 
     @Test
@@ -80,18 +80,18 @@ class ServicoServiceTest {
     }
 
     @Test
-    void deveListarTodosOsServicos() {
+    void deveListarTodosOsServicosAtivos() {
         List<ServicoEntity> listaEntities = List.of(entity);
         PageRequest pageable = PageRequest.of(0, 20);
 
-        when(servicoRepository.findAll(pageable)).thenReturn(new PageImpl<>(listaEntities));
+        when(servicoRepository.findAllByAtivoTrue(pageable)).thenReturn(new PageImpl<>(listaEntities));
         when(servicoMapper.toResponse(entity)).thenReturn(response);
 
         Page<ServicoResponse> resultado = servicoService.listar(pageable);
 
         assertNotNull(resultado);
         assertEquals(1, resultado.getContent().size());
-        verify(servicoRepository).findAll(pageable);
+        verify(servicoRepository).findAllByAtivoTrue(pageable);
     }
 
     @Test
@@ -165,27 +165,29 @@ class ServicoServiceTest {
     }
 
     @Test
-    void deveDeletarServicoComSucesso() {
+    void deveInativarServicoComSucesso() {
         Long id = 1L;
-        when(servicoRepository.existsById(id)).thenReturn(true);
-        doNothing().when(servicoRepository).deleteById(id);
+        entity.setAtivo(true);
+        when(servicoRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(servicoRepository.save(entity)).thenReturn(entity);
 
-        servicoService.deletar(id);
+        servicoService.inativar(id);
 
-        verify(servicoRepository).existsById(id);
-        verify(servicoRepository).deleteById(id);
+        assertFalse(entity.isAtivo());
+        verify(servicoRepository).findById(id);
+        verify(servicoRepository).save(entity);
     }
 
     @Test
-    void deveLancarExcecaoAoDeletarIdInexistente() {
+    void deveLancarExcecaoAoInativarIdInexistente() {
         Long id = 1L;
-        when(servicoRepository.existsById(id)).thenReturn(false);
+        when(servicoRepository.findById(id)).thenReturn(Optional.empty());
 
-        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> servicoService.deletar(id));
+        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> servicoService.inativar(id));
 
         assertEquals(HttpStatus.NOT_FOUND, excecao.getStatusCode());
-        assertEquals("ID informado para exclusão não existe: " + id, excecao.getReason());
-        verify(servicoRepository, never()).deleteById(id);
+        assertEquals("Serviço não encontrado com o ID: " + id, excecao.getReason());
+        verify(servicoRepository, never()).save(any());
     }
 
     @Test

@@ -36,7 +36,7 @@ public class ServicoService {
     }
 
     public Page<ServicoResponse> listar(Pageable pageable) {
-        return servicoRepository.findAll(pageable)
+        return servicoRepository.findAllByAtivoTrue(pageable)
                 .map(servicoMapper::toResponse);
     }
 
@@ -60,13 +60,11 @@ public class ServicoService {
         return servicoMapper.toResponse(atualizado);
     }
 
-    public void deletar(Long id) {
-
-        if (!servicoRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "ID informado para exclusão não existe: " + id);
-        }
-
-        servicoRepository.deleteById(id);
+    public void inativar(Long id) {
+        ServicoEntity servico = servicoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado com o ID: " + id));
+        servico.setAtivo(false);
+        servicoRepository.save(servico);
     }
 
     private ServicoEntity buscarServicoPorId(Long id) {

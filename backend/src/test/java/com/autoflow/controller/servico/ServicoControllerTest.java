@@ -52,7 +52,7 @@ class ServicoControllerTest {
                 .build();
 
         request = new ServicoRequest("Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(150.00));
-        response = new ServicoResponse(1L, "Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(150.00));
+        response = new ServicoResponse(1L, "Troca de Óleo", "Substituição do óleo do motor", BigDecimal.valueOf(150.00), true);
         responses = List.of(response);
     }
 
@@ -98,13 +98,13 @@ class ServicoControllerTest {
     }
 
     @Test
-    void deveDeletarServico() throws Exception {
-        doNothing().when(servicoService).deletar(1L);
+    void deveInativarServico() throws Exception {
+        doNothing().when(servicoService).inativar(1L);
 
         mockMvc.perform(delete("/servicos/1"))
                 .andExpect(status().isOk());
 
-        verify(servicoService).deletar(1L);
+        verify(servicoService).inativar(1L);
     }
 
     @Test

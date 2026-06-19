@@ -81,16 +81,16 @@ public class ServicoController {
         return ResponseEntity.ok(servicoService.atualizar(request, id));
     }
 
-    @Operation(summary = "Deletar um serviço", description = "Deleta um serviço pelo ID")
-    @ApiResponse(responseCode = "200", description = "Serviço deletado com sucesso")
+    @Operation(summary = "Inativar um serviço", description = "Inativa um serviço pelo ID (soft-delete)")
+    @ApiResponse(responseCode = "200", description = "Serviço inativado com sucesso")
     @ApiResponse(responseCode = "404", description = "Serviço não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deletar(@PathVariable Long id){
-        servicoService.deletar(id);
-        return ResponseEntity.ok().body("serviço deletado com sucesso");
+    public ResponseEntity<String> inativar(@PathVariable Long id){
+        servicoService.inativar(id);
+        return ResponseEntity.ok().body("Serviço inativado com sucesso");
 
     }
 

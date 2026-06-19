@@ -7,6 +7,7 @@ public record ServicoResponse(
         Long id,
         String nome,
         String descricao,
-        BigDecimal valor) {
+        BigDecimal valor,
+        boolean ativo) {
 
 }

@@ -9,6 +9,7 @@ export interface ServicoResponse {
   nome: string;
   descricao: string;
   valor: number | null;
+  ativo: boolean;
 }
 
 export interface TempoMedioServicoResponse {
