@@ -1,0 +1,35 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+}
+
+mat-dialog-content {
+  min-width: 520px;
+  padding-top: 8px !important;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+mat-dialog-actions {
+  gap: 8px;
+  padding-top: 8px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+mat-spinner { display: inline-block; }
+
+@media (max-width: 640px) {
+  mat-dialog-content { min-width: 0; }
+  .form-grid { grid-template-columns: 1fr; }
+}

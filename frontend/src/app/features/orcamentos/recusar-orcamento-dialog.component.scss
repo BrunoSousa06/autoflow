@@ -1,0 +1,10 @@
+mat-dialog-content {
+  display: grid;
+  gap: 12px;
+  min-width: min(420px, 78vw);
+}
+
+p {
+  margin: 0;
+  color: #555;
+}

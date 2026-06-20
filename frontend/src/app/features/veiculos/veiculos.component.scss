@@ -1,0 +1,91 @@
+.page {
+  max-width: 1200px;
+}
+
+.page-header {
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.filtros-card {
+  padding: 16px 16px 4px;
+  margin-bottom: 24px;
+}
+
+.filtro-field {
+  flex: 1 1 180px;
+  min-width: 160px;
+}
+
+.filtro-ano {
+  flex: 0 1 120px;
+}
+
+.filtros-acoes {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-top: 4px;
+  padding-bottom: 20px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 40px;
+  }
+}
+
+.icon-vazio { color: #ccc; }
+
+.mono {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.875rem;
+  letter-spacing: 0.03em;
+}
+
+.placa-cell {
+  font-weight: 600;
+  color: #1565c0;
+  letter-spacing: 0.05em;
+}
+
+.col-nome { font-weight: 500; }
+
+.col-acoes {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.cliente-nome {
+  display: block;
+  font-weight: 500;
+}
+
+.cliente-doc {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.veiculo-row {
+  transition: background 0.15s;
+
+  &:hover { background: #f5f5f5; }
+}

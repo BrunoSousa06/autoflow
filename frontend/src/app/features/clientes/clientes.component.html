@@ -1,0 +1,140 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1>Clientes</h1>
+      @if (!loading() && !erroCarregamento()) {
+        <p class="subtitle">{{ clientes().length }} cliente(s) cadastrado(s)</p>
+      }
+    </div>
+    <button mat-raised-button color="primary" (click)="abrirFormulario()">
+      <mat-icon>person_add</mat-icon>
+      Novo Cliente
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Carregando clientes…</p>
+    </div>
+  } @else if (erroCarregamento()) {
+    <mat-card class="estado-card">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>{{ erroCarregamento() }}</p>
+      <button mat-stroked-button (click)="carregar()">
+        <mat-icon>refresh</mat-icon>
+        Tentar novamente
+      </button>
+    </mat-card>
+  } @else if (clientes().length === 0) {
+    <mat-card class="estado-card">
+      <mat-icon class="icon-vazio">people_outline</mat-icon>
+      <p>Nenhum cliente cadastrado.</p>
+      <button mat-raised-button color="primary" (click)="abrirFormulario()">
+        <mat-icon>person_add</mat-icon>
+        Cadastrar primeiro cliente
+      </button>
+    </mat-card>
+  } @else {
+    <mat-card class="tabela-card">
+      <table mat-table [dataSource]="clientes()" multiTemplateDataRows>
+
+        <ng-container matColumnDef="expandir">
+          <th mat-header-cell *matHeaderCellDef class="col-expandir"></th>
+          <td mat-cell *matCellDef="let c" class="col-expandir">
+            <button
+              mat-icon-button
+              (click)="toggleExpand(c, $event)"
+              [matTooltip]="expandido === c ? 'Ocultar veículos' : 'Ver veículos'"
+            >
+              <mat-icon>{{ expandido === c ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Nome</th>
+          <td mat-cell *matCellDef="let c" class="col-nome">{{ c.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="cpfCnpj">
+          <th mat-header-cell *matHeaderCellDef>CPF / CNPJ</th>
+          <td mat-cell *matCellDef="let c" class="mono">{{ fmt(c.cpfCnpj) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="telefone">
+          <th mat-header-cell *matHeaderCellDef>Telefone</th>
+          <td mat-cell *matCellDef="let c" class="mono">{{ fmtTel(c.telefone) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>E-mail</th>
+          <td mat-cell *matCellDef="let c">{{ c.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+          <td mat-cell *matCellDef="let c" class="col-acoes">
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Editar cliente"
+              (click)="abrirFormulario(c)"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            @if (isAdmin) {
+              <button
+                mat-icon-button
+                color="warn"
+                matTooltip="Excluir cliente"
+                (click)="confirmarExclusao(c)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="detalhe">
+          <td mat-cell *matCellDef="let c" [attr.colspan]="colunas.length" class="detalhe-cell">
+            @if (expandido === c) {
+              <div class="detalhe-content">
+                <mat-divider />
+                <div class="veiculos-section">
+                  <span class="veiculos-label">
+                    <mat-icon>directions_car</mat-icon>
+                    Veículos vinculados
+                  </span>
+                  @if (c.veiculos?.length) {
+                    <mat-chip-set>
+                      @for (v of c.veiculos; track v.id) {
+                        <mat-chip>
+                          {{ v.marca }} {{ v.modelo }} &middot; {{ v.ano }} &middot; {{ v.placa }}
+                        </mat-chip>
+                      }
+                    </mat-chip-set>
+                  } @else {
+                    <span class="sem-veiculo">Nenhum veículo vinculado a este cliente.</span>
+                  }
+                </div>
+              </div>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: colunas"
+          class="cliente-row"
+          [class.expandida]="expandido === row"
+        ></tr>
+        <tr mat-row *matRowDef="let row; columns: ['detalhe']" class="detalhe-row"></tr>
+
+      </table>
+    </mat-card>
+  }
+
+</div>

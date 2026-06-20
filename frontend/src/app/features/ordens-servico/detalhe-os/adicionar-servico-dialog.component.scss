@@ -1,0 +1,54 @@
+mat-dialog-content {
+  min-width: 360px;
+  max-height: 420px;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0;
+  color: #666;
+}
+
+.vazio {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.instrucao {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0 0 12px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.servico-linha {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  transition: background 0.15s;
+
+  &.selecionado {
+    background: #e3f2fd;
+    border-color: #90caf9;
+  }
+}
+
+.srv-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 4px;
+
+  .srv-nome { flex: 1; font-size: 0.9rem; color: #222; }
+  .srv-valor { font-weight: 600; color: #1565c0; font-size: 0.85rem; white-space: nowrap; }
+}

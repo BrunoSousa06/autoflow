@@ -1,0 +1,25 @@
+.detail { display: grid; gap: 14px; }
+.back { width: fit-content; }
+.header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+h2 { margin: 0; font-size: 1.35rem; }
+p { margin: 4px 0 0; color: #666; }
+mat-card { border-radius: 8px; }
+.loading { display: flex; justify-content: center; padding: 28px; }
+.message { margin: 0 0 14px; color: #333; }
+.status { padding: 6px 12px; border-radius: 999px; font-weight: 700; background: #eef2f7; }
+.recebida { background: #e8f0fe; color: #174ea6; }
+.em_diagnostico, .aguardando_aprovacao { background: #fff8e1; color: #8a5a00; }
+.em_execucao { background: #f3e5f5; color: #6a1b9a; }
+.finalizada, .entregue { background: #e6f4ea; color: #137333; }
+dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+dt { color: #666; }
+dd { margin: 3px 0 0; font-weight: 600; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; min-width: 520px; border-collapse: collapse; }
+th, td { padding: 10px 8px; border-bottom: 1px solid #e0e0e0; text-align: left; }
+th { color: #666; font-weight: 600; }
+.money { text-align: right; white-space: nowrap; }
+.timeline { margin: 0; padding-left: 20px; display: grid; gap: 12px; }
+.timeline span { display: block; color: #666; font-size: .85rem; margin-top: 2px; }
+.timeline p, .muted { margin: 4px 0 0; color: #666; }
+@media (max-width: 700px) { .header { flex-direction: column; } }

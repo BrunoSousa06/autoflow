@@ -1,0 +1,129 @@
+<h2 mat-dialog-title>
+  <mat-icon>person_add</mat-icon>
+  Novo Usuário
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" novalidate>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nome completo</mat-label>
+      <mat-icon matPrefix>person</mat-icon>
+      <input matInput formControlName="nome" autocomplete="off" />
+      @if (f['nome'].hasError('required') && f['nome'].touched) {
+        <mat-error>Nome é obrigatório</mat-error>
+      } @else if (f['nome'].hasError('backend')) {
+        <mat-error>{{ f['nome'].getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>E-mail</mat-label>
+      <mat-icon matPrefix>email</mat-icon>
+      <input matInput formControlName="email" type="email" autocomplete="off" />
+      @if (f['email'].hasError('required') && f['email'].touched) {
+        <mat-error>E-mail é obrigatório</mat-error>
+      } @else if (f['email'].hasError('email') && f['email'].touched) {
+        <mat-error>Formato de e-mail inválido</mat-error>
+      } @else if (f['email'].hasError('backend')) {
+        <mat-error>{{ f['email'].getError('backend') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Função</mat-label>
+      <mat-icon matPrefix>badge</mat-icon>
+      <mat-select formControlName="role">
+        @for (role of rolesDisponiveis(); track role) {
+          <mat-option [value]="role">{{ roleLabels[role] }}</mat-option>
+        }
+      </mat-select>
+      @if (f['role'].hasError('required') && f['role'].touched) {
+        <mat-error>Função é obrigatória</mat-error>
+      }
+    </mat-form-field>
+
+    @if (roleAtual() === 'CLIENTE') {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>CPF / CNPJ</mat-label>
+        <mat-icon matPrefix>credit_card</mat-icon>
+        <input
+          matInput
+          formControlName="cpfCnpj"
+          placeholder="000.000.000-00 ou 00.000.000/0000-00"
+          autocomplete="off"
+          (input)="mascaraCpfCnpj($event)"
+        />
+        @if (f['cpfCnpj'].hasError('required') && f['cpfCnpj'].touched) {
+          <mat-error>CPF/CNPJ é obrigatório</mat-error>
+        } @else if (f['cpfCnpj'].hasError('cpfCnpj')) {
+          <mat-error>{{ f['cpfCnpj'].getError('cpfCnpj') }}</mat-error>
+        } @else if (f['cpfCnpj'].hasError('backend')) {
+          <mat-error>{{ f['cpfCnpj'].getError('backend') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Telefone</mat-label>
+        <mat-icon matPrefix>phone</mat-icon>
+        <input
+          matInput
+          formControlName="telefone"
+          placeholder="(00) 90000-0000"
+          autocomplete="off"
+          (input)="mascaraTelefone($event)"
+        />
+        @if (f['telefone'].hasError('required') && f['telefone'].touched) {
+          <mat-error>Telefone é obrigatório</mat-error>
+        } @else if (f['telefone'].hasError('backend')) {
+          <mat-error>{{ f['telefone'].getError('backend') }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Senha</mat-label>
+      <mat-icon matPrefix>lock</mat-icon>
+      <input matInput formControlName="senha" [type]="mostrarSenha ? 'text' : 'password'" autocomplete="new-password" />
+      <button mat-icon-button matSuffix type="button" (click)="mostrarSenha = !mostrarSenha">
+        <mat-icon>{{ mostrarSenha ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      @if (f['senha'].hasError('required') && f['senha'].touched) {
+        <mat-error>Senha é obrigatória</mat-error>
+      } @else if (f['senha'].hasError('pattern') && f['senha'].touched) {
+        <mat-error>Mín. 8 caracteres com maiúscula, minúscula, número e caractere especial</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Confirmar senha</mat-label>
+      <mat-icon matPrefix>lock_reset</mat-icon>
+      <input matInput formControlName="confirmarSenha" [type]="mostrarSenha ? 'text' : 'password'" autocomplete="new-password" />
+      @if (f['confirmarSenha'].hasError('required') && f['confirmarSenha'].touched) {
+        <mat-error>Confirmação de senha é obrigatória</mat-error>
+      } @else if (f['confirmarSenha'].hasError('senhasDiferentes')) {
+        <mat-error>As senhas não coincidem</mat-error>
+      }
+    </mat-form-field>
+
+    @if (erroBackend()) {
+      <div class="error-banner">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ erroBackend() }}</span>
+      </div>
+    }
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()" [disabled]="loading()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="salvar()" [disabled]="loading()">
+    @if (loading()) {
+      <mat-spinner diameter="18" />
+    } @else {
+      <mat-icon>person_add</mat-icon>
+    }
+    Cadastrar
+  </button>
+</mat-dialog-actions>
