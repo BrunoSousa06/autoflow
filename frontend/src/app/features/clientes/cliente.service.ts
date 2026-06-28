@@ -21,6 +21,10 @@ export class ClienteService {
     return this.http.get<ClienteResponse>(`${this.base}/${id}`);
   }
 
+  buscarPorDocumento(documento: string): Observable<ClienteResponse> {
+    return this.http.get<ClienteResponse>(`${this.base}/${documento}`);
+  }
+
   cadastrar(req: ClienteRequest): Observable<ClienteResponse> {
     return this.http.post<ClienteResponse>(this.base, req);
   }

@@ -13,6 +13,26 @@
     </button>
   </div>
 
+  <form class="filtros" (ngSubmit)="buscar()">
+    <mat-form-field appearance="outline" class="filtro-documento">
+      <mat-label>Buscar por CPF / CNPJ</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        name="documento"
+        [(ngModel)]="filtroDocumento"
+        placeholder="Digite CPF ou CNPJ"
+      />
+    </mat-form-field>
+
+    <div class="filtro-acoes">
+      <button mat-raised-button color="primary" type="submit">Buscar</button>
+      @if (temFiltroDocumento) {
+        <button mat-button type="button" (click)="limparFiltros()">Limpar</button>
+      }
+    </div>
+  </form>
+
   @if (loading()) {
     <div class="loading-center">
       <mat-spinner diameter="48" />

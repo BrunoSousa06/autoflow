@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,6 +9,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/services/auth.service';
@@ -28,6 +31,9 @@ import {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
@@ -53,18 +59,46 @@ export class ClientesComponent implements OnInit {
 
   expandido: ClienteResponse | null = null;
 
+  filtroDocumento = '';
+
   readonly colunas = ['expandir', 'nome', 'cpfCnpj', 'telefone', 'email', 'acoes'];
   readonly fmt = formatarCpfCnpj;
   readonly fmtTel = formatarTelefone;
+
+  get temFiltroDocumento(): boolean {
+    return !!this.filtroDocumento.trim();
+  }
 
   ngOnInit(): void {
     this.carregar();
   }
 
-  carregar(): void {
+  carregar(documento?: string): void {
     this.expandido = null;
     this.loading.set(true);
     this.erroCarregamento.set(null);
+
+    const filtro = (documento ?? this.filtroDocumento).trim();
+    const documentoSanitizado = filtro.replace(/\D/g, '');
+
+    if (documentoSanitizado) {
+      this.clienteService.buscarPorDocumento(documentoSanitizado).subscribe({
+        next: (cliente) => {
+          this.clientes.set([cliente]);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          const mensagem = err?.status === 404
+            ? 'Cliente não encontrado.'
+            : 'Não foi possível carregar o cliente.';
+          this.erroCarregamento.set(mensagem);
+          this.clientes.set([]);
+          this.loading.set(false);
+        },
+      });
+      return;
+    }
+
     this.clienteService.listarTodos().subscribe({
       next: (data) => {
         this.clientes.set(data);
@@ -75,6 +109,15 @@ export class ClientesComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  buscar(): void {
+    this.carregar();
+  }
+
+  limparFiltros(): void {
+    this.filtroDocumento = '';
+    this.carregar();
   }
 
   toggleExpand(cliente: ClienteResponse, event: Event): void {
