@@ -1,0 +1,19 @@
+.page { padding: 24px; display: grid; gap: 18px; }
+.header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+h1 { margin: 0; font-size: 1.6rem; }
+p { margin: 4px 0 0; color: #666; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: start; }
+.filter-actions { display: flex; gap: 8px; align-items: center; min-height: 56px; }
+.loading, .empty { display: flex; justify-content: center; padding: 32px; color: #666; }
+.list { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+.card { border-radius: 8px; }
+.status { display: inline-flex; margin: 8px 0 14px; padding: 4px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; background: #eef2f7; }
+.aprovado { background: #e6f4ea; color: #137333; }
+.reprovado { background: #fce8e6; color: #a50e0e; }
+.disponivel { background: #e8f0fe; color: #174ea6; }
+.substituido { background: #f1f3f4; color: #5f6368; }
+dl { margin: 0; display: grid; gap: 8px; }
+dl div { display: flex; justify-content: space-between; gap: 12px; }
+dt { color: #666; }
+dd { margin: 0; font-weight: 600; text-align: right; }
+@media (max-width: 700px) { .header { flex-direction: column; } .page { padding: 16px; } }

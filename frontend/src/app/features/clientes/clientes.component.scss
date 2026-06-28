@@ -1,0 +1,96 @@
+.page {
+  max-width: 1200px;
+}
+
+.page-header {
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.icon-vazio { color: #ccc; }
+
+.col-expandir {
+  width: 48px;
+  padding-right: 0;
+}
+
+.col-nome { font-weight: 500; }
+
+.mono {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.875rem;
+  letter-spacing: 0.03em;
+}
+
+.col-acoes {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.cliente-row {
+  transition: background 0.15s;
+
+  &.expandida td { background: #f0f7ff; }
+}
+
+.detalhe-row {
+  height: 0;
+
+  td { padding: 0 !important; border: none !important; }
+  &:hover { background: transparent !important; }
+}
+
+.detalhe-cell {
+  padding: 0 !important;
+  border: none !important;
+}
+
+.detalhe-content {
+  padding: 0 16px 16px 16px;
+  background: #f8fbff;
+}
+
+.veiculos-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.veiculos-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #1565c0;
+  }
+}
+
+.sem-veiculo {
+  font-size: 0.875rem;
+  color: #888;
+  font-style: italic;
+}

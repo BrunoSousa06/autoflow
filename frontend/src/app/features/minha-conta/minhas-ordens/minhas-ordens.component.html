@@ -1,0 +1,66 @@
+<section class="section">
+  <header class="section-header">
+    <div>
+      <h2>Minhas ordens</h2>
+      <p>Acompanhe o andamento das suas ordens de servico.</p>
+    </div>
+    <button mat-stroked-button color="primary" type="button" (click)="carregar()">
+      <mat-icon>refresh</mat-icon>
+      Atualizar
+    </button>
+  </header>
+
+  <mat-form-field appearance="outline" class="status-filter">
+    <mat-label>Status</mat-label>
+    <mat-select name="status" [(ngModel)]="statusFiltro">
+      <mat-option value="">Todos</mat-option>
+      <mat-option *ngFor="let status of statusOptions" [value]="status">
+        {{ statusLabel(status) }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <div *ngIf="loading()" class="loading">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading() && !ordensFiltradas().length" class="empty">
+    Nenhuma ordem encontrada.
+  </div>
+
+  <div *ngIf="!loading() && ordensFiltradas().length" class="grid">
+    <mat-card *ngFor="let ordem of ordensFiltradas()" class="card">
+      <mat-card-header>
+        <mat-card-title>OS {{ ordem.numeroOs }}</mat-card-title>
+        <mat-card-subtitle>Veiculo {{ ordem.placa }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <span class="status" [ngClass]="ordem.statusAtual.toLowerCase()">{{ statusLabel(ordem.statusAtual) }}</span>
+        <p>{{ ordem.mensagemParaCliente }}</p>
+
+        <dl>
+          <div><dt>Abertura</dt><dd>{{ ordem.dataAbertura | date:'short' }}</dd></div>
+          <div><dt>Atualizacao</dt><dd>{{ ordem.ultimaAtualizacao | date:'short' }}</dd></div>
+          <div><dt>Servicos</dt><dd>{{ ordem.servicosSolicitados.length }}</dd></div>
+          <div *ngIf="ordem.orcamentoAtual">
+            <dt>Orcamento</dt>
+            <dd>{{ orcamentoStatus(ordem) }} - {{ ordem.orcamentoAtual.totalGeral | currency:'BRL' }}</dd>
+          </div>
+        </dl>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button color="primary" type="button" (click)="abrirDetalhe(ordem.numeroOs)">Detalhes</button>
+        <button
+          *ngIf="ordem.orcamentoAtual"
+          mat-button
+          color="primary"
+          type="button"
+          (click)="abrirOrcamento(ordem.orcamentoAtual.id)">
+          Ver orcamento
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</section>

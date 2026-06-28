@@ -8,6 +8,41 @@ on:
     branches: [ "develop", "main" ]
 
 jobs:
+   snyk-scan:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read       # Resolve o erro de acesso ao workflow-runs
+      contents: read      # Permite ler o código para análise
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Run Snyk Open Source Scan
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --sarif-file-output=snyk.sarif
+
+      - name: Build Docker Image for Scan
+        working-directory: backend
+        run: docker build -t autoflow-app:latest -f Dockerfile .
+
+      - name: Snyk Container Scan
+        continue-on-error: true 
+        working-directory: backend
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk container test autoflow-app:latest --file=Dockerfile
 
    sonar-analysis:
     name: SonarQube Analysis
@@ -34,10 +69,11 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('backend/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build and analyze
+        working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java

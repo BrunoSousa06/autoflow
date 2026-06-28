@@ -1,0 +1,50 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+
+  .titulo-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: #1976d2;
+  }
+}
+
+.sub {
+  margin: 0 0 16px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.erro-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c62828;
+  font-size: 0.875rem;
+  padding: 8px 0;
+}
+
+.campo-mecanico { width: 100%; }
+
+mat-dialog-actions {
+  gap: 8px;
+  padding-top: 8px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}

@@ -1,0 +1,81 @@
+<div class="login-wrapper">
+  <div class="login-brand">
+    <div class="brand-content">
+      <mat-icon class="brand-icon">directions_car</mat-icon>
+      <h1>AutoFlow</h1>
+      <p>Sistema de Gestão de Oficina Mecânica</p>
+    </div>
+  </div>
+
+  <div class="login-panel">
+    <mat-card class="login-card">
+      <mat-card-header>
+        <mat-card-title>Bem-vindo de volta</mat-card-title>
+        <mat-card-subtitle>Faça login para acessar o sistema</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>E-mail</mat-label>
+            <mat-icon matPrefix>email</mat-icon>
+            <input matInput formControlName="email" type="email" autocomplete="email" />
+            @if (form.controls.email.hasError('required')) {
+              <mat-error>E-mail obrigatório</mat-error>
+            } @else if (form.controls.email.hasError('email')) {
+              <mat-error>Formato de e-mail inválido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Senha</mat-label>
+            <mat-icon matPrefix>lock</mat-icon>
+            <input
+              matInput
+              formControlName="senha"
+              [type]="hidePassword() ? 'password' : 'text'"
+              autocomplete="current-password"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="hidePassword.set(!hidePassword())"
+              [attr.aria-label]="hidePassword() ? 'Mostrar senha' : 'Ocultar senha'"
+            >
+              <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (form.controls.senha.hasError('required')) {
+              <mat-error>Senha obrigatória</mat-error>
+            }
+          </mat-form-field>
+
+          @if (errorMsg()) {
+            <div class="error-banner">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ errorMsg() }}</span>
+            </div>
+          }
+
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            class="full-width submit-btn"
+            [disabled]="loading()"
+          >
+            @if (loading()) {
+              <mat-spinner diameter="20" />
+              <span>Autenticando…</span>
+            } @else {
+              <mat-icon>login</mat-icon>
+              <span>Entrar</span>
+            }
+          </button>
+
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

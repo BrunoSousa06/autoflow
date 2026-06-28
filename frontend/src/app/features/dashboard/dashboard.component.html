@@ -1,0 +1,129 @@
+<div class="dashboard">
+
+  <!-- ── Banner de boas-vindas ───────────────────────────────────────── -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h2>{{ greeting }}!</h2>
+      <p class="user-email">{{ usuario?.email }}</p>
+    </div>
+    <span class="role-chip">{{ roleLabel }}</span>
+  </div>
+
+  <!-- ── Métricas reais — apenas ADMIN ──────────────────────────────── -->
+  @if (isAdmin) {
+    <section class="section">
+      <h3 class="section-title">
+        <mat-icon>bar_chart</mat-icon>
+        Métricas da Oficina
+        <span class="section-badge">dados reais</span>
+      </h3>
+
+      @if (metricsLoading()) {
+        <div class="metrics-loading">
+          <mat-spinner diameter="32" />
+          <span>Carregando métricas…</span>
+        </div>
+      } @else if (metricsError()) {
+        <div class="metrics-error">
+          <mat-icon>warning_amber</mat-icon>
+          <span>Não foi possível carregar as métricas. Tente recarregar a página.</span>
+        </div>
+      } @else {
+        <div class="metrics-grid">
+
+          <!-- OS Finalizadas -->
+          <mat-card class="metric-card">
+            <mat-card-content>
+              <div class="metric-icon-wrap accent-blue">
+                <mat-icon>check_circle</mat-icon>
+              </div>
+              <div class="metric-body">
+                <span class="metric-value">
+                  {{ tempoMedioOs()?.quantidadeOrdensFinalizadas ?? '—' }}
+                </span>
+                <span class="metric-label">OS Finalizadas</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Tempo médio de finalização -->
+          <mat-card class="metric-card">
+            <mat-card-content>
+              <div class="metric-icon-wrap accent-green">
+                <mat-icon>schedule</mat-icon>
+              </div>
+              <div class="metric-body">
+                <span class="metric-value">
+                  @if (tempoMedioOs(); as os) {
+                    {{ formatHoras(os.tempoMedioHoras) }}
+                  } @else {
+                    —
+                  }
+                </span>
+                <span class="metric-label">Tempo Médio de Finalização</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+        </div>
+
+        <!-- Top serviços -->
+        @if (topServicos().length > 0) {
+          <mat-card class="top-servicos-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>emoji_events</mat-icon>
+              <mat-card-title>Serviços Mais Executados</mat-card-title>
+              <mat-card-subtitle>por quantidade de execuções finalizadas</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="top-servicos-list">
+                @for (s of topServicos(); track s.servicoId; let i = $index) {
+                  <div class="top-servico-item">
+                    <span class="rank">{{ i + 1 }}.</span>
+                    <span class="servico-nome">{{ s.nomeServico }}</span>
+                    <span class="servico-stats">
+                      {{ s.quantidadeExecucoes }}x &nbsp;·&nbsp; {{ formatHoras(s.tempoMedioHoras) }} médio
+                    </span>
+                  </div>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      }
+    </section>
+  }
+
+  <!-- ── Mensagem contextual — ATENDENTE e MECANICO ─────────────────── -->
+  @if (roleContext) {
+    <div class="role-context">
+      <mat-icon>info_outline</mat-icon>
+      <span>{{ roleContext }}</span>
+    </div>
+  }
+
+  <!-- ── Atalhos de navegação ────────────────────────────────────────── -->
+  <section class="section">
+    <h3 class="section-title">
+      <mat-icon>apps</mat-icon>
+      Acesso Rápido
+    </h3>
+
+    <div class="shortcuts-grid">
+      @for (card of shortcuts; track card.route) {
+        <a [routerLink]="card.route" class="shortcut-link">
+          <mat-card class="shortcut-card">
+            <mat-card-content>
+              <div class="shortcut-icon">
+                <mat-icon>{{ card.icon }}</mat-icon>
+              </div>
+              <span class="shortcut-label">{{ card.label }}</span>
+              <span class="shortcut-desc">{{ card.description }}</span>
+            </mat-card-content>
+          </mat-card>
+        </a>
+      }
+    </div>
+  </section>
+
+</div>

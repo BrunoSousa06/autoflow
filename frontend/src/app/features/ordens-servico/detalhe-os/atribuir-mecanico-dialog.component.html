@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>
+  <mat-icon class="titulo-icon">engineering</mat-icon>
+  Atribuir Mecânico
+</h2>
+
+<mat-dialog-content>
+  <p class="sub">OS: <strong>{{ data.numeroOs }}</strong></p>
+
+  @if (carregando()) {
+    <div class="loading">
+      <mat-spinner diameter="32" />
+      <span>Carregando mecânicos...</span>
+    </div>
+  } @else if (erro()) {
+    <div class="erro-inline">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <span>{{ erro() }}</span>
+    </div>
+  } @else {
+    <mat-form-field appearance="outline" class="campo-mecanico">
+      <mat-label>Selecionar mecânico</mat-label>
+      <mat-select [(ngModel)]="mecanicoSelecionadoId" name="mecanico">
+        @for (m of mecanicos(); track m.id) {
+          <mat-option [value]="m.id">{{ m.nome }} — {{ m.email }}</mat-option>
+        }
+      </mat-select>
+      @if (mecanicos().length === 0) {
+        <mat-hint>Nenhum mecânico cadastrado no sistema.</mat-hint>
+      }
+    </mat-form-field>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="null">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="!mecanicoSelecionadoId || carregando()"
+    (click)="confirmar()"
+  >
+    <mat-icon>check</mat-icon>
+    Confirmar
+  </button>
+</mat-dialog-actions>

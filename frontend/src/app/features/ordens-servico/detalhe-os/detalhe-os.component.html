@@ -1,0 +1,418 @@
+<div class="page">
+
+  @if (loading()) {
+    <div class="loading-center">
+      <mat-spinner diameter="48" />
+      <p>Carregando ordem de serviço...</p>
+    </div>
+  } @else if (erro()) {
+    <mat-card class="estado-card">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>{{ erro() }}</p>
+      <button mat-stroked-button (click)="voltar()">
+        <mat-icon>arrow_back</mat-icon>
+        Voltar para lista
+      </button>
+    </mat-card>
+  } @else if (os()) {
+
+    <!-- Header -->
+    <div class="page-header">
+      <button mat-icon-button (click)="voltar()" matTooltip="Voltar para lista">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1>{{ os()!.numeroOs }}</h1>
+        <span class="data-abertura">
+          Aberta em {{ os()!.dataAbertura | date:'dd/MM/yyyy HH:mm' }}
+          &nbsp;·&nbsp;
+          Atualizada em {{ os()!.ultimaAtualizacao | date:'dd/MM/yyyy HH:mm' }}
+        </span>
+      </div>
+      <mat-chip [class]="'status-os-' + os()!.status">
+        {{ labelStatusOs(os()!.status) }}
+      </mat-chip>
+    </div>
+
+    <!-- Timeline -->
+    <mat-card class="timeline-card">
+      <div class="timeline">
+        @for (step of ORDEM_STATUS; track step; let last = $last) {
+          <div class="timeline-step" [class]="passoStatus(step)">
+            <div class="step-dot">
+              @if (passoStatus(step) === 'concluido') {
+                <mat-icon>check</mat-icon>
+              } @else {
+                <mat-icon>{{ STATUS_INFO[step].icon }}</mat-icon>
+              }
+            </div>
+            <span class="step-label">{{ STATUS_INFO[step].label }}</span>
+          </div>
+          @if (!last) {
+            <div class="timeline-connector" [class.feito]="passoStatus(step) === 'concluido'"></div>
+          }
+        }
+      </div>
+    </mat-card>
+
+    <!-- Cards de informações -->
+    <div class="cards-row">
+
+      <!-- Cliente -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title class="card-title-icon">
+            <mat-icon>person</mat-icon>
+            Cliente
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <dl class="info-dl">
+            <dt>Nome</dt><dd>{{ os()!.cliente.nome }}</dd>
+            <dt>CPF/CNPJ</dt><dd>{{ os()!.cliente.cpfCnpj }}</dd>
+            <dt>E-mail</dt><dd>{{ os()!.cliente.email }}</dd>
+            <dt>Telefone</dt><dd>{{ os()!.cliente.telefone }}</dd>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Veículo -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title class="card-title-icon">
+            <mat-icon>directions_car</mat-icon>
+            Veículo
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <dl class="info-dl">
+            <dt>Placa</dt><dd class="placa">{{ os()!.veiculo.placa }}</dd>
+            <dt>Marca</dt><dd>{{ os()!.veiculo.marca ?? '—' }}</dd>
+            <dt>Modelo</dt><dd>{{ os()!.veiculo.modelo ?? '—' }}</dd>
+            <dt>Ano</dt><dd>{{ os()!.veiculo.ano }}</dd>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Orçamento -->
+      @if (os()!.orcamentoAtual; as orc) {
+        <mat-card class="info-card">
+          <mat-card-header>
+            <mat-card-title class="card-title-icon">
+              <mat-icon>receipt_long</mat-icon>
+              Orçamento{{ orc.tipo === 'COMPLEMENTAR' ? ' Complementar' : '' }} v{{ orc.versao }}
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="orc-status-chip">
+              <mat-chip [class]="'status-orc-' + orc.status">
+                {{ labelStatusOrcamento(orc.status) }}
+              </mat-chip>
+            </div>
+            <dl class="info-dl">
+              <dt>Serviços</dt><dd>{{ orc.totalServicos | currency:'BRL' }}</dd>
+              <dt>Peças/Insumos</dt><dd>{{ orc.totalItens | currency:'BRL' }}</dd>
+              <dt>Total Geral</dt><dd class="total-geral">{{ orc.totalGeral | currency:'BRL' }}</dd>
+            </dl>
+            @if (orc.mensagem) {
+              <p class="orc-mensagem">{{ orc.mensagem }}</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+
+    </div>
+
+    <!-- Serviços -->
+    <mat-card class="servicos-card">
+      <mat-card-header>
+        <mat-card-title class="card-title-icon">
+          <mat-icon>build</mat-icon>
+          Serviços Solicitados ({{ os()!.servicos.length }})
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @for (srv of os()!.servicos; track srv.id) {
+          <div class="servico-item">
+            <div class="servico-header">
+              <span class="servico-nome">{{ srv.nome }}</span>
+              <mat-chip [class]="'status-srv-' + srv.status" class="chip-sm">
+                {{ labelStatusServico(srv.status) }}
+              </mat-chip>
+              <span class="servico-valor">{{ srv.valor | currency:'BRL' }}</span>
+            </div>
+
+            @if (srv.iniciadoEm || srv.finalizadoEm) {
+              <div class="servico-datas">
+                @if (srv.iniciadoEm) {
+                  <span class="data-tag">
+                    <mat-icon class="icon-xs">play_arrow</mat-icon>
+                    Início: {{ srv.iniciadoEm | date:'dd/MM/yyyy HH:mm' }}
+                  </span>
+                }
+                @if (srv.finalizadoEm) {
+                  <span class="data-tag">
+                    <mat-icon class="icon-xs">stop</mat-icon>
+                    Fim: {{ srv.finalizadoEm | date:'dd/MM/yyyy HH:mm' }}
+                  </span>
+                }
+              </div>
+            }
+
+            @if (srv.itensNecessarios.length) {
+              <div class="itens-necessarios">
+                <p class="itens-titulo">Itens / Peças necessários</p>
+                @for (item of srv.itensNecessarios; track item.pecaInsumoId) {
+                  <div class="item-linha">
+                    <span class="item-nome">{{ item.nome }}</span>
+                    <span class="item-tipo">{{ item.tipo }}</span>
+                    <span class="item-qtd">{{ item.quantidade }}x</span>
+                    <span class="item-valor">{{ item.valorTotal | currency:'BRL' }}</span>
+                    <mat-chip [class]="'status-item-' + item.status" class="chip-xs">
+                      {{ item.mensagemStatus ?? labelStatusItem(item.status) }}
+                    </mat-chip>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Painéis por role -->
+    <div class="paineis-row">
+
+      @if (podeVerPainelAtendente) {
+        <mat-card class="painel-card">
+          <mat-card-header>
+            <mat-card-title class="card-title-icon">
+              <mat-icon>support_agent</mat-icon>
+              Ações do Atendente
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="painel-acoes">
+            <button
+              mat-stroked-button
+              [disabled]="salvando()"
+              (click)="abrirAtribuirMecanico()"
+            >
+              @if (salvando()) {
+                <mat-spinner diameter="16" class="btn-spinner" />
+              } @else {
+                <mat-icon>engineering</mat-icon>
+              }
+              Atribuir Mecânico
+            </button>
+            <button
+              mat-stroked-button
+              color="primary"
+              [disabled]="os()!.status !== 'FINALIZADA' || salvando()"
+              [matTooltip]="os()!.status !== 'FINALIZADA' ? 'Disponível somente quando a OS estiver Finalizada' : ''"
+              (click)="confirmarEntrega()"
+            >
+              @if (salvando()) {
+                <mat-spinner diameter="16" class="btn-spinner" />
+              } @else {
+                <mat-icon>local_shipping</mat-icon>
+              }
+              Entregar Veículo
+            </button>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (podeVerPainelMecanico) {
+        <mat-card class="painel-card">
+          <mat-card-header>
+            <mat-card-title class="card-title-icon">
+              <mat-icon>construction</mat-icon>
+              Ações do Mecânico
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="painel-acoes">
+
+            <!-- Iniciar Diagnóstico -->
+            <button
+              mat-stroked-button
+              [disabled]="os()!.status !== 'RECEBIDA' || !podeAlterarDiagnostico() || salvando()"
+              [matTooltip]="tooltipDiagnostico('RECEBIDA')"
+              (click)="iniciarDiagnostico()"
+            >
+              @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+              @else { <mat-icon>manage_search</mat-icon> }
+              Iniciar Diagnóstico
+            </button>
+
+            <!-- Registrar Laudo -->
+            <button
+              mat-stroked-button
+              [disabled]="os()!.status !== 'EM_DIAGNOSTICO' || !podeAlterarDiagnostico() || salvando()"
+              [matTooltip]="tooltipDiagnostico('EM_DIAGNOSTICO')"
+              (click)="abrirRegistrarLaudo()"
+            >
+              @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+              @else { <mat-icon>description</mat-icon> }
+              {{ os()!.diagnostico?.laudo ? 'Atualizar Laudo' : 'Registrar Laudo' }}
+            </button>
+
+            <!-- Adicionar serviços durante o diagnóstico -->
+            @if (os()!.status === 'EM_DIAGNOSTICO' && podeAlterarDiagnostico()) {
+              <button
+                mat-stroked-button
+                [disabled]="salvando()"
+                (click)="abrirAdicionarServico()"
+              >
+                @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                @else { <mat-icon>add_task</mat-icon> }
+                Adicionar Serviço
+              </button>
+            }
+
+            <!-- Itens necessários por serviço -->
+            @if (os()!.status === 'EM_DIAGNOSTICO' && podeAlterarDiagnostico()) {
+              <div class="secao-itens">
+                <p class="secao-label">Itens necessários por serviço</p>
+                @for (srv of os()!.servicos; track srv.id) {
+                  <button
+                    mat-stroked-button
+                    [disabled]="salvando()"
+                    (click)="abrirItensServico(srv)"
+                    class="btn-servico"
+                  >
+                    <mat-icon>inventory_2</mat-icon>
+                    <span class="btn-servico-nome">{{ srv.nome }}</span>
+                    <span class="btn-servico-qtd">({{ srv.itensNecessarios.length }} item(s))</span>
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Finalizar Diagnóstico -->
+            <button
+              mat-stroked-button
+              color="accent"
+              [disabled]="os()!.status !== 'EM_DIAGNOSTICO' || !podeAlterarDiagnostico() || salvando()"
+              [matTooltip]="tooltipDiagnostico('EM_DIAGNOSTICO')"
+              (click)="confirmarFinalizarDiagnostico()"
+            >
+              @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+              @else { <mat-icon>fact_check</mat-icon> }
+              Finalizar Diagnóstico
+            </button>
+
+            <!-- Execução de serviços -->
+            @if (os()!.status === 'AGUARDANDO_APROVACAO' || os()!.status === 'EM_EXECUCAO') {
+              <div class="secao-itens">
+                <p class="secao-label">Execução de serviços</p>
+                @for (srv of os()!.servicos; track srv.id) {
+                  @if (srv.status === 'AGUARDANDO') {
+                    <button
+                      mat-stroked-button
+                      color="primary"
+                      [disabled]="salvando()"
+                      (click)="iniciarExecucaoServico(srv)"
+                      class="btn-servico"
+                    >
+                      <mat-icon>play_arrow</mat-icon>
+                      <span class="btn-servico-nome">Iniciar: {{ srv.nome }}</span>
+                    </button>
+                  } @else if (srv.status === 'EM_EXECUCAO') {
+                    <button
+                      mat-stroked-button
+                      color="accent"
+                      [disabled]="salvando()"
+                      (click)="finalizarExecucaoServico(srv)"
+                      class="btn-servico"
+                    >
+                      <mat-icon>stop_circle</mat-icon>
+                      <span class="btn-servico-nome">Finalizar: {{ srv.nome }}</span>
+                    </button>
+                  } @else if (srv.status === 'FINALIZADO') {
+                    <div class="srv-concluido">
+                      <mat-icon class="icon-ok">check_circle</mat-icon>
+                      <span>{{ srv.nome }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            }
+
+            <!-- Reparo adicional (durante execução) -->
+            @if (os()!.status === 'EM_EXECUCAO' && podeAlterarDiagnostico()) {
+              <mat-divider style="margin: 12px 0" />
+              <div class="secao-itens">
+                <p class="secao-label">Reparo Adicional</p>
+                <button
+                  mat-stroked-button
+                  color="warn"
+                  [disabled]="salvando()"
+                  (click)="criarReparoAdicional()"
+                  class="btn-servico"
+                >
+                  <mat-icon>construction</mat-icon>
+                  <span class="btn-servico-nome">Identificar reparo adicional</span>
+                </button>
+              </div>
+            }
+
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (podeVerPainelCliente) {
+        <mat-card class="painel-card">
+          <mat-card-header>
+            <mat-card-title class="card-title-icon">
+              <mat-icon>account_balance_wallet</mat-icon>
+              Aprovação de Orçamento
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="painel-acoes">
+            @if (os()!.orcamentoAtual; as orc) {
+              <div class="orc-resumo-cliente">
+                <span>Status: <strong>{{ labelStatusOrcamento(orc.status) }}</strong></span>
+                <span>Total: <strong>{{ orc.totalGeral | currency:'BRL' }}</strong></span>
+              </div>
+              <button
+                mat-stroked-button
+                [disabled]="salvando()"
+                (click)="baixarPdfOrcamento(orc.id)"
+              >
+                @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                @else { <mat-icon>picture_as_pdf</mat-icon> }
+                Baixar PDF
+              </button>
+              @if (orc.status === 'DISPONIVEL') {
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  [disabled]="salvando()"
+                  (click)="aprovarOrcamento(orc.id)"
+                >
+                  @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                  @else { <mat-icon>thumb_up</mat-icon> }
+                  Aprovar Orçamento
+                </button>
+                <button
+                  mat-stroked-button
+                  color="warn"
+                  [disabled]="salvando()"
+                  (click)="recusarOrcamento(orc.id)"
+                >
+                  @if (salvando()) { <mat-spinner diameter="16" class="btn-spinner" /> }
+                  @else { <mat-icon>thumb_down</mat-icon> }
+                  Recusar Orçamento
+                </button>
+              }
+            } @else {
+              <p class="sem-info">Aguardando geração do orçamento.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+
+    </div>
+
+  }
+</div>

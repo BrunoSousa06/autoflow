@@ -1,0 +1,89 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+
+  .titulo-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: #1976d2;
+  }
+}
+
+.sub {
+  margin: 0 0 16px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.erro-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c62828;
+  font-size: 0.875rem;
+  padding: 8px 0;
+}
+
+.linhas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.linha-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.campo-peca { flex: 1; }
+
+.campo-qtd {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.peca-info {
+  font-size: 0.75rem;
+  color: #888;
+  margin-left: 4px;
+}
+
+.sem-itens {
+  color: #999;
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 8px 0;
+  text-align: center;
+}
+
+.btn-adicionar {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+mat-dialog-actions {
+  gap: 8px;
+  padding-top: 8px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}

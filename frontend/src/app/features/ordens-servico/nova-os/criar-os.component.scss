@@ -1,0 +1,147 @@
+.page {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0 0 2px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 0.875rem;
+  }
+}
+
+.wizard-card {
+  padding: 0;
+  overflow: hidden;
+
+  ::ng-deep .mat-stepper-horizontal {
+    background: transparent;
+  }
+
+  ::ng-deep .mat-horizontal-content-container {
+    padding: 0;
+  }
+}
+
+.step-content {
+  padding: 24px 24px 8px;
+
+  .step-desc {
+    margin: 0 0 20px;
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px 24px;
+  gap: 12px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.field-full { width: 100%; }
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 120px;
+  gap: 12px;
+}
+
+.loading-servicos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0;
+  color: #666;
+}
+
+.servicos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.servico-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child { border-bottom: none; }
+
+  &:hover { background: #f5f5f5; }
+
+  &.selecionado { background: #e3f2fd; }
+
+  .servico-nome { font-size: 0.9rem; }
+
+  .servico-valor {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #2e7d32;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+}
+
+.aviso-selecao {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #e65100;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdecea;
+  color: #c62828;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+mat-spinner { display: inline-block; }
+
+@media (max-width: 600px) {
+  .form-grid-3 { grid-template-columns: 1fr; }
+}
