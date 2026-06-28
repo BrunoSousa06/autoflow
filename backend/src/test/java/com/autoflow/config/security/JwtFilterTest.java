@@ -262,4 +262,60 @@ class JwtFilterTest {
         verify(filterChain)
                 .doFilter(request, response);
     }
+
+    @Test
+    void deveDefinirRoleNoTokenDeAutenticacao()
+            throws ServletException, IOException {
+
+        String token = "jwt-token";
+
+        request.addHeader(
+                "Authorization",
+                "Bearer " + token
+        );
+
+        when(jwtService.extrairEmail(token)).thenReturn("teste@email.com");
+        when(userDetailsService.loadUserByUsername("teste@email.com")).thenReturn(userDetails);
+        when(jwtService.tokenValido(token)).thenReturn(true);
+        when(jwtService.extrairRole(token)).thenReturn("ADMIN");
+
+        jwtFilter.doFilterInternal(request, response, filterChain);
+
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        assertNotNull(auth);
+        assertTrue(auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
+    }
+
+    @Test
+    void shouldNotFilterDeveRetornarTrueParaSwaggerUi()
+            throws ServletException {
+
+        request.setRequestURI("/swagger-ui/index.html");
+        assertTrue(jwtFilter.shouldNotFilter(request));
+    }
+
+    @Test
+    void shouldNotFilterDeveRetornarTrueParaApiDocs()
+            throws ServletException {
+
+        request.setRequestURI("/v3/api-docs/swagger-config");
+        assertTrue(jwtFilter.shouldNotFilter(request));
+    }
+
+    @Test
+    void shouldNotFilterDeveRetornarTrueParaSwaggerHtml()
+            throws ServletException {
+
+        request.setRequestURI("/swagger-ui.html");
+        assertTrue(jwtFilter.shouldNotFilter(request));
+    }
+
+    @Test
+    void shouldNotFilterDeveRetornarFalseParaOutrasRotas()
+            throws ServletException {
+
+        request.setRequestURI("/api/clientes");
+        assertFalse(jwtFilter.shouldNotFilter(request));
+    }
 }
