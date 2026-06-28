@@ -4,7 +4,7 @@ public record ClienteVeiculoResponse(
         Long id,
         String nome,
         String cpfCnpj,
-        Long telefone,
+        String telefone,
         String email
 ) {
 }
