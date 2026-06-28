@@ -17,6 +17,7 @@ import {
   ConfirmacaoDialogComponent,
   ConfirmacaoDialogData,
 } from '../../shared/dialogs/confirmacao-dialog.component';
+import { normalizePage } from '../../core/utils/pagination.util';
 
 @Component({
   selector: 'app-servicos',
@@ -62,10 +63,11 @@ export class ServicosComponent implements OnInit {
     this.erroCarregamento.set(null);
     this.servicoService.listar(page, size).subscribe({
       next: (pagina) => {
-        this.servicos.set(pagina.content);
-        this.totalElements.set(pagina.page.totalElements);
-        this.pageIndex.set(pagina.page.number);
-        this.pageSize.set(pagina.page.size);
+        const p = normalizePage<ServicoResponse>(pagina, this.pageSize());
+        this.servicos.set(p.content);
+        this.totalElements.set(p.totalElements);
+        this.pageIndex.set(p.pageNumber);
+        this.pageSize.set(p.pageSize);
         this.loading.set(false);
       },
       error: () => {

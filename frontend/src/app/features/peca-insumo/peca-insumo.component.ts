@@ -19,6 +19,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { PecaInsumoService } from './peca-insumo.service';
 import { CategoriaPecaInsumo, PecaInsumoResponse } from './peca-insumo.model';
 import { PecaInsumoFormDialogComponent } from './peca-insumo-form-dialog.component';
+import { normalizePage } from '../../core/utils/pagination.util';
 
 @Component({
   selector: 'app-peca-insumo',
@@ -79,10 +80,11 @@ export class PecaInsumoComponent implements OnInit {
     this.erroCarregamento.set(null);
     this.service.listar(page, size, this.filtroNome, this.filtroTipo).subscribe({
       next: (pagina) => {
-        this.itens.set(pagina.content);
-        this.totalElements.set(pagina.page.totalElements);
-        this.pageIndex.set(pagina.page.number);
-        this.pageSize.set(pagina.page.size);
+        const p = normalizePage<PecaInsumoResponse>(pagina, this.pageSize());
+        this.itens.set(p.content);
+        this.totalElements.set(p.totalElements);
+        this.pageIndex.set(p.pageNumber);
+        this.pageSize.set(p.pageSize);
         this.loading.set(false);
       },
       error: (err) => {

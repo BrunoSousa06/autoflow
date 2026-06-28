@@ -17,6 +17,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { OrdemServicoService } from './ordem-servico.service';
 import { OrdemServicoFiltro, OrdemServicoResponse, STATUS_OS_LABEL, StatusOrdemServico } from './ordem-servico.model';
+import { normalizePage } from '../../core/utils/pagination.util';
 
 @Component({
   selector: 'app-ordens-servico',
@@ -97,8 +98,10 @@ export class OrdensServicoComponent implements OnInit, OnDestroy {
 
     this.service.listar(filtro).subscribe({
       next: (page) => {
-        this.ordens.set(page.content);
-        this.totalElements.set(page.page.totalElements);
+        const p = normalizePage<OrdemServicoResponse>(page, this.pageSize());
+        this.ordens.set(p.content);
+        this.totalElements.set(p.totalElements);
+        this.pageIndex.set(p.pageNumber);
         this.loading.set(false);
       },
       error: (err) => {
