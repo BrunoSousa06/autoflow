@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -65,9 +64,7 @@ class OrdemServicoEntityTest {
 
     @Test
     void testRegistrarLaudoSemDiagnostico() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            ordemServico.registrarLaudo("Laudo teste");
-        });
+        assertThrows(IllegalArgumentException.class, () -> ordemServico.registrarLaudo("Laudo teste"));
     }
 
     @Test
@@ -108,16 +105,12 @@ class OrdemServicoEntityTest {
 
     @Test
     void testOrdemServicoInvalidVeiculo() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            OrdemServicoEntity.criar(cliente, null);
-        });
+        assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(cliente, null));
     }
 
     @Test
     void testOrdemServicoInvalidCliente() {
         veiculo.setCliente(null);
-        assertThrows(IllegalArgumentException.class, () -> {
-            OrdemServicoEntity.criar(null, veiculo);
-        });
+        assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(null, veiculo));
     }
 }

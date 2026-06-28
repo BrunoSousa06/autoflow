@@ -25,6 +25,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -58,6 +61,18 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
                 || ordemServico.getStatus() == StatusOrdemServico.ENTREGUE) {
             throw new IllegalStateException("Não é possível registrar reparo adicional em uma OS finalizada.");
         }
+
+        Set<Long> servicosJaNaOs = ordemServico.getServicosSolicitados().stream()
+                .map(ServicoSolicitadoEntity::getServicoId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        servicos.forEach(s -> {
+            if (s.getServicoId() != null && servicosJaNaOs.contains(s.getServicoId())) {
+                throw new IllegalArgumentException(
+                        "Serviço já incluído na ordem de serviço e não pode ser adicionado novamente: ID " + s.getServicoId());
+            }
+        });
 
         Long mecanicoId =
                 usuarioService.buscarPorEmail(emailMecanico).getId();

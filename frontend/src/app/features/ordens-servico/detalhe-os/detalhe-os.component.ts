@@ -506,7 +506,10 @@ export class DetalheOsComponent implements OnInit {
     if (!os) return;
 
     const ref = this.dialog.open(CriarReparoAdicionalDialogComponent, {
-      data: { numeroOs: os.numeroOs } as CriarReparoAdicionalDialogData,
+      data: {
+        numeroOs: os.numeroOs,
+        servicosJaNaOs: os.servicos.map(s => s.servicoId),
+      } as CriarReparoAdicionalDialogData,
       width: '580px',
     });
 
