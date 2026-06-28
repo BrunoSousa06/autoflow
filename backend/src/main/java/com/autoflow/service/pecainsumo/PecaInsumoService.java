@@ -1,6 +1,7 @@
 package com.autoflow.service.pecainsumo;
 
 
+import com.autoflow.common.util.NameSanitizer;
 import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
 import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
@@ -34,14 +35,19 @@ public class PecaInsumoService {
     private final PecaInsumoMapper pecaInsumoMapper;
 
     public PecaInsumoResponse cadastrar(PecaInsumoRequest request) {
+        String nomeSanitizado = sanitizeAndNormalizeNome(request.nome());
 
-        if (pecaInsumoRepository.findByNomeIgnoreCase(request.nome()).isPresent()) {
-
+        if (pecaInsumoRepository.findByNomeIgnoreCase(nomeSanitizado).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Peça/Insumo já foi cadastrado");
         }
 
         PecaInsumoEntity entity =
-                pecaInsumoRepository.save(pecaInsumoMapper.mapToEntity(request));
+                pecaInsumoRepository.save(pecaInsumoMapper.mapToEntity(new PecaInsumoRequest(
+                        nomeSanitizado,
+                        request.valor(),
+                        request.quantidade(),
+                        request.tipo()
+                )));
 
         return pecaInsumoMapper.toResponse(entity);
     }
@@ -67,8 +73,14 @@ public class PecaInsumoService {
     ) {
 
         PecaInsumoEntity entity = buscarEntidadePorId(id);
+        String nomeSanitizado = sanitizeAndNormalizeNome(request.nome());
 
-        pecaInsumoMapper.updateEntity(request, entity);
+        pecaInsumoMapper.updateEntity(new PecaInsumoRequest(
+                nomeSanitizado,
+                request.valor(),
+                request.quantidade(),
+                request.tipo()
+        ), entity);
 
         PecaInsumoEntity atualizado = pecaInsumoRepository.save(entity);
 
@@ -87,6 +99,14 @@ public class PecaInsumoService {
     private PecaInsumoEntity buscarEntidadePorId(Long id) {
         return pecaInsumoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                 "Peça/Insumo não encontrado com o ID: " + id));
+    }
+
+    private String sanitizeAndNormalizeNome(String nome) {
+        try {
+            return NameSanitizer.sanitizeName(nome);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
     }
 
 

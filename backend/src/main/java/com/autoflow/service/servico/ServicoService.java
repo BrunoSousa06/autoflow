@@ -1,6 +1,7 @@
 package com.autoflow.service.servico;
 
 
+import com.autoflow.common.util.NameSanitizer;
 import com.autoflow.controller.servico.request.ServicoRequest;
 import com.autoflow.controller.servico.response.ServicoResponse;
 import com.autoflow.controller.servico.response.TempoMedioServicoResponse;
@@ -25,12 +26,17 @@ public class ServicoService {
     private final ServicoMapper servicoMapper;
     private final ServicoSolicitadoRepository servicoSolicitadoRepository;
     public ServicoResponse cadastrar(ServicoRequest request) {
+        String nomeSanitizado = sanitizeAndNormalizeNome(request.nome());
 
-        if (servicoRepository.findByNomeIgnoreCase(request.nome()).isPresent()) {
+        if (servicoRepository.findByNomeIgnoreCase(nomeSanitizado).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Serviço já foi cadastrado");
         }
 
-        ServicoEntity entity = servicoRepository.save(servicoMapper.mapToEntity(request));
+        ServicoEntity entity = servicoRepository.save(servicoMapper.mapToEntity(new ServicoRequest(
+                nomeSanitizado,
+                request.descricao(),
+                request.valor()
+        )));
 
         return servicoMapper.toResponse(entity);
     }
@@ -52,8 +58,13 @@ public class ServicoService {
     public ServicoResponse atualizar(ServicoRequest request, Long id) {
 
         ServicoEntity servico = buscarServicoPorId(id);
+        String nomeSanitizado = sanitizeAndNormalizeNome(request.nome());
 
-        servicoMapper.updateEntity(request, servico);
+        servicoMapper.updateEntity(new ServicoRequest(
+                nomeSanitizado,
+                request.descricao(),
+                request.valor()
+        ), servico);
 
         ServicoEntity atualizado = servicoRepository.save(servico);
 
@@ -70,6 +81,14 @@ public class ServicoService {
     private ServicoEntity buscarServicoPorId(Long id) {
         return servicoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado com o ID: " + id));
+    }
+
+    private String sanitizeAndNormalizeNome(String nome) {
+        try {
+            return NameSanitizer.sanitizeName(nome);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
     }
 
     public List<TempoMedioServicoResponse> listarTempoMedioPorServico() {

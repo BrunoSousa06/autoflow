@@ -80,6 +80,33 @@ class ServicoServiceTest {
     }
 
     @Test
+    void deveRecusarNomeComMarkupMalicioso() {
+        var requestMaliciosa = new ServicoRequest("<script>alert(1)</script>", "Descrição", BigDecimal.TEN);
+
+        ResponseStatusException excecao = assertThrows(ResponseStatusException.class, () -> servicoService.cadastrar(requestMaliciosa));
+
+        assertEquals(HttpStatus.BAD_REQUEST, excecao.getStatusCode());
+        verify(servicoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveNormalizarNomeAntesDePersistir() {
+        var requestNormalizada = new ServicoRequest("  Lavagem   de  carro  ", "Descrição", BigDecimal.TEN);
+        var entityPersistida = new ServicoEntity();
+        entityPersistida.setNome("Lavagem de carro");
+
+        when(servicoRepository.findByNomeIgnoreCase("Lavagem de carro")).thenReturn(Optional.empty());
+        when(servicoMapper.mapToEntity(any(ServicoRequest.class))).thenReturn(entityPersistida);
+        when(servicoRepository.save(entityPersistida)).thenReturn(entityPersistida);
+        when(servicoMapper.toResponse(entityPersistida)).thenReturn(response);
+
+        servicoService.cadastrar(requestNormalizada);
+
+        verify(servicoMapper).mapToEntity(argThat(req -> "Lavagem de carro".equals(req.nome())));
+        verify(servicoRepository).save(entityPersistida);
+    }
+
+    @Test
     void deveListarTodosOsServicosAtivos() {
         List<ServicoEntity> listaEntities = List.of(entity);
         PageRequest pageable = PageRequest.of(0, 20);

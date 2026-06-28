@@ -108,6 +108,33 @@ class PecaInsumoServiceTest {
         }
 
         @Test
+        void deveRecusarNomeComMarkupMalicioso() {
+            var requestMaliciosa = new PecaInsumoRequest("<script>alert(1)</script>", BigDecimal.TEN, 1, CategoriaPecaInsumo.PECA);
+
+            ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> service.cadastrar(requestMaliciosa));
+
+            assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        void deveNormalizarNomeAntesDePersistir() {
+            var requestNormalizada = new PecaInsumoRequest("  Filtro   de  oleo  ", BigDecimal.TEN, 1, CategoriaPecaInsumo.PECA);
+            var entityPersistida = new PecaInsumoEntity();
+            entityPersistida.setNome("Filtro de oleo");
+
+            when(repository.findByNomeIgnoreCase("Filtro de oleo")).thenReturn(Optional.empty());
+            when(mapper.mapToEntity(any(PecaInsumoRequest.class))).thenReturn(entityPersistida);
+            when(repository.save(entityPersistida)).thenReturn(entityPersistida);
+            when(mapper.toResponse(entityPersistida)).thenReturn(response);
+
+            service.cadastrar(requestNormalizada);
+
+            verify(mapper).mapToEntity(argThat(req -> "Filtro de oleo".equals(req.nome())));
+            verify(repository).save(entityPersistida);
+        }
+
+        @Test
         void deveLancarExcecaoQuandoPecaJaExistir() {
 
             when(repository.findByNomeIgnoreCase(request.nome()))
