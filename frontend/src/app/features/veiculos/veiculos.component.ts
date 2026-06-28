@@ -15,6 +15,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/services/auth.service';
 import { VeiculoService } from './veiculo.service';
 import { VeiculoResponse } from './veiculo.model';
+import { normalizePage } from '../../core/utils/pagination.util';
 import { VeiculoFormDialogComponent } from './veiculo-form-dialog.component';
 import {
   ConfirmacaoDialogComponent,
@@ -90,11 +91,12 @@ export class VeiculosComponent implements OnInit {
       )
       .subscribe({
         next: (pagina) => {
-          this.veiculos.set(pagina.content);
-          this.totalElements.set(pagina.page.totalElements);
-          this.pageIndex.set(pagina.page.number);
-          this.loading.set(false);
-        },
+            const p = normalizePage<VeiculoResponse>(pagina, this.pageSize);
+            this.veiculos.set(p.content);
+            this.totalElements.set(p.totalElements);
+            this.pageIndex.set(p.pageNumber);
+            this.loading.set(false);
+          },
         error: () => {
           this.erroCarregamento.set('Não foi possível carregar os veículos.');
           this.loading.set(false);
