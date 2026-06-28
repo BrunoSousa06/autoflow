@@ -19,6 +19,7 @@ import { CriarReparoAdicionalRequest } from './reparo-adicional.model';
 
 export interface CriarReparoAdicionalDialogData {
   numeroOs: string;
+  servicosJaNaOs: number[];
 }
 
 interface ItemRow {
@@ -73,7 +74,8 @@ export class CriarReparoAdicionalDialogComponent implements OnInit {
       pecas: this.pecaInsumoService.listar(0, 100),
     }).subscribe({
       next: ({ servicos, pecas }) => {
-        this.servicos.set(servicos.content);
+        const jaAdicionados = new Set(this.data.servicosJaNaOs);
+        this.servicos.set(servicos.content.filter(s => !jaAdicionados.has(s.id)));
         this.pecasInsumos.set(pecas.content);
         this.carregando.set(false);
       },
