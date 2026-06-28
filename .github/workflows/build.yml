@@ -34,10 +34,12 @@ jobs:
         run: snyk test --sarif-file-output=snyk.sarif
 
       - name: Build Docker Image for Scan
-        run: docker build -t autoflow-app:latest .
+        working-directory: backend
+        run: docker build -t autoflow-app:latest -f Dockerfile .
 
       - name: Snyk Container Scan
         continue-on-error: true 
+        working-directory: backend
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk container test autoflow-app:latest --file=Dockerfile
