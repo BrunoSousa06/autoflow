@@ -46,6 +46,7 @@ public record OrcamentoResponse(
 
         return orcamentoEntity.getServicos()
                 .stream()
+                .filter(s -> s != null)
                 .map(OrcamentoServicoResponse::from)
                 .toList();
     }
@@ -57,6 +58,7 @@ public record OrcamentoResponse(
 
         return orcamentoEntity.getItens()
                 .stream()
+                .filter(i -> i != null)
                 .map(OrcamentoItemNecessarioResponse::from)
                 .toList();
     }
