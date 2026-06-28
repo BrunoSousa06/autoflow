@@ -87,5 +87,24 @@ class OrcamentoVersioningServiceImplTest {
 
         verify(repository, never()).saveAndFlush(org.mockito.ArgumentMatchers.any());
     }
+
+    @Test
+    void deveRetornarVersao1PrincipalPorIdQuandoNaoExisteAnterior() {
+        when(repository.findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(1L, TipoOrcamento.PRINCIPAL))
+                .thenReturn(Optional.empty());
+
+        assertEquals(1, service.proximaVersaoPrincipal(1L));
+    }
+
+    @Test
+    void deveRetornarProximaVersaoPrincipalPorIdQuandoExisteAnterior() {
+        OrcamentoEntity ultimo = new OrcamentoEntity();
+        ultimo.setVersao(2);
+
+        when(repository.findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(1L, TipoOrcamento.PRINCIPAL))
+                .thenReturn(Optional.of(ultimo));
+
+        assertEquals(3, service.proximaVersaoPrincipal(1L));
+    }
 }
 
