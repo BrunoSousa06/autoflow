@@ -8,6 +8,39 @@ on:
     branches: [ "develop", "main" ]
 
 jobs:
+   snyk-scan:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read       # Resolve o erro de acesso ao workflow-runs
+      contents: read      # Permite ler o código para análise
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Run Snyk Open Source Scan
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --sarif-file-output=snyk.sarif
+
+      - name: Build Docker Image for Scan
+        run: docker build -t autoflow-app:latest .
+
+      - name: Snyk Container Scan
+        continue-on-error: true 
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk container test autoflow-app:latest --file=Dockerfile
 
    sonar-analysis:
     name: SonarQube Analysis

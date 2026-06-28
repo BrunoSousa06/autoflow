@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 
@@ -196,8 +197,11 @@ public class OrdemServicoEntity {
         }
     }
 
+    private static final AtomicLong SEQUENCIA_NUMERO_OS = new AtomicLong(0);
+
     private static String gerarNumeroOs() {
-        return "OS-" + System.currentTimeMillis();
+        long valor = SEQUENCIA_NUMERO_OS.incrementAndGet();
+        return "OS-" + System.currentTimeMillis() + "-" + valor;
     }
 
     public List<ServicoSolicitadoEntity> getServicosSolicitados() {
