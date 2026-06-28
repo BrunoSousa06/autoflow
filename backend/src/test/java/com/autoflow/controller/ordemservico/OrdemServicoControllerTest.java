@@ -485,6 +485,72 @@ class OrdemServicoControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
+    void deveIniciarDiagnosticoComoMecanico() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+
+        when(ordemServicoService.iniciarDiagnostico("OS-123", "mecanico@autoflow.com"))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/iniciar", "OS-123")
+                        .with(csrf()))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.status").value("EM_DIAGNOSTICO"));
+
+        verify(ordemServicoService).iniciarDiagnostico("OS-123", "mecanico@autoflow.com");
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveRetornarForbiddenQuandoAtendenteTentarIniciarDiagnostico() throws Exception {
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/iniciar", "OS-123")
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verify(ordemServicoService, never()).iniciarDiagnostico(anyString(), anyString());
+    }
+
+    @Test
+    @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
+    void deveRegistrarLaudoComoMecanico() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+
+        when(ordemServicoService.registrarLaudo("OS-123", "mecanico@autoflow.com", "Motor com desgaste"))
+                .thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/laudo", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "laudo": "Motor com desgaste"
+                                }
+                                """))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(ordemServicoService).registrarLaudo("OS-123", "mecanico@autoflow.com", "Motor com desgaste");
+    }
+
+    @Test
+    @WithMockUser(roles = "MECANICO")
+    void deveIniciarServicoComoMecanico() throws Exception {
+        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.EM_EXECUCAO);
+
+        when(ordemServicoService.iniciarServico("OS-123", 55L)).thenReturn(ordemServico);
+
+        mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", "OS-123", 55L)
+                        .with(csrf()))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.servicos[0].status").value("EM_EXECUCAO"));
+
+        verify(ordemServicoService).iniciarServico("OS-123", 55L);
+    }
+
+    @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveRetornarBadRequestQuandoCriarOrdemSemServicos() throws Exception {
         mockMvc.perform(post("/ordens-servico")
