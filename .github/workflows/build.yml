@@ -8,6 +8,39 @@ on:
     branches: [ "develop", "main" ]
 
 jobs:
+   frontend-build-test:
+    name: Frontend Build and Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Test frontend with coverage
+        working-directory: frontend
+        run: npm run test:ci
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/frontend
+          if-no-files-found: ignore
+
    snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
