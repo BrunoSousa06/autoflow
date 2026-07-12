@@ -145,7 +145,7 @@ export class PecaInsumoFormDialogComponent {
       }
     }
     if (!temErroCampo) {
-      this.erroBackend.set('Erro ao processar a requisicao.');
+      this.erroBackend.set('Erro ao processar a requisição.');
     }
   }
 
