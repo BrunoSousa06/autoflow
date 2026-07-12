@@ -156,4 +156,41 @@ class ServicoSolicitadoEntityTest {
         assertNotNull(servicoSolicitado.getItensNecessarios());
         assertTrue(servicoSolicitado.getItensNecessarios().isEmpty());
     }
+
+    @Test
+    void testRegistrarItensNecessarios_statusNaoAguardando_lanca() {
+        List<ItemNecessarioEntity> itens = new ArrayList<>();
+        servicoSolicitado.iniciar(itens);
+
+        assertThrows(IllegalStateException.class, () -> servicoSolicitado.registrarItensNecessarios(itens));
+    }
+
+    @Test
+    void testIniciar_comOrdemServicoNaoEmExecucao_lanca() {
+        OrdemServicoEntity os = criarOrdemServicoEmStatus(StatusOrdemServico.RECEBIDA);
+        servicoSolicitado.setOrdemServico(os);
+
+        assertThrows(IllegalStateException.class, () -> servicoSolicitado.iniciar(new ArrayList<>()));
+    }
+
+    @Test
+    void testIniciar_comOrdemServicoEmExecucao_sucesso() {
+        OrdemServicoEntity os = criarOrdemServicoEmStatus(StatusOrdemServico.EM_EXECUCAO);
+        servicoSolicitado.setOrdemServico(os);
+
+        servicoSolicitado.iniciar(new ArrayList<>());
+
+        assertEquals(StatusServicoOs.EM_EXECUCAO, servicoSolicitado.getStatus());
+    }
+
+    @Test
+    void testValidarNome_nulo_lanca() {
+        assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitadoEntity(1L, null));
+    }
+
+    private OrdemServicoEntity criarOrdemServicoEmStatus(StatusOrdemServico status) {
+        OrdemServicoEntity os = new OrdemServicoEntity();
+        os.setStatus(status);
+        return os;
+    }
 }
