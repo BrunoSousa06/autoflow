@@ -25,7 +25,7 @@ sequenceDiagram
 
     Mecanico->>Frontend: Inicia servico aprovado
     Frontend->>Security: PATCH /ordens-servico/{numeroOs}/servicos/{servicoId}/iniciar
-    Security->>OSController: Requisicao autorizada
+    Security->>OSController: requisição autorizada
     OSController->>OSService: iniciarServico(numeroOs, servicoId, emailMecanico)
     OSService->>DB: Busca OS, servico e itens necessarios
     OSService->>Estoque: verificarDisponibilidadeEBaixar(itensNecessarios)
@@ -44,7 +44,7 @@ sequenceDiagram
     opt Mecanico identifica reparo adicional
         Mecanico->>Frontend: Informa novos servicos, pecas ou insumos
         Frontend->>Security: POST /ordens-servico/{numeroOs}/reparos-adicionais
-        Security->>ReparoController: Requisicao autorizada
+        Security->>ReparoController: requisição autorizada
         ReparoController->>ReparoService: criar(numeroOs, emailMecanico, servicosAdicionais)
         ReparoService->>DB: Cria reparo adicional e orcamento complementar pendente
         ReparoService-->>ReparoController: orcamentoId + publicUrl
@@ -52,7 +52,7 @@ sequenceDiagram
 
         Cliente->>Frontend: Aprova ou recusa orcamento complementar
         Frontend->>Security: POST /orcamentos/{orcamentoId}/aprovar ou /recusar
-        Security->>OrcamentoController: Requisicao autorizada
+        Security->>OrcamentoController: requisição autorizada
         OrcamentoController->>OrcamentoService: aprovar(...) ou recusar(...)
         OrcamentoService->>ReparoService: Registra aprovacao ou recusa do reparo adicional
         OrcamentoService-->>OrcamentoController: OrcamentoEntity atualizado
@@ -61,7 +61,7 @@ sequenceDiagram
 
     Mecanico->>Frontend: Conclui servico em execucao
     Frontend->>Security: PATCH /ordens-servico/{numeroOs}/servicos/{servicoId}/finalizar
-    Security->>OSController: Requisicao autorizada
+    Security->>OSController: requisição autorizada
     OSController->>OSService: finalizarServico(numeroOs, servicoId, emailMecanico)
     OSService->>DB: Atualiza servico para CONCLUIDO
 

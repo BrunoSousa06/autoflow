@@ -40,7 +40,7 @@ Este documento descreve os requisitos nao funcionais do sistema Autoflow, inclui
 | Categoria | API |
 | Prioridade | Obrigatoria |
 | Descricao | As APIs devem seguir principios RESTful e ser documentadas com Swagger, OpenAPI ou ferramenta similar. |
-| Criterios de aceite | Deve existir documentacao acessivel dos endpoints; a documentacao deve conter metodos HTTP, rotas, parametros, corpos de requisicao e respostas esperadas. |
+| Criterios de aceite | Deve existir documentacao acessivel dos endpoints; a documentacao deve conter metodos HTTP, rotas, parametros, corpos de requisição e respostas esperadas. |
 
 ### RNF005 - Autenticacao JWT para APIs Administrativas
 
