@@ -1,22 +1,37 @@
 package com.autoflow.mapper;
 
 
-import com.autoflow.controller.cliente.request.ClienteRequest;
-import com.autoflow.controller.cliente.response.ClienteResponse;
+import com.autoflow.application.dto.cliente.ClienteInput;
+import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.presentation.cliente.request.ClienteRequest;
+import com.autoflow.presentation.cliente.response.ClienteResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
+import jakarta.validation.Valid;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper(componentModel = "spring")
 public interface ClienteMapper {
 
-    void updateEntity(ClienteRequest request, @MappingTarget ClienteEntity entity);
+    void updateEntity(ClienteInput request, @MappingTarget ClienteEntity entity);
 
-    ClienteResponse maptoResponse(ClienteEntity clienteEntity);
+    ClienteResponse maptoResponse(ClienteOutput output);
 
     List<ClienteResponse> mapToList(List<ClienteEntity> clientes);
 
-    ClienteEntity mapToEntity(ClienteRequest request);
+    ClienteEntity mapToEntity(ClienteInput request);
+
+    ClienteOutput mapToOutput(ClienteEntity clienteEntity);
+
+    List<ClienteOutput> mapToListOutput(List<ClienteEntity> clientes);
+
+    ClienteInput mapToInput(ClienteRequest request);
+
+    default Optional<ClienteOutput> mapToOutputOpt(Optional<ClienteEntity> byCpfCnpj) {
+        return byCpfCnpj.map(this::mapToOutput);
+    }
 }

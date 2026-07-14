@@ -8,7 +8,7 @@ import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.mapper.UsuarioMapper;
-import com.autoflow.repository.cliente.ClienteRepository;
+import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.usuario.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

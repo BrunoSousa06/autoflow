@@ -1,9 +1,10 @@
 package com.autoflow.mapper;
 
 
-import com.autoflow.controller.veiculo.request.VeiculoRequest;
-import com.autoflow.controller.veiculo.request.VeiculoUpdateRequest;
-import com.autoflow.controller.veiculo.response.VeiculoResponse;
+import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.dto.veiculo.VeiculoInput;
+import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.presentation.veiculo.response.VeiculoResponse;
 import com.autoflow.domain.cliente.ClienteEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
 import org.mapstruct.Mapper;
@@ -17,13 +18,15 @@ public interface VeiculoMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cliente", source = "cliente")
-    VeiculoEntity mapToEntity(VeiculoRequest request, ClienteEntity cliente);
+    VeiculoEntity mapToEntity(CadastrarVeiculoInput request, ClienteEntity cliente);
 
     VeiculoResponse mapToResponse(VeiculoEntity veiculoEntity);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cliente", ignore = true)
-    void updateEntity(VeiculoUpdateRequest request, @MappingTarget VeiculoEntity veiculoEntity);
+    void updateEntity(VeiculoInput request, @MappingTarget VeiculoEntity veiculoEntity);
 
     List<VeiculoResponse> mapToList(List<VeiculoEntity> veiculos);
+
+    VeiculoOutput mapToOutput(VeiculoEntity veiculoEntity);
 }

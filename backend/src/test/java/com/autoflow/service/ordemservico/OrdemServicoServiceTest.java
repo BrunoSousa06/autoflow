@@ -1,5 +1,7 @@
 package com.autoflow.service.ordemservico;
 
+import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
@@ -12,12 +14,11 @@ import com.autoflow.domain.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.veiculo.VeiculoEntity;
-import com.autoflow.repository.cliente.ClienteRepository;
+import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
-import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
@@ -31,7 +32,6 @@ import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
-import com.autoflow.service.veiculo.VeiculoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -63,7 +63,7 @@ class OrdemServicoServiceTest {
     @Mock
     OrdemServicoRepository repository;
     @Mock
-    VeiculoService veiculoService;
+    BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
     @Mock
     ServicoService servicoService;
     @Mock
@@ -81,13 +81,14 @@ class OrdemServicoServiceTest {
     @Mock
     OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
     @Mock
-    ClienteService clienteService;
-    @Mock
     ClienteRepository clienteRepository;
     @Mock
     HistoricoStatusOsRepository historicoStatusOsRepository;
     @Mock
     OrcamentoNotificacaoService orcamentoNotificacaoService;
+    @Mock
+    BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
+
 
     @Test
     void deveCriarOrdemServicoComServicosVinculados() {
@@ -97,8 +98,8 @@ class OrdemServicoServiceTest {
         ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(10L);
         ServicoEntity servicoCatalogo = criarServico(10L, "Revisao", new BigDecimal("100.00"));
 
-        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
-        when(veiculoService.buscarOuCadastrarPorPlacaParaCliente(cliente, veiculoRequest)).thenReturn(veiculo);
+        when(buscarClientePorCpfCnpjUseCase.execute("12345678901")).thenReturn(cliente);
+        when(buscarOuCadastrarVeiculoUseCase.execute(cliente, veiculoRequest)).thenReturn(veiculo);
         when(servicoService.buscarEntityPorId(10L)).thenReturn(servicoCatalogo);
         when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -126,8 +127,8 @@ class OrdemServicoServiceTest {
         ClienteEntity cliente = criarCliente(1L);
         VeiculoEntity veiculo = criarVeiculo(1L, cliente);
         VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
-        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
-        when(veiculoService.buscarOuCadastrarPorPlacaParaCliente(cliente, veiculoRequest)).thenReturn(veiculo);
+        when(buscarClientePorCpfCnpjUseCase.execute("12345678901")).thenReturn(cliente);
+        when(buscarOuCadastrarVeiculoUseCase.execute(cliente, veiculoRequest)).thenReturn(veiculo);
 
         assertThrows(IllegalArgumentException.class, () -> service.criar("12345678901", veiculoRequest, null));
         verify(repository, never()).save(any());
@@ -138,7 +139,7 @@ class OrdemServicoServiceTest {
         ResponseStatusException erro = new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente nao encontrado");
         VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
         List<ServicoSolicitadoEntity> servicosSolicitados = List.of(new ServicoSolicitadoEntity(10L));
-        when(clienteService.buscarPorCpfCnpj("12345678901")).thenThrow(erro);
+        when(buscarClientePorCpfCnpjUseCase.execute("12345678901")).thenThrow(erro);
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -146,7 +147,7 @@ class OrdemServicoServiceTest {
         );
 
         assertSame(erro, exception);
-        verifyNoInteractions(veiculoService, servicoService, repository);
+        verifyNoInteractions(buscarOuCadastrarVeiculoUseCase, servicoService, repository);
     }
 
     @Test
@@ -155,8 +156,8 @@ class OrdemServicoServiceTest {
         VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
         ResponseStatusException erro = new ResponseStatusException(HttpStatus.CONFLICT, "Placa ja cadastrada para outro cliente.");
 
-        when(clienteService.buscarPorCpfCnpj("12345678901")).thenReturn(cliente);
-        when(veiculoService.buscarOuCadastrarPorPlacaParaCliente(cliente, veiculoRequest)).thenThrow(erro);
+        when(buscarClientePorCpfCnpjUseCase.execute("12345678901")).thenReturn(cliente);
+        when(buscarOuCadastrarVeiculoUseCase.execute(cliente, veiculoRequest)).thenThrow(erro);
         List<ServicoSolicitadoEntity> servicosSolicitados = List.of(new ServicoSolicitadoEntity(10L));
 
         ResponseStatusException exception = assertThrows(
