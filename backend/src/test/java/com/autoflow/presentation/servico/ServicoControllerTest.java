@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,6 +63,8 @@ class ServicoControllerTest {
     private ServicoRequest servicoRequest;
     private ServicoOutput servicoOutput;
     private ServicoResponse servicoResponse;
+    private TempoMedioServicoMetricaOutput tempoMedioServicoMetricaOutput;
+    private TempoMedioServicoResponse tempoMedioServicoResponse; // Added for the test
 
     @BeforeEach
     void setup() {
@@ -86,6 +89,9 @@ class ServicoControllerTest {
                 new BigDecimal("150.00"),
                 true
         );
+
+        tempoMedioServicoMetricaOutput = new TempoMedioServicoMetricaOutput(1L, "Troca de Óleo", 2L, 3600.0, 60.0, 1.0);
+        tempoMedioServicoResponse = new TempoMedioServicoResponse(1L, "Troca de Óleo", 2L, 3600.0, 60.0, 1.0); // Initialize
     }
 
     @Test
@@ -100,7 +106,7 @@ class ServicoControllerTest {
         entity.setValor(new BigDecimal("150.00"));
         entity.setAtivo(true);
 
-        when(servicoMapper.toResponse(any(ServicoEntity.class)))
+        when(servicoMapper.mapToResponse(any(ServicoOutput.class)))
                 .thenReturn(servicoResponse);
 
         ResponseEntity<ServicoResponse> resultado = servicoController.cadastrar(servicoRequest);
@@ -125,7 +131,7 @@ class ServicoControllerTest {
         entity.setValor(new BigDecimal("150.00"));
         entity.setAtivo(true);
 
-        when(servicoMapper.toResponse(any(ServicoEntity.class)))
+        when(servicoMapper.mapToResponse(any(ServicoOutput.class)))
                 .thenReturn(servicoResponse);
 
         ResponseEntity<ServicoResponse> resultado = servicoController.listar(1L);
@@ -151,8 +157,6 @@ class ServicoControllerTest {
         entity.setValor(new BigDecimal("150.00"));
         entity.setAtivo(true);
 
-        when(servicoMapper.toResponse(any(ServicoEntity.class)))
-                .thenReturn(servicoResponse);
 
         ResponseEntity<Page<ServicoResponse>> resultado = servicoController.listarTodosServicos(0, 20);
 
@@ -174,9 +178,6 @@ class ServicoControllerTest {
         entity.setDescricao("Substituição do óleo do motor");
         entity.setValor(new BigDecimal("150.00"));
         entity.setAtivo(true);
-
-        when(servicoMapper.toResponse(any(ServicoEntity.class)))
-                .thenReturn(servicoResponse);
 
         ResponseEntity<ServicoResponse> resultado = servicoController.atualizar(servicoRequest, 1L);
 
@@ -209,8 +210,14 @@ class ServicoControllerTest {
                 .tempoMedioHoras(1.0)
                 .build();
 
+        List<TempoMedioServicoResponse> expectedResponses = List.of(tempoMedioServicoResponse);
+
         when(calcularTempoMedioServicoUseCase.execute())
                 .thenReturn(List.of(metricaOutput));
+        
+        when(servicoMapper.mapToMetricResponse(anyList()))
+                .thenReturn(expectedResponses);
+
 
         ResponseEntity<List<TempoMedioServicoResponse>> resultado = servicoController.listarTempoMedioPorServico();
 
@@ -221,6 +228,7 @@ class ServicoControllerTest {
         assertEquals(2L, resultado.getBody().get(0).quantidadeExecucoes());
 
         verify(calcularTempoMedioServicoUseCase).execute();
+        verify(servicoMapper).mapToMetricResponse(List.of(metricaOutput)); // Verify with the actual argument
     }
 
 }
