@@ -21,9 +21,6 @@ public class CalcularTempoMedioServicoUseCase {
                 .toList();
     }
 
-    /**
-     * Maps projection to output DTO, converting time units.
-     */
     private TempoMedioServicoMetricaOutput mapToOutput(TempoMedioServicoProjection projection) {
         Double tempoMedioSegundos = projection.getTempoMedioSegundos();
 

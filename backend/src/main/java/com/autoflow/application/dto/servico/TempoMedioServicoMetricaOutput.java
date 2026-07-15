@@ -5,11 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Output DTO for Service Metrics at the application layer.
- * Contains aggregated execution time data for a service.
- * Used by CalcularTempoMedioServicoUseCase.
- */
+
 @Data
 @Builder
 @NoArgsConstructor

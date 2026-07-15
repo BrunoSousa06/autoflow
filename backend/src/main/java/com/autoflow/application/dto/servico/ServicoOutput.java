@@ -7,11 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * Output DTO for Servico (Service) representing the service at the application layer.
- * Used in all query and command operations at the application layer.
- * Separated from REST DTOs to maintain clean architecture boundaries.
- */
 @Data
 @Builder
 @NoArgsConstructor

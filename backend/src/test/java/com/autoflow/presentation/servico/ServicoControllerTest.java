@@ -31,10 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-/**
- * Test suite for ServicoController.
- * Tests that endpoints correctly delegate to use cases and convert between DTO layers.
- */
+
 @ExtendWith(MockitoExtension.class)
 class ServicoControllerTest {
 

@@ -10,11 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-/**
- * Adapter implementing ServicoGateway.
- * Bridges between the domain layer (which depends on the gateway) and infrastructure layer (JpaRepository).
- * This allows the domain to be independent of infrastructure implementation details.
- */
+
 @Component
 @RequiredArgsConstructor
 public class ServicoRepositoryAdapter implements ServicoGateway {
