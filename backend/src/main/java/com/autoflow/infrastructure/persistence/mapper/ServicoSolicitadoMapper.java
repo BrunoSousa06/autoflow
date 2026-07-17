@@ -1,4 +1,4 @@
-package com.autoflow.mapper;
+package com.autoflow.infrastructure.persistence.mapper;
 
 import com.autoflow.controller.ordemservico.request.ServicoSolicitadoRequest;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;

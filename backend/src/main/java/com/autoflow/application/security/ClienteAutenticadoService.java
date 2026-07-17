@@ -1,6 +1,6 @@
 package com.autoflow.application.security;
 
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

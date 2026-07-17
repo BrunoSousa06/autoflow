@@ -1,6 +1,6 @@
-package com.autoflow.domain.veiculo;
+package com.autoflow.infrastructure.persistence.entity.veiculo;
 
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

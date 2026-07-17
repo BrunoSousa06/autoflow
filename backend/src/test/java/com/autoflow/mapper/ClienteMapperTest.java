@@ -2,7 +2,8 @@ package com.autoflow.mapper;
 
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
 import com.autoflow.presentation.cliente.request.ClienteRequest;
 import com.autoflow.presentation.cliente.response.ClienteResponse;
 import org.junit.jupiter.api.BeforeEach;

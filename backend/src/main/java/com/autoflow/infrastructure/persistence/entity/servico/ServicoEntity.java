@@ -1,4 +1,4 @@
-package com.autoflow.domain.servico;
+package com.autoflow.infrastructure.persistence.entity.servico;
 
 
 import jakarta.persistence.*;

@@ -5,12 +5,13 @@ import com.autoflow.application.dto.veiculo.VeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.security.AuthorizationService;
 import com.autoflow.application.security.ClienteAutenticadoService;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
-import com.autoflow.mapper.VeiculoMapper;
+import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;
 import org.junit.jupiter.api.AfterEach;
@@ -51,6 +52,9 @@ class VeiculoUseCasesTest {
     private AtualizarVeiculoUseCase atualizarVeiculoUseCase;
     @InjectMocks
     private DeletarVeiculoUseCase deletarVeiculoUseCase;
+    
+    @InjectMocks
+    private BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
 
     @Mock
     private VeiculoRepository veiculoRepository;
@@ -144,7 +148,6 @@ class VeiculoUseCasesTest {
         verify(veiculoRepository, never()).save(any());
     }
 
-    // ── BuscarVeiculoUseCase ────────────────────────────────────────────────────────────────
 
     @Test
     void deveListarVeiculoPorIdComSucesso() {
@@ -422,14 +425,10 @@ class VeiculoUseCasesTest {
     @Test
     void deveDeletarVeiculoComSucesso() {
         when(veiculoRepository.existsById(1L)).thenReturn(true);
-        // Removed unnecessary stubbing: when(veiculoRepository.findById(1L)).thenReturn(Optional.of(veiculoEntity));
-        // Removed unnecessary stubbing: doNothing().when(authorizationService).validarPermissao(veiculoEntity);
 
         deletarVeiculoUseCase.execute(1L);
 
         verify(veiculoRepository).existsById(1L);
-        // Removed unnecessary verification: verify(veiculoRepository).findById(1L);
-        // Removed unnecessary verification: verify(authorizationService).validarPermissao(veiculoEntity);
         verify(veiculoRepository).deleteById(1L);
     }
 
@@ -443,5 +442,165 @@ class VeiculoUseCasesTest {
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
         verify(veiculoRepository, never()).deleteById(any());
         verifyNoInteractions(authorizationService);
+    }
+
+    @Test
+    void deveRetornarVeiculoExistenteQuandoPertencerAoCliente() {
+
+        ClienteEntity cliente = new ClienteEntity();
+        cliente.setId(1L);
+
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setCliente(cliente);
+        veiculo.setPlaca("ABC1234");
+
+        VeiculoOrdemServicoRequest request =
+                new VeiculoOrdemServicoRequest(
+                        "abc-1234",
+                        null,
+                        null,
+                        null
+                );
+
+        when(veiculoRepository.findByPlaca("ABC1234"))
+                .thenReturn(Optional.of(veiculo));
+
+        VeiculoEntity resultado = buscarOuCadastrarVeiculoUseCase.execute(cliente, request);
+
+        assertSame(veiculo, resultado);
+        verify(veiculoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarConflitoQuandoPlacaPertencerOutroCliente() {
+
+        ClienteEntity cliente = new ClienteEntity();
+        cliente.setId(1L);
+
+        ClienteEntity outroCliente = new ClienteEntity();
+        outroCliente.setId(2L);
+
+        VeiculoEntity veiculo = new VeiculoEntity();
+        veiculo.setCliente(outroCliente);
+
+        VeiculoOrdemServicoRequest request =
+                new VeiculoOrdemServicoRequest(
+                        "ABC1234",
+                        null,
+                        null,
+                        null
+                );
+
+        when(veiculoRepository.findByPlaca("ABC1234"))
+                .thenReturn(Optional.of(veiculo));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> buscarOuCadastrarVeiculoUseCase.execute(cliente, request)
+        );
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals(
+                "409 CONFLICT \"Placa já cadastrada para outro cliente.\"",
+                exception.getMessage()
+        );
+
+        verify(veiculoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarBadRequestQuandoDadosObrigatoriosNaoForemInformados() {
+
+        ClienteEntity cliente = new ClienteEntity();
+        cliente.setId(1L);
+
+        VeiculoOrdemServicoRequest request =
+                new VeiculoOrdemServicoRequest(
+                        "ABC1234",
+                        "",
+                        "",
+                        null
+                );
+
+        when(veiculoRepository.findByPlaca("ABC1234"))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> buscarOuCadastrarVeiculoUseCase.execute(cliente, request)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals(
+                "400 BAD_REQUEST \"Marca, modelo e ano são obrigatórios para cadastrar um novo veículo.\"",
+                exception.getMessage()
+        );
+
+        verify(veiculoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveCadastrarNovoVeiculoQuandoNaoExistir() {
+
+        ClienteEntity cliente = new ClienteEntity();
+        cliente.setId(1L);
+
+        VeiculoOrdemServicoRequest request =
+                new VeiculoOrdemServicoRequest(
+                        "abc-1234",
+                        "Toyota",
+                        "Corolla",
+                        2023
+                );
+
+        VeiculoEntity salvo = new VeiculoEntity();
+        salvo.setCliente(cliente);
+        salvo.setPlaca("ABC1234");
+        salvo.setMarca("Toyota");
+        salvo.setModelo("Corolla");
+        salvo.setAno(2023);
+
+        when(veiculoRepository.findByPlaca("ABC1234"))
+                .thenReturn(Optional.empty());
+
+        when(veiculoRepository.save(any(VeiculoEntity.class)))
+                .thenReturn(salvo);
+
+        VeiculoEntity resultado = buscarOuCadastrarVeiculoUseCase.execute(cliente, request);
+
+        assertEquals("ABC1234", resultado.getPlaca());
+        assertEquals("Toyota", resultado.getMarca());
+        assertEquals("Corolla", resultado.getModelo());
+        assertEquals(2023, resultado.getAno());
+        assertEquals(cliente, resultado.getCliente());
+
+        verify(veiculoRepository).save(any(VeiculoEntity.class));
+    }
+
+    @Test
+    void deveNormalizarPlacaAntesDeBuscarESalvar() {
+
+        ClienteEntity cliente = new ClienteEntity();
+        cliente.setId(1L);
+
+        VeiculoOrdemServicoRequest request =
+                new VeiculoOrdemServicoRequest(
+                        "abc-1@23 4",
+                        "Honda",
+                        "Civic",
+                        2022
+                );
+
+        when(veiculoRepository.findByPlaca("ABC1234"))
+                .thenReturn(Optional.empty());
+
+        when(veiculoRepository.save(any(VeiculoEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        VeiculoEntity resultado = buscarOuCadastrarVeiculoUseCase.execute(cliente, request);
+
+        assertEquals("ABC1234", resultado.getPlaca());
+
+        verify(veiculoRepository).findByPlaca("ABC1234");
     }
 }

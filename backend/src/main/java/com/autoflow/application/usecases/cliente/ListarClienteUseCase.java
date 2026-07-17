@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.cliente;
 
 import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.application.gateway.ClienteGateway;
-import com.autoflow.mapper.ClienteMapper;
+import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;

@@ -3,8 +3,7 @@ package com.autoflow.presentation.cliente;
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.usecases.cliente.*;
-import com.autoflow.mapper.ClienteMapper;
-import com.autoflow.presentation.cliente.ClienteController;
+import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
 import com.autoflow.presentation.cliente.request.ClienteRequest;
 import com.autoflow.presentation.cliente.response.ClienteResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -85,17 +84,17 @@ class ClienteControllerTest {
         clienteRequest = new ClienteRequest("João Silva", "52998224725", "12312321321", "bruno@hotmail.com");
         clienteInput = new ClienteInput("João Silva", "52998224725", "12312321321", "bruno@hotmail.com");
 
-        clienteOutput = ClienteOutput.builder()
-                .id(1L)
-                .nome("Bruno")
-                .cpfCnpj("52998224725")
-                .telefone("12312321321")
-                .email("bruno@hotmail.com")
-                .veiculos(null)
-                .build();
 
         response = new ClienteResponse(1L, "Bruno", "52998224725", "12312321321", "bruno@hotmail.com", null);
         responses = List.of(response);
+
+        clienteOutput = ClienteOutput.builder()
+                .id(1L)
+                .nome("Bruno")
+                .cpfCnpj("12345678901")
+                .telefone("11999999999")
+                .email("bruno@email.com")
+                .build();
 
 
     }

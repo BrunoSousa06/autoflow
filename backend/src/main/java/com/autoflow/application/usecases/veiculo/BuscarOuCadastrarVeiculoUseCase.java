@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.veiculo;
 
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
-import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.servico;
 
-import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.application.gateway.ServicoGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

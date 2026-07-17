@@ -4,12 +4,11 @@ import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
 import com.autoflow.application.usecases.servico.*;
-import com.autoflow.presentation.servico.ServicoController;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
 import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
-import com.autoflow.domain.servico.ServicoEntity;
-import com.autoflow.mapper.ServicoMapper;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;

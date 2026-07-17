@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.repository;
 
 
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

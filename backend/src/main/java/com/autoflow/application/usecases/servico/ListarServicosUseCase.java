@@ -2,7 +2,7 @@ package com.autoflow.application.usecases.servico;
 
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.ServicoGateway;
-import com.autoflow.mapper.ServicoMapper;
+import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

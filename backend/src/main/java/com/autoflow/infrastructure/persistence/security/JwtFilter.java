@@ -1,7 +1,7 @@
-package com.autoflow.config.security;
+package com.autoflow.infrastructure.persistence.security;
 
-import com.autoflow.config.security.service.CustomUserDetailsService;
-import com.autoflow.config.security.service.JwtService;
+import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.persistence.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
@@ -25,7 +25,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(
+    public void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
@@ -69,7 +69,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    public boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
         return path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")

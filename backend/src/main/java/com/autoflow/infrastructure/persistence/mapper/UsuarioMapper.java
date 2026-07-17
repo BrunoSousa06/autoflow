@@ -1,9 +1,9 @@
-package com.autoflow.mapper;
+package com.autoflow.infrastructure.persistence.mapper;
 
 
 import com.autoflow.controller.usuario.request.RegistroRequest;
 import com.autoflow.controller.usuario.response.UsuarioResponse;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

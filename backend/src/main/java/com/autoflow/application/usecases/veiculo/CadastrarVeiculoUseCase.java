@@ -2,9 +2,9 @@ package com.autoflow.application.usecases.veiculo;
 
 import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
-import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.domain.veiculo.VeiculoEntity;
-import com.autoflow.mapper.VeiculoMapper;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;

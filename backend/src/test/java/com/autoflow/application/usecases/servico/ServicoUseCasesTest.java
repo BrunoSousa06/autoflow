@@ -2,9 +2,9 @@ package com.autoflow.application.usecases.servico;
 
 import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.application.gateway.ServicoGateway;
-import com.autoflow.mapper.ServicoMapper;
+import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

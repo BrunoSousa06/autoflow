@@ -1,4 +1,4 @@
-package com.autoflow.mapper;
+package com.autoflow.infrastructure.persistence.mapper;
 
 import org.mapstruct.Named;
 import org.springframework.security.crypto.password.PasswordEncoder;

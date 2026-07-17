@@ -1,7 +1,7 @@
-package com.autoflow.domain.cliente;
+package com.autoflow.infrastructure.persistence.entity.cliente;
 
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

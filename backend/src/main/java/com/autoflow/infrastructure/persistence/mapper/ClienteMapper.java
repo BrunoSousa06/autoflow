@@ -1,14 +1,12 @@
-package com.autoflow.mapper;
+package com.autoflow.infrastructure.persistence.mapper;
 
 
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.presentation.cliente.request.ClienteRequest;
 import com.autoflow.presentation.cliente.response.ClienteResponse;
-import com.autoflow.domain.cliente.ClienteEntity;
-import jakarta.validation.Valid;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;

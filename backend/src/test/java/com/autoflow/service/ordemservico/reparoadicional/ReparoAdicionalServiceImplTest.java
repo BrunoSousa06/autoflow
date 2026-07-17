@@ -6,7 +6,7 @@ import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;

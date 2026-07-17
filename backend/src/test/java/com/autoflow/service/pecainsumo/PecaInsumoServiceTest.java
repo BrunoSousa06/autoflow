@@ -7,7 +7,7 @@ import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import com.autoflow.mapper.PecaInsumoMapper;
+import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
 import com.autoflow.repository.pecainsumo.PecaInsumoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;

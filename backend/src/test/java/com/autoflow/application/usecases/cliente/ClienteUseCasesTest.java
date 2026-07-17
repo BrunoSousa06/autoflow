@@ -2,9 +2,9 @@ package com.autoflow.application.usecases.cliente;
 
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.application.gateway.ClienteGateway;
-import com.autoflow.mapper.ClienteMapper;
+import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,7 +30,7 @@ class ClienteUseCasesTest {
     @Mock
     private ClienteGateway clienteGateway;
 
-    @Mock
+    @Spy
     private ClienteMapper clienteMapper;
 
     @InjectMocks
@@ -124,16 +125,13 @@ class ClienteUseCasesTest {
 
         @Test
         void deveBuscarClientePorEmailComSucesso() {
-            // Assuming ClienteGateway.findByUsuarioEmail returns ClienteOutput directly
-            when(clienteGateway.findByUsuarioEmail("bruno@email.com")).thenReturn(Optional.of(clienteOutput));
-            // Removed unnecessary stubbing for clienteMapper.mapToOutput
-
+            when(clienteGateway.findByUsuarioEmail("bruno@email.com")).thenReturn(Optional.of(clienteEntity));
+            when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
             ClienteOutput resultado = buscarClientePorEmailUseCase.execute("bruno@email.com");
 
             assertNotNull(resultado);
             assertEquals("Bruno", resultado.nome());
             verify(clienteGateway).findByUsuarioEmail("bruno@email.com");
-            // Removed unnecessary verification for clienteMapper.mapToOutput
         }
 
         @Test
@@ -156,7 +154,6 @@ class ClienteUseCasesTest {
         @Test
         void deveBuscarClientePorIdComSucesso() {
             when(clienteGateway.findById(1L)).thenReturn(Optional.of(clienteEntity));
-            // Removed unnecessary stubbing: when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
 
             ClienteEntity resultado = buscarClientePorIdUseCase.execute(1L);
 
@@ -184,25 +181,21 @@ class ClienteUseCasesTest {
 
         @Test
         void deveListarTodosClientesComSucesso() {
-            List<ClienteEntity> entities = List.of(clienteEntity); // Still need entities for potential mapper calls in other tests
+            List<ClienteEntity> entities = List.of(clienteEntity);
             List<ClienteOutput> outputs = List.of(clienteOutput);
 
-            // Assuming ClienteGateway.findAll returns List<ClienteOutput> directly
-            when(clienteGateway.findAll()).thenReturn(outputs);
-            // Removed unnecessary stubbing for clienteMapper.mapToListOutput
-
+            when(clienteGateway.findAll()).thenReturn(entities);
+            when(clienteMapper.mapToListOutput(entities)).thenReturn(outputs);
             List<ClienteOutput> resultado = listarTodosClientesUseCase.execute();
 
             assertNotNull(resultado);
             assertEquals(1, resultado.size());
             verify(clienteGateway).findAll();
-            // Removed unnecessary verification for clienteMapper.mapToListOutput
         }
 
         @Test
         void deveRetornarListaVaziaSemClientes() {
             when(clienteGateway.findAll()).thenReturn(List.of());
-            // Removed unnecessary stubbing: when(clienteMapper.mapToListOutput(List.of())).thenReturn(List.of());
 
             List<ClienteOutput> resultado = listarTodosClientesUseCase.execute();
 

@@ -3,8 +3,8 @@ package com.autoflow.application.usecases.veiculo;
 
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.security.AuthorizationService;
-import com.autoflow.domain.veiculo.VeiculoEntity;
-import com.autoflow.mapper.VeiculoMapper;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

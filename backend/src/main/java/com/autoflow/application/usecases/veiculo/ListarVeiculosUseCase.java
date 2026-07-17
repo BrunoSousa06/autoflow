@@ -3,7 +3,7 @@ package com.autoflow.application.usecases.veiculo;
 import com.autoflow.application.dto.veiculo.VeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.security.ClienteAutenticadoService;
-import com.autoflow.mapper.VeiculoMapper;
+import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
 import com.autoflow.infrastructure.persistence.repository.VeiculoSpecifications;
 import com.autoflow.application.dto.veiculo.VeiculoFiltro;

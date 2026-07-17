@@ -1,7 +1,7 @@
 package com.autoflow.application.gateway;
 
 import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 
 import java.util.Optional;
 import java.util.List;
@@ -19,10 +19,10 @@ public interface ClienteGateway {
     boolean existsByCpfCnpj(String cpfCnpj);
 
 
-    Optional<ClienteOutput> findByUsuarioEmail(String usuarioEmail);
+    Optional<ClienteEntity> findByUsuarioEmail(String usuarioEmail);
 
 
-    List<ClienteOutput> findAll();
+    List<ClienteEntity> findAll();
 
 
     void deleteById(Long id);

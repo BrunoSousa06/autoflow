@@ -1,9 +1,7 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.application.gateway.ClienteGateway;
-import com.autoflow.mapper.ClienteMapper;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,7 +15,6 @@ import java.util.Optional;
 public class ClienteRepositoryAdapter implements ClienteGateway {
 
     private final ClienteRepository clienteRepository;
-    private final ClienteMapper clienteMapper;
 
     @Override
     public ClienteEntity save(ClienteEntity cliente) {
@@ -41,17 +38,13 @@ public class ClienteRepositoryAdapter implements ClienteGateway {
     }
 
     @Override
-    public Optional<ClienteOutput> findByUsuarioEmail(String usuarioEmail) {
-        Optional<ClienteEntity> byUsuarioEmail = clienteRepository.findByUsuarioEmail(usuarioEmail);
-
-
-        return clienteMapper.mapToOutputOpt(byUsuarioEmail);
+    public Optional<ClienteEntity> findByUsuarioEmail(String usuarioEmail) {
+        return clienteRepository.findByUsuarioEmail(usuarioEmail);
     }
 
     @Override
-    public List<ClienteOutput> findAll() {
-        List<ClienteEntity> allClientes = clienteRepository.findAll();
-        return clienteMapper.mapToListOutput(allClientes);
+    public List<ClienteEntity> findAll() {
+        return clienteRepository.findAll();
     }
 
     @Override

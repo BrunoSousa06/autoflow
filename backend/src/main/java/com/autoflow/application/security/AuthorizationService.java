@@ -1,7 +1,7 @@
 package com.autoflow.application.security;
 
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

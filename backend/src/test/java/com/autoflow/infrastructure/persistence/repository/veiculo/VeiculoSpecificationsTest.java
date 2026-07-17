@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.repository.veiculo;
 
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.VeiculoSpecifications;
 import com.autoflow.application.dto.veiculo.VeiculoFiltro;
 import jakarta.persistence.criteria.*;

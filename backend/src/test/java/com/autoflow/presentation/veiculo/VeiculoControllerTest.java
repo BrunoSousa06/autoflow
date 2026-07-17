@@ -4,7 +4,7 @@ import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.usecases.veiculo.*;
-import com.autoflow.mapper.VeiculoControllerMapper;
+import com.autoflow.infrastructure.persistence.mapper.VeiculoControllerMapper;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.presentation.veiculo.response.VeiculoResponse;

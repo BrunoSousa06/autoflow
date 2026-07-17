@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.repository;
 
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.application.dto.veiculo.VeiculoFiltro;
 import org.springframework.data.jpa.domain.Specification;
 

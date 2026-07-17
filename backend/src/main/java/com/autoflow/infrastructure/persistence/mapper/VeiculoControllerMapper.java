@@ -1,4 +1,4 @@
-package com.autoflow.mapper;
+package com.autoflow.infrastructure.persistence.mapper;
 
 import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoInput;

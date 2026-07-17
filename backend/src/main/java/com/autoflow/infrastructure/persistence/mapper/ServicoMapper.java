@@ -1,14 +1,13 @@
-package com.autoflow.mapper;
+package com.autoflow.infrastructure.persistence.mapper;
 
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
-import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 

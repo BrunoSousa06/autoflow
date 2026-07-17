@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.infrastructure.persistence.repository.ServicoRepository;
 import lombok.RequiredArgsConstructor;

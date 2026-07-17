@@ -1,4 +1,4 @@
-package com.autoflow.config.security;
+package com.autoflow.infrastructure.persistence.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;

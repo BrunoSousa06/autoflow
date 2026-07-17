@@ -1,6 +1,6 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

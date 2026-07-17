@@ -1,4 +1,4 @@
-package com.autoflow.config.security.service;
+package com.autoflow.infrastructure.persistence.security.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
