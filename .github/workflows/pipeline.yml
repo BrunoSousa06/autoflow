@@ -136,7 +136,7 @@ jobs:
           java-version: "21"
 
       - name: Install Snyk CLI
-        uses: snyk/actions/setup@v4
+        uses: snyk/actions/setup@master
 
       - name: Run Snyk Open Source Scan
         continue-on-error: true
