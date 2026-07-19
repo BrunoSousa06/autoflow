@@ -49,7 +49,7 @@ jobs:
   backend-build:
     name: Backend Build
     runs-on: ubuntu-latest
-    needs: backend-test
+    needs: backend-test-sonar
 
     steps:
       - uses: actions/checkout@v4
@@ -121,7 +121,6 @@ jobs:
   snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
-    needs:  [backend-test-and-sonar, frontend-build]
     permissions:
       actions: read
       contents: read
