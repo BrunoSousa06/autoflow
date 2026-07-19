@@ -140,7 +140,7 @@ jobs:
   snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
-    needs:["backend-sonar", "frontend-build"]
+    needs:  [backend-sonar, frontend-build]
     permissions:
       actions: read
       contents: read
