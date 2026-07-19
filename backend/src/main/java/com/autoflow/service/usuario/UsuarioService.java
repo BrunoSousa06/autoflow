@@ -1,15 +1,15 @@
 package com.autoflow.service.usuario;
 
-import com.autoflow.controller.usuario.request.LoginRequest;
-import com.autoflow.controller.usuario.request.RegistroRequest;
+import com.autoflow.presentation.usuario.request.LoginRequest;
+import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.autoflow.infrastructure.persistence.security.service.JwtService;
-import com.autoflow.controller.usuario.response.UsuarioResponse;
+import com.autoflow.presentation.usuario.response.UsuarioResponse;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
-import com.autoflow.repository.usuario.UsuarioRepository;
+import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,35 +29,6 @@ public class UsuarioService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UsuarioMapper usuarioMapper;
-
-    @Transactional
-    public UsuarioEntity cadastrar(RegistroRequest request) {
-
-        if (usuarioRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
-
-        }
-
-        if (RoleEnum.CLIENTE.equals(request.role())
-                && clienteRepository.existsByCpfCnpj(request.cpfCnpj())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF/CNPJ já cadastrado");
-        }
-
-        UsuarioEntity usuarioEntity =
-                usuarioRepository.save(usuarioMapper.mapToEntity(request));
-
-        if (RoleEnum.CLIENTE.equals(request.role())) {
-
-            ClienteEntity clienteEntity =
-                    usuarioMapper.mapToClienteEntity(request);
-
-            clienteEntity.setUsuario(usuarioEntity);
-
-            clienteRepository.save(clienteEntity);
-        }
-
-        return usuarioEntity;
-    }
 
 
     public String login(LoginRequest request) {
@@ -96,7 +67,7 @@ public class UsuarioService {
 
         List<UsuarioEntity> mecanicos = usuarioRepository.findByRole(RoleEnum.MECANICO);
 
-        return usuarioMapper.mapToResponse(mecanicos);
+        return usuarioMapper.mapEntityToResponse(mecanicos);
 
     }
 
@@ -108,16 +79,7 @@ public class UsuarioService {
     public List<UsuarioResponse> listarUsuarios() {
         List<UsuarioEntity> usuarios = usuarioRepository.findAll();
 
-        return usuarioMapper.mapToResponse(usuarios);
+        return usuarioMapper.mapEntityToResponse(usuarios);
     }
 
-    @Transactional
-    public UsuarioResponse cadastrarComoStaff(RegistroRequest request, RoleEnum callerRole) {
-        if (RoleEnum.ATENDENTE.equals(callerRole) &&
-                (RoleEnum.ADMIN.equals(request.role()) || RoleEnum.MECANICO.equals(request.role()))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Atendente não pode cadastrar usuários com esta função");
-        }
-        return usuarioMapper.mapToResponse(cadastrar(request));
-    }
 }

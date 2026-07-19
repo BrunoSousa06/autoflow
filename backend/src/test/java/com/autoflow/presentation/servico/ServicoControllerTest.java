@@ -4,6 +4,7 @@ import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
 import com.autoflow.application.usecases.servico.*;
+import com.autoflow.infrastructure.persistence.mapper.ServicoMapperImpl;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
 import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
@@ -31,6 +32,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
+
 @ExtendWith(MockitoExtension.class)
 class ServicoControllerTest {
 
@@ -52,20 +54,29 @@ class ServicoControllerTest {
     @Mock
     private CalcularTempoMedioServicoUseCase calcularTempoMedioServicoUseCase;
 
-    @Mock
     private ServicoMapper servicoMapper;
 
-    @InjectMocks
     private ServicoController servicoController;
 
     private ServicoRequest servicoRequest;
     private ServicoOutput servicoOutput;
-    private ServicoResponse servicoResponse;
-    private TempoMedioServicoMetricaOutput tempoMedioServicoMetricaOutput;
-    private TempoMedioServicoResponse tempoMedioServicoResponse; // Added for the test
+    private TempoMedioServicoResponse tempoMedioServicoResponse;
 
     @BeforeEach
     void setup() {
+
+        servicoMapper = new ServicoMapperImpl();
+
+        servicoController = new ServicoController(
+                criarServicoUseCase,
+                buscarServicoPorIdUseCase,
+                listarServicosUseCase,
+                atualizarServicoUseCase,
+                inativarServicoUseCase,
+                calcularTempoMedioServicoUseCase,
+                servicoMapper
+        );
+
         servicoRequest = new ServicoRequest(
                 "Troca de Óleo",
                 "Substituição do óleo do motor",
@@ -80,62 +91,60 @@ class ServicoControllerTest {
                 .ativo(true)
                 .build();
 
-        servicoResponse = new ServicoResponse(
+        tempoMedioServicoResponse = new TempoMedioServicoResponse(
                 1L,
                 "Troca de Óleo",
-                "Substituição do óleo do motor",
-                new BigDecimal("150.00"),
-                true
+                2L,
+                3600.0,
+                60.0,
+                1.0
         );
-
-        tempoMedioServicoMetricaOutput = new TempoMedioServicoMetricaOutput(1L, "Troca de Óleo", 2L, 3600.0, 60.0, 1.0);
-        tempoMedioServicoResponse = new TempoMedioServicoResponse(1L, "Troca de Óleo", 2L, 3600.0, 60.0, 1.0); // Initialize
     }
 
     @Test
     void deveCadastrarServico() {
+
         when(criarServicoUseCase.execute(any(ServicoInput.class)))
                 .thenReturn(servicoOutput);
 
-        ServicoEntity entity = new ServicoEntity();
-        entity.setId(1L);
-        entity.setNome("Troca de Óleo");
-        entity.setDescricao("Substituição do óleo do motor");
-        entity.setValor(new BigDecimal("150.00"));
-        entity.setAtivo(true);
-
-        when(servicoMapper.mapToResponse(any(ServicoOutput.class)))
-                .thenReturn(servicoResponse);
-
-        ResponseEntity<ServicoResponse> resultado = servicoController.cadastrar(servicoRequest);
+        ResponseEntity<ServicoResponse> resultado =
+                servicoController.cadastrar(servicoRequest);
 
         assertNotNull(resultado);
         assertEquals(HttpStatus.CREATED, resultado.getStatusCode());
-        assertEquals("Troca de Óleo", resultado.getBody().nome());
 
-        ArgumentCaptor<ServicoInput> captor = ArgumentCaptor.forClass(ServicoInput.class);
+        assertNotNull(resultado.getBody());
+        assertEquals(1L, resultado.getBody().id());
+        assertEquals("Troca de Óleo", resultado.getBody().nome());
+        assertEquals("Substituição do óleo do motor", resultado.getBody().descricao());
+        assertEquals(new BigDecimal("150.00"), resultado.getBody().valor());
+        assertTrue(resultado.getBody().ativo());
+
+        ArgumentCaptor<ServicoInput> captor =
+                ArgumentCaptor.forClass(ServicoInput.class);
+
         verify(criarServicoUseCase).execute(captor.capture());
+
+        ServicoInput input = captor.getValue();
+
+        assertEquals("Troca de Óleo", input.nome());
+        assertEquals("Substituição do óleo do motor", input.descricao());
+        assertEquals(new BigDecimal("150.00"), input.valor());
     }
 
     @Test
     void deveListarServicoPorId() {
+
         when(buscarServicoPorIdUseCase.execute(1L))
                 .thenReturn(servicoOutput);
 
-        ServicoEntity entity = new ServicoEntity();
-        entity.setId(1L);
-        entity.setNome("Troca de Óleo");
-        entity.setDescricao("Substituição do óleo do motor");
-        entity.setValor(new BigDecimal("150.00"));
-        entity.setAtivo(true);
-
-        when(servicoMapper.mapToResponse(any(ServicoOutput.class)))
-                .thenReturn(servicoResponse);
-
-        ResponseEntity<ServicoResponse> resultado = servicoController.listar(1L);
+        ResponseEntity<ServicoResponse> resultado =
+                servicoController.listar(1L);
 
         assertNotNull(resultado);
         assertEquals(HttpStatus.OK, resultado.getStatusCode());
+
+        assertEquals(1L, resultado.getBody().id());
         assertEquals("Troca de Óleo", resultado.getBody().nome());
 
         verify(buscarServicoPorIdUseCase).execute(1L);
@@ -143,90 +152,100 @@ class ServicoControllerTest {
 
     @Test
     void deveListarTodosServicos() {
-        Page<ServicoOutput> outputPage = new PageImpl<>(List.of(servicoOutput));
+
+        Page<ServicoOutput> outputPage =
+                new PageImpl<>(List.of(servicoOutput));
 
         when(listarServicosUseCase.execute(any(Pageable.class)))
                 .thenReturn(outputPage);
 
-        ServicoEntity entity = new ServicoEntity();
-        entity.setId(1L);
-        entity.setNome("Troca de Óleo");
-        entity.setDescricao("Substituição do óleo do motor");
-        entity.setValor(new BigDecimal("150.00"));
-        entity.setAtivo(true);
+        ResponseEntity<Page<ServicoResponse>> resultado =
+                servicoController.listarTodosServicos(0,20);
 
-
-        ResponseEntity<Page<ServicoResponse>> resultado = servicoController.listarTodosServicos(0, 20);
-
-        assertNotNull(resultado);
         assertEquals(HttpStatus.OK, resultado.getStatusCode());
-        assertEquals(1, resultado.getBody().getContent().size());
 
-        verify(listarServicosUseCase).execute(any(Pageable.class));
+        assertEquals(1, resultado.getBody().getContent().size());
+        assertEquals(
+                "Troca de Óleo",
+                resultado.getBody().getContent().getFirst().nome());
+
+        verify(listarServicosUseCase)
+                .execute(any(Pageable.class));
     }
 
     @Test
     void deveAtualizarServico() {
+
         when(atualizarServicoUseCase.execute(eq(1L), any(ServicoInput.class)))
                 .thenReturn(servicoOutput);
 
-        ServicoEntity entity = new ServicoEntity();
-        entity.setId(1L);
-        entity.setNome("Troca de Óleo");
-        entity.setDescricao("Substituição do óleo do motor");
-        entity.setValor(new BigDecimal("150.00"));
-        entity.setAtivo(true);
+        ResponseEntity<ServicoResponse> resultado =
+                servicoController.atualizar(servicoRequest,1L);
 
-        ResponseEntity<ServicoResponse> resultado = servicoController.atualizar(servicoRequest, 1L);
-
-        assertNotNull(resultado);
         assertEquals(HttpStatus.OK, resultado.getStatusCode());
 
-        ArgumentCaptor<ServicoInput> captor = ArgumentCaptor.forClass(ServicoInput.class);
-        verify(atualizarServicoUseCase).execute(eq(1L), captor.capture());
+        ArgumentCaptor<ServicoInput> captor =
+                ArgumentCaptor.forClass(ServicoInput.class);
+
+        verify(atualizarServicoUseCase)
+                .execute(eq(1L), captor.capture());
+
+        ServicoInput input = captor.getValue();
+
+        assertEquals("Troca de Óleo", input.nome());
+        assertEquals("Substituição do óleo do motor", input.descricao());
+        assertEquals(new BigDecimal("150.00"), input.valor());
     }
 
     @Test
     void deveInativarServico() {
-        ResponseEntity<String> resultado = servicoController.inativar(1L);
 
-        assertNotNull(resultado);
+        ResponseEntity<String> resultado =
+                servicoController.inativar(1L);
+
         assertEquals(HttpStatus.OK, resultado.getStatusCode());
-        assertEquals("Serviço inativado com sucesso", resultado.getBody());
+        assertEquals(
+                "Serviço inativado com sucesso",
+                resultado.getBody());
 
-        verify(inativarServicoUseCase).execute(1L);
+        verify(inativarServicoUseCase)
+                .execute(1L);
     }
 
     @Test
     void deveListarTempoMedioPorServico() {
-        TempoMedioServicoMetricaOutput metricaOutput = TempoMedioServicoMetricaOutput.builder()
-                .servicoId(1L)
-                .nomeServico("Troca de Óleo")
-                .quantidadeExecucoes(2L)
-                .tempoMedioSegundos(3600.0)
-                .tempoMedioMinutos(60.0)
-                .tempoMedioHoras(1.0)
-                .build();
 
-        List<TempoMedioServicoResponse> expectedResponses = List.of(tempoMedioServicoResponse);
+        TempoMedioServicoMetricaOutput output =
+                TempoMedioServicoMetricaOutput.builder()
+                        .servicoId(1L)
+                        .nomeServico("Troca de Óleo")
+                        .quantidadeExecucoes(2L)
+                        .tempoMedioSegundos(3600.0)
+                        .tempoMedioMinutos(60.0)
+                        .tempoMedioHoras(1.0)
+                        .build();
 
         when(calcularTempoMedioServicoUseCase.execute())
-                .thenReturn(List.of(metricaOutput));
-        
-        when(servicoMapper.mapToMetricResponse(anyList()))
-                .thenReturn(expectedResponses);
+                .thenReturn(List.of(output));
 
+        ResponseEntity<List<TempoMedioServicoResponse>> resultado =
+                servicoController.listarTempoMedioPorServico();
 
-        ResponseEntity<List<TempoMedioServicoResponse>> resultado = servicoController.listarTempoMedioPorServico();
-
-        assertNotNull(resultado);
         assertEquals(HttpStatus.OK, resultado.getStatusCode());
+
         assertEquals(1, resultado.getBody().size());
-        assertEquals("Troca de Óleo", resultado.getBody().get(0).nomeServico());
-        assertEquals(2L, resultado.getBody().get(0).quantidadeExecucoes());
+
+        TempoMedioServicoResponse response =
+                resultado.getBody().getFirst();
+
+        assertEquals(1L, response.servicoId());
+        assertEquals("Troca de Óleo", response.nomeServico());
+        assertEquals(2L, response.quantidadeExecucoes());
+        assertEquals(3600.0, response.tempoMedioSegundos());
+        assertEquals(60.0, response.tempoMedioMinutos());
+        assertEquals(1.0, response.tempoMedioHoras());
 
         verify(calcularTempoMedioServicoUseCase).execute();
-        verify(servicoMapper).mapToMetricResponse(List.of(metricaOutput)); // Verify with the actual argument
     }
 
 }

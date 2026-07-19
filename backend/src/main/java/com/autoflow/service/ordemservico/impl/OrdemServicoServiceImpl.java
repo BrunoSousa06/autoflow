@@ -2,7 +2,7 @@ package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
-import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
+import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
@@ -44,7 +44,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse.mensagemParaCliente;
+import static com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse.mensagemParaCliente;
 
 
 @Slf4j
