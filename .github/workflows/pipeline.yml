@@ -3,13 +3,15 @@ name: Pipeline
 on:
   push:
     branches: ["develop", "main"]
+
   pull_request:
     types: [opened, synchronize, reopened]
     branches: ["develop", "main"]
 
 jobs:
-  backend-test:
-    name: Backend Tests
+
+  backend-test-sonar:
+    name: Backend Tests & SonarQube Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -24,21 +26,25 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Run Unit Tests
-        working-directory: backend
-        run: mvn clean test jacoco:report
-
-      - name: Upload Backend Test Artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Cache SonarQube packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
-          name: backend-test-artifacts
-          path: |
-            backend/target/classes/**
-            backend/target/test-classes/**
-            backend/target/site/jacoco/**
-            backend/target/surefire-reports/**
-          if-no-files-found: error
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Maven packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('backend/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build and analyze
+        working-directory: backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
 
   backend-build:
     name: Backend Build
@@ -58,49 +64,6 @@ jobs:
       - name: Build Backend
         working-directory: backend
         run: mvn package -DskipTests
-
-  sonar-analysis:
-    name: SonarQube Analysis
-    runs-on: ubuntu-latest
-    needs: backend-build
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Cache SonarQube packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Download Backend Test Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-test-artifacts
-          path: backend/target
-
-      - name: Run Sonar Analysis
-        working-directory: backend
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          mvn sonar:sonar \
-            -DskipTests \
-            -Dsonar.projectKey=BrunoSousa06_autoflow \
-            -Dsonar.qualitygate.wait=true \
-            -Dsonar.java.binaries=target/classes \
-            -Dsonar.junit.reportPaths=target/surefire-reports \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
   frontend-test:
     name: Frontend Tests
@@ -158,7 +121,7 @@ jobs:
   snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
-    needs:  [sonar-analysis, frontend-build]
+    needs:  [backend-test-and-sonar, frontend-build]
     permissions:
       actions: read
       contents: read
@@ -196,7 +159,7 @@ jobs:
   docker-build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs:  [sonar-analysis, frontend-build]
+    needs:  [backend-test-and-sonar, frontend-build]
     steps:
       - uses: actions/checkout@v4
 
