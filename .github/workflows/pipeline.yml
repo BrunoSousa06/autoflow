@@ -178,10 +178,7 @@ jobs:
   docker-build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs:
-      - backend-build
-      - frontend-build-test
-
+    needs:  [backend-sonar, frontend-build]
     steps:
       - uses: actions/checkout@v4
 
