@@ -1,66 +1,116 @@
 name: Pipeline
+
 on:
   push:
-    branches: [ "develop", "main" ]
+    branches: ["develop", "main"]
+
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [ "develop", "main" ]
+    branches: ["develop", "main"]
 
 jobs:
-  backend-build-test-sonar: 
-    name: Backend Build, Tests & Sonar
+
+  backend-test:
+    name: Backend Tests
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          distribution: temurin
+          java-version: "21"
+          cache: maven
 
-      - name: Build, Test and Analyze
+      - name: Run Unit Tests
         working-directory: backend
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
+        run: mvn clean test
 
-      - name: Upload backend coverage
+      - name: Upload Backend Coverage
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: backend-coverage
           path: backend/target/site/jacoco/
+          if-no-files-found: ignore
+
+  backend-build:
+    name: Backend Build
+    runs-on: ubuntu-latest
+    needs: backend-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build Backend
+        working-directory: backend
+        run: mvn package -DskipTests
+
+  backend-sonar:
+    name: Backend SonarQube
+    runs-on: ubuntu-latest
+    needs: backend-build
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run Sonar Analysis
+        working-directory: backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+            -DskipTests \
+            -Dsonar.projectKey=BrunoSousa06_autoflow \
+            -Dsonar.qualitygate.wait=true
 
   frontend-build-test:
-    name: Frontend Build and Tests
+    name: Frontend Build & Tests
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install Dependencies
         working-directory: frontend
         run: npm ci
 
-      # CORREÇÃO: Testes executam ANTES do build de produção
-      - name: Test frontend with coverage
+      - name: Run Frontend Tests
         working-directory: frontend
         run: npm run test:ci
 
-      - name: Build frontend
+      - name: Build Frontend
         working-directory: frontend
         run: npm run build
 
-      - name: Upload frontend coverage
+      - name: Upload Frontend Coverage
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -71,19 +121,23 @@ jobs:
   snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
-    needs: [backend-build-test-sonar, frontend-build-test]
+    needs:
+      - backend-sonar
+      - frontend-build-test
+
     permissions:
-      actions: read       
-      contents: read      
+      actions: read
+      contents: read
       security-events: write
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: temurin
+          java-version: "21"
 
       - name: Install Snyk CLI
         uses: snyk/actions/setup@v4
@@ -98,39 +152,42 @@ jobs:
         working-directory: backend
         run: docker build -t autoflow-app:latest -f Dockerfile .
 
-      - name: Snyk Container Scan
-        continue-on-error: true 
+      - name: Run Snyk Container Scan
+        continue-on-error: true
         working-directory: backend
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk container test autoflow-app:latest --file=Dockerfile
+
   docker-build:
-      name: Build Docker Images
-      runs-on: ubuntu-latest
-      needs: [backend-build-test-sonar, frontend-build-test]
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs:
+      - backend-build
+      - frontend-build-test
 
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v3
+    steps:
+      - uses: actions/checkout@v4
 
-        - name: Build Backend Docker Image
-          uses: docker/build-push-action@v5
-          with:
-            context: ./backend
-            file: ./backend/Dockerfile
-            push: false
-            tags: autoflow-backend:latest
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-        - name: Build Frontend Docker Image
-          uses: docker/build-push-action@v5
-          with:
-            context: ./frontend
-            file: ./frontend/Dockerfile
-            push: false
-            tags: autoflow-frontend:latest
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: autoflow-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: autoflow-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
