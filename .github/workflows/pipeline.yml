@@ -7,13 +7,13 @@ on:
     branches: [ "develop", "main" ]
 
 jobs:
-  backend-build: 
-    name: Backend Build and Tests
+  backend-build-test-sonar: 
+    name: Backend Build, Tests & Sonar
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -21,9 +21,11 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build and Test with Maven
+      - name: Build, Test and Analyze
         working-directory: backend
-        run: mvn clean verify
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
 
       - name: Upload backend coverage
         uses: actions/upload-artifact@v4
@@ -49,13 +51,14 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-
+      # CORREÇÃO: Testes executam ANTES do build de produção
       - name: Test frontend with coverage
         working-directory: frontend
         run: npm run test:ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
 
       - name: Upload frontend coverage
         uses: actions/upload-artifact@v4
@@ -65,45 +68,10 @@ jobs:
           path: frontend/coverage/frontend
           if-no-files-found: ignore
 
-  sonar-analysis:
-    name: SonarQube Analysis
-    runs-on: ubuntu-latest
-    needs: [backend-build, frontend-build-test]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Cache SonarQube packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('backend/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Build and analyze
-        working-directory: backend
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
-
   snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
-    needs: [backend-build, frontend-build-test]
+    needs: [backend-build-test-sonar, frontend-build-test]
     permissions:
       actions: read       
       contents: read      
@@ -118,7 +86,7 @@ jobs:
           java-version: '21'
 
       - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
+        uses: snyk/actions/setup@v4
 
       - name: Run Snyk Open Source Scan
         continue-on-error: true
@@ -136,11 +104,10 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk container test autoflow-app:latest --file=Dockerfile
-  
   docker-build:
       name: Build Docker Images
       runs-on: ubuntu-latest
-      needs: [backend-build, frontend-build-test]
+      needs: [backend-build-test-sonar, frontend-build-test]
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
