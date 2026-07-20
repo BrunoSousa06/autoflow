@@ -3,7 +3,7 @@ package com.autoflow.controller.ordemservico.reparoadicional;
 import com.autoflow.controller.ordemservico.reparoadicional.request.CriarReparoAdicionalRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.response.CriarReparoAdicionalResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.mapper.ItensNecessariosMapper;
+import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapper;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

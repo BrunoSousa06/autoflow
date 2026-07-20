@@ -2,12 +2,12 @@ package com.autoflow.domain.cliente;
 
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,17 +1,17 @@
 package com.autoflow.controller.ordemservico;
 
-import com.autoflow.config.security.service.CustomUserDetailsService;
-import com.autoflow.config.security.service.JwtService;
+import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapperImpl;
+import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapperImpl;
+import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.persistence.security.service.JwtService;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
-import com.autoflow.domain.veiculo.VeiculoEntity;
-import com.autoflow.mapper.ItensNecessariosMapperImpl;
-import com.autoflow.mapper.ServicoSolicitadoMapperImpl;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;

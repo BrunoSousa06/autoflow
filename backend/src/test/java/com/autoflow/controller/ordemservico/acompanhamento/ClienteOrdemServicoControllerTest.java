@@ -1,7 +1,7 @@
 package com.autoflow.controller.ordemservico.acompanhamento;
 
-import com.autoflow.config.security.service.CustomUserDetailsService;
-import com.autoflow.config.security.service.JwtService;
+import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.persistence.security.service.JwtService;
 import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.service.ordemservico.OrdemServicoService;

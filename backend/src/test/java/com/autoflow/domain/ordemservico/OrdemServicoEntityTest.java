@@ -1,7 +1,7 @@
 package com.autoflow.domain.ordemservico;
 
-import com.autoflow.domain.cliente.ClienteEntity;
-import com.autoflow.domain.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

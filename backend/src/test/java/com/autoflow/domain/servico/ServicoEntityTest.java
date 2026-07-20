@@ -1,5 +1,6 @@
 package com.autoflow.domain.servico;
 
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
