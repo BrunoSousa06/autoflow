@@ -170,7 +170,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Backend Docker Image and push
+      - name: Build Backend Docker Image
         uses: docker/build-push-action@v6
         with:
           context: ./backend
@@ -180,7 +180,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build Frontend Docker Image and push
+      - name: Build Frontend Docker Image
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
