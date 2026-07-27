@@ -1,7 +1,7 @@
 package com.autoflow.controller.orcamento;
 
-import com.autoflow.config.security.service.CustomUserDetailsService;
-import com.autoflow.config.security.service.JwtService;
+import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.persistence.security.service.JwtService;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;

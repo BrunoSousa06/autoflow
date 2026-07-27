@@ -8,8 +8,8 @@ import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoRespo
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
-import com.autoflow.mapper.ItensNecessariosMapper;
-import com.autoflow.mapper.ServicoSolicitadoMapper;
+import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapper;
+import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapper;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;

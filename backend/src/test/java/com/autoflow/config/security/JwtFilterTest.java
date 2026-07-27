@@ -1,7 +1,8 @@
 package com.autoflow.config.security;
 
-import com.autoflow.config.security.service.CustomUserDetailsService;
-import com.autoflow.config.security.service.JwtService;
+import com.autoflow.infrastructure.persistence.security.JwtFilter;
+import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.persistence.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,13 +1,13 @@
 package com.autoflow.service.servico;
 
 
-import com.autoflow.controller.servico.request.ServicoRequest;
-import com.autoflow.controller.servico.response.ServicoResponse;
-import com.autoflow.controller.servico.response.TempoMedioServicoResponse;
-import com.autoflow.domain.servico.ServicoEntity;
-import com.autoflow.mapper.ServicoMapper;
-import com.autoflow.repository.servico.ServicoRepository;
-import com.autoflow.repository.servico.ServicoSolicitadoRepository;
+import com.autoflow.presentation.servico.request.ServicoRequest;
+import com.autoflow.presentation.servico.response.ServicoResponse;
+import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
+import com.autoflow.infrastructure.persistence.repository.ServicoRepository;
+import com.autoflow.infrastructure.persistence.repository.ServicoSolicitadoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

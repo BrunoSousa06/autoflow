@@ -1,23 +1,24 @@
 package com.autoflow.service.ordemservico.impl;
 
+import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
-import com.autoflow.domain.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import com.autoflow.domain.servico.ServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.domain.veiculo.VeiculoEntity;
-import com.autoflow.repository.cliente.ClienteRepository;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
-import com.autoflow.service.cliente.ClienteService;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
@@ -30,7 +31,6 @@ import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
-import com.autoflow.service.veiculo.VeiculoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,8 +52,7 @@ import static com.autoflow.controller.ordemservico.acompanhamento.response.Acomp
 @RequiredArgsConstructor
 public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OrdemServicoRepository ordemServicoRepository;
-
-    private final VeiculoService veiculoService;
+    private final BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
     private final ServicoService servicoService;
     private final UsuarioService usuarioService;
     private final PecaInsumoService pecaInsumoService;
@@ -62,15 +61,15 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OrcamentoVersioningService orcamentoVersioningServiceImpl;
     private final OrcamentoRepository orcamentoRepository;
     private final OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
-    private final ClienteService clienteService;
     private final ClienteRepository clienteRepository;
     private final HistoricoStatusOsRepository historicoStatusOsRepository;
     private final OrcamentoNotificacaoService orcamentoNotificacaoService;
+    private final BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
 
     @Autowired
-    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, VeiculoService veiculoService, ServicoService servicoService, UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService, OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl, OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl, ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl, ClienteService clienteService) {
+    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService, UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService, OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl, OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl, ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl, BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase) {
         this.ordemServicoRepository = ordemServicoRepository;
-        this.veiculoService = veiculoService;
+        this.buscarOuCadastrarVeiculoUseCase = buscarOuCadastrarVeiculoUseCase;
         this.servicoService = servicoService;
         this.usuarioService = usuarioService;
         this.historicoStatusOsRepository = historicoStatusOsRepository;
@@ -82,13 +81,13 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.clienteRepository = clienteRepository;
         this.orcamentoRepository = orcamentoRepository;
         this.orcamentoPublicacaoServiceImpl = orcamentoPublicacaoServiceImpl;
-        this.clienteService = clienteService;
+        this.buscarClientePorCpfCnpjUseCase = buscarClientePorCpfCnpjUseCase;
     }
 
     public OrdemServicoEntity criar(String cpfCnpj, VeiculoOrdemServicoRequest veiculoRequest, List<ServicoSolicitadoEntity> servicosSolicitados) {
-        ClienteEntity cliente = clienteService.buscarPorCpfCnpj(cpfCnpj);
+        ClienteEntity cliente = buscarClientePorCpfCnpjUseCase.execute(cpfCnpj);
 
-        VeiculoEntity veiculo = veiculoService.buscarOuCadastrarPorPlacaParaCliente(
+            VeiculoEntity veiculo = buscarOuCadastrarVeiculoUseCase.execute(
                 cliente,
                 veiculoRequest
         );

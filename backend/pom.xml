@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<version>3.5.14</version>
+			<version>3.5.15</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -184,8 +184,9 @@
 				<configuration>
 					<excludes>
 						<exclude>com/autoflow/config/security/SecurityConfig.class</exclude>
-						<exclude>com/autoflow/mapper/**</exclude>
+						<exclude>com/autoflow/infrastructure/persistence/mapper/**</exclude>
 						<exclude>**/*Application.java</exclude>
+						<exclude>com/autoflow/application/gateway/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
