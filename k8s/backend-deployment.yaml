@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoflow-backend
+  labels:
+    app: autoflow-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: autoflow-backend
+  template:
+    metadata:
+      labels:
+        app: autoflow-backend
+    spec:
+      containers:
+        - name: autoflow-backend-container
+          image: brunosousa06/autoflow-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: autoflow-secrets

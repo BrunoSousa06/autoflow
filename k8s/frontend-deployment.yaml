@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoflow-frontend
+  labels:
+    app: autoflow-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: autoflow-frontend
+  template:
+    metadata:
+      labels:
+        app: autoflow-frontend
+    spec:
+      containers:
+        - name: autoflow-frontend-container
+          image: brunosousa06/autoflow-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
