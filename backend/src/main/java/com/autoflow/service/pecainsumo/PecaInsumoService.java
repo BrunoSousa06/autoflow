@@ -1,11 +1,11 @@
 package com.autoflow.service.pecainsumo;
 
 
-import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
-import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
+import com.autoflow.presentation.pecainsumo.request.PecaInsumoRequest;
+import com.autoflow.presentation.pecainsumo.response.PecaInsumoResponse;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.repository.pecainsumo.PecaInsumoSpecifications;
+import com.autoflow.infrastructure.persistence.repository.PecaInsumoSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
@@ -13,7 +13,7 @@ import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
-import com.autoflow.repository.pecainsumo.PecaInsumoRepository;
+import com.autoflow.infrastructure.persistence.repository.PecaInsumoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -61,18 +61,6 @@ public class PecaInsumoService {
 
     public PecaInsumoEntity buscarEntityPorId(Long id) {
         return buscarEntidadePorId(id);
-    }
-
-    public PecaInsumoResponse atualizar(PecaInsumoRequest request, Long id
-    ) {
-
-        PecaInsumoEntity entity = buscarEntidadePorId(id);
-
-        pecaInsumoMapper.updateEntity(request, entity);
-
-        PecaInsumoEntity atualizado = pecaInsumoRepository.save(entity);
-
-        return pecaInsumoMapper.toResponse(atualizado);
     }
 
     public void deletar(Long id) {

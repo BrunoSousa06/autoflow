@@ -30,7 +30,6 @@ public class ClienteController {
 
     private final CriarClienteUseCase criarClienteUseCase;
     private final BuscarClientePorEmailUseCase buscarClientePorEmailUseCase;
-    private final BuscarClientePorIdUseCase buscarClientePorIdUseCase;
     private final ListarTodosClientesUseCase listarTodosClientesUseCase;
     private final AtualizarClienteUseCase atualizarClienteUseCase;
     private final DeletarClienteUseCase deletarClienteUseCase;

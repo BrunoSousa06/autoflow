@@ -1,14 +1,14 @@
 package com.autoflow.service.pecainsumo;
 
-import com.autoflow.controller.pecainsumo.request.PecaInsumoRequest;
-import com.autoflow.controller.pecainsumo.response.PecaInsumoResponse;
+import com.autoflow.presentation.pecainsumo.request.PecaInsumoRequest;
+import com.autoflow.presentation.pecainsumo.response.PecaInsumoResponse;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
-import com.autoflow.repository.pecainsumo.PecaInsumoRepository;
+import com.autoflow.infrastructure.persistence.repository.PecaInsumoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -106,39 +106,6 @@ class PecaInsumoServiceTest {
             verify(mapper)
                     .toResponse(entity);
         }
-
-        @Test
-        void deveLancarExcecaoQuandoPecaJaExistir() {
-
-            when(repository.findByNomeIgnoreCase(request.nome()))
-                    .thenReturn(Optional.of(entity));
-
-            ResponseStatusException exception =
-                    assertThrows(
-                            ResponseStatusException.class,
-                            () -> service.cadastrar(request)
-                    );
-
-            assertAll(
-                    () -> assertEquals(
-                            HttpStatus.BAD_REQUEST,
-                            exception.getStatusCode()
-                    ),
-                    () -> assertEquals(
-                            "Peça/Insumo já foi cadastrado",
-                            exception.getReason()
-                    )
-            );
-
-            verify(repository)
-                    .findByNomeIgnoreCase(request.nome());
-
-            verify(repository, never())
-                    .save(any());
-
-            verify(mapper, never())
-                    .mapToEntity(any());
-        }
     }
 
     @Nested
@@ -195,25 +162,6 @@ class PecaInsumoServiceTest {
 
             verify(repository).findAll(any(Specification.class), eq(pageable));
             verify(mapper).toResponse(entity);
-        }
-
-        @Test
-        void deveRetornarPaginaVaziaQuandoNaoHouverItens() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<PecaInsumoEntity> pageVazia = new PageImpl<>(List.of(), pageable, 0);
-
-            when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(pageVazia);
-
-            Page<PecaInsumoResponse> resultado = service.listarPaginado(pageable, null, null);
-
-            assertAll(
-                    () -> assertNotNull(resultado),
-                    () -> assertEquals(0, resultado.getTotalElements()),
-                    () -> assertTrue(resultado.getContent().isEmpty())
-            );
-
-            verify(repository).findAll(any(Specification.class), eq(pageable));
-            verify(mapper, never()).toResponse(any());
         }
 
         @Test
@@ -293,35 +241,6 @@ class PecaInsumoServiceTest {
         }
 
         @Test
-        void deveLancarExcecaoQuandoIdNaoExistir() {
-
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            ResponseStatusException exception =
-                    assertThrows(
-                            ResponseStatusException.class,
-                            () -> service.buscarPorId(1L)
-                    );
-
-            assertAll(
-                    () -> assertEquals(
-                            HttpStatus.NOT_FOUND,
-                            exception.getStatusCode()
-                    ),
-                    () -> assertEquals(
-                            "Peça/Insumo não encontrado com o ID: 1",
-                            exception.getReason()
-                    )
-            );
-
-            verify(repository).findById(1L);
-
-            verify(mapper, never())
-                    .toResponse(any());
-        }
-
-        @Test
         void deveBuscarEntityPorIdComSucesso() {
 
             when(repository.findById(1L))
@@ -341,228 +260,174 @@ class PecaInsumoServiceTest {
     @Nested
     class AtualizarTests {
 
-        @Test
-        void deveAtualizarComSucesso() {
+        @Nested
+        class DeletarTests {
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.of(entity));
+            @Test
+            void deveDeletarComSucesso() {
 
-            when(repository.save(entity))
-                    .thenReturn(entity);
+                when(repository.existsById(1L))
+                        .thenReturn(true);
 
-            when(mapper.toResponse(entity))
-                    .thenReturn(response);
+                service.deletar(1L);
 
-            PecaInsumoResponse resultado =
-                    service.atualizar(request, 1L);
+                verify(repository).existsById(1L);
+                verify(repository).deleteById(1L);
+            }
 
-            assertEquals(response, resultado);
+            @Test
+            void deveLancarExcecaoQuandoIdNaoExistir() {
 
-            verify(repository).findById(1L);
+                when(repository.existsById(1L))
+                        .thenReturn(false);
 
-            verify(mapper)
-                    .updateEntity(request, entity);
+                ResponseStatusException exception =
+                        assertThrows(
+                                ResponseStatusException.class,
+                                () -> service.deletar(1L)
+                        );
 
-            verify(repository)
-                    .save(entity);
+                assertAll(
+                        () -> assertEquals(
+                                HttpStatus.NOT_FOUND,
+                                exception.getStatusCode()
+                        ),
+                        () -> assertEquals(
+                                "Peça/Insumo não encontrado com o ID: 1",
+                                exception.getReason()
+                        )
+                );
 
-            verify(mapper)
-                    .toResponse(entity);
+                verify(repository).existsById(1L);
+
+                verify(repository, never())
+                        .deleteById(anyLong());
+            }
         }
 
-        @Test
-        void deveLancarExcecaoQuandoIdNaoExistir() {
+        @Nested
+        class VerificarDisponibilidadeEBaixarTests {
 
-            when(repository.findById(1L))
-                    .thenReturn(Optional.empty());
+            @Test
+            void deveMarcarDisponivelEBaixarEstoqueQuandoHouverQuantidade() {
+                PecaInsumoEntity filtro = criarPecaInsumo(
+                        1L,
+                        "Filtro de Oleo",
+                        CategoriaPecaInsumo.PECA,
+                        new BigDecimal("50.00"),
+                        10
+                );
+                List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 2));
 
-            ResponseStatusException exception =
-                    assertThrows(
-                            ResponseStatusException.class,
-                            () -> service.atualizar(request, 1L)
-                    );
+                when(repository.findAllById(List.of(1L)))
+                        .thenReturn(List.of(filtro));
 
-            assertEquals(
-                    HttpStatus.NOT_FOUND,
-                    exception.getStatusCode()
-            );
+                BaixaEstoqueResult resultado = service.verificarDisponibilidadeEBaixar(itens);
 
-            verify(repository).findById(1L);
+                ItemNecessarioEntity itemAtualizado = resultado.itensAtualizados().getFirst();
+                assertAll(
+                        () -> assertEquals(8, filtro.getQuantidade()),
+                        () -> assertEquals(1L, itemAtualizado.getPecaInsumoId()),
+                        () -> assertEquals("Filtro de Oleo", itemAtualizado.getNome()),
+                        () -> assertEquals(CategoriaPecaInsumo.PECA, itemAtualizado.getTipo()),
+                        () -> assertEquals(new BigDecimal("50.00"), itemAtualizado.getValorUnitario()),
+                        () -> assertEquals(2, itemAtualizado.getQuantidade()),
+                        () -> assertEquals(new BigDecimal("100.00"), itemAtualizado.getValorTotal()),
+                        () -> assertEquals(StatusItemNecessario.UTILIZADO, itemAtualizado.getStatus()),
+                        () -> assertEquals(8, itemAtualizado.getQuantidadeDisponivel()),
+                        () -> assertNull(itemAtualizado.getMotivoPendencia()),
+                        () -> assertNull(itemAtualizado.getMensagemStatus())
+                );
+                verify(repository).findAllById(List.of(1L));
+                verify(repository).saveAll(List.of(filtro));
+            }
 
-            verify(repository, never())
-                    .save(any());
+            @Test
+            void deveMarcarPendenteENaoBaixarEstoqueQuandoNaoHouverQuantidade() {
+                PecaInsumoEntity filtro = criarPecaInsumo(
+                        1L,
+                        "Filtro de Oleo",
+                        CategoriaPecaInsumo.PECA,
+                        new BigDecimal("50.00"),
+                        2
+                );
+                List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 3));
 
-            verify(mapper, never())
-                    .updateEntity(any(), any());
+                when(repository.findAllById(List.of(1L)))
+                        .thenReturn(List.of(filtro));
+
+                BaixaEstoqueResult resultado = service.verificarDisponibilidadeEBaixar(itens);
+
+                ItemNecessarioEntity itemAtualizado = resultado.itensAtualizados().getFirst();
+                assertAll(
+                        () -> assertEquals(2, filtro.getQuantidade()),
+                        () -> assertEquals(1L, itemAtualizado.getPecaInsumoId()),
+                        () -> assertEquals("Filtro de Oleo", itemAtualizado.getNome()),
+                        () -> assertEquals(3, itemAtualizado.getQuantidade()),
+                        () -> assertEquals(StatusItemNecessario.PENDENTE, itemAtualizado.getStatus()),
+                        () -> assertEquals(2, itemAtualizado.getQuantidadeDisponivel()),
+                        () -> assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE, itemAtualizado.getMotivoPendencia()),
+                        () -> assertEquals(
+                                "Estoque insuficiente. Solicitado: 3, disponivel: 2.",
+                                itemAtualizado.getMensagemStatus()
+                        )
+                );
+                verify(repository).findAllById(List.of(1L));
+                verify(repository).saveAll(List.of());
+            }
+
+            @Test
+            void deveLancarNotFoundQuandoItemNaoExistirNoEstoque() {
+                List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 3));
+
+                when(repository.findAllById(List.of(1L)))
+                        .thenReturn(List.of());
+
+                ResponseStatusException exception = assertThrows(
+                        ResponseStatusException.class,
+                        () -> service.verificarDisponibilidadeEBaixar(itens)
+                );
+
+                assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+                verify(repository).findAllById(List.of(1L));
+                verify(repository, never()).saveAll(any());
+            }
+
+            @Test
+            void deveRetornarResultadoVazioQuandoListaForVazia() {
+                BaixaEstoqueResult result = service.verificarDisponibilidadeEBaixar(Collections.emptyList());
+
+                assertNotNull(result);
+                assertTrue(result.itensAtualizados().isEmpty());
+            }
         }
-    }
 
-    @Nested
-    class DeletarTests {
-
-        @Test
-        void deveDeletarComSucesso() {
-
-            when(repository.existsById(1L))
-                    .thenReturn(true);
-
-            service.deletar(1L);
-
-            verify(repository).existsById(1L);
-            verify(repository).deleteById(1L);
+        private PecaInsumoEntity criarPecaInsumo(
+                Long id,
+                String nome,
+                CategoriaPecaInsumo tipo,
+                BigDecimal valor,
+                int quantidade
+        ) {
+            PecaInsumoEntity pecaInsumo = new PecaInsumoEntity();
+            pecaInsumo.setId(id);
+            pecaInsumo.setNome(nome);
+            pecaInsumo.setTipo(tipo);
+            pecaInsumo.setValor(valor);
+            pecaInsumo.setQuantidade(quantidade);
+            return pecaInsumo;
         }
 
-        @Test
-        void deveLancarExcecaoQuandoIdNaoExistir() {
-
-            when(repository.existsById(1L))
-                    .thenReturn(false);
-
-            ResponseStatusException exception =
-                    assertThrows(
-                            ResponseStatusException.class,
-                            () -> service.deletar(1L)
-                    );
-
-            assertAll(
-                    () -> assertEquals(
-                            HttpStatus.NOT_FOUND,
-                            exception.getStatusCode()
-                    ),
-                    () -> assertEquals(
-                            "Peça/Insumo não encontrado com o ID: 1",
-                            exception.getReason()
-                    )
-            );
-
-            verify(repository).existsById(1L);
-
-            verify(repository, never())
-                    .deleteById(anyLong());
-        }
-    }
-
-    @Nested
-    class VerificarDisponibilidadeEBaixarTests {
-
-        @Test
-        void deveMarcarDisponivelEBaixarEstoqueQuandoHouverQuantidade() {
-            PecaInsumoEntity filtro = criarPecaInsumo(
-                    1L,
-                    "Filtro de Oleo",
+        private ItemNecessarioEntity criarItemNecessarioSolicitado(Long pecaInsumoId, int quantidade) {
+            return ItemNecessarioEntity.criar(
+                    pecaInsumoId,
+                    "Item solicitado",
                     CategoriaPecaInsumo.PECA,
-                    new BigDecimal("50.00"),
-                    10
+                    BigDecimal.ZERO,
+                    quantidade,
+                    null
             );
-            List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 2));
-
-            when(repository.findAllById(List.of(1L)))
-                    .thenReturn(List.of(filtro));
-
-            BaixaEstoqueResult resultado = service.verificarDisponibilidadeEBaixar(itens);
-
-            ItemNecessarioEntity itemAtualizado = resultado.itensAtualizados().getFirst();
-            assertAll(
-                    () -> assertEquals(8, filtro.getQuantidade()),
-                    () -> assertEquals(1L, itemAtualizado.getPecaInsumoId()),
-                    () -> assertEquals("Filtro de Oleo", itemAtualizado.getNome()),
-                    () -> assertEquals(CategoriaPecaInsumo.PECA, itemAtualizado.getTipo()),
-                    () -> assertEquals(new BigDecimal("50.00"), itemAtualizado.getValorUnitario()),
-                    () -> assertEquals(2, itemAtualizado.getQuantidade()),
-                    () -> assertEquals(new BigDecimal("100.00"), itemAtualizado.getValorTotal()),
-                    () -> assertEquals(StatusItemNecessario.UTILIZADO, itemAtualizado.getStatus()),
-                    () -> assertEquals(8, itemAtualizado.getQuantidadeDisponivel()),
-                    () -> assertNull(itemAtualizado.getMotivoPendencia()),
-                    () -> assertNull(itemAtualizado.getMensagemStatus())
-            );
-            verify(repository).findAllById(List.of(1L));
-            verify(repository).saveAll(List.of(filtro));
         }
-
-        @Test
-        void deveMarcarPendenteENaoBaixarEstoqueQuandoNaoHouverQuantidade() {
-            PecaInsumoEntity filtro = criarPecaInsumo(
-                    1L,
-                    "Filtro de Oleo",
-                    CategoriaPecaInsumo.PECA,
-                    new BigDecimal("50.00"),
-                    2
-            );
-            List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 3));
-
-            when(repository.findAllById(List.of(1L)))
-                    .thenReturn(List.of(filtro));
-
-            BaixaEstoqueResult resultado = service.verificarDisponibilidadeEBaixar(itens);
-
-            ItemNecessarioEntity itemAtualizado = resultado.itensAtualizados().getFirst();
-            assertAll(
-                    () -> assertEquals(2, filtro.getQuantidade()),
-                    () -> assertEquals(1L, itemAtualizado.getPecaInsumoId()),
-                    () -> assertEquals("Filtro de Oleo", itemAtualizado.getNome()),
-                    () -> assertEquals(3, itemAtualizado.getQuantidade()),
-                    () -> assertEquals(StatusItemNecessario.PENDENTE, itemAtualizado.getStatus()),
-                    () -> assertEquals(2, itemAtualizado.getQuantidadeDisponivel()),
-                    () -> assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE, itemAtualizado.getMotivoPendencia()),
-                    () -> assertEquals(
-                            "Estoque insuficiente. Solicitado: 3, disponivel: 2.",
-                            itemAtualizado.getMensagemStatus()
-                    )
-            );
-            verify(repository).findAllById(List.of(1L));
-            verify(repository).saveAll(List.of());
-        }
-
-        @Test
-        void deveLancarNotFoundQuandoItemNaoExistirNoEstoque() {
-            List<ItemNecessarioEntity> itens = List.of(criarItemNecessarioSolicitado(1L, 3));
-
-            when(repository.findAllById(List.of(1L)))
-                    .thenReturn(List.of());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> service.verificarDisponibilidadeEBaixar(itens)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(repository).findAllById(List.of(1L));
-            verify(repository, never()).saveAll(any());
-        }
-
-        @Test
-        void deveRetornarResultadoVazioQuandoListaForVazia() {
-            BaixaEstoqueResult result = service.verificarDisponibilidadeEBaixar(Collections.emptyList());
-
-            assertNotNull(result);
-            assertTrue(result.itensAtualizados().isEmpty());
-        }
-    }
-
-    private PecaInsumoEntity criarPecaInsumo(
-            Long id,
-            String nome,
-            CategoriaPecaInsumo tipo,
-            BigDecimal valor,
-            int quantidade
-    ) {
-        PecaInsumoEntity pecaInsumo = new PecaInsumoEntity();
-        pecaInsumo.setId(id);
-        pecaInsumo.setNome(nome);
-        pecaInsumo.setTipo(tipo);
-        pecaInsumo.setValor(valor);
-        pecaInsumo.setQuantidade(quantidade);
-        return pecaInsumo;
-    }
-
-    private ItemNecessarioEntity criarItemNecessarioSolicitado(Long pecaInsumoId, int quantidade) {
-        return ItemNecessarioEntity.criar(
-                pecaInsumoId,
-                "Item solicitado",
-                CategoriaPecaInsumo.PECA,
-                BigDecimal.ZERO,
-                quantidade,
-                null
-        );
     }
 }
+

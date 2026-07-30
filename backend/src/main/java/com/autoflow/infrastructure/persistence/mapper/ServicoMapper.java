@@ -16,15 +16,12 @@ public interface ServicoMapper {
 
     ServicoResponse toResponse(ServicoEntity entity);
 
-    List<ServicoResponse> toResponseList(List<ServicoEntity> entityList);
 
     ServicoEntity mapToEntity(ServicoRequest request);
 
     void updateEntity(ServicoRequest request, @MappingTarget ServicoEntity entity);
 
     ServicoOutput mapToOutput(ServicoEntity entity);
-
-    List<ServicoOutput> mapToListOutput(List<ServicoEntity> entityList);
 
     ServicoResponse mapToResponse(ServicoOutput output);
 

@@ -3,7 +3,7 @@ package com.autoflow.config.security.service;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.repository.usuario.UsuarioRepository;
+import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

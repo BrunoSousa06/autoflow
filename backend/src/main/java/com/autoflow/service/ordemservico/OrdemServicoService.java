@@ -1,6 +1,6 @@
 package com.autoflow.service.ordemservico;
 
-import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
+import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
