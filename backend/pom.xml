@@ -183,8 +183,6 @@
 						<exclude>com/autoflow/infrastructure/persistence/mapper/**</exclude>
 						<exclude>**/*Application.java</exclude>
 						<exclude>com/autoflow/application/gateway/**</exclude>
-						<exclude>com/autoflow/service/usuario/**</exclude>
-						<exclude>com/autoflow/application/usecases/usuario/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>

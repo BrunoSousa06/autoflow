@@ -13,10 +13,30 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface AcompanhamentoMapper {
 
-
     List<AcompanhamentoOrdemServicoResponse> toResponse(List<AcompanhamentoOrdemServicoOutput> output);
     AcompanhamentoOrdemServicoResponse toResponse(AcompanhamentoOrdemServicoOutput output);
 
-    @Mapping(target ="numeroOs", source = "ordemServico.numeroOs")
-    AcompanhamentoOrdemServicoOutput mapToOutPut(OrdemServicoEntity ordemServico, OrcamentoEntity orcamentoAtual, List<HistoricoStatusOsEntity> historico);
+    default AcompanhamentoOrdemServicoOutput mapToOutPut(
+            OrdemServicoEntity ordemServico,
+            OrcamentoEntity orcamentoAtual,
+            List<HistoricoStatusOsEntity> historico) {
+
+        AcompanhamentoOrdemServicoResponse response =
+                AcompanhamentoOrdemServicoResponse.from(
+                        ordemServico,
+                        orcamentoAtual,
+                        historico);
+
+        return new AcompanhamentoOrdemServicoOutput(
+                response.numeroOs(),
+                response.placa(),
+                response.statusAtual(),
+                response.dataAbertura(),
+                response.ultimaAtualizacao(),
+                response.servicosSolicitados(),
+                response.orcamentoAtual(),
+                response.situacaoAprovacao(),
+                response.mensagemParaCliente(),
+                response.historicoStatus());
+    }
 }

@@ -6,6 +6,5 @@ public record UsuarioCadastroResponse(
     Long id,
     String nome,
     String email,
-    String senha,
     RoleEnum role){
 }

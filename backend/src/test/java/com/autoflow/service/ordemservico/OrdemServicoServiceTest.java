@@ -769,7 +769,7 @@ class OrdemServicoServiceTest {
         HistoricoStatusOsEntity historico = HistoricoStatusOsEntity.criar(
                 os.getId(),
                 StatusOrdemServico.AGUARDANDO_APROVACAO,
-                "O orÃ§amento estÃ¡ disponÃ­vel e aguardando sua aprovaÃ§Ã£o.",
+                "O orçamento está disponível e aguardando sua aprovação.",
                 os.getNumeroOs()
         );
 
