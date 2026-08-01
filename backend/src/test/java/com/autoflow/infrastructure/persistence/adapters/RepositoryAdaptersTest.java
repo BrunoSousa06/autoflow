@@ -10,6 +10,8 @@ import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.repository.PecaInsumoRepository;
+import com.autoflow.infrastructure.persistence.repository.ServicoSolicitadoRepository;
+import com.autoflow.infrastructure.persistence.repository.TempoMedioServicoProjection;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
@@ -37,6 +39,7 @@ class RepositoryAdaptersTest {
     @Mock HistoricoStatusOsRepository historicoRepository;
     @Mock OrcamentoRepository orcamentoRepository;
     @Mock OrdemServicoRepository ordemRepository;
+    @Mock ServicoSolicitadoRepository servicoSolicitadoRepository;
 
     @Test
     void pecaAdapterDeveDelegarTodasOperacoes() {
@@ -135,14 +138,12 @@ class RepositoryAdaptersTest {
         var esperado = Optional.of(ordem);
         var pageable = PageRequest.of(0, 10);
         Specification<OrdemServicoEntity> spec = (root, query, cb) -> cb.conjunction();
-        var projection = mock(TempoMedioOrdemServicoProjection.class);
         when(ordemRepository.save(ordem)).thenReturn(ordem);
         when(ordemRepository.findById(1L)).thenReturn(esperado);
         when(ordemRepository.findByNumeroOs("OS-1")).thenReturn(esperado);
         when(ordemRepository.findByCliente_IdOrderByDataAberturaDesc(2L)).thenReturn(List.of(ordem));
         when(ordemRepository.findAllByOrderByDataAberturaDesc()).thenReturn(List.of(ordem));
         when(ordemRepository.findAll(spec, pageable)).thenReturn(new PageImpl<>(List.of(ordem)));
-        when(ordemRepository.calcularTempoMedioFinalizacao()).thenReturn(projection);
 
         assertSame(ordem, adapter.save(ordem));
         assertEquals(esperado, adapter.findById(1L));
@@ -150,6 +151,31 @@ class RepositoryAdaptersTest {
         assertEquals(List.of(ordem), adapter.findByClienteIdOrderByDataAberturaDesc(2L));
         assertEquals(List.of(ordem), adapter.findAllByOrderByDataAberturaDesc());
         assertEquals(List.of(ordem), adapter.findAll(spec, pageable).getContent());
-        assertSame(projection, adapter.calcularTempoMedioFinalizacao());
+    }
+
+    @Test
+    void metricsAdapterDeveOcultarProjectionsDosCasosDeUso() {
+        var ordemProjection = mock(TempoMedioOrdemServicoProjection.class);
+        var servicoProjection = mock(TempoMedioServicoProjection.class);
+        when(ordemProjection.getQuantidadeOrdensFinalizadas()).thenReturn(4L);
+        when(ordemProjection.getTempoMedioSegundos()).thenReturn(1800.0);
+        when(servicoProjection.getServicoId()).thenReturn(7L);
+        when(servicoProjection.getNomeServico()).thenReturn("Alinhamento");
+        when(servicoProjection.getQuantidadeExecucoes()).thenReturn(3L);
+        when(servicoProjection.getTempoMedioSegundos()).thenReturn(900.0);
+        when(ordemRepository.calcularTempoMedioFinalizacao()).thenReturn(ordemProjection);
+        when(servicoSolicitadoRepository.calcularTempoMedioPorServico())
+                .thenReturn(List.of(servicoProjection));
+
+        var adapter = new MetricsRepositoryAdapter(ordemRepository, servicoSolicitadoRepository);
+        var ordem = adapter.calcularTempoMedioOrdensServico();
+        var servicos = adapter.calcularTempoMedioPorServico();
+
+        assertEquals(4L, ordem.quantidadeOrdensFinalizadas());
+        assertEquals(1800.0, ordem.tempoMedioSegundos());
+        assertEquals(7L, servicos.getFirst().servicoId());
+        assertEquals("Alinhamento", servicos.getFirst().nomeServico());
+        assertEquals(3L, servicos.getFirst().quantidadeExecucoes());
+        assertEquals(900.0, servicos.getFirst().tempoMedioSegundos());
     }
 }

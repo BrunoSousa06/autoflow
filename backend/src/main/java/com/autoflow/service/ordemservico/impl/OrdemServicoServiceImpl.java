@@ -4,7 +4,6 @@ import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
-import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -17,7 +16,6 @@ import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
-import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
@@ -343,23 +341,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return orcamentoRepository.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
                 .or(() -> orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc(numeroOs))
                 .orElse(null);
-    }
-
-    @Override
-    public TempoMedioOrdemServicoResponse calcularTempoMedioFinalizacao() {
-        TempoMedioOrdemServicoProjection projection =
-                ordemServicoRepository.calcularTempoMedioFinalizacao();
-
-        Double tempoMedioSegundos = projection.getTempoMedioSegundos();
-        Double tempoMedioMinutos = tempoMedioSegundos == null ? null : tempoMedioSegundos / 60;
-        Double tempoMedioHoras = tempoMedioSegundos == null ? null : tempoMedioSegundos / 3600;
-
-        return new TempoMedioOrdemServicoResponse(
-                projection.getQuantidadeOrdensFinalizadas(),
-                tempoMedioSegundos,
-                tempoMedioMinutos,
-                tempoMedioHoras
-        );
     }
 
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {

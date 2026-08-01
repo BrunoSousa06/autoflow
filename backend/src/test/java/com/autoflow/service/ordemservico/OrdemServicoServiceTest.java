@@ -4,7 +4,6 @@ import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
-import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
@@ -17,7 +16,6 @@ import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
-import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
@@ -931,40 +929,6 @@ class OrdemServicoServiceTest {
 
         assertEquals(erro, exception);
         verify(repository, never()).save(any());
-    }
-
-    @Test
-    void deveCalcularTempoMedioFinalizacao() {
-        TempoMedioOrdemServicoProjection projection = mock(TempoMedioOrdemServicoProjection.class);
-        when(projection.getQuantidadeOrdensFinalizadas()).thenReturn(3L);
-        when(projection.getTempoMedioSegundos()).thenReturn(7200.0);
-        when(repository.calcularTempoMedioFinalizacao()).thenReturn(projection);
-
-        TempoMedioOrdemServicoResponse resultado = service.calcularTempoMedioFinalizacao();
-
-        assertNotNull(resultado);
-        assertEquals(3L, resultado.quantidadeOrdensFinalizadas());
-        assertEquals(7200.0, resultado.tempoMedioSegundos());
-        assertEquals(120.0, resultado.tempoMedioMinutos());
-        assertEquals(2.0, resultado.tempoMedioHoras());
-        verify(repository).calcularTempoMedioFinalizacao();
-    }
-
-    @Test
-    void deveRetornarTemposNulosQuandoNaoExistirOrdemFinalizada() {
-        TempoMedioOrdemServicoProjection projection = mock(TempoMedioOrdemServicoProjection.class);
-        when(projection.getQuantidadeOrdensFinalizadas()).thenReturn(0L);
-        when(projection.getTempoMedioSegundos()).thenReturn(null);
-        when(repository.calcularTempoMedioFinalizacao()).thenReturn(projection);
-
-        TempoMedioOrdemServicoResponse resultado = service.calcularTempoMedioFinalizacao();
-
-        assertNotNull(resultado);
-        assertEquals(0L, resultado.quantidadeOrdensFinalizadas());
-        assertNull(resultado.tempoMedioSegundos());
-        assertNull(resultado.tempoMedioMinutos());
-        assertNull(resultado.tempoMedioHoras());
-        verify(repository).calcularTempoMedioFinalizacao();
     }
 
     private OrdemServicoEntity criarOrdemServicoComServico(String numeroOs, Long servicoOsId) {

@@ -3,7 +3,6 @@ package com.autoflow.infrastructure.persistence.adapters;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
-import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,10 +48,5 @@ public class OrdemServicoRepositoryAdapter implements OrdemServicoGateway {
             Specification<OrdemServicoEntity> specification,
             Pageable pageable) {
         return repository.findAll(specification, pageable);
-    }
-
-    @Override
-    public TempoMedioOrdemServicoProjection calcularTempoMedioFinalizacao() {
-        return repository.calcularTempoMedioFinalizacao();
     }
 }

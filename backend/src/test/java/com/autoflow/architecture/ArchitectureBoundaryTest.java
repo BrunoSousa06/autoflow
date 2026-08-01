@@ -1,5 +1,6 @@
 package com.autoflow.architecture;
 
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
@@ -23,7 +24,10 @@ import static com.tngtech.archunit.library.freeze.FreezingArchRule.freeze;
  * - Entidades de dominio importam jakarta.persistence (dominio->JPA)
  * - OrdemServicoService interface importa com.autoflow.controller (service->controller)
  */
-@AnalyzeClasses(packages = "com.autoflow")
+@AnalyzeClasses(
+        packages = "com.autoflow",
+        importOptions = ImportOption.DoNotIncludeTests.class
+)
 class ArchitectureBoundaryTest {
 
     @ArchTest

@@ -8,6 +8,8 @@ import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -288,27 +290,15 @@ class JwtFilterTest {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
     }
 
-    @Test
-    void shouldNotFilterDeveRetornarTrueParaSwaggerUi()
-            throws ServletException {
+    @ParameterizedTest(name = "Deve ignorar o filtro JWT para a rota: {0}")
+    @ValueSource(strings = {
+            "/swagger-ui/index.html",
+            "/v3/api-docs/swagger-config",
+            "/swagger-ui.html"
+    })
+    void shouldNotFilterDeveRetornarTrueParaRotasPublicas(String rota) {
+        request.setRequestURI(rota);
 
-        request.setRequestURI("/swagger-ui/index.html");
-        assertTrue(jwtFilter.shouldNotFilter(request));
-    }
-
-    @Test
-    void shouldNotFilterDeveRetornarTrueParaApiDocs()
-            throws ServletException {
-
-        request.setRequestURI("/v3/api-docs/swagger-config");
-        assertTrue(jwtFilter.shouldNotFilter(request));
-    }
-
-    @Test
-    void shouldNotFilterDeveRetornarTrueParaSwaggerHtml()
-            throws ServletException {
-
-        request.setRequestURI("/swagger-ui.html");
         assertTrue(jwtFilter.shouldNotFilter(request));
     }
 
