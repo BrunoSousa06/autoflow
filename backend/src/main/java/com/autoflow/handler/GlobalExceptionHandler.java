@@ -1,5 +1,9 @@
 package com.autoflow.handler;
 
+import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoException;
+import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
+import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -72,6 +76,33 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(error);
+    }
+
+    @ExceptionHandler(AcompanhamentoPublicoNaoEncontradoException.class)
+    public ResponseEntity<String> handleAcompanhamentoNaoEncontrado(
+            AcompanhamentoPublicoNaoEncontradoException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(exception.getMessage());
+    }
+
+    @ExceptionHandler(TokenAcompanhamentoObrigatorioException.class)
+    public ResponseEntity<String> handleTokenObrigatorio(
+            TokenAcompanhamentoObrigatorioException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(exception.getMessage());
+    }
+
+    @ExceptionHandler(OrdemServicoNaoEncontradaException.class)
+    public ResponseEntity<String> handleOrdemServicoNaoEncontrada(
+            OrdemServicoNaoEncontradaException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(exception.getMessage());
     }
 
 }

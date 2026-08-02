@@ -1,16 +1,13 @@
 package com.autoflow.service.usuario;
 
 import com.autoflow.presentation.usuario.request.LoginRequest;
-import com.autoflow.presentation.usuario.request.RegistroRequest;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.presentation.usuario.response.UsuarioResponse;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;

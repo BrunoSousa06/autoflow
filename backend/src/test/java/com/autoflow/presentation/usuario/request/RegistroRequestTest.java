@@ -1,63 +1,51 @@
 package com.autoflow.presentation.usuario.request;
 
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.presentation.usuario.request.RegistroRequest;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RegistroRequestTest {
 
-    @Test
-    void deveCriarRequestComTodosOsCampos() {
-        RegistroRequest request = new RegistroRequest(
-                "João Silva", "joao@email.com", "12345678901",
-                "11999999999", "Senha@123", RoleEnum.ADMIN
-        );
+    private static Validator validator;
 
-        assertEquals("João Silva", request.nome());
-        assertEquals("joao@email.com", request.email());
-        assertEquals("12345678901", request.cpfCnpj());
-        assertEquals("11999999999", request.telefone());
-        assertEquals("Senha@123", request.senha());
-        assertEquals(RoleEnum.ADMIN, request.role());
+    @BeforeAll
+    static void setupValidator() {
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     @Test
-    void deveDefaultarRoleParaClienteQuandoNulo() {
-        RegistroRequest request = new RegistroRequest(
-                "João Silva", "joao@email.com", "12345678901",
-                "11999999999", "Senha@123", null
-        );
+    void devePermitirStaffSemCpfCnpjETelefone() {
+        var request = new RegistroRequest(
+                "Atendente",
+                "atendente@autoflow.com",
+                null,
+                null,
+                "Senha@1234",
+                RoleEnum.ATENDENTE);
 
-        assertEquals(RoleEnum.CLIENTE, request.role());
+        assertTrue(validator.validate(request).isEmpty());
     }
 
     @Test
-    void deveMantherRoleMecanicoQuandoInformado() {
-        RegistroRequest request = new RegistroRequest(
-                "João", "joao@email.com", "12345678901",
-                "11999999999", "Senha@123", RoleEnum.MECANICO
-        );
+    void deveExigirCpfCnpjETelefoneParaCliente() {
+        var request = new RegistroRequest(
+                "Cliente",
+                "cliente@autoflow.com",
+                null,
+                null,
+                "Senha@1234",
+                RoleEnum.CLIENTE);
 
-        assertEquals(RoleEnum.MECANICO, request.role());
-    }
+        var camposInvalidos = validator.validate(request).stream()
+                .map(violacao -> violacao.getPropertyPath().toString())
+                .sorted()
+                .toList();
 
-    @Test
-    void deveMantherRoleAtendenteQuandoInformado() {
-        RegistroRequest request = new RegistroRequest(
-                "João", "joao@email.com", "12345678901",
-                "11999999999", "Senha@123", RoleEnum.ATENDENTE
-        );
-
-        assertEquals(RoleEnum.ATENDENTE, request.role());
-    }
-
-    @Test
-    void deveSerIgualQuandoMesmosValores() {
-        RegistroRequest r1 = new RegistroRequest("João", "joao@email.com", "12345678901", "11999999999", "Senha@123", RoleEnum.CLIENTE);
-        RegistroRequest r2 = new RegistroRequest("João", "joao@email.com", "12345678901", "11999999999", "Senha@123", RoleEnum.CLIENTE);
-        assertEquals(r1, r2);
-        assertEquals(r1.hashCode(), r2.hashCode());
+        assertEquals(java.util.List.of("cpfCnpj", "telefone"), camposInvalidos);
     }
 }

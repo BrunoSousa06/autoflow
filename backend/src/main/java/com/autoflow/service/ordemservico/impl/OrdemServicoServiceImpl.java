@@ -1,6 +1,8 @@
 package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
@@ -23,12 +25,15 @@ import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.repository.ordemservico.OrdemServicoSpecifications;
 import com.autoflow.service.ordemservico.OrdemServicoService;
+import com.autoflow.infrastructure.security.SecureTokenAcompanhamentoAdapter;
+import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.service.usuario.UsuarioService;
+import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +44,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Base64;
+import java.util.HexFormat;
 import java.util.List;
 
 import static com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse.mensagemParaCliente;
@@ -49,6 +62,10 @@ import static com.autoflow.presentation.ordemservico.acompanhamento.response.Aco
 @Service
 @RequiredArgsConstructor
 public class OrdemServicoServiceImpl implements OrdemServicoService {
+
+    private static final long VALIDADE_TOKEN_EM_DIAS = 30;
+    private static final SecureRandom TOKEN_RANDOM = new SecureRandom();
+
     private final OrdemServicoRepository ordemServicoRepository;
     private final BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
     private final ServicoService servicoService;
@@ -63,9 +80,18 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final HistoricoStatusOsRepository historicoStatusOsRepository;
     private final OrcamentoNotificacaoService orcamentoNotificacaoService;
     private final BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
+    private final GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase;
+    private final EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase;
 
     @Autowired
-    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService, UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService, OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl, OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl, ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl, BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase) {
+    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
+                                   UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService,
+                                   OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl,
+                                   OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl,
+                                   ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl,
+                                   BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase,
+                                   GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase,
+                                   EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase) {
         this.ordemServicoRepository = ordemServicoRepository;
         this.buscarOuCadastrarVeiculoUseCase = buscarOuCadastrarVeiculoUseCase;
         this.servicoService = servicoService;
@@ -80,25 +106,65 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.orcamentoRepository = orcamentoRepository;
         this.orcamentoPublicacaoServiceImpl = orcamentoPublicacaoServiceImpl;
         this.buscarClientePorCpfCnpjUseCase = buscarClientePorCpfCnpjUseCase;
+        this.gerarTokenAcompanhamentoUseCase = gerarTokenAcompanhamentoUseCase;
+        this.enviarLinkAcompanhamentoUseCase = enviarLinkAcompanhamentoUseCase;
     }
 
-    public OrdemServicoEntity criar(String cpfCnpj, VeiculoOrdemServicoRequest veiculoRequest, List<ServicoSolicitadoEntity> servicosSolicitados) {
-        ClienteEntity cliente = buscarClientePorCpfCnpjUseCase.execute(cpfCnpj);
+    @Transactional
+    public OrdemServicoCriada criar(
+            String cpfCnpj,
+            VeiculoOrdemServicoRequest veiculoRequest,
+            List<ServicoSolicitadoEntity> servicosSolicitados
+    ) {
+        ClienteEntity cliente =
+                buscarClientePorCpfCnpjUseCase.execute(cpfCnpj);
 
-            VeiculoEntity veiculo = buscarOuCadastrarVeiculoUseCase.execute(
-                cliente,
-                veiculoRequest
-        );
+        VeiculoEntity veiculo =
+                buscarOuCadastrarVeiculoUseCase.execute(
+                        cliente,
+                        veiculoRequest
+                );
+
         validarServicosSolicitados(servicosSolicitados);
 
-        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
+        OrdemServicoEntity ordemServico =
+                OrdemServicoEntity.criar(cliente, veiculo);
 
-        List<ServicoSolicitadoEntity> servicosComDados = servicosSolicitados.stream()
-                .map(servico -> preencherDadosDoServico(ordemServico, servico))
-                .toList();
+        List<ServicoSolicitadoEntity> servicosComDados =
+                servicosSolicitados.stream()
+                        .map(servico ->
+                                preencherDadosDoServico(
+                                        ordemServico,
+                                        servico
+                                )
+                        )
+                        .toList();
 
-        ordemServico.adicionarServicosSolicitados(servicosComDados);
-        return salvarOs(ordemServico);
+        ordemServico.adicionarServicosSolicitados(
+                servicosComDados
+        );
+
+        OrdemServicoEntity ordemSalva =
+                salvarOs(ordemServico);
+
+        TokenAcompanhamentoOutput tokenGerado =
+                gerarTokenAcompanhamentoUseCase.execute(
+                        ordemSalva.getId()
+                );
+
+        try {
+            enviarLinkAcompanhamentoUseCase.execute(
+                    ordemSalva,
+                    tokenGerado.token()
+            );
+        } catch (RuntimeException exception) {
+            log.error("Não foi possível enviar o link de acompanhamento da OS {}", ordemSalva.getNumeroOs(), exception);
+        }
+
+        return new OrdemServicoCriada(
+                ordemSalva,
+                tokenGerado.token()
+        );
     }
 
     @Transactional
@@ -226,7 +292,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         }
         ordemServico.finalizarDiagnostico();
         int versao = orcamentoVersioningServiceImpl.proximaVersaoPrincipalNumeroOs(numeroOs);
-        OrcamentoEntity orcamento = orcamentoFactoryImpl.criarPrincipalDisponivel(ordemServico, versao, LocalDateTime.now());
+        OrcamentoEntity orcamento = orcamentoFactoryImpl.criarPrincipalDisponivel(
+                ordemServico, versao, LocalDateTime.now(ZoneId.systemDefault()));
 
         ordemServico.aguardarAprovacao();
 
@@ -262,12 +329,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoId) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        StatusOrdemServico statusAnterior = ordemServico.getStatus();
-
-        if (statusAnterior == StatusOrdemServico.AGUARDANDO_APROVACAO) {
-            ordemServico.iniciarExecucao();
-        } else if (statusAnterior != StatusOrdemServico.EM_EXECUCAO) {
-            throw new IllegalStateException("OS deve estar aprovada ou em execucao para iniciar servico.");
+        if (ordemServico.getStatus() != StatusOrdemServico.EM_EXECUCAO) {
+            throw new IllegalStateException("O serviço só pode ser iniciado após a aprovação do orçamento.");
         }
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
@@ -276,10 +339,6 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 pecaInsumoService.verificarDisponibilidadeEBaixar(servico.getItensNecessarios());
 
         servico.iniciar(baixaEstoqueResult.itensAtualizados());
-
-        if (!statusAnterior.equals(ordemServico.getStatus())) {
-            return salvarOs(ordemServico);
-        }
 
         return ordemServicoRepository.save(ordemServico);
     }
@@ -407,5 +466,29 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         os.getNumeroOs()
                 )
         );
+    }
+    public String gerarToken() {
+        byte[] bytes = new byte[32];
+        TOKEN_RANDOM.nextBytes(bytes);
+
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(bytes);
+    }
+
+    public String calcularHash(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(
+                    token.getBytes(StandardCharsets.UTF_8)
+            );
+
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(
+                    "Algoritmo SHA-256 indisponível",
+                    exception
+            );
+        }
     }
 }

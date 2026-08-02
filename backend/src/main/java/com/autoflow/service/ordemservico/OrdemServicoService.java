@@ -6,6 +6,7 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import jakarta.transaction.Transactional;
@@ -15,7 +16,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface OrdemServicoService {
-    OrdemServicoEntity criar(
+    OrdemServicoCriada criar(
             String cpfCnpj,
             VeiculoOrdemServicoRequest veiculo,
             List<ServicoSolicitadoEntity> servicosSolicitados

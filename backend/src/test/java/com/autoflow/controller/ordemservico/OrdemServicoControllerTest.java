@@ -4,8 +4,8 @@ import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
 import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapperImpl;
-import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -14,6 +14,7 @@ import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
+import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -85,7 +86,7 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(ordemServicoService.criar(eq("52998224725"), any(VeiculoOrdemServicoRequest.class), anyList()))
-                .thenReturn(ordemServico);
+                .thenReturn(new OrdemServicoCriada(ordemServico, "token-acompanhamento"));
 
         mockMvc.perform(post("/ordens-servico")
                         .with(csrf())

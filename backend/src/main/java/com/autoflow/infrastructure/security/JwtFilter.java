@@ -1,7 +1,7 @@
-package com.autoflow.infrastructure.persistence.security;
+package com.autoflow.infrastructure.security;
 
-import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,15 +40,15 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String email = jwtService.extrairEmail(token);
 
-        if (email != null
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (SecurityContextHolder.getContext().getAuthentication() == null
+                && jwtService.tokenValido(token)) {
+            String email = jwtService.extrairEmail(token);
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(email);
+            if (email != null) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(email);
 
-            if (jwtService.tokenValido(token)) {
                 String roleDoToken = jwtService.extrairRole(token);
 
                 SimpleGrantedAuthority authority =
@@ -79,9 +79,11 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         return "OPTIONS".equalsIgnoreCase(request.getMethod())
-                || path.startsWith("/auth/")
                 || path.startsWith("/public/")
+                || path.startsWith("/auth/")
                 || path.equals("/actuator/health")
+                || path.equals("/actuator/health/liveness")
+                || path.equals("/actuator/health/readiness")
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")
                 || path.equals("/swagger-ui.html");

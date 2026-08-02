@@ -7,7 +7,6 @@ import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapperImpl;
-import com.autoflow.presentation.usuario.UsuarioAdminController;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -93,8 +92,8 @@ class UsuarioAdminControllerTest {
         registroAtendente = new RegistroRequest(
                 "Atendente",
                 "atendente@autoflow.com",
-                "52998224725",
-                "11999999999",
+                null,
+                null,
                 "Senha@1234",
                 RoleEnum.ATENDENTE
         );

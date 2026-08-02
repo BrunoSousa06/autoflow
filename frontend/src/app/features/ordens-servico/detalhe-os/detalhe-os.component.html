@@ -302,7 +302,7 @@
             </button>
 
             <!-- Execução de serviços -->
-            @if (os()!.status === 'AGUARDANDO_APROVACAO' || os()!.status === 'EM_EXECUCAO') {
+            @if (os()!.status === 'EM_EXECUCAO') {
               <div class="secao-itens">
                 <p class="secao-label">Execução de serviços</p>
                 @for (srv of os()!.servicos; track srv.id) {

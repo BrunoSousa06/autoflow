@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -67,6 +68,14 @@ public class OrdemServicoEntity {
     @Column(name = "ultima_atualizacao", nullable = false)
     private LocalDateTime ultimaAtualizacao;
 
+    private String acompanhamentoTokenHash;
+
+    private LocalDateTime acompanhamentoTokenCriadoEm;
+
+    private LocalDateTime acompanhamentoTokenExpiraEm;
+
+    private LocalDateTime acompanhamentoTokenRevogadoEm;
+
     private OrdemServicoEntity(
             String numeroOs,
             VeiculoEntity veiculo,
@@ -91,7 +100,7 @@ public class OrdemServicoEntity {
                 gerarNumeroOs(),
                 veiculo,
                 StatusOrdemServico.RECEBIDA,
-                LocalDateTime.now()
+                agora()
         );
         ordemServico.cliente = ClienteOsEntity.fromCliente(cliente);
         ordemServico.atualizarUltimaAtualizacao();
@@ -99,7 +108,7 @@ public class OrdemServicoEntity {
     }
 
     public void atualizarUltimaAtualizacao() {
-        this.ultimaAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = agora();
     }
 
     public void registrarLaudo(
@@ -117,14 +126,14 @@ public class OrdemServicoEntity {
             this.diagnostico = new DiagnosticoEntity();
         }
 
-        this.diagnostico.setIniciadoEm(LocalDateTime.now());
+        this.diagnostico.setIniciadoEm(agora());
         this.status = StatusOrdemServico.EM_DIAGNOSTICO;
         this.atualizarUltimaAtualizacao();
     }
 
     public void finalizarDiagnostico(){
         validaSePodeFinalizarDiagnostico();
-        this.diagnostico.setConcluidoEm(LocalDateTime.now());
+        this.diagnostico.setConcluidoEm(agora());
         this.atualizarUltimaAtualizacao();
     }
 
@@ -217,7 +226,7 @@ public class OrdemServicoEntity {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null) return false;
         Class<?> oEffectiveClass = o instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
@@ -228,21 +237,21 @@ public class OrdemServicoEntity {
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return this instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
     public void finalizarPorOrcamentoRecusado() {
         validarTransicao(StatusOrdemServico.AGUARDANDO_APROVACAO, StatusOrdemServico.FINALIZADA);
         this.status = StatusOrdemServico.FINALIZADA;
-        this.finalizadaEm = LocalDateTime.now();
+        this.finalizadaEm = agora();
         atualizarUltimaAtualizacao();
     }
 
     public void iniciarExecucao() {
         validarTransicao(StatusOrdemServico.AGUARDANDO_APROVACAO, StatusOrdemServico.EM_EXECUCAO);
         if (this.execucaoIniciadaEm == null) {
-            this.execucaoIniciadaEm = LocalDateTime.now();
+            this.execucaoIniciadaEm = agora();
         }
         this.atualizarUltimaAtualizacao();
         this.status = StatusOrdemServico.EM_EXECUCAO;
@@ -263,7 +272,7 @@ public class OrdemServicoEntity {
 
         if (todosFinalizados) {
             this.status = StatusOrdemServico.FINALIZADA;
-            this.finalizadaEm = LocalDateTime.now();
+            this.finalizadaEm = agora();
             this.atualizarUltimaAtualizacao();
         }
     }
@@ -271,7 +280,7 @@ public class OrdemServicoEntity {
     public void entregar() {
         validarTransicao(StatusOrdemServico.FINALIZADA, StatusOrdemServico.ENTREGUE);
         this.status = StatusOrdemServico.ENTREGUE;
-        this.entregueEm = LocalDateTime.now();
+        this.entregueEm = agora();
         this.atualizarUltimaAtualizacao();
     }
 
@@ -283,5 +292,53 @@ public class OrdemServicoEntity {
                             ". Status esperado: " + esperado
             );
         }
+    }
+
+    private static LocalDateTime agora() {
+        return LocalDateTime.now(ZoneId.systemDefault());
+    }
+
+    public void configurarAcompanhamentoPublico(
+            String tokenHash,
+            LocalDateTime criadoEm,
+            LocalDateTime expiraEm
+    ) {
+        if (tokenHash == null || tokenHash.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Hash do token de acompanhamento é obrigatório"
+            );
+        }
+
+        if (criadoEm == null) {
+            throw new IllegalArgumentException(
+                    "Data de criação do token é obrigatória"
+            );
+        }
+
+        if (expiraEm != null && !expiraEm.isAfter(criadoEm)) {
+            throw new IllegalArgumentException(
+                    "Expiração deve ser posterior à criação do token"
+            );
+        }
+
+        this.acompanhamentoTokenHash = tokenHash;
+        this.acompanhamentoTokenCriadoEm = criadoEm;
+        this.acompanhamentoTokenExpiraEm = expiraEm;
+        this.acompanhamentoTokenRevogadoEm = null;
+    }
+
+    public boolean acompanhamentoPublicoDisponivel(
+            LocalDateTime agora
+    ) {
+        if (acompanhamentoTokenHash == null) {
+            return false;
+        }
+
+        if (acompanhamentoTokenRevogadoEm != null) {
+            return false;
+        }
+
+        return acompanhamentoTokenExpiraEm == null
+                || acompanhamentoTokenExpiraEm.isAfter(agora);
     }
 }
