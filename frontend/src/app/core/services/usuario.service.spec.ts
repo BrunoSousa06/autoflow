@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { UsuarioService, UsuarioResponse } from './usuario.service';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/auth';
+const BASE = `${environment.apiUrl}/auth`;
 
 describe('UsuarioService', () => {
   let service: UsuarioService;

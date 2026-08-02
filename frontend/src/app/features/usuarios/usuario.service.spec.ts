@@ -3,8 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { UsuarioAdminService } from './usuario.service';
 import { UsuarioRequest, UsuarioResponse } from './usuario.model';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/usuarios';
+const BASE = `${environment.apiUrl}/usuarios`;
 
 describe('UsuarioAdminService', () => {
   let service: UsuarioAdminService;

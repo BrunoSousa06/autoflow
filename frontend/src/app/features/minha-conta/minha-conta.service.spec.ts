@@ -3,8 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MinhaContaService } from './minha-conta.service';
 import { AcompanhamentoOrdemServicoResponse, ClienteLogadoResponse } from './minha-conta.model';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/clientes/me';
+const BASE = `${environment.apiUrl}/clientes/me`;
 
 describe('MinhaContaService', () => {
   let service: MinhaContaService;
