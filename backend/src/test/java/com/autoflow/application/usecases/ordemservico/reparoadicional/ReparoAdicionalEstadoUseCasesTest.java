@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -181,8 +182,8 @@ class ReparoAdicionalEstadoUseCasesTest {
         when(consultarPorOrcamentoUseCase.execute(30L)).thenReturn(Optional.of(reparo));
         when(consultarPorOrcamentoUseCase.execute(31L)).thenReturn(Optional.empty());
 
-        useCase.executeSeExistir(30L);
-        useCase.executeSeExistir(31L);
+        assertTrue(useCase.executeSeExistir(30L));
+        assertFalse(useCase.executeSeExistir(31L));
 
         verify(aprovarReparoAdicionalUseCase).execute(40L);
     }
@@ -209,8 +210,8 @@ class ReparoAdicionalEstadoUseCasesTest {
         when(consultarPorOrcamentoUseCase.execute(30L)).thenReturn(Optional.of(reparo));
         when(consultarPorOrcamentoUseCase.execute(31L)).thenReturn(Optional.empty());
 
-        useCase.executeSeExistir(30L, "Cliente recusou");
-        useCase.executeSeExistir(31L, "Cliente recusou");
+        assertTrue(useCase.executeSeExistir(30L, "Cliente recusou"));
+        assertFalse(useCase.executeSeExistir(31L, "Cliente recusou"));
 
         verify(recusarReparoAdicionalUseCase).execute(40L, "Cliente recusou");
     }

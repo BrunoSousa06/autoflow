@@ -11,7 +11,7 @@ sequenceDiagram
         participant Security as JWT / Spring Security
         participant OrcamentoController as OrcamentoController
         participant OrcamentoService as OrcamentoService
-        participant ReparoService as ReparoAdicionalService
+        participant ReparoUseCase as Caso de uso por orcamento
     end
 
     participant DB as PostgreSQL
@@ -38,14 +38,14 @@ sequenceDiagram
         OrcamentoService->>DB: Atualiza orcamento para APROVADO
         DB-->>OrcamentoService: Orcamento aprovado
 
-        OrcamentoService->>ReparoService: aprovarSeExistirPorOrcamentoId(orcamentoId)
-        activate ReparoService
+        OrcamentoService->>ReparoUseCase: executeSeExistir(orcamentoId)
+        activate ReparoUseCase
 
-        ReparoService->>DB: Atualiza reparo adicional para APROVADO
-        DB-->>ReparoService: Reparo adicional aprovado
+        ReparoUseCase->>DB: Atualiza reparo adicional para APROVADO
+        DB-->>ReparoUseCase: Reparo adicional aprovado
 
-        ReparoService-->>OrcamentoService: Reparo adicional atualizado
-        deactivate ReparoService
+        ReparoUseCase-->>OrcamentoService: true quando encontrou o reparo
+        deactivate ReparoUseCase
 
         OrcamentoService-->>OrcamentoController: OrcamentoEntity aprovado
         deactivate OrcamentoService
@@ -62,14 +62,14 @@ sequenceDiagram
         OrcamentoService->>DB: Atualiza orcamento para RECUSADO e salva motivo
         DB-->>OrcamentoService: Orcamento recusado
 
-        OrcamentoService->>ReparoService: recusarSeExistirPorOrcamentoId(orcamentoId, motivo)
-        activate ReparoService
+        OrcamentoService->>ReparoUseCase: executeSeExistir(orcamentoId, motivo)
+        activate ReparoUseCase
 
-        ReparoService->>DB: Atualiza reparo adicional para RECUSADO
-        DB-->>ReparoService: Reparo adicional recusado
+        ReparoUseCase->>DB: Atualiza reparo adicional para RECUSADO
+        DB-->>ReparoUseCase: Reparo adicional recusado
 
-        ReparoService-->>OrcamentoService: Reparo adicional atualizado
-        deactivate ReparoService
+        ReparoUseCase-->>OrcamentoService: true quando encontrou o reparo
+        deactivate ReparoUseCase
 
         OrcamentoService-->>OrcamentoController: OrcamentoEntity recusado
         deactivate OrcamentoService

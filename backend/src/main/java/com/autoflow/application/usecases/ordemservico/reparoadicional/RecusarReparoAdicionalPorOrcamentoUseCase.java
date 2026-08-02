@@ -12,8 +12,12 @@ public class RecusarReparoAdicionalPorOrcamentoUseCase {
     private final RecusarReparoAdicionalUseCase recusarReparoAdicionalUseCase;
 
     @Transactional
-    public void executeSeExistir(Long orcamentoId, String motivo) {
-        consultarPorOrcamentoUseCase.execute(orcamentoId)
-                .ifPresent(reparo -> recusarReparoAdicionalUseCase.execute(reparo.getId(), motivo));
+    public boolean executeSeExistir(Long orcamentoId, String motivo) {
+        return consultarPorOrcamentoUseCase.execute(orcamentoId)
+                .map(reparo -> {
+                    recusarReparoAdicionalUseCase.execute(reparo.getId(), motivo);
+                    return true;
+                })
+                .orElse(false);
     }
 }

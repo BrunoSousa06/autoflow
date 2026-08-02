@@ -5,13 +5,14 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.orcamento.OrcamentoSpecifications;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoService;
 import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
-import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import com.autoflow.service.usuario.UsuarioService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,8 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     private final OrcamentoRepository orcamentoRepository;
     private final OrdemServicoRepository ordemServicoRepository;
     private final OrcamentoPublicacaoService publicacaoService;
-    private final ReparoAdicionalService reparoAdicionalService;
+    private final AprovarReparoAdicionalPorOrcamentoUseCase aprovarReparoAdicionalPorOrcamentoUseCase;
+    private final RecusarReparoAdicionalPorOrcamentoUseCase recusarReparoAdicionalPorOrcamentoUseCase;
     private final UsuarioService usuarioService;
 
     @Override
@@ -84,8 +86,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
 
         OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
 
-        if (reparoAdicionalService.existePorOrcamentoId(orcamento.getId())) {
-            reparoAdicionalService.aprovarSeExistirPorOrcamentoId(orcamento.getId());
+        if (aprovarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(orcamento.getId())) {
             return orcamentoSalvo;
         }
 
@@ -134,8 +135,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
 
         OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
 
-        if(reparoAdicionalService.existePorOrcamentoId(orcamento.getId())) {
-            reparoAdicionalService.recusarSeExistirPorOrcamentoId(orcamento.getId(), motivo);
+        if (recusarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(orcamento.getId(), motivo)) {
             return orcamentoSalvo;
         }
 

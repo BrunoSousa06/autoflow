@@ -12,9 +12,13 @@ public class AprovarReparoAdicionalPorOrcamentoUseCase {
     private final AprovarReparoAdicionalUseCase aprovarReparoAdicionalUseCase;
 
     @Transactional
-    public void executeSeExistir(Long orcamentoId) {
-        consultarPorOrcamentoUseCase.execute(orcamentoId)
-                .ifPresent(reparo -> aprovarReparoAdicionalUseCase.execute(reparo.getId()));
+    public boolean executeSeExistir(Long orcamentoId) {
+        return consultarPorOrcamentoUseCase.execute(orcamentoId)
+                .map(reparo -> {
+                    aprovarReparoAdicionalUseCase.execute(reparo.getId());
+                    return true;
+                })
+                .orElse(false);
     }
 
     @Transactional
