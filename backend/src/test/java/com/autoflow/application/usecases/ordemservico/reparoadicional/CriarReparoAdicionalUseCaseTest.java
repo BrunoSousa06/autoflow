@@ -1,0 +1,357 @@
+package com.autoflow.application.usecases.ordemservico.reparoadicional;
+
+import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
+import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
+import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
+import com.autoflow.application.gateway.OrcamentoComplementarGateway;
+import com.autoflow.application.gateway.OrcamentoNotificacaoGateway;
+import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
+import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.gateway.ReparoAdicionalGateway;
+import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
+import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.StatusItemNecessario;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class CriarReparoAdicionalUseCaseTest {
+
+    private static final Clock CLOCK = Clock.fixed(
+            Instant.parse("2026-08-02T15:30:00Z"),
+            ZoneOffset.UTC
+    );
+
+    @Mock OrdemServicoGateway ordemServicoGateway;
+    @Mock UsuarioGateway usuarioGateway;
+    @Mock ServicoGateway servicoGateway;
+    @Mock ConsultarDisponibilidadeEstoqueUseCase disponibilidadeEstoqueUseCase;
+    @Mock ReparoAdicionalGateway reparoAdicionalGateway;
+    @Mock OrcamentoComplementarGateway orcamentoComplementarGateway;
+    @Mock OrcamentoPublicacaoGateway orcamentoPublicacaoGateway;
+    @Mock OrcamentoNotificacaoGateway orcamentoNotificacaoGateway;
+
+    private CriarReparoAdicionalUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        useCase = new CriarReparoAdicionalUseCase(
+                ordemServicoGateway,
+                usuarioGateway,
+                servicoGateway,
+                disponibilidadeEstoqueUseCase,
+                reparoAdicionalGateway,
+                orcamentoComplementarGateway,
+                orcamentoPublicacaoGateway,
+                orcamentoNotificacaoGateway,
+                CLOCK
+        );
+    }
+
+    @Test
+    void deveCriarReparoComplementarPublicarNotificarEVincularOrcamento() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        var servicoCatalogo = servicoCatalogo(5L);
+        var itemEnriquecido = itemEnriquecido(7L, 2);
+        var orcamento = new OrcamentoEntity();
+        orcamento.setId(30L);
+
+        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo));
+        when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido));
+        when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
+            ReparoAdicionalEntity reparo = invocation.getArgument(0);
+            reparo.setId(40L);
+            return reparo;
+        });
+        when(orcamentoComplementarGateway.criarESalvar(
+                any(),
+                any(),
+                any()
+        )).thenReturn(orcamento);
+        when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
+
+        var output = useCase.execute(command(5L, 7L, 2));
+
+        assertEquals(40L, output.reparoAdicionalId());
+        assertEquals(30L, output.orcamentoId());
+        assertEquals("https://publicacao/orcamento/30", output.publicUrl());
+
+        ArgumentCaptor<ReparoAdicionalEntity> reparoCaptor =
+                ArgumentCaptor.forClass(ReparoAdicionalEntity.class);
+        verify(reparoAdicionalGateway, times(2)).save(reparoCaptor.capture());
+        ReparoAdicionalEntity reparo = reparoCaptor.getAllValues().getLast();
+        assertEquals(10L, reparo.getOrdemServicoId());
+        assertEquals(20L, reparo.getMecanicoId());
+        assertEquals(30L, reparo.getOrcamentoId());
+        assertEquals(1, reparo.getServicos().size());
+        assertSame(reparo, reparo.getServicos().getFirst().getReparoAdicional());
+        assertSame(itemEnriquecido, reparo.getServicos().getFirst().getItensNecessarios().getFirst());
+
+        ArgumentCaptor<LocalDateTime> dataCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(orcamentoComplementarGateway).criarESalvar(
+                any(),
+                any(),
+                dataCaptor.capture()
+        );
+        assertEquals(LocalDateTime.ofInstant(CLOCK.instant(), ZoneId.systemDefault()), dataCaptor.getValue());
+
+        InOrder ordem = inOrder(
+                reparoAdicionalGateway,
+                orcamentoComplementarGateway,
+                orcamentoPublicacaoGateway,
+                orcamentoNotificacaoGateway
+        );
+        ordem.verify(reparoAdicionalGateway).save(any());
+        ordem.verify(orcamentoComplementarGateway).criarESalvar(any(), any(), any());
+        ordem.verify(orcamentoPublicacaoGateway).publicar(30L);
+        ordem.verify(orcamentoNotificacaoGateway)
+                .notificar(orcamento, ordemServico, "https://publicacao/orcamento/30");
+        ordem.verify(reparoAdicionalGateway).save(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StatusOrdemServico.class, names = {"FINALIZADA", "ENTREGUE"})
+    void deveRejeitarOrdemServicoEmEstadoFinal(StatusOrdemServico status) {
+        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+                .thenReturn(Optional.of(ordemServico(status)));
+
+        assertThrows(IllegalStateException.class, () -> useCase.execute(command(5L, 7L, 2)));
+
+        verifyNoInteractions(usuarioGateway, servicoGateway, reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveRejeitarListaDeServicosVazia() {
+        var command = new CriarReparoAdicionalCommand(
+                "OS-123",
+                "mecanico@autoflow.com",
+                List.of()
+        );
+
+        var erro = assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
+
+        assertEquals("Reparo adicional deve ter ao menos um servico.", erro.getMessage());
+        verifyNoInteractions(ordemServicoGateway);
+    }
+
+    @Test
+    void deveValidarDadosObrigatoriosDoCommandSemAcessarGateways() {
+        var semNumeroOs = new CriarReparoAdicionalCommand(
+                " ",
+                "mecanico@autoflow.com",
+                command(5L, 7L, 2).servicos()
+        );
+        var semEmail = new CriarReparoAdicionalCommand(
+                "OS-123",
+                " ",
+                command(5L, 7L, 2).servicos()
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> useCase.execute(semNumeroOs));
+        assertThrows(IllegalArgumentException.class, () -> useCase.execute(semEmail));
+        verifyNoInteractions(ordemServicoGateway);
+    }
+
+    @Test
+    void deveRejeitarServicoDuplicadoNaPropriaRequisicao() {
+        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+                .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
+        var servico = new ServicoReparoAdicionalCommand(
+                5L,
+                List.of(new ItemReparoAdicionalCommand(7L, 2))
+        );
+        var command = new CriarReparoAdicionalCommand(
+                "OS-123",
+                "mecanico@autoflow.com",
+                List.of(servico, servico)
+        );
+
+        var erro = assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
+
+        assertTrue(erro.getMessage().contains("Serviço duplicado"));
+        verifyNoInteractions(usuarioGateway, reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveRejeitarServicoJaPresenteNaOrdemServico() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        ordemServico.adicionarServicosSolicitados(List.of(new ServicoSolicitadoEntity(5L)));
+        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+
+        var erro = assertThrows(
+                IllegalArgumentException.class,
+                () -> useCase.execute(command(5L, 7L, 2))
+        );
+
+        assertTrue(erro.getMessage().contains("já incluído na ordem de serviço"));
+        verifyNoInteractions(usuarioGateway, reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveRejeitarServicoSemItens() {
+        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+                .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        var command = new CriarReparoAdicionalCommand(
+                "OS-123",
+                "mecanico@autoflow.com",
+                List.of(new ServicoReparoAdicionalCommand(5L, List.of()))
+        );
+
+        var erro = assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
+
+        assertEquals("Servico do reparo adicional deve ter ao menos um item necessario.", erro.getMessage());
+        verifyNoInteractions(reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveRejeitarQuantidadeDeItemNaoPositiva() {
+        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+                .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
+
+        var erro = assertThrows(
+                IllegalArgumentException.class,
+                () -> useCase.execute(command(5L, 7L, 0))
+        );
+
+        assertEquals("Quantidade do item deve ser maior que zero.", erro.getMessage());
+        verifyNoInteractions(disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveInformarOrdemServicoMecanicoEServicoInexistentes() {
+        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.empty());
+        var erroOs = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
+        assertEquals(HttpStatus.NOT_FOUND, erroOs.getStatusCode());
+
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.empty());
+        var erroUsuario = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
+        assertEquals(HttpStatus.NOT_FOUND, erroUsuario.getStatusCode());
+
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
+        var erroServico = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
+        assertEquals(HttpStatus.NOT_FOUND, erroServico.getStatusCode());
+    }
+
+    @Test
+    void falhaDeNotificacaoNaoDeveDesfazerCriacao() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        var orcamento = new OrcamentoEntity();
+        orcamento.setId(30L);
+        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
+        when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido(7L, 2)));
+        when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
+            ReparoAdicionalEntity reparo = invocation.getArgument(0);
+            reparo.setId(40L);
+            return reparo;
+        });
+        when(orcamentoComplementarGateway.criarESalvar(any(), any(), any())).thenReturn(orcamento);
+        when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
+        org.mockito.Mockito.doThrow(new RuntimeException("smtp indisponivel"))
+                .when(orcamentoNotificacaoGateway)
+                .notificar(any(), any(), any());
+
+        var output = useCase.execute(command(5L, 7L, 2));
+
+        assertEquals(30L, output.orcamentoId());
+        verify(reparoAdicionalGateway, times(2)).save(any());
+    }
+
+    private CriarReparoAdicionalCommand command(Long servicoId, Long itemId, int quantidade) {
+        return new CriarReparoAdicionalCommand(
+                "OS-123",
+                "mecanico@autoflow.com",
+                List.of(new ServicoReparoAdicionalCommand(
+                        servicoId,
+                        List.of(new ItemReparoAdicionalCommand(itemId, quantidade))
+                ))
+        );
+    }
+
+    private OrdemServicoEntity ordemServico(StatusOrdemServico status) {
+        var ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
+        ordemServico.setStatus(status);
+        return ordemServico;
+    }
+
+    private ServicoEntity servicoCatalogo(Long id) {
+        var servico = new ServicoEntity();
+        servico.setId(id);
+        servico.setNome("Troca de pastilha");
+        servico.setValor(new BigDecimal("120.00"));
+        return servico;
+    }
+
+    private ItemNecessarioEntity itemEnriquecido(Long id, int quantidade) {
+        return ItemNecessarioEntity.criar(
+                id,
+                "Pastilha",
+                CategoriaPecaInsumo.PECA,
+                new BigDecimal("15.00"),
+                quantidade,
+                StatusItemNecessario.DISPONIVEL
+        );
+    }
+}
