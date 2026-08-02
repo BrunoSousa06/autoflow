@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -129,9 +130,39 @@ class ReparoAdicionalServiceImplTest {
         assertSame(reparoPersistido, reparoPersistido.getServicos().getFirst().getReparoAdicional());
         assertNull(reparoPersistido.getServicos().getFirst().getOrdemServico());
         assertEquals("Troca de pastilha", reparoPersistido.getServicos().getFirst().getNome());
+        ItemNecessarioEntity itemPersistido = reparoPersistido.getServicos().getFirst().getItensNecessarios().getFirst();
+        assertEquals(StatusItemNecessario.DISPONIVEL, itemPersistido.getStatus());
+        assertEquals(10, itemPersistido.getQuantidadeDisponivel());
+        assertNull(itemPersistido.getMotivoPendencia());
         verify(orcamentoVersioningService).proximaVersaoPrincipalNumeroOs("OS-123");
         verify(orcamentoFactory).criarAdicionalDisponivel(eq(ordemServico), any(ReparoAdicionalEntity.class), eq(2), any());
         verify(orcamentoPublicacaoService).publicar(30L);
+        verify(orcamentoNotificacaoService).enviarLinkOrcamentoParaCliente(
+                orcamentoSalvo,
+                ordemServico,
+                "http://localhost:8080/public/orcamentos/30?token=abc"
+        );
+
+        InOrder fluxo = inOrder(
+                reparoAdicionalRepository,
+                orcamentoVersioningService,
+                orcamentoFactory,
+                orcamentoRepository,
+                orcamentoPublicacaoService,
+                orcamentoNotificacaoService
+        );
+        fluxo.verify(reparoAdicionalRepository).save(any(ReparoAdicionalEntity.class));
+        fluxo.verify(orcamentoVersioningService).proximaVersaoPrincipalNumeroOs("OS-123");
+        fluxo.verify(orcamentoFactory).criarAdicionalDisponivel(
+                eq(ordemServico), any(ReparoAdicionalEntity.class), eq(2), any());
+        fluxo.verify(orcamentoRepository).save(orcamento);
+        fluxo.verify(orcamentoPublicacaoService).publicar(30L);
+        fluxo.verify(orcamentoNotificacaoService).enviarLinkOrcamentoParaCliente(
+                orcamentoSalvo,
+                ordemServico,
+                "http://localhost:8080/public/orcamentos/30?token=abc"
+        );
+        fluxo.verify(reparoAdicionalRepository).save(any(ReparoAdicionalEntity.class));
     }
 
     @Test
@@ -261,6 +292,31 @@ class ReparoAdicionalServiceImplTest {
         );
 
         verify(reparoAdicionalRepository, never()).save(any());
+    }
+
+    @Test
+    void criar_deveLancarErroQuandoServicoJaEstiverNaOrdemDeServico() {
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
+        ordemServico.setNumeroOs("OS-123");
+        ordemServico.adicionarServicosSolicitados(List.of(servico(1L, "Troca de pastilha", "120.00")));
+        ServicoSolicitadoEntity servicoDuplicado = servico(1L, "Troca de pastilha", "120.00");
+        servicoDuplicado.registrarItensNecessarios(List.of(item(7L, "Pastilha", 2)));
+
+        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
+
+        IllegalArgumentException erro = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.criar("OS-123", "mecanico@autoflow.com", List.of(servicoDuplicado))
+        );
+
+        assertEquals(
+                "Serviço já incluído na ordem de serviço e não pode ser adicionado novamente: ID 1",
+                erro.getMessage()
+        );
+        verifyNoInteractions(usuarioService, servicoService, pecaInsumoService);
+        verifyNoInteractions(reparoAdicionalRepository, orcamentoRepository, orcamentoPublicacaoService,
+                orcamentoNotificacaoService);
     }
 
     @Test
@@ -428,6 +484,20 @@ class ReparoAdicionalServiceImplTest {
         assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE, item.getMotivoPendencia());
         assertEquals(1, item.getQuantidadeDisponivel());
         assertEquals("Estoque insuficiente. Solicitado: 3, disponivel: 1.", item.getMensagemStatus());
+    }
+
+    @Test
+    void buscaItensNecessarios_deveMarcarItemComoDisponivelQuandoEstoqueForIgualAoSolicitado() {
+        ItemNecessarioEntity solicitado = item(7L, "Pastilha", 3);
+        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 3));
+
+        List<ItemNecessarioEntity> resultado = service.buscaItensNecessarios(List.of(solicitado), pecaInsumoService);
+
+        ItemNecessarioEntity item = resultado.getFirst();
+        assertEquals(StatusItemNecessario.DISPONIVEL, item.getStatus());
+        assertEquals(3, item.getQuantidadeDisponivel());
+        assertNull(item.getMotivoPendencia());
+        assertNull(item.getMensagemStatus());
     }
 
     private ServicoSolicitadoEntity servico(Long servicoId, String nome, String valor) {

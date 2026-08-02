@@ -150,6 +150,72 @@ class ReparoAdicionalControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "MECANICO")
+    void deveRetornarBadRequestQuandoServicoIdNaoForInformado() throws Exception {
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "servicos": [
+                                    {
+                                      "itensNecessarios": [
+                                        { "pecaInsumoId": 7, "quantidade": 2 }
+                                      ]
+                                    }
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(itensNecessariosMapper, reparoAdicionalService);
+    }
+
+    @Test
+    @WithMockUser(roles = "MECANICO")
+    void deveRetornarBadRequestQuandoItensNecessariosEstiveremVazios() throws Exception {
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "servicos": [
+                                    {
+                                      "servicoId": 10,
+                                      "itensNecessarios": []
+                                    }
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(itensNecessariosMapper, reparoAdicionalService);
+    }
+
+    @Test
+    @WithMockUser(roles = "MECANICO")
+    void deveRetornarBadRequestQuandoQuantidadeDoItemNaoForPositiva() throws Exception {
+        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "servicos": [
+                                    {
+                                      "servicoId": 10,
+                                      "itensNecessarios": [
+                                        { "pecaInsumoId": 7, "quantidade": 0 }
+                                      ]
+                                    }
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(itensNecessariosMapper, reparoAdicionalService);
+    }
+
+    @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarCriarReparoAdicional() throws Exception {
         mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
