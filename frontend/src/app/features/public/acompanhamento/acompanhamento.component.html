@@ -1,14 +1,100 @@
 <div class="page">
-  <mat-card class="card">
-    <mat-icon class="icon">info_outline</mat-icon>
-    <h1>Acompanhamento de OS</h1>
-    <p>
-      O acompanhamento público de ordens de serviço não está disponível.
-      Para consultar o status da sua OS ou aprovar orçamentos, faça login com sua conta de cliente.
-    </p>
-    <button mat-flat-button color="primary" (click)="irParaLogin()">
-      <mat-icon>login</mat-icon>
-      Fazer login
-    </button>
-  </mat-card>
+  <header class="brand" aria-label="AutoFlow">
+    <span class="brand-icon"><mat-icon>directions_car</mat-icon></span>
+    <span>AutoFlow</span>
+  </header>
+
+  <main>
+  @if (carregando) {
+    <mat-card class="card state" aria-live="polite">
+      <mat-spinner diameter="44"></mat-spinner>
+      <div><h1>Buscando sua ordem de serviço</h1><p>Isso deve levar apenas alguns segundos.</p></div>
+    </mat-card>
+  } @else if (erro) {
+    <mat-card class="card state error" role="alert">
+      <span class="state-icon"><mat-icon>link_off</mat-icon></span>
+      <div><h1>Não foi possível abrir o acompanhamento</h1><p>{{ erro }}</p></div>
+      <div class="state-actions">
+        @if (podeTentarNovamente) {
+          <button mat-flat-button color="primary" (click)="atualizar()"><mat-icon>refresh</mat-icon>Tentar novamente</button>
+        }
+        <button mat-stroked-button color="primary" (click)="irParaLogin()">Acessar minha conta</button>
+      </div>
+    </mat-card>
+  } @else if (acompanhamento) {
+    <mat-card class="card">
+      <section class="summary">
+        <div class="title-row">
+          <div>
+            <div class="eyebrow">ACOMPANHAMENTO DA ORDEM</div>
+            <h1>{{ acompanhamento.numeroOs }}</h1>
+            <p><mat-icon>calendar_today</mat-icon>Aberta em {{ acompanhamento.dataAbertura | date:'dd/MM/yyyy, HH:mm' }}</p>
+          </div>
+          <span class="status"><span class="status-dot"></span>{{ statusLabel(acompanhamento.status) }}</span>
+        </div>
+
+        <div class="progress-copy">
+          <div><span>Progresso</span><strong>{{ progresso() }}%</strong></div>
+          <progress class="progress-track" aria-label="Progresso da ordem de serviço" max="100" [value]="progresso()">{{ progresso() }}%</progress>
+        </div>
+      </section>
+
+      @if (acompanhamento.status === 'AGUARDANDO_APROVACAO' && acompanhamento.orcamentoId) {
+        <section class="approval-card" aria-labelledby="approval-title">
+          <span class="approval-icon"><mat-icon>request_quote</mat-icon></span>
+          <div>
+            <span class="approval-kicker">AÇÃO NECESSÁRIA</span>
+            <h2 id="approval-title">Seu orçamento está pronto</h2>
+            <p>Revise os valores e, se estiver tudo certo, aprove para liberar o início dos serviços.</p>
+          </div>
+          <div class="approval-actions">
+            <button mat-stroked-button color="primary" [disabled]="processandoOrcamento" (click)="baixarOrcamento()">
+              <mat-icon>download</mat-icon>Baixar PDF
+            </button>
+            <button mat-flat-button color="primary" [disabled]="processandoOrcamento" (click)="confirmarAprovacao()">
+              @if (processandoOrcamento) { <mat-spinner diameter="18"></mat-spinner> } @else { <mat-icon>check_circle</mat-icon> }
+              Aprovar orçamento
+            </button>
+          </div>
+        </section>
+      }
+
+      <section class="content-grid">
+        <div>
+          <h2>Etapas do serviço</h2>
+          <p class="section-description">Acompanhe onde seu veículo está no processo.</p>
+          <div class="timeline">
+            @for (etapa of etapas; track etapa; let i = $index) {
+              <div class="step" [class.done]="etapaConcluida(i)" [class.current]="acompanhamento.status === etapa" [attr.aria-current]="acompanhamento.status === etapa ? 'step' : null">
+                <div class="marker">
+                  <mat-icon>{{ etapaConcluida(i) ? 'check' : acompanhamento.status === etapa ? 'more_horiz' : 'circle' }}</mat-icon>
+                </div>
+                <div><strong>{{ statusLabel(etapa) }}</strong>@if (acompanhamento.status === etapa) { <small>Estamos nesta etapa</small> }</div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <aside>
+          <h2>Datas importantes</h2>
+          <div class="dates">
+            <div><mat-icon>event</mat-icon><span>Abertura</span><strong>{{ acompanhamento.dataAbertura | date:'dd/MM/yyyy, HH:mm' }}</strong></div>
+            @if (acompanhamento.execucaoIniciadaEm) { <div><mat-icon>build</mat-icon><span>Execução iniciada</span><strong>{{ acompanhamento.execucaoIniciadaEm | date:'dd/MM/yyyy, HH:mm' }}</strong></div> }
+            @if (acompanhamento.finalizadaEm) { <div><mat-icon>task_alt</mat-icon><span>Finalizada</span><strong>{{ acompanhamento.finalizadaEm | date:'dd/MM/yyyy, HH:mm' }}</strong></div> }
+            @if (acompanhamento.entregueEm) { <div><mat-icon>key</mat-icon><span>Entregue</span><strong>{{ acompanhamento.entregueEm | date:'dd/MM/yyyy, HH:mm' }}</strong></div> }
+          </div>
+        </aside>
+      </section>
+
+      <footer class="card-footer">
+        <div class="privacy"><mat-icon>lock</mat-icon><span><strong>Seus dados estão protegidos</strong>Este link mostra somente o andamento operacional.</span></div>
+        <div class="footer-actions">
+          @if (atualizadoEm) { <small>Atualizado às {{ atualizadoEm | date:'HH:mm' }}</small> }
+          <button mat-stroked-button (click)="atualizar()"><mat-icon>refresh</mat-icon>Atualizar</button>
+          <button mat-button color="primary" (click)="irParaLogin()">Acessar minha conta</button>
+        </div>
+      </footer>
+    </mat-card>
+  }
+  </main>
 </div>

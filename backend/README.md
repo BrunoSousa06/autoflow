@@ -219,6 +219,12 @@ http://localhost:8080/v3/api-docs
 * Docker (opcional)
 * PostgreSQL
 
+### Variáveis de ambiente
+
+Defina `FRONTEND_PUBLIC_BASE_URL` com a URL pública do frontend usada nos links
+de acompanhamento enviados aos clientes. Quando não informada, o backend usa
+`http://localhost:4200` para desenvolvimento local.
+
 ### Clonar o projeto
 
 ```bash

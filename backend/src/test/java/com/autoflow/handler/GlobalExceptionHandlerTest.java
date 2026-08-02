@@ -1,5 +1,8 @@
 package com.autoflow.handler;
 
+import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoException;
+import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
+import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpStatus;
@@ -120,5 +123,35 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Servico e obrigatorio.", response.getBody().get("erro"));
+    }
+
+    @Test
+    void deveRetornarNotFoundQuandoAcompanhamentoNaoExistir() {
+        var exception = new AcompanhamentoPublicoNaoEncontradoException();
+
+        var response = handler.handleAcompanhamentoNaoEncontrado(exception);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(exception.getMessage(), response.getBody());
+    }
+
+    @Test
+    void deveRetornarBadRequestQuandoTokenNaoForInformado() {
+        var exception = new TokenAcompanhamentoObrigatorioException();
+
+        var response = handler.handleTokenObrigatorio(exception);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(exception.getMessage(), response.getBody());
+    }
+
+    @Test
+    void deveRetornarNotFoundQuandoOrdemServicoNaoExistir() {
+        var exception = new OrdemServicoNaoEncontradaException(123L);
+
+        var response = handler.handleOrdemServicoNaoEncontrada(exception);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(exception.getMessage(), response.getBody());
     }
 }

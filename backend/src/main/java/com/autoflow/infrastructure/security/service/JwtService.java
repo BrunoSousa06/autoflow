@@ -1,4 +1,4 @@
-package com.autoflow.infrastructure.persistence.security.service;
+package com.autoflow.infrastructure.security.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Date;
 
 @Service
@@ -24,11 +25,12 @@ public class JwtService {
 
     public String gerarToken(String email, String role) {
 
+        Instant agora = Instant.now();
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .issuedAt(Date.from(agora))
+                .expiration(Date.from(agora.plusMillis(expiration)))
                 .signWith(getKey())
                 .compact();
     }

@@ -5,8 +5,8 @@ import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOr
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcompanharOrdemServicoUseCase;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.infrastructure.persistence.mapper.AcompanhamentoMapperImpl;
-import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.presentation.ordemservico.acompanhamento.ClienteOrdemServicoController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +28,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -65,8 +66,8 @@ class ClienteOrdemServicoControllerTest {
                         "OS-123",
                         "ABC1D23",
                         StatusOrdemServico.RECEBIDA,
-                        LocalDateTime.of(2026, 6, 6, 10, 0),
-                        LocalDateTime.of(2026, 6, 6, 10, 5),
+                        LocalDateTime.of(2026, Month.JULY, 6, 10, 0),
+                        LocalDateTime.of(2026, Month.JULY, 6, 10, 5),
                         List.of(),
                         null,
                         null,

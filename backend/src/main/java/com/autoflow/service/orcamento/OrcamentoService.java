@@ -12,6 +12,10 @@ public interface OrcamentoService {
 
     OrcamentoEntity aprovar(Long orcamentoId, String emailUsuario);
 
+    OrcamentoEntity consultarDaOrdem(Long orcamentoId, String numeroOs);
+
+    OrcamentoEntity aprovarDaOrdem(Long orcamentoId, String numeroOs);
+
     OrcamentoEntity recusar(Long orcamentoId, String motivo, String emailUsuario);
 
     List<OrcamentoEntity> consultarOrcamentos(String emailUsuario, OrcamentoFiltro filtro);

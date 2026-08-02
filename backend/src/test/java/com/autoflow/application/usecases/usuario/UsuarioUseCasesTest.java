@@ -9,7 +9,7 @@ import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.presentation.usuario.request.LoginRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

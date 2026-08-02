@@ -1,7 +1,7 @@
-package com.autoflow.infrastructure.persistence.security;
+package com.autoflow.infrastructure.security;
 
-import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
@@ -69,10 +69,15 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    public boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        return path.startsWith("/v3/api-docs")
-                || path.startsWith("/swagger-ui")
-                || path.startsWith("/swagger-ui.html");
+    public boolean shouldNotFilter(
+            HttpServletRequest request
+    ) {
+        String uri = request.getRequestURI();
+
+        return uri.equals("/public/ordens-servico/acompanhamento")
+                || uri.startsWith("/public/orcamentos/")
+                || uri.startsWith("/swagger-ui/")
+                || uri.equals("/swagger-ui.html")
+                || uri.startsWith("/v3/api-docs");
     }
 }

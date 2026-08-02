@@ -1,4 +1,4 @@
-package com.autoflow.infrastructure.persistence.security;
+package com.autoflow.infrastructure.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -30,6 +30,7 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
     @Bean
+    @SuppressWarnings("java:S4502") // Stateless API authenticated by bearer tokens; browsers do not send them automatically.
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
@@ -56,6 +57,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
                                 "/webjars/**"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/public/ordens-servico/acompanhamento"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/public/orcamentos/*/pdf").permitAll()
                         .anyRequest().authenticated()
