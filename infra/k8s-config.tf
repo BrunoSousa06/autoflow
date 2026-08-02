@@ -14,3 +14,12 @@ resource "kubectl_manifest" "autoflow_secrets" {
   })
 }
 
+
+resource "kubectl_manifest" "frontend_config" {
+  yaml_body = templatefile("${path.module}/../k8s/frontend-configmap.yaml", {
+    backend_service_address = data.kubernetes_service_v1.backend_lb.status[0].load_balancer[0].ingress[0].hostname
+  })
+
+  depends_on = [time_sleep.wait_seconds, kubectl_manifest.backend_service,
+  ]
+}

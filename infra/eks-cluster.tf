@@ -1,5 +1,5 @@
 resource "aws_eks_cluster" "autoflow" {
-  name = "eks-${var.project_name}"
+  name     = "eks-${var.project_name}"
   role_arn = var.role_arn
   version  = "1.35"
 
