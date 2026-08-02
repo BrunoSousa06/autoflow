@@ -3,11 +3,10 @@ kind: Service
 metadata:
   name: autoflow-frontend-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: autoflow-frontend
   ports:
     - protocol: TCP
       port: 80
       targetPort: 8080
-      nodePort: 30080

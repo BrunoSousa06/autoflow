@@ -5,7 +5,7 @@ metadata:
   labels:
     app: autoflow-backend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: autoflow-backend
@@ -18,10 +18,39 @@ spec:
         - name: autoflow-backend-container
           image: brunosousa06/autoflow-backend:latest
           imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
           ports:
             - containerPort: 8081
           envFrom:
             - configMapRef:
-                name: backend-config
+                name: autoflow-config
             - secretRef:
                 name: autoflow-secrets
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            failureThreshold: 20
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            failureThreshold: 3
+            timeoutSeconds: 5 
+            periodSeconds: 20
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            timeoutSeconds: 5
+            periodSeconds: 30
+          
+        
+          
