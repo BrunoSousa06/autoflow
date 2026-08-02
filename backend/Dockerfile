@@ -10,12 +10,16 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Runtime
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jre-alpine
+
+RUN addgroup -S appgroup && adduser -S autoflowuser -G appgroup
 
 WORKDIR /autoflow
 
-COPY --from=build /autoflow/target/*.jar app.jar
+COPY --from=build --chown=autoflowuser:appgroup /autoflow/target/*.jar app.jar
 
-EXPOSE 8080
+USER autoflowuser
+
+EXPOSE 8081
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

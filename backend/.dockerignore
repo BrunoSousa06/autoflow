@@ -1,0 +1,25 @@
+# Pastas de Build Locais
+target/
+.mvn/
+
+# IDEs (Eclipse, IntelliJ, VS Code)
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# Controle de Versão e Logs
+.git
+.gitignore
+*.log
+
+# Arquivos do Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos Sensíveis / Configurações Locais
+.env
+*.pem
+*.key
