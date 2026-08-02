@@ -1,7 +1,7 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
-import com.autoflow.application.gateway.NotificacaoService;
+import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ClienteOsEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,13 +24,13 @@ import static org.mockito.Mockito.verify;
 class EnviarLinkAcompanhamentoUseCaseTest {
 
     @Mock
-    private NotificacaoService notificacaoService;
+    private NotificacaoGateway notificacaoGateway;
 
     private EnviarLinkAcompanhamentoUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new EnviarLinkAcompanhamentoUseCase(notificacaoService);
+        useCase = new EnviarLinkAcompanhamentoUseCase(notificacaoGateway);
         ReflectionTestUtils.setField(useCase, "frontendPublicBaseUrl", "https://app.autoflow.com");
     }
 
@@ -46,7 +46,7 @@ class EnviarLinkAcompanhamentoUseCaseTest {
         useCase.execute(ordemServico, "token-seguro");
 
         ArgumentCaptor<MensagemNotificacao> captor = ArgumentCaptor.forClass(MensagemNotificacao.class);
-        verify(notificacaoService).enviar(captor.capture());
+        verify(notificacaoGateway).enviar(captor.capture());
         MensagemNotificacao mensagem = captor.getValue();
         assertAll(
                 () -> assertEquals("maria@email.com", mensagem.destinatario()),
@@ -65,6 +65,6 @@ class EnviarLinkAcompanhamentoUseCaseTest {
 
         useCase.execute(ordemServico, "token");
 
-        verify(notificacaoService, never()).enviar(org.mockito.ArgumentMatchers.any());
+        verify(notificacaoGateway, never()).enviar(org.mockito.ArgumentMatchers.any());
     }
 }

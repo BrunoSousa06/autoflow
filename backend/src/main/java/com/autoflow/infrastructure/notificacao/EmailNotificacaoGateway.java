@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.notificacao;
 
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
-import com.autoflow.application.gateway.NotificacaoService;
+import com.autoflow.application.gateway.NotificacaoGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EmailNotificacaoService implements NotificacaoService {
+public class EmailNotificacaoGateway implements NotificacaoGateway {
 
     private final JavaMailSender mailSender;
 
