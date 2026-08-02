@@ -1,10 +1,9 @@
 package com.autoflow.controller.ordemservico.reparoadicional;
 
+import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
 import com.autoflow.controller.ordemservico.request.ItensNecessariosRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.request.CriarReparoAdicionalRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.request.ServicoReparoAdicionalRequest;
-import com.autoflow.controller.ordemservico.reparoadicional.response.CriarReparoAdicionalResponse;
-import com.autoflow.service.ordemservico.reparoadicional.impl.CriarReparoAdicionalResult;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -13,15 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ReparoAdicionalDtoTest {
 
+    private final ReparoAdicionalRestMapper mapper = new ReparoAdicionalRestMapper();
+
     @Test
-    void deveCriarResponseAPartirDoResult() {
-        CriarReparoAdicionalResult result = new CriarReparoAdicionalResult(
+    void deveMapearOutputParaResponse() {
+        var output = new CriarReparoAdicionalOutput(
                 1L,
                 2L,
                 "http://localhost:8080/public/orcamentos/2?token=abc"
         );
 
-        CriarReparoAdicionalResponse response = CriarReparoAdicionalResponse.from(result);
+        var response = mapper.toResponse(output);
 
         assertEquals(1L, response.reparoAdicionalId());
         assertEquals(2L, response.orcamentoId());
@@ -29,28 +30,17 @@ class ReparoAdicionalDtoTest {
     }
 
     @Test
-    void deveManterValoresDoRequestDeCriacao() {
-        ItensNecessariosRequest item = new ItensNecessariosRequest(7L, 2);
-        ServicoReparoAdicionalRequest servico =
-                new ServicoReparoAdicionalRequest(10L, List.of(item));
+    void deveMapearRequestParaCommand() {
+        var item = new ItensNecessariosRequest(7L, 2);
+        var servico = new ServicoReparoAdicionalRequest(10L, List.of(item));
+        var request = new CriarReparoAdicionalRequest(List.of(servico));
 
-        CriarReparoAdicionalRequest request = new CriarReparoAdicionalRequest(List.of(servico));
+        var command = mapper.toCommand("OS-123", "mecanico@autoflow.com", request);
 
-        assertEquals(1, request.servicos().size());
-        assertEquals(10L, request.servicos().getFirst().servicoId());
-        assertEquals(1, request.servicos().getFirst().itensNecessarios().size());
-        assertEquals(7L, request.servicos().getFirst().itensNecessarios().getFirst().pecaInsumoId());
-    }
-
-    @Test
-    void deveManterValoresDoRequestDeServicoComItens() {
-        ItensNecessariosRequest item = new ItensNecessariosRequest(7L, 2);
-
-        ServicoReparoAdicionalRequest request = new ServicoReparoAdicionalRequest(10L, List.of(item));
-
-        assertEquals(10L, request.servicoId());
-        assertEquals(1, request.itensNecessarios().size());
-        assertEquals(7L, request.itensNecessarios().getFirst().pecaInsumoId());
-        assertEquals(2, request.itensNecessarios().getFirst().quantidade());
+        assertEquals("OS-123", command.numeroOs());
+        assertEquals("mecanico@autoflow.com", command.emailMecanico());
+        assertEquals(10L, command.servicos().getFirst().servicoId());
+        assertEquals(7L, command.servicos().getFirst().itensNecessarios().getFirst().pecaInsumoId());
+        assertEquals(2, command.servicos().getFirst().itensNecessarios().getFirst().quantidade());
     }
 }

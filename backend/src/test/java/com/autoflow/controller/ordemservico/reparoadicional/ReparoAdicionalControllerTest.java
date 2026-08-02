@@ -1,12 +1,12 @@
 package com.autoflow.controller.ordemservico.reparoadicional;
 
+import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
+import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapper;
-import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
-import com.autoflow.service.ordemservico.reparoadicional.impl.CriarReparoAdicionalResult;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,9 +28,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,6 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ReparoAdicionalController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import({
+        ReparoAdicionalRestMapper.class,
         ReparoAdicionalControllerTest.MethodSecurityTestConfig.class,
         ReparoAdicionalControllerTest.SecurityExceptionHandler.class
 })
@@ -48,10 +52,7 @@ class ReparoAdicionalControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private ReparoAdicionalService reparoAdicionalService;
-
-    @MockitoBean
-    private ItensNecessariosMapper itensNecessariosMapper;
+    private CriarReparoAdicionalUseCase criarReparoAdicionalUseCase;
 
     @MockitoBean
     private JwtService jwtService;
@@ -62,191 +63,116 @@ class ReparoAdicionalControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveCriarReparoAdicionalComoMecanico() throws Exception {
-        List<ItemNecessarioEntity> itens = List.of(itemNecessario(7L, 2));
-        when(itensNecessariosMapper.mapToEntities(any())).thenReturn(itens);
-        when(reparoAdicionalService.criar(
-                eq("OS-123"),
-                eq("mecanico@autoflow.com"),
-                any()
-        )).thenReturn(new CriarReparoAdicionalResult(
+        when(criarReparoAdicionalUseCase.execute(any())).thenReturn(new CriarReparoAdicionalOutput(
                 5L,
                 20L,
                 "http://localhost:8080/public/orcamentos/20?token=abc"
         ));
 
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "servicos": [
-                                    {
-                                      "servicoId": 10,
-                                      "itensNecessarios": [
-                                        {
-                                          "pecaInsumoId": 7,
-                                          "quantidade": 2
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                                """))
+        executarPostValido()
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reparoAdicionalId").value(5L))
                 .andExpect(jsonPath("$.orcamentoId").value(20L))
                 .andExpect(jsonPath("$.publicUrl").value("http://localhost:8080/public/orcamentos/20?token=abc"));
 
-        verify(itensNecessariosMapper).mapToEntities(any());
-        verify(reparoAdicionalService).criar(eq("OS-123"), eq("mecanico@autoflow.com"), any());
+        ArgumentCaptor<CriarReparoAdicionalCommand> captor = ArgumentCaptor.forClass(CriarReparoAdicionalCommand.class);
+        verify(criarReparoAdicionalUseCase).execute(captor.capture());
+        CriarReparoAdicionalCommand command = captor.getValue();
+        assertEquals("OS-123", command.numeroOs());
+        assertEquals("mecanico@autoflow.com", command.emailMecanico());
+        assertEquals(10L, command.servicos().getFirst().servicoId());
+        assertEquals(7L, command.servicos().getFirst().itensNecessarios().getFirst().pecaInsumoId());
+        assertEquals(2, command.servicos().getFirst().itensNecessarios().getFirst().quantidade());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void deveCriarReparoAdicionalComoAdmin() throws Exception {
-        when(itensNecessariosMapper.mapToEntities(any())).thenReturn(List.of(itemNecessario(7L, 2)));
-        when(reparoAdicionalService.criar(eq("OS-123"), eq("user"), any()))
-                .thenReturn(new CriarReparoAdicionalResult(5L, 20L, "url"));
+        when(criarReparoAdicionalUseCase.execute(any()))
+                .thenReturn(new CriarReparoAdicionalOutput(5L, 20L, "url"));
 
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "servicos": [
-                                    {
-                                      "servicoId": 10,
-                                      "itensNecessarios": [
-                                        {
-                                          "pecaInsumoId": 7,
-                                          "quantidade": 2
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                                """))
+        executarPostValido()
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.reparoAdicionalId").value(5L));
 
-        verify(reparoAdicionalService).criar(eq("OS-123"), eq("user"), any());
+        verify(criarReparoAdicionalUseCase).execute(any());
     }
 
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveRetornarBadRequestQuandoServicoNaoForInformado() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "servicos": []
-                                }
-                                """))
-                .andExpect(status().isBadRequest());
+        executarPost("""
+                { "servicos": [] }
+                """).andExpect(status().isBadRequest());
 
-        verifyNoInteractions(itensNecessariosMapper);
-        verifyNoInteractions(reparoAdicionalService);
+        verifyNoInteractions(criarReparoAdicionalUseCase);
     }
 
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveRetornarBadRequestQuandoServicoIdNaoForInformado() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "servicos": [
-                                    {
-                                      "itensNecessarios": [
-                                        { "pecaInsumoId": 7, "quantidade": 2 }
-                                      ]
-                                    }
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isBadRequest());
+        executarPost("""
+                {
+                  "servicos": [{
+                    "itensNecessarios": [{ "pecaInsumoId": 7, "quantidade": 2 }]
+                  }]
+                }
+                """).andExpect(status().isBadRequest());
 
-        verifyNoInteractions(itensNecessariosMapper, reparoAdicionalService);
+        verifyNoInteractions(criarReparoAdicionalUseCase);
     }
 
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveRetornarBadRequestQuandoItensNecessariosEstiveremVazios() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "servicos": [
-                                    {
-                                      "servicoId": 10,
-                                      "itensNecessarios": []
-                                    }
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isBadRequest());
+        executarPost("""
+                {
+                  "servicos": [{ "servicoId": 10, "itensNecessarios": [] }]
+                }
+                """).andExpect(status().isBadRequest());
 
-        verifyNoInteractions(itensNecessariosMapper, reparoAdicionalService);
+        verifyNoInteractions(criarReparoAdicionalUseCase);
     }
 
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveRetornarBadRequestQuandoQuantidadeDoItemNaoForPositiva() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "servicos": [
-                                    {
-                                      "servicoId": 10,
-                                      "itensNecessarios": [
-                                        { "pecaInsumoId": 7, "quantidade": 0 }
-                                      ]
-                                    }
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isBadRequest());
+        executarPost("""
+                {
+                  "servicos": [{
+                    "servicoId": 10,
+                    "itensNecessarios": [{ "pecaInsumoId": 7, "quantidade": 0 }]
+                  }]
+                }
+                """).andExpect(status().isBadRequest());
 
-        verifyNoInteractions(itensNecessariosMapper, reparoAdicionalService);
+        verifyNoInteractions(criarReparoAdicionalUseCase);
     }
 
     @Test
     @WithMockUser(roles = "CLIENTE")
     void deveRetornarForbiddenQuandoClienteTentarCriarReparoAdicional() throws Exception {
-        mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "servicos": [
-                                    {
-                                      "servicoId": 10,
-                                      "itensNecessarios": [
-                                        {
-                                          "pecaInsumoId": 7,
-                                          "quantidade": 2
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        executarPostValido().andExpect(status().isForbidden());
 
-        verify(itensNecessariosMapper, never()).mapToEntities(any());
-        verify(reparoAdicionalService, never()).criar(any(), any(), any());
+        verify(criarReparoAdicionalUseCase, never()).execute(any());
     }
 
-    private ItemNecessarioEntity itemNecessario(Long pecaInsumoId, Integer quantidade) {
-        ItemNecessarioEntity item = new ItemNecessarioEntity();
-        item.setPecaInsumoId(pecaInsumoId);
-        item.setQuantidade(quantidade);
-        return item;
+    private org.springframework.test.web.servlet.ResultActions executarPostValido() throws Exception {
+        return executarPost("""
+                {
+                  "servicos": [{
+                    "servicoId": 10,
+                    "itensNecessarios": [{ "pecaInsumoId": 7, "quantidade": 2 }]
+                  }]
+                }
+                """);
+    }
+
+    private org.springframework.test.web.servlet.ResultActions executarPost(String json) throws Exception {
+        return mockMvc.perform(post("/ordens-servico/{numeroOs}/reparos-adicionais", "OS-123")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json));
     }
 
     @TestConfiguration
