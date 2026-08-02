@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -51,6 +52,25 @@ public class OrcamentoServiceImpl implements OrcamentoService {
     public OrcamentoEntity aprovar(Long orcamentoId, String emailUsuario) {
         OrcamentoEntity orcamento = getOrcamento(orcamentoId);
         UsuarioEntity usuarioEntity = validarUsuarioPodeAcessar(orcamento, emailUsuario);
+        return efetivarAprovacao(orcamento, usuarioEntity.getNome());
+    }
+
+    @Override
+    public OrcamentoEntity consultarDaOrdem(Long orcamentoId, String numeroOs) {
+        OrcamentoEntity orcamento = getOrcamento(orcamentoId);
+        validarPertenceAOrdem(orcamento, numeroOs);
+        return orcamento;
+    }
+
+    @Override
+    @Transactional
+    public OrcamentoEntity aprovarDaOrdem(Long orcamentoId, String numeroOs) {
+        OrcamentoEntity orcamento = getOrcamento(orcamentoId);
+        validarPertenceAOrdem(orcamento, numeroOs);
+        return efetivarAprovacao(orcamento, orcamento.getCliente().getNome());
+    }
+
+    private OrcamentoEntity efetivarAprovacao(OrcamentoEntity orcamento, String assinaturaNome) {
         if (orcamento.getStatus() == StatusOrcamento.APROVADO || orcamento.getStatus() == StatusOrcamento.REPROVADO) {
             return orcamento;
         }
@@ -59,8 +79,8 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         }
 
         orcamento.setStatus(StatusOrcamento.APROVADO);
-        orcamento.setAssinaturaNome(usuarioEntity.getNome());
-        orcamento.setAprovadoEm(LocalDateTime.now());
+        orcamento.setAssinaturaNome(assinaturaNome);
+        orcamento.setAprovadoEm(LocalDateTime.now(ZoneId.systemDefault()));
 
         OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
 
@@ -75,6 +95,12 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         ordemServicoRepository.save(ordemServico);
 
         return orcamentoRepository.save(orcamento);
+    }
+
+    private void validarPertenceAOrdem(OrcamentoEntity orcamento, String numeroOs) {
+        if (!orcamento.getNumeroOs().equals(numeroOs)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado para esta ordem de serviço");
+        }
     }
 
     private UsuarioEntity validarUsuarioPodeAcessar(OrcamentoEntity orcamento, String emailUsuario) {
@@ -102,7 +128,7 @@ public class OrcamentoServiceImpl implements OrcamentoService {
         }
 
         orcamento.setStatus(StatusOrcamento.REPROVADO);
-        orcamento.setReprovadoEm(LocalDateTime.now());
+        orcamento.setReprovadoEm(LocalDateTime.now(ZoneId.systemDefault()));
         orcamento.setAssinaturaNome(usuarioEntity.getNome());
         if(motivo != null) orcamento.setRecusaMotivo(motivo);
 

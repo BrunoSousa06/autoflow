@@ -1,4 +1,4 @@
-package com.autoflow.service.notificacao;
+package com.autoflow.application.dto.notificacao;
 
 public record MensagemNotificacao(
         String destinatario,

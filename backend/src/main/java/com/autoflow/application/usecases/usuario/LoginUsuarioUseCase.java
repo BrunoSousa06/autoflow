@@ -2,7 +2,7 @@ package com.autoflow.application.usecases.usuario;
 
 import com.autoflow.presentation.usuario.request.LoginRequest;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

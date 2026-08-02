@@ -2,10 +2,10 @@ package com.autoflow.controller.ordemservico.response;
 
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 
 public record OrdemServicoResponse(
         Long id,
@@ -17,22 +17,44 @@ public record OrdemServicoResponse(
         LocalDateTime execucaoIniciadaEm,
         LocalDateTime finalizadaEm,
         LocalDateTime entregueEm,
-        List<ServicoOsResponse> servicos
+        List<ServicoOsResponse> servicos,
+        String acompanhamentoUrl
 ) {
-    public static OrdemServicoResponse fromDomain(OrdemServicoEntity os) {
+
+    public static OrdemServicoResponse fromDomain(
+            OrdemServicoCriada resultado,
+            String acompanhamentoUrl
+    ) {
+        return fromEntity(
+                resultado.ordemServico(),
+                acompanhamentoUrl
+        );
+    }
+
+    public static OrdemServicoResponse fromDomain(
+            OrdemServicoEntity ordemServico
+    ) {
+        return fromEntity(ordemServico, null);
+    }
+
+    private static OrdemServicoResponse fromEntity(
+            OrdemServicoEntity ordemServico,
+            String acompanhamentoUrl
+    ) {
         return new OrdemServicoResponse(
-                os.getId(),
-                os.getNumeroOs(),
-                os.getCliente().getNome(),
-                os.getCliente().getCpfCnpj(),
-                os.getStatus(),
-                os.getDataAbertura(),
-                os.getExecucaoIniciadaEm(),
-                os.getFinalizadaEm(),
-                os.getEntregueEm(),
-                os.getServicosSolicitados().stream()
+                ordemServico.getId(),
+                ordemServico.getNumeroOs(),
+                ordemServico.getCliente().getNome(),
+                ordemServico.getCliente().getCpfCnpj(),
+                ordemServico.getStatus(),
+                ordemServico.getDataAbertura(),
+                ordemServico.getExecucaoIniciadaEm(),
+                ordemServico.getFinalizadaEm(),
+                ordemServico.getEntregueEm(),
+                ordemServico.getServicosSolicitados().stream()
                         .map(ServicoOsResponse::fromDomain)
-                        .toList()
+                        .toList(),
+                acompanhamentoUrl
         );
     }
 }

@@ -1,7 +1,7 @@
 package com.autoflow.controller.ordemservico.reparoadicional;
 
-import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapper;
 import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;

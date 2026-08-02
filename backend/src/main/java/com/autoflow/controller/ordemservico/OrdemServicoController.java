@@ -7,6 +7,7 @@ import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapper;
 import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapper;
@@ -19,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -39,6 +41,8 @@ public class OrdemServicoController {
     private final OrdemServicoService ordemServicoService;
     private final ServicoSolicitadoMapper servicoSolicitadoMapper;
     private final ItensNecessariosMapper itensNecessariosMapper;
+    @Value("${app.frontend-public-base-url}")
+    private String frontendPublicBaseUrl;
 
     public OrdemServicoController(OrdemServicoServiceImpl ordemServicoService,
                                   ServicoSolicitadoMapper servicoSolicitadoMapper,
@@ -58,12 +62,28 @@ public class OrdemServicoController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public OrdemServicoResponse criar(@Valid @RequestBody CriarOrdemServicoRequest request) {
-        List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request.servicosSolicitados());
-        return OrdemServicoResponse.fromDomain(ordemServicoService.criar(request.cpfCnpj(),
+    public OrdemServicoResponse criar(
+            @Valid @RequestBody CriarOrdemServicoRequest request
+    ) {
+        List<ServicoSolicitadoEntity> servicos =
+                servicoSolicitadoMapper.mapToEntities(
+                        request.servicosSolicitados()
+                );
+
+        OrdemServicoCriada osCriada = ordemServicoService.criar(
+                request.cpfCnpj(),
                 request.veiculo(),
                 servicos
-        ));
+        );
+
+        String acompanhamentoUrl = frontendPublicBaseUrl
+                + "/public/acompanhamento?token="
+                + osCriada.tokenAcompanhamento();
+
+        return OrdemServicoResponse.fromDomain(
+                osCriada,
+                acompanhamentoUrl
+        );
     }
 
     @Operation(summary = "Incluir serviço na ordem de serviço", description = "Adiciona novos serviços a uma ordem de serviço existente")

@@ -1,4 +1,4 @@
-package com.autoflow.infrastructure.persistence.security.service;
+package com.autoflow.infrastructure.security.service;
 
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
