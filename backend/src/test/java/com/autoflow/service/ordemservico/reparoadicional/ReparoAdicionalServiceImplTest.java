@@ -1,5 +1,6 @@
 package com.autoflow.service.ordemservico.reparoadicional;
 
+import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
@@ -75,6 +76,9 @@ class ReparoAdicionalServiceImplTest {
     @Mock
     PecaInsumoService pecaInsumoService;
 
+    @Mock
+    ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
+
     @InjectMocks
     ReparoAdicionalServiceImpl service;
 
@@ -94,7 +98,8 @@ class ReparoAdicionalServiceImplTest {
         when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
-        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 10));
+        when(consultarDisponibilidadeEstoqueUseCase.execute(anyList()))
+                .thenReturn(List.of(itemComEstoque(7L, "Pastilha", 2, 10)));
         when(reparoAdicionalRepository.save(any(ReparoAdicionalEntity.class))).thenAnswer(invocation -> {
             ReparoAdicionalEntity reparo = invocation.getArgument(0);
             if (reparo.getId() == null) {
@@ -181,7 +186,8 @@ class ReparoAdicionalServiceImplTest {
         when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
         when(usuarioService.buscarPorEmail("mecanico@autoflow.com")).thenReturn(mecanico);
         when(servicoService.buscarEntityPorId(1L)).thenReturn(servicoCatalogo(1L, "Troca de pastilha", "120.00"));
-        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 10));
+        when(consultarDisponibilidadeEstoqueUseCase.execute(anyList()))
+                .thenReturn(List.of(itemComEstoque(7L, "Pastilha", 2, 10)));
         when(reparoAdicionalRepository.save(any(ReparoAdicionalEntity.class))).thenAnswer(invocation -> {
             ReparoAdicionalEntity reparo = invocation.getArgument(0);
             if (reparo.getId() == null) {
@@ -474,7 +480,8 @@ class ReparoAdicionalServiceImplTest {
     @Test
     void buscaItensNecessarios_deveMarcarItemComoPendenteQuandoEstoqueInsuficiente() {
         ItemNecessarioEntity solicitado = item(7L, "Pastilha", 3);
-        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 1));
+        when(consultarDisponibilidadeEstoqueUseCase.execute(List.of(solicitado)))
+                .thenReturn(List.of(itemComEstoque(7L, "Pastilha", 3, 1)));
 
         List<ItemNecessarioEntity> resultado = service.buscaItensNecessarios(List.of(solicitado), pecaInsumoService);
 
@@ -489,7 +496,8 @@ class ReparoAdicionalServiceImplTest {
     @Test
     void buscaItensNecessarios_deveMarcarItemComoDisponivelQuandoEstoqueForIgualAoSolicitado() {
         ItemNecessarioEntity solicitado = item(7L, "Pastilha", 3);
-        when(pecaInsumoService.buscarEntityPorId(7L)).thenReturn(pecaInsumo(7L, "Pastilha", "15.00", 3));
+        when(consultarDisponibilidadeEstoqueUseCase.execute(List.of(solicitado)))
+                .thenReturn(List.of(itemComEstoque(7L, "Pastilha", 3, 3)));
 
         List<ItemNecessarioEntity> resultado = service.buscaItensNecessarios(List.of(solicitado), pecaInsumoService);
 
@@ -520,6 +528,22 @@ class ReparoAdicionalServiceImplTest {
                 new BigDecimal("15.00"),
                 quantidade,
                 null
+        );
+    }
+
+    private ItemNecessarioEntity itemComEstoque(Long id, String nome, int quantidade, int quantidadeDisponivel) {
+        boolean disponivel = quantidadeDisponivel >= quantidade;
+        return ItemNecessarioEntity.criar(
+                id,
+                nome,
+                CategoriaPecaInsumo.PECA,
+                new BigDecimal("15.00"),
+                quantidade,
+                disponivel ? StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE,
+                new SituacaoEstoque(
+                        quantidadeDisponivel,
+                        disponivel ? null : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE
+                )
         );
     }
 

@@ -1,9 +1,9 @@
 package com.autoflow.service.ordemservico.reparoadicional.impl;
 
+import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
@@ -45,7 +45,7 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
     private final OrcamentoPublicacaoService orcamentoPublicacaoService;
     private final OrcamentoNotificacaoService orcamentoNotificacaoService;
     private final ServicoService servicoService;
-    private final PecaInsumoService pecaInsumoService;
+    private final ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
 
     @Transactional
     @Override
@@ -215,41 +215,12 @@ public class ReparoAdicionalServiceImpl implements ReparoAdicionalService {
             throw new IllegalArgumentException("Servico do reparo adicional deve ter ao menos um item necessario.");
         }
 
-        return buscaItensNecessarios(itensNecessarios, pecaInsumoService);
+        return consultarDisponibilidadeEstoqueUseCase.execute(itensNecessarios);
     }
 
     @Override
     public List<ItemNecessarioEntity> buscaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios, PecaInsumoService pecaInsumoService) {
-        return itensNecessarios.stream()
-                .map(itemNecessario -> {
-                    PecaInsumoEntity itemEstoque =
-                            pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
-
-                    boolean disponivel =
-                            itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
-
-                    StatusItemNecessario status = disponivel
-                            ? StatusItemNecessario.DISPONIVEL
-                            : StatusItemNecessario.PENDENTE;
-
-                    MotivoPendenciaItem motivoPendencia = disponivel
-                            ? null
-                            : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE;
-
-                    return ItemNecessarioEntity.criar(
-                            itemEstoque.getId(),
-                            itemEstoque.getNome(),
-                            itemEstoque.getTipo(),
-                            itemEstoque.getValor(),
-                            itemNecessario.getQuantidade(),
-                            status,
-                            new SituacaoEstoque(
-                                    itemEstoque.getQuantidade(),
-                                    motivoPendencia
-                            )
-                    );
-                })
-                .toList();
+        return consultarDisponibilidadeEstoqueUseCase.execute(itensNecessarios);
     }
 
     private ServicoSolicitadoEntity copiarServicoParaOrdemServico(
