@@ -1,5 +1,5 @@
 variable "project_name" {
-  default = "autoflow-terraform"
+  default = "autoflow"
 }
 
 variable "region_default" {

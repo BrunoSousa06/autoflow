@@ -8,8 +8,8 @@ resource "aws_subnet" "subnet_public" {
   tags = {
     "Name" = "public-subnet"
 
-    "kubernetes.io/role/elb"                       = "1"
-    "kubernetes.io/cluster/eks-autoflow-terraform" = "shared"
+    "kubernetes.io/role/elb"             = "1"
+    "kubernetes.io/cluster/eks-autoflow" = "shared"
   }
 
 }
@@ -25,8 +25,8 @@ resource "aws_subnet" "subnet_private" {
   tags = {
     Name = "private-subnet"
 
-    "kubernetes.io/role/internal-elb"              = "1"
-    "kubernetes.io/cluster/eks-autoflow-terraform" = "shared"
+    "kubernetes.io/role/internal-elb"    = "1"
+    "kubernetes.io/cluster/eks-autoflow" = "shared"
   }
 
 }
