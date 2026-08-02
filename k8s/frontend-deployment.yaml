@@ -27,6 +27,9 @@ spec:
               cpu: "500m"
           ports:
             - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: frontend-config
           readinessProbe:
             httpGet:
               path: /
