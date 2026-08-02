@@ -1,11 +1,9 @@
 package com.autoflow.application.gateway;
 
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.Query;
 
 
 import java.util.List;
@@ -27,7 +25,4 @@ public interface OrdemServicoGateway {
             Specification<OrdemServicoEntity> specification,
             Pageable pageable);
 
-
-
-    TempoMedioOrdemServicoProjection calcularTempoMedioFinalizacao();
 }

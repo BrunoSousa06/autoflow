@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { OrcamentoService } from './orcamento.service';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/orcamentos';
+const BASE = `${environment.apiUrl}/orcamentos`;
 
 describe('OrcamentoService', () => {
   let service: OrcamentoService;

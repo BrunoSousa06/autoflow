@@ -4,7 +4,8 @@ import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,16 +40,19 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String email = jwtService.extrairEmail(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (SecurityContextHolder.getContext().getAuthentication() == null
+                && jwtService.tokenValido(token)) {
+            String email = jwtService.extrairEmail(token);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (email != null) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(email);
 
-            if (jwtService.tokenValido(token)) {
                 String roleDoToken = jwtService.extrairRole(token);
 
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleDoToken);
+                SimpleGrantedAuthority authority =
+                        new SimpleGrantedAuthority("ROLE_" + roleDoToken);
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
@@ -58,10 +62,12 @@ public class JwtFilter extends OncePerRequestFilter {
                         );
 
                 authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
                 );
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authToken);
             }
         }
 
@@ -69,15 +75,17 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    public boolean shouldNotFilter(
-            HttpServletRequest request
-    ) {
-        String uri = request.getRequestURI();
+    public boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
 
-        return uri.equals("/public/ordens-servico/acompanhamento")
-                || uri.startsWith("/public/orcamentos/")
-                || uri.startsWith("/swagger-ui/")
-                || uri.equals("/swagger-ui.html")
-                || uri.startsWith("/v3/api-docs");
+        return "OPTIONS".equalsIgnoreCase(request.getMethod())
+                || path.startsWith("/public/")
+                || path.startsWith("/auth/")
+                || path.equals("/actuator/health")
+                || path.equals("/actuator/health/liveness")
+                || path.equals("/actuator/health/readiness")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html");
     }
 }

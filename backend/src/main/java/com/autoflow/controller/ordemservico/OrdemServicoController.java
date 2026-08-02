@@ -1,5 +1,7 @@
 package com.autoflow.controller.ordemservico;
 
+import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
+import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
 import com.autoflow.controller.ordemservico.request.*;
 import com.autoflow.controller.ordemservico.response.FinalizarDiagnosticoResponse;
 import com.autoflow.controller.ordemservico.response.OrdemServicoDetalheResponse;
@@ -41,15 +43,19 @@ public class OrdemServicoController {
     private final OrdemServicoService ordemServicoService;
     private final ServicoSolicitadoMapper servicoSolicitadoMapper;
     private final ItensNecessariosMapper itensNecessariosMapper;
+    private final CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase;
+
     @Value("${app.frontend-public-base-url}")
     private String frontendPublicBaseUrl;
 
     public OrdemServicoController(OrdemServicoServiceImpl ordemServicoService,
                                   ServicoSolicitadoMapper servicoSolicitadoMapper,
-                                  ItensNecessariosMapper itensNecessariosMapper) {
+                                  ItensNecessariosMapper itensNecessariosMapper,
+                                  CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase) {
         this.ordemServicoService = ordemServicoService;
         this.servicoSolicitadoMapper = servicoSolicitadoMapper;
         this.itensNecessariosMapper = itensNecessariosMapper;
+        this.calcularTempoMedioOrdemServicoUseCase = calcularTempoMedioOrdemServicoUseCase;
     }
 
     @Operation(summary = "Criar a ordem de serviço", description = "Cria uma nova ordem de serviço identificando o cliente por CPF/CNPJ e buscando ou cadastrando o veiculo pela placa")
@@ -323,6 +329,12 @@ public class OrdemServicoController {
     @GetMapping("/metricas/tempo-medio")
     @PreAuthorize("hasRole('ADMIN')")
     public TempoMedioOrdemServicoResponse calcularTempoMedioFinalizacao() {
-        return ordemServicoService.calcularTempoMedioFinalizacao();
+        TempoMedioOrdemServicoOutput output = calcularTempoMedioOrdemServicoUseCase.execute();
+        return new TempoMedioOrdemServicoResponse(
+                output.quantidadeOrdensFinalizadas(),
+                output.tempoMedioSegundos(),
+                output.tempoMedioMinutos(),
+                output.tempoMedioHoras()
+        );
     }
 }

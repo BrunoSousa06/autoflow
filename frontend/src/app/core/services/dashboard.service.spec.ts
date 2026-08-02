@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DashboardService, TempoMedioOsResponse, TempoMedioServicoResponse } from './dashboard.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080';
+const API = environment.apiUrl;
 
 describe('DashboardService', () => {
   let service: DashboardService;

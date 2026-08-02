@@ -1,5 +1,6 @@
 package com.autoflow.architecture;
 
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -25,8 +26,8 @@ import static com.tngtech.archunit.library.freeze.FreezingArchRule.freeze;
  * - OrdemServicoService interface importa com.autoflow.controller (service->controller)
  */
 @AnalyzeClasses(
-    packages = "com.autoflow",
-    importOptions = ImportOption.DoNotIncludeTests.class
+        packages = "com.autoflow",
+        importOptions = ImportOption.DoNotIncludeTests.class
 )
 class ArchitectureBoundaryTest {
 

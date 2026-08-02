@@ -3,8 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { PecaInsumoService } from './peca-insumo.service';
 import { PecaInsumoRequest, PecaInsumoResponse } from './peca-insumo.model';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/peca-insumo';
+const BASE = `${environment.apiUrl}/peca-insumo`;
 
 describe('PecaInsumoService', () => {
   let service: PecaInsumoService;

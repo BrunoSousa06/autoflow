@@ -102,14 +102,14 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
+        when(jwtService.tokenValido(token))
+                .thenReturn(true);
+
         when(jwtService.extrairEmail(token))
                 .thenReturn("teste@email.com");
 
         when(userDetailsService.loadUserByUsername("teste@email.com"))
                 .thenReturn(userDetails);
-
-        when(jwtService.tokenValido(token))
-                .thenReturn(true);
 
         assertDoesNotThrow(this::executarFiltro);
 
@@ -149,8 +149,8 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
-        when(jwtService.extrairEmail(token))
-                .thenReturn(null);
+        when(jwtService.tokenValido(token)).thenReturn(true);
+        when(jwtService.extrairEmail(token)).thenReturn(null);
 
         assertDoesNotThrow(this::executarFiltro);
 
@@ -178,12 +178,6 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
-        when(jwtService.extrairEmail(token))
-                .thenReturn("teste@email.com");
-
-        when(userDetailsService.loadUserByUsername("teste@email.com"))
-                .thenReturn(userDetails);
-
         when(jwtService.tokenValido(token))
                 .thenReturn(false);
 
@@ -194,6 +188,9 @@ class JwtFilterTest {
                         .getContext()
                         .getAuthentication()
         );
+
+        verify(jwtService, never()).extrairEmail(token);
+        verifyNoInteractions(userDetailsService);
 
         assertDoesNotThrow(this::verificarFiltroContinuou);
     }
@@ -217,14 +214,9 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
-        when(jwtService.extrairEmail(token))
-                .thenReturn("teste@email.com");
-
         assertDoesNotThrow(this::executarFiltro);
 
-        verify(jwtService)
-                .extrairEmail(token);
-
+        verifyNoInteractions(jwtService);
         verifyNoInteractions(userDetailsService);
 
         assertDoesNotThrow(this::verificarFiltroContinuou);
@@ -253,15 +245,27 @@ class JwtFilterTest {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"/swagger-ui/index.html", "/v3/api-docs/swagger-config", "/swagger-ui.html"})
-    void shouldNotFilterDeveRetornarTrueParaRotasDeDocumentacao(String rota) {
+    @ParameterizedTest(name = "Deve ignorar o filtro JWT para a rota: {0}")
+    @ValueSource(strings = {
+            "/public/ordens-servico/acompanhamento",
+            "/public/outra-rota",
+            "/auth/login",
+            "/actuator/health",
+            "/actuator/health/liveness",
+            "/actuator/health/readiness",
+            "/swagger-ui/index.html",
+            "/v3/api-docs/swagger-config",
+            "/swagger-ui.html"
+    })
+    void shouldNotFilterDeveRetornarTrueParaRotasPublicas(String rota) {
         request.setRequestURI(rota);
+
         assertTrue(jwtFilter.shouldNotFilter(request));
     }
 
     @Test
-    void shouldNotFilterDeveRetornarFalseParaOutrasRotas() {
+    void shouldNotFilterDeveRetornarFalseParaOutrasRotas()
+            throws ServletException {
 
         request.setRequestURI("/api/clientes");
         assertFalse(jwtFilter.shouldNotFilter(request));

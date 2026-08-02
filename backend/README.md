@@ -168,6 +168,20 @@ Funcionalidades implementadas:
 * Endpoints públicos e privados
 * Senhas armazenadas de forma criptografada
 
+## Métricas do dashboard
+
+As métricas do dashboard são consultas de leitura calculadas diretamente sobre os dados
+persistidos de ordens de serviço e serviços solicitados:
+
+* `/ordens-servico/metricas/tempo-medio` considera OS com status `FINALIZADA` ou
+  `ENTREGUE` e calcula o intervalo entre o início da execução e a finalização;
+* `/servicos/metricas/tempo-medio` considera serviços solicitados com status
+  `FINALIZADO`, agrupados por serviço.
+
+As projections de banco são encapsuladas pelo adapter de métricas. A aplicação recebe
+somente modelos do `MetricsGateway` e realiza as conversões de segundos para minutos e
+horas sem alterar o contrato REST consumido pelo frontend.
+
 ---
 
 ## Validações

@@ -1,11 +1,12 @@
 package com.autoflow.controller.ordemservico;
 
+import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
+import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
 import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapperImpl;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
-import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -69,6 +70,9 @@ class OrdemServicoControllerTest {
 
     @MockitoBean
     private OrdemServicoServiceImpl ordemServicoService;
+
+    @MockitoBean
+    private CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase;
 
     @MockitoBean
     private JwtService jwtService;
@@ -379,13 +383,13 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void deveCalcularTempoMedioFinalizacaoComoAdmin() throws Exception {
-        TempoMedioOrdemServicoResponse response = new TempoMedioOrdemServicoResponse(
+        TempoMedioOrdemServicoOutput output = new TempoMedioOrdemServicoOutput(
                 3L,
                 7200.0,
                 120.0,
                 2.0
         );
-        when(ordemServicoService.calcularTempoMedioFinalizacao()).thenReturn(response);
+        when(calcularTempoMedioOrdemServicoUseCase.execute()).thenReturn(output);
 
         mockMvc.perform(get("/ordens-servico/metricas/tempo-medio"))
                 .andExpect(status().isOk())
@@ -394,7 +398,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.tempoMedioMinutos").value(120.0))
                 .andExpect(jsonPath("$.tempoMedioHoras").value(2.0));
 
-        verify(ordemServicoService).calcularTempoMedioFinalizacao();
+        verify(calcularTempoMedioOrdemServicoUseCase).execute();
     }
 
     @Test
@@ -403,7 +407,7 @@ class OrdemServicoControllerTest {
         mockMvc.perform(get("/ordens-servico/metricas/tempo-medio"))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).calcularTempoMedioFinalizacao();
+        verifyNoInteractions(calcularTempoMedioOrdemServicoUseCase);
     }
 
     @Test

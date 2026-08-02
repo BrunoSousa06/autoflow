@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 function criarTokenJwt(payload: object): string {
   const encoded = btoa(JSON.stringify(payload))
@@ -63,7 +64,7 @@ describe('AuthService', () => {
 
     service.login('admin@autoflow.com', 'senha123').subscribe();
 
-    const req = httpTesting.expectOne('http://localhost:8080/auth/login');
+    const req = httpTesting.expectOne(`${environment.apiUrl}/auth/login`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ email: 'admin@autoflow.com', senha: 'senha123' });
     req.flush({ token });
@@ -75,7 +76,7 @@ describe('AuthService', () => {
     const token = criarTokenJwt({ sub: 'mecanico@autoflow.com', role: 'MECANICO', iat: 0, exp: 9999999999 });
 
     service.login('mecanico@autoflow.com', 'senha').subscribe();
-    httpTesting.expectOne('http://localhost:8080/auth/login').flush({ token });
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({ token });
 
     expect(service.isLoggedIn()).toBeTrue();
   });
@@ -84,7 +85,7 @@ describe('AuthService', () => {
     const token = criarTokenJwt({ sub: 'atendente@autoflow.com', role: 'ATENDENTE', iat: 0, exp: 9999999999 });
 
     service.login('atendente@autoflow.com', 'senha').subscribe();
-    httpTesting.expectOne('http://localhost:8080/auth/login').flush({ token });
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({ token });
 
     const usuario = service.getUsuarioLogado();
     expect(usuario?.email).toBe('atendente@autoflow.com');
@@ -95,7 +96,7 @@ describe('AuthService', () => {
     const token = criarTokenJwt({ sub: 'admin@autoflow.com', role: 'ADMIN', iat: 0, exp: 9999999999 });
 
     service.login('admin@autoflow.com', 'senha').subscribe();
-    httpTesting.expectOne('http://localhost:8080/auth/login').flush({ token });
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({ token });
 
     expect(service.getRole()).toBe('ADMIN');
   });
@@ -105,7 +106,7 @@ describe('AuthService', () => {
     const navigateSpy = spyOn(router, 'navigate');
 
     service.login('user@autoflow.com', 'senha').subscribe();
-    httpTesting.expectOne('http://localhost:8080/auth/login').flush({ token });
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({ token });
 
     service.logout();
 
@@ -119,7 +120,7 @@ describe('AuthService', () => {
     const navigateSpy = spyOn(router, 'navigate');
 
     service.login('user@autoflow.com', 'senha').subscribe();
-    httpTesting.expectOne('http://localhost:8080/auth/login').flush({ token: tokenExpirado });
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({ token: tokenExpirado });
 
     const usuario = service.getUsuarioLogado();
     expect(usuario).toBeNull();
