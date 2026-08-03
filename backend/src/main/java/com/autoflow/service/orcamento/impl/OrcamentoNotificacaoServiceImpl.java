@@ -4,7 +4,7 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
-import com.autoflow.application.gateway.NotificacaoService;
+import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class OrcamentoNotificacaoServiceImpl implements OrcamentoNotificacaoService {
 
-    private final NotificacaoService notificacaoService;
+    private final NotificacaoGateway notificacaoGateway;
 
     @Override
     public void enviarLinkOrcamentoParaCliente(
@@ -34,7 +34,7 @@ public class OrcamentoNotificacaoServiceImpl implements OrcamentoNotificacaoServ
                 montarMensagem(ordemServico, orcamento, urlPublica)
         );
 
-        notificacaoService.enviar(mensagem);
+        notificacaoGateway.enviar(mensagem);
     }
 
     private String montarAssunto(OrcamentoEntity orcamento) {

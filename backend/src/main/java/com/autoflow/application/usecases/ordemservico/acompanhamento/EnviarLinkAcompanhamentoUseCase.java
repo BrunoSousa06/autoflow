@@ -1,7 +1,7 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
-import com.autoflow.application.gateway.NotificacaoService;
+import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class EnviarLinkAcompanhamentoUseCase {
 
-    private final NotificacaoService notificacaoService;
+    private final NotificacaoGateway notificacaoGateway;
 
     @Value("${app.frontend-public-base-url}")
     private String frontendPublicBaseUrl;
@@ -24,7 +24,7 @@ public class EnviarLinkAcompanhamentoUseCase {
         }
 
         String url = frontendPublicBaseUrl + "/public/acompanhamento?token=" + token;
-        notificacaoService.enviar(new MensagemNotificacao(
+        notificacaoGateway.enviar(new MensagemNotificacao(
                 emailCliente,
                 "Acompanhe sua ordem de serviço " + ordemServico.getNumeroOs() + " - AutoFlow",
                 """

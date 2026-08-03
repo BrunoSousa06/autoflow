@@ -2,6 +2,7 @@ package com.autoflow.service.ordemservico;
 
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
@@ -72,6 +73,8 @@ class OrdemServicoServiceTest {
     UsuarioService usuarioService;
     @Mock
     PecaInsumoService pecaInsumoService;
+    @Mock
+    ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
     @Mock
     OrdemServicoAccessPolicy ordemServicoAccessPolicy;
     @Mock
@@ -570,16 +573,19 @@ class OrdemServicoServiceTest {
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 5);
+        ItemNecessarioEntity solicitado = criarItemNecessarioSolicitado(pecaInsumoId, 2);
+        ItemNecessarioEntity itemComDisponibilidade = criarItemComDisponibilidade(estoque, 2);
 
         when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
-        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
+        when(consultarDisponibilidadeEstoqueUseCase.execute(List.of(solicitado)))
+                .thenReturn(List.of(itemComDisponibilidade));
         when(repository.save(os)).thenReturn(os);
 
         OrdemServicoEntity resultado = service.registrarItemNecessario(numeroOs,
                 servicoOsId,
                 emailAdmin,
-                List.of(criarItemNecessarioSolicitado(pecaInsumoId, 2)));
+                List.of(solicitado));
 
         ServicoSolicitadoEntity servico = resultado.buscarServicoSolicitado(servicoOsId);
         assertEquals(1, servico.getItensNecessarios().size());
@@ -602,16 +608,19 @@ class OrdemServicoServiceTest {
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         UsuarioEntity admin = criarUsuario(1L, "Admin", emailAdmin, RoleEnum.ADMIN);
         PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 1);
+        ItemNecessarioEntity solicitado = criarItemNecessarioSolicitado(pecaInsumoId, 2);
+        ItemNecessarioEntity itemComDisponibilidade = criarItemComDisponibilidade(estoque, 2);
 
         when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailAdmin)).thenReturn(admin);
-        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
+        when(consultarDisponibilidadeEstoqueUseCase.execute(List.of(solicitado)))
+                .thenReturn(List.of(itemComDisponibilidade));
         when(repository.save(os)).thenReturn(os);
 
         OrdemServicoEntity resultado = service.registrarItemNecessario(numeroOs,
                 servicoOsId,
                 emailAdmin,
-                List.of(criarItemNecessarioSolicitado(pecaInsumoId, 2))
+                List.of(solicitado)
         );
 
         ItemNecessarioEntity item = resultado.buscarServicoSolicitado(servicoOsId)
@@ -659,14 +668,17 @@ class OrdemServicoServiceTest {
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         UsuarioEntity mecanico = criarUsuario(2L, "Mecanico", emailMecanico, RoleEnum.MECANICO);
         PecaInsumoEntity estoque = criarPecaInsumo(pecaInsumoId, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 5);
+        ItemNecessarioEntity solicitado = criarItemNecessarioSolicitado(pecaInsumoId, 1);
+        ItemNecessarioEntity itemComDisponibilidade = criarItemComDisponibilidade(estoque, 1);
 
         when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
         when(usuarioService.buscarPorEmail(emailMecanico)).thenReturn(mecanico);
-        when(pecaInsumoService.buscarEntityPorId(pecaInsumoId)).thenReturn(estoque);
+        when(consultarDisponibilidadeEstoqueUseCase.execute(List.of(solicitado)))
+                .thenReturn(List.of(itemComDisponibilidade));
         when(repository.save(os)).thenReturn(os);
 
         service.registrarItemNecessario(numeroOs, servicoOsId, emailMecanico,
-                List.of(criarItemNecessarioSolicitado(pecaInsumoId, 1)));
+                List.of(solicitado));
 
         verify(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
@@ -1169,6 +1181,25 @@ class OrdemServicoServiceTest {
                 BigDecimal.ZERO,
                 quantidade,
                 null
+        );
+    }
+
+    private ItemNecessarioEntity criarItemComDisponibilidade(
+            PecaInsumoEntity estoque,
+            int quantidadeSolicitada
+    ) {
+        boolean disponivel = estoque.getQuantidade() >= quantidadeSolicitada;
+        return ItemNecessarioEntity.criar(
+                estoque.getId(),
+                estoque.getNome(),
+                estoque.getTipo(),
+                estoque.getValor(),
+                quantidadeSolicitada,
+                disponivel ? StatusItemNecessario.DISPONIVEL : StatusItemNecessario.PENDENTE,
+                new SituacaoEstoque(
+                        estoque.getQuantidade(),
+                        disponivel ? null : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE
+                )
         );
     }
 }

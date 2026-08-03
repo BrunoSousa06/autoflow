@@ -10,9 +10,9 @@ sequenceDiagram
     box API Spring Boot
         participant Security as JWT / Spring Security
         participant ReparoController as ReparoAdicionalController
-        participant ReparoService as ReparoAdicionalService
-        participant Publicacao as OrcamentoPublicacaoService
-        participant Notificacao as OrcamentoNotificacaoService
+        participant ReparoUseCase as CriarReparoAdicionalUseCase
+        participant Publicacao as OrcamentoPublicacaoGateway
+        participant Notificacao as OrcamentoNotificacaoGateway
     end
 
     participant DB as PostgreSQL
@@ -28,42 +28,42 @@ sequenceDiagram
     deactivate Security
 
     activate ReparoController
-    ReparoController->>ReparoService: criar(numeroOs, emailMecanico, servicosAdicionais)
+    ReparoController->>ReparoUseCase: execute(command)
 
-    activate ReparoService
-    ReparoService->>DB: Busca OS em EM_EXECUCAO
-    DB-->>ReparoService: OS encontrada
+    activate ReparoUseCase
+    ReparoUseCase->>DB: Busca OS em EM_EXECUCAO
+    DB-->>ReparoUseCase: OS encontrada
 
-    ReparoService->>ReparoService: Valida se OS permite reparo adicional
+    ReparoUseCase->>ReparoUseCase: Valida se OS permite reparo adicional
 
-    ReparoService->>DB: Cria reparo adicional com aprovacao pendente
-    DB-->>ReparoService: Reparo adicional criado
+    ReparoUseCase->>DB: Cria reparo adicional com aprovacao pendente
+    DB-->>ReparoUseCase: Reparo adicional criado
 
-    ReparoService->>DB: Cria orcamento complementar pendente
-    DB-->>ReparoService: Orcamento complementar salvo
+    ReparoUseCase->>DB: Cria orcamento complementar pendente
+    DB-->>ReparoUseCase: Orcamento complementar salvo
 
-    ReparoService->>Publicacao: publicar(orcamentoId)
+    ReparoUseCase->>Publicacao: publicar(orcamentoId)
     activate Publicacao
 
     Publicacao->>DB: Salva hash do token publico
     DB-->>Publicacao: Token publico registrado
 
-    Publicacao-->>ReparoService: URL publica do PDF
+    Publicacao-->>ReparoUseCase: URL publica do PDF
     deactivate Publicacao
 
-    ReparoService->>Notificacao: enviarLinkOrcamentoParaCliente(orcamento, OS, publicUrl)
+    ReparoUseCase->>Notificacao: enviarLinkOrcamentoParaCliente(orcamento, OS, publicUrl)
     activate Notificacao
 
     alt Notificacao enviada
-        Notificacao-->>ReparoService: Envio confirmado
+        Notificacao-->>ReparoUseCase: Envio confirmado
     else Erro no envio
-        Notificacao-->>ReparoService: Erro tratado em log
+        Notificacao-->>ReparoUseCase: Erro tratado em log
     end
 
     deactivate Notificacao
 
-    ReparoService-->>ReparoController: Reparo adicional e orcamento complementar
-    deactivate ReparoService
+    ReparoUseCase-->>ReparoController: Output com reparo, orcamento e URL
+    deactivate ReparoUseCase
 
     ReparoController-->>Frontend: 201 Created + orcamentoId + publicUrl
     deactivate ReparoController

@@ -1,6 +1,7 @@
 package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
@@ -10,7 +11,6 @@ import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.*;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
@@ -71,6 +71,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final ServicoService servicoService;
     private final UsuarioService usuarioService;
     private final PecaInsumoService pecaInsumoService;
+    private final ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
     private final OrdemServicoAccessPolicy ordemServicoAccessPolicy;
     private final OrcamentoFactory orcamentoFactoryImpl;
     private final OrcamentoVersioningService orcamentoVersioningServiceImpl;
@@ -91,7 +92,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                                    ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl,
                                    BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase,
                                    GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase,
-                                   EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase) {
+                                   EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase,
+                                   ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase) {
         this.ordemServicoRepository = ordemServicoRepository;
         this.buscarOuCadastrarVeiculoUseCase = buscarOuCadastrarVeiculoUseCase;
         this.servicoService = servicoService;
@@ -108,6 +110,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.buscarClientePorCpfCnpjUseCase = buscarClientePorCpfCnpjUseCase;
         this.gerarTokenAcompanhamentoUseCase = gerarTokenAcompanhamentoUseCase;
         this.enviarLinkAcompanhamentoUseCase = enviarLinkAcompanhamentoUseCase;
+        this.consultarDisponibilidadeEstoqueUseCase = consultarDisponibilidadeEstoqueUseCase;
     }
 
     @Transactional
@@ -403,36 +406,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     }
 
     private List<ItemNecessarioEntity> verificaItensNecessarios(List<ItemNecessarioEntity> itensNecessarios) {
-        return itensNecessarios.stream()
-                .map(itemNecessario -> {
-                    PecaInsumoEntity itemEstoque =
-                            pecaInsumoService.buscarEntityPorId(itemNecessario.getPecaInsumoId());
-
-                    boolean disponivel =
-                            itemEstoque.getQuantidade() >= itemNecessario.getQuantidade();
-
-                    StatusItemNecessario status = disponivel
-                            ? StatusItemNecessario.DISPONIVEL
-                            : StatusItemNecessario.PENDENTE;
-
-                    MotivoPendenciaItem motivoPendencia = disponivel
-                            ? null
-                            : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE;
-
-                    return ItemNecessarioEntity.criar(
-                            itemEstoque.getId(),
-                            itemEstoque.getNome(),
-                            itemEstoque.getTipo(),
-                            itemEstoque.getValor(),
-                            itemNecessario.getQuantidade(),
-                            status,
-                            new SituacaoEstoque(
-                                    itemEstoque.getQuantidade(),
-                                    motivoPendencia
-                            )
-                    );
-                })
-                .toList();
+        return consultarDisponibilidadeEstoqueUseCase.execute(itensNecessarios);
     }
 
     private ServicoSolicitadoEntity preencherDadosDoServico(

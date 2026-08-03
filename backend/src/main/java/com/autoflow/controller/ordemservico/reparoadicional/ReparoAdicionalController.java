@@ -1,10 +1,8 @@
 package com.autoflow.controller.ordemservico.reparoadicional;
 
+import com.autoflow.application.usecases.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
 import com.autoflow.controller.ordemservico.reparoadicional.request.CriarReparoAdicionalRequest;
 import com.autoflow.controller.ordemservico.reparoadicional.response.CriarReparoAdicionalResponse;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapper;
-import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -15,9 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/ordens-servico/{numeroOs}/reparos-adicionais")
@@ -26,9 +27,8 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class ReparoAdicionalController {
 
-    private final ReparoAdicionalService reparoAdicionalService;
-    private final ItensNecessariosMapper itensNecessariosMapper;
-
+    private final CriarReparoAdicionalUseCase criarReparoAdicionalUseCase;
+    private final ReparoAdicionalRestMapper reparoAdicionalRestMapper;
 
     @Operation(summary = "Criar os reparos adicionais", description = "Cria os reparos adicionais da ordem de serviço")
     @ApiResponse(responseCode = "201", description = "Reparo adicional criado com sucesso")
@@ -44,22 +44,12 @@ public class ReparoAdicionalController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CriarReparoAdicionalRequest request
     ) {
-        List<ServicoSolicitadoEntity> servicos = request.servicos()
-                .stream()
-                .map(servicoRequest -> {
-                    ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity();
-                    servico.setServicoId(servicoRequest.servicoId());
-                    servico.registrarItensNecessarios(
-                            itensNecessariosMapper.mapToEntities(servicoRequest.itensNecessarios())
-                    );
-                    return servico;
-                })
-                .toList();
-
-        return CriarReparoAdicionalResponse.from(reparoAdicionalService.criar(
+        var command = reparoAdicionalRestMapper.toCommand(
                 numeroOs,
                 userDetails.getUsername(),
-                servicos
-        ));
+                request
+        );
+
+        return reparoAdicionalRestMapper.toResponse(criarReparoAdicionalUseCase.execute(command));
     }
 }

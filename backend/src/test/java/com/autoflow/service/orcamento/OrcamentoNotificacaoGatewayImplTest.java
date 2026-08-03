@@ -6,7 +6,7 @@ import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.ClienteOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
-import com.autoflow.application.gateway.NotificacaoService;
+import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.service.orcamento.impl.OrcamentoNotificacaoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,10 +22,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class OrcamentoNotificacaoServiceImplTest {
+class OrcamentoNotificacaoGatewayImplTest {
 
     @Mock
-    NotificacaoService notificacaoService;
+    NotificacaoGateway notificacaoGateway;
 
     @InjectMocks
     OrcamentoNotificacaoServiceImpl service;
@@ -37,7 +37,7 @@ class OrcamentoNotificacaoServiceImplTest {
 
         service.enviarLinkOrcamentoParaCliente(orcamento, ordemServico, "https://autoflow.test/orcamentos/1");
 
-        verify(notificacaoService, never()).enviar(org.mockito.ArgumentMatchers.any());
+        verify(notificacaoGateway, never()).enviar(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -72,7 +72,7 @@ class OrcamentoNotificacaoServiceImplTest {
 
     private MensagemNotificacao capturarMensagemEnviada() {
         ArgumentCaptor<MensagemNotificacao> captor = ArgumentCaptor.forClass(MensagemNotificacao.class);
-        verify(notificacaoService).enviar(captor.capture());
+        verify(notificacaoGateway).enviar(captor.capture());
         return captor.getValue();
     }
 
