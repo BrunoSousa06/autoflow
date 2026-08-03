@@ -1,10 +1,12 @@
 package com.autoflow.service.ordemservico;
 
+import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
-import com.autoflow.controller.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
+import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
-import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
@@ -17,7 +19,6 @@ import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
-import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
@@ -25,6 +26,7 @@ import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
+import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.ordemservico.impl.OrdemServicoAccessPolicy;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
@@ -89,49 +91,201 @@ class OrdemServicoServiceTest {
     @Mock
     BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
 
+    @Mock
+    private GerarTokenAcompanhamentoUseCase
+            gerarTokenAcompanhamentoUseCase;
+    @Mock
+    private EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase;
 
     @Test
-    void deveCriarOrdemServicoComServicosVinculados() {
+    void deveCriarOrdemServicoComServicosVinculadosETokenDeAcompanhamento() {
+        Long ordemServicoId = 100L;
+        String tokenOriginal = "token-publico-original";
+        String tokenHash = "token-hash";
+
         ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
-        ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(10L);
-        ServicoEntity servicoCatalogo = criarServico(10L, "Revisao", new BigDecimal("100.00"));
 
-        when(buscarClientePorCpfCnpjUseCase.execute("12345678901")).thenReturn(cliente);
-        when(buscarOuCadastrarVeiculoUseCase.execute(cliente, veiculoRequest)).thenReturn(veiculo);
-        when(servicoService.buscarEntityPorId(10L)).thenReturn(servicoCatalogo);
-        when(repository.save(any(OrdemServicoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        VeiculoEntity veiculo =
+                criarVeiculo(1L, cliente);
 
-        OrdemServicoEntity resultado = service.criar("12345678901", veiculoRequest, List.of(solicitado));
+        VeiculoOrdemServicoRequest veiculoRequest =
+                criarVeiculoRequestCompleto();
 
-        assertEquals(StatusOrdemServico.RECEBIDA, resultado.getStatus());
-        assertNotNull(resultado.getUltimaAtualizacao());
-        assertEquals("12345678901", resultado.getCliente().getCpfCnpj());
-        assertEquals(veiculo, resultado.getVeiculo());
-        assertEquals(1, resultado.getServicosSolicitados().size());
-        ServicoSolicitadoEntity servicoOs = resultado.getServicosSolicitados().getFirst();
-        assertEquals(10L, servicoOs.getServicoId());
-        assertEquals("Revisao", servicoOs.getNome());
-        assertEquals(new BigDecimal("100.00"), servicoOs.getValor());
-        assertEquals(StatusServicoOs.AGUARDANDO, servicoOs.getStatus());
-        assertEquals(resultado, servicoOs.getOrdemServico());
-        verify(historicoStatusOsRepository).save(argThat(historico ->
-                StatusOrdemServico.RECEBIDA.equals(historico.getStatus())
-                        && historico.getMensagemCliente() != null
-        ));
+        ServicoSolicitadoEntity solicitado =
+                new ServicoSolicitadoEntity(10L);
+
+        ServicoEntity servicoCatalogo = criarServico(
+                10L,
+                "Revisao",
+                new BigDecimal("100.00")
+        );
+
+        TokenAcompanhamentoOutput tokenGerado =
+                new TokenAcompanhamentoOutput(
+                        tokenOriginal,
+                        tokenHash
+                );
+
+        when(
+                buscarClientePorCpfCnpjUseCase.execute(
+                        "12345678901"
+                )
+        ).thenReturn(cliente);
+
+        when(
+                buscarOuCadastrarVeiculoUseCase.execute(
+                        cliente,
+                        veiculoRequest
+                )
+        ).thenReturn(veiculo);
+
+        when(servicoService.buscarEntityPorId(10L))
+                .thenReturn(servicoCatalogo);
+
+        when(repository.save(any(OrdemServicoEntity.class)))
+                .thenAnswer(invocation -> {
+                    OrdemServicoEntity ordemServico =
+                            invocation.getArgument(0);
+
+                    ordemServico.setId(ordemServicoId);
+
+                    return ordemServico;
+                });
+
+        when(
+                gerarTokenAcompanhamentoUseCase.execute(
+                        ordemServicoId
+                )
+        ).thenReturn(tokenGerado);
+
+        OrdemServicoCriada resultado = service.criar(
+                "12345678901",
+                veiculoRequest,
+                List.of(solicitado)
+        );
+
+        OrdemServicoEntity ordemServicoCriada =
+                resultado.ordemServico();
+
+        verify(enviarLinkAcompanhamentoUseCase).execute(
+                ordemServicoCriada,
+                tokenOriginal
+        );
+
+        assertAll(
+                () -> assertNotNull(resultado),
+                () -> assertNotNull(ordemServicoCriada),
+                () -> assertEquals(
+                        tokenOriginal,
+                        resultado.tokenAcompanhamento()
+                ),
+                () -> assertEquals(
+                        ordemServicoId,
+                        ordemServicoCriada.getId()
+                ),
+                () -> assertEquals(
+                        StatusOrdemServico.RECEBIDA,
+                        ordemServicoCriada.getStatus()
+                ),
+                () -> assertNotNull(
+                        ordemServicoCriada.getUltimaAtualizacao()
+                ),
+                () -> assertEquals(
+                        "12345678901",
+                        ordemServicoCriada
+                                .getCliente()
+                                .getCpfCnpj()
+                ),
+                () -> assertEquals(
+                        veiculo,
+                        ordemServicoCriada.getVeiculo()
+                ),
+                () -> assertEquals(
+                        1,
+                        ordemServicoCriada
+                                .getServicosSolicitados()
+                                .size()
+                )
+        );
+
+        ServicoSolicitadoEntity servicoOs =
+                ordemServicoCriada
+                        .getServicosSolicitados()
+                        .getFirst();
+
+        assertAll(
+                () -> assertEquals(
+                        10L,
+                        servicoOs.getServicoId()
+                ),
+                () -> assertEquals(
+                        "Revisao",
+                        servicoOs.getNome()
+                ),
+                () -> assertEquals(
+                        new BigDecimal("100.00"),
+                        servicoOs.getValor()
+                ),
+                () -> assertEquals(
+                        StatusServicoOs.AGUARDANDO,
+                        servicoOs.getStatus()
+                ),
+                () -> assertSame(
+                        ordemServicoCriada,
+                        servicoOs.getOrdemServico()
+                )
+        );
+
+        verify(repository).save(
+                any(OrdemServicoEntity.class)
+        );
+
+        verify(gerarTokenAcompanhamentoUseCase)
+                .execute(ordemServicoId);
+
+        verify(historicoStatusOsRepository).save(
+                argThat(historico ->
+                        StatusOrdemServico.RECEBIDA.equals(
+                                historico.getStatus()
+                        )
+                                && historico.getMensagemCliente() != null
+                )
+        );
     }
 
     @Test
     void deveLancarIllegalArgumentQuandoCriarSemServicos() {
         ClienteEntity cliente = criarCliente(1L);
-        VeiculoEntity veiculo = criarVeiculo(1L, cliente);
-        VeiculoOrdemServicoRequest veiculoRequest = criarVeiculoRequestCompleto();
-        when(buscarClientePorCpfCnpjUseCase.execute("12345678901")).thenReturn(cliente);
-        when(buscarOuCadastrarVeiculoUseCase.execute(cliente, veiculoRequest)).thenReturn(veiculo);
+        VeiculoEntity veiculo =
+                criarVeiculo(1L, cliente);
 
-        assertThrows(IllegalArgumentException.class, () -> service.criar("12345678901", veiculoRequest, null));
+        VeiculoOrdemServicoRequest veiculoRequest =
+                criarVeiculoRequestCompleto();
+
+        when(
+                buscarClientePorCpfCnpjUseCase.execute(
+                        "12345678901"
+                )
+        ).thenReturn(cliente);
+
+        when(
+                buscarOuCadastrarVeiculoUseCase.execute(
+                        cliente,
+                        veiculoRequest
+                )
+        ).thenReturn(veiculo);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.criar(
+                        "12345678901",
+                        veiculoRequest,
+                        null
+                )
+        );
+
         verify(repository, never()).save(any());
+        verifyNoInteractions(gerarTokenAcompanhamentoUseCase);
     }
 
     @Test
@@ -147,7 +301,12 @@ class OrdemServicoServiceTest {
         );
 
         assertSame(erro, exception);
-        verifyNoInteractions(buscarOuCadastrarVeiculoUseCase, servicoService, repository);
+        verifyNoInteractions(
+                buscarOuCadastrarVeiculoUseCase,
+                servicoService,
+                repository,
+                gerarTokenAcompanhamentoUseCase
+        );
     }
 
     @Test
@@ -166,7 +325,11 @@ class OrdemServicoServiceTest {
         );
 
         assertSame(erro, exception);
-        verifyNoInteractions(servicoService, repository);
+        verifyNoInteractions(
+                servicoService,
+                repository,
+                gerarTokenAcompanhamentoUseCase
+        );
     }
 
     @Test
@@ -226,8 +389,9 @@ class OrdemServicoServiceTest {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o mecânico atribuído pode alterar o diagnóstico."))
                 .when(ordemServicoAccessPolicy).validarPodeAlterarDiagnostico(os, outroMecanico);
 
+        List<ServicoSolicitadoEntity> novosServicos = List.of(new ServicoSolicitadoEntity(20L));
         assertThrows(ResponseStatusException.class,
-                () -> service.incluirServicos("OS-123", List.of(new ServicoSolicitadoEntity(20L)), "outro@autoflow.com"));
+                () -> service.incluirServicos("OS-123", novosServicos, "outro@autoflow.com"));
 
         verify(repository, never()).save(any());
     }
@@ -540,35 +704,19 @@ class OrdemServicoServiceTest {
     }
 
     @Test
-    void deveIniciarServicoEBaixarEstoqueDosItensDoServico() {
+    void naoDeveIniciarServicoAntesDaAprovacaoDoOrcamento() {
         String numeroOs = "OS-123";
         Long servicoOsId = 55L;
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
-        ItemNecessarioEntity itemOriginal = criarItemNecessarioSolicitado(10L, 2);
-        os.buscarServicoSolicitado(servicoOsId).registrarItensNecessarios(List.of(itemOriginal));
-        ItemNecessarioEntity itemAtualizado = ItemNecessarioEntity.criar(
-                10L, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 2, StatusItemNecessario.DISPONIVEL
-        );
-
         when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
-        when(pecaInsumoService.verificarDisponibilidadeEBaixar(List.of(itemOriginal)))
-                .thenReturn(new BaixaEstoqueResult(List.of(itemAtualizado)));
-        when(repository.save(os)).thenReturn(os);
 
-        OrdemServicoEntity resultado = service.iniciarServico(numeroOs, servicoOsId);
+        assertThrows(IllegalStateException.class, () -> service.iniciarServico(numeroOs, servicoOsId));
 
-        ServicoSolicitadoEntity servico = resultado.buscarServicoSolicitado(servicoOsId);
-        assertEquals(StatusServicoOs.EM_EXECUCAO, servico.getStatus());
-        assertNotNull(servico.getIniciadoEm());
-        assertEquals(StatusOrdemServico.EM_EXECUCAO, resultado.getStatus());
-        assertNotNull(resultado.getExecucaoIniciadaEm());
-        assertNotNull(resultado.getUltimaAtualizacao());
-        assertEquals(List.of(itemAtualizado), servico.getItensNecessarios());
-        verify(repository).save(os);
-        verify(historicoStatusOsRepository).save(argThat(historico ->
-                StatusOrdemServico.EM_EXECUCAO.equals(historico.getStatus())
-        ));
+        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, os.getStatus());
+        assertEquals(StatusServicoOs.AGUARDANDO, os.buscarServicoSolicitado(servicoOsId).getStatus());
+        verifyNoInteractions(pecaInsumoService);
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -769,7 +917,7 @@ class OrdemServicoServiceTest {
         HistoricoStatusOsEntity historico = HistoricoStatusOsEntity.criar(
                 os.getId(),
                 StatusOrdemServico.AGUARDANDO_APROVACAO,
-                "O orÃ§amento estÃ¡ disponÃ­vel e aguardando sua aprovaÃ§Ã£o.",
+                "O orçamento está disponível e aguardando sua aprovação.",
                 os.getNumeroOs()
         );
 
@@ -931,40 +1079,6 @@ class OrdemServicoServiceTest {
 
         assertEquals(erro, exception);
         verify(repository, never()).save(any());
-    }
-
-    @Test
-    void deveCalcularTempoMedioFinalizacao() {
-        TempoMedioOrdemServicoProjection projection = mock(TempoMedioOrdemServicoProjection.class);
-        when(projection.getQuantidadeOrdensFinalizadas()).thenReturn(3L);
-        when(projection.getTempoMedioSegundos()).thenReturn(7200.0);
-        when(repository.calcularTempoMedioFinalizacao()).thenReturn(projection);
-
-        TempoMedioOrdemServicoResponse resultado = service.calcularTempoMedioFinalizacao();
-
-        assertNotNull(resultado);
-        assertEquals(3L, resultado.quantidadeOrdensFinalizadas());
-        assertEquals(7200.0, resultado.tempoMedioSegundos());
-        assertEquals(120.0, resultado.tempoMedioMinutos());
-        assertEquals(2.0, resultado.tempoMedioHoras());
-        verify(repository).calcularTempoMedioFinalizacao();
-    }
-
-    @Test
-    void deveRetornarTemposNulosQuandoNaoExistirOrdemFinalizada() {
-        TempoMedioOrdemServicoProjection projection = mock(TempoMedioOrdemServicoProjection.class);
-        when(projection.getQuantidadeOrdensFinalizadas()).thenReturn(0L);
-        when(projection.getTempoMedioSegundos()).thenReturn(null);
-        when(repository.calcularTempoMedioFinalizacao()).thenReturn(projection);
-
-        TempoMedioOrdemServicoResponse resultado = service.calcularTempoMedioFinalizacao();
-
-        assertNotNull(resultado);
-        assertEquals(0L, resultado.quantidadeOrdensFinalizadas());
-        assertNull(resultado.tempoMedioSegundos());
-        assertNull(resultado.tempoMedioMinutos());
-        assertNull(resultado.tempoMedioHoras());
-        verify(repository).calcularTempoMedioFinalizacao();
     }
 
     private OrdemServicoEntity criarOrdemServicoComServico(String numeroOs, Long servicoOsId) {

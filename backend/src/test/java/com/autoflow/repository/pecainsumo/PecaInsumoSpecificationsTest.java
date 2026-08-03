@@ -2,6 +2,7 @@ package com.autoflow.repository.pecainsumo;
 
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.repository.PecaInsumoSpecifications;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

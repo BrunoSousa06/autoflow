@@ -1,13 +1,15 @@
 package com.autoflow.config.security;
 
-import com.autoflow.infrastructure.persistence.security.JwtFilter;
-import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.JwtFilter;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,17 +62,11 @@ class JwtFilterTest {
     }
 
     @Test
-    void deveContinuarFiltroQuandoAuthorizationForNulo()
-            throws ServletException, IOException {
+    void deveContinuarFiltroQuandoAuthorizationForNulo() {
 
-        jwtFilter.doFilterInternal(
-                request,
-                response,
-                filterChain
-        );
+        assertDoesNotThrow(this::executarFiltro);
 
-        verify(filterChain)
-                .doFilter(request, response);
+        assertDoesNotThrow(this::verificarFiltroContinuou);
 
         verifyNoInteractions(
                 jwtService,
@@ -79,22 +75,16 @@ class JwtFilterTest {
     }
 
     @Test
-    void deveContinuarFiltroQuandoHeaderNaoForBearer()
-            throws ServletException, IOException {
+    void deveContinuarFiltroQuandoHeaderNaoForBearer() {
 
         request.addHeader(
                 "Authorization",
                 "Basic abc123"
         );
 
-        jwtFilter.doFilterInternal(
-                request,
-                response,
-                filterChain
-        );
+        assertDoesNotThrow(this::executarFiltro);
 
-        verify(filterChain)
-                .doFilter(request, response);
+        assertDoesNotThrow(this::verificarFiltroContinuou);
 
         verifyNoInteractions(
                 jwtService,
@@ -103,8 +93,7 @@ class JwtFilterTest {
     }
 
     @Test
-    void deveAutenticarUsuarioQuandoTokenForValido()
-            throws ServletException, IOException {
+    void deveAutenticarUsuarioQuandoTokenForValido() {
 
         String token = "jwt-token";
 
@@ -113,20 +102,16 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
+        when(jwtService.tokenValido(token))
+                .thenReturn(true);
+
         when(jwtService.extrairEmail(token))
                 .thenReturn("teste@email.com");
 
         when(userDetailsService.loadUserByUsername("teste@email.com"))
                 .thenReturn(userDetails);
 
-        when(jwtService.tokenValido(token))
-                .thenReturn(true);
-
-        jwtFilter.doFilterInternal(
-                request,
-                response,
-                filterChain
-        );
+        assertDoesNotThrow(this::executarFiltro);
 
         assertNotNull(
                 SecurityContextHolder
@@ -151,13 +136,11 @@ class JwtFilterTest {
         verify(userDetailsService)
                 .loadUserByUsername("teste@email.com");
 
-        verify(filterChain)
-                .doFilter(request, response);
+        assertDoesNotThrow(this::verificarFiltroContinuou);
     }
 
     @Test
-    void naoDeveAutenticarQuandoEmailForNulo()
-            throws ServletException, IOException {
+    void naoDeveAutenticarQuandoEmailForNulo() {
 
         String token = "jwt-token";
 
@@ -166,14 +149,10 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
-        when(jwtService.extrairEmail(token))
-                .thenReturn(null);
+        when(jwtService.tokenValido(token)).thenReturn(true);
+        when(jwtService.extrairEmail(token)).thenReturn(null);
 
-        jwtFilter.doFilterInternal(
-                request,
-                response,
-                filterChain
-        );
+        assertDoesNotThrow(this::executarFiltro);
 
         assertNull(
                 SecurityContextHolder
@@ -186,13 +165,11 @@ class JwtFilterTest {
 
         verifyNoInteractions(userDetailsService);
 
-        verify(filterChain)
-                .doFilter(request, response);
+        assertDoesNotThrow(this::verificarFiltroContinuou);
     }
 
     @Test
-    void naoDeveAutenticarQuandoTokenForInvalido()
-            throws ServletException, IOException {
+    void naoDeveAutenticarQuandoTokenForInvalido() {
 
         String token = "jwt-token";
 
@@ -201,20 +178,10 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
-        when(jwtService.extrairEmail(token))
-                .thenReturn("teste@email.com");
-
-        when(userDetailsService.loadUserByUsername("teste@email.com"))
-                .thenReturn(userDetails);
-
         when(jwtService.tokenValido(token))
                 .thenReturn(false);
 
-        jwtFilter.doFilterInternal(
-                request,
-                response,
-                filterChain
-        );
+        assertDoesNotThrow(this::executarFiltro);
 
         assertNull(
                 SecurityContextHolder
@@ -222,13 +189,14 @@ class JwtFilterTest {
                         .getAuthentication()
         );
 
-        verify(filterChain)
-                .doFilter(request, response);
+        verify(jwtService, never()).extrairEmail(token);
+        verifyNoInteractions(userDetailsService);
+
+        assertDoesNotThrow(this::verificarFiltroContinuou);
     }
 
     @Test
-    void naoDeveCarregarUsuarioQuandoJaExistirAutenticacao()
-            throws ServletException, IOException {
+    void naoDeveCarregarUsuarioQuandoJaExistirAutenticacao() {
 
         SecurityContextHolder.getContext()
                 .setAuthentication(
@@ -246,27 +214,16 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
-        when(jwtService.extrairEmail(token))
-                .thenReturn("teste@email.com");
+        assertDoesNotThrow(this::executarFiltro);
 
-        jwtFilter.doFilterInternal(
-                request,
-                response,
-                filterChain
-        );
-
-        verify(jwtService)
-                .extrairEmail(token);
-
+        verifyNoInteractions(jwtService);
         verifyNoInteractions(userDetailsService);
 
-        verify(filterChain)
-                .doFilter(request, response);
+        assertDoesNotThrow(this::verificarFiltroContinuou);
     }
 
     @Test
-    void deveDefinirRoleNoTokenDeAutenticacao()
-            throws ServletException, IOException {
+    void deveDefinirRoleNoTokenDeAutenticacao() {
 
         String token = "jwt-token";
 
@@ -280,7 +237,7 @@ class JwtFilterTest {
         when(jwtService.tokenValido(token)).thenReturn(true);
         when(jwtService.extrairRole(token)).thenReturn("ADMIN");
 
-        jwtFilter.doFilterInternal(request, response, filterChain);
+        assertDoesNotThrow(this::executarFiltro);
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(auth);
@@ -288,27 +245,21 @@ class JwtFilterTest {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
     }
 
-    @Test
-    void shouldNotFilterDeveRetornarTrueParaSwaggerUi()
-            throws ServletException {
+    @ParameterizedTest(name = "Deve ignorar o filtro JWT para a rota: {0}")
+    @ValueSource(strings = {
+            "/public/ordens-servico/acompanhamento",
+            "/public/outra-rota",
+            "/auth/login",
+            "/actuator/health",
+            "/actuator/health/liveness",
+            "/actuator/health/readiness",
+            "/swagger-ui/index.html",
+            "/v3/api-docs/swagger-config",
+            "/swagger-ui.html"
+    })
+    void shouldNotFilterDeveRetornarTrueParaRotasPublicas(String rota) {
+        request.setRequestURI(rota);
 
-        request.setRequestURI("/swagger-ui/index.html");
-        assertTrue(jwtFilter.shouldNotFilter(request));
-    }
-
-    @Test
-    void shouldNotFilterDeveRetornarTrueParaApiDocs()
-            throws ServletException {
-
-        request.setRequestURI("/v3/api-docs/swagger-config");
-        assertTrue(jwtFilter.shouldNotFilter(request));
-    }
-
-    @Test
-    void shouldNotFilterDeveRetornarTrueParaSwaggerHtml()
-            throws ServletException {
-
-        request.setRequestURI("/swagger-ui.html");
         assertTrue(jwtFilter.shouldNotFilter(request));
     }
 
@@ -318,5 +269,13 @@ class JwtFilterTest {
 
         request.setRequestURI("/api/clientes");
         assertFalse(jwtFilter.shouldNotFilter(request));
+    }
+
+    private void executarFiltro() throws ServletException, IOException {
+        jwtFilter.doFilterInternal(request, response, filterChain);
+    }
+
+    private void verificarFiltroContinuou() throws ServletException, IOException {
+        verify(filterChain).doFilter(request, response);
     }
 }

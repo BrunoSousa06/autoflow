@@ -1,7 +1,7 @@
 package com.autoflow.controller.orcamento;
 
-import com.autoflow.infrastructure.persistence.security.service.CustomUserDetailsService;
-import com.autoflow.infrastructure.persistence.security.service.JwtService;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
+import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 
 import static org.mockito.Mockito.never;
@@ -261,8 +262,8 @@ class OrcamentoControllerTest {
                 .tipo(TipoOrcamento.PRINCIPAL)
                 .versao(1)
                 .status(StatusOrcamento.DISPONIVEL)
-                .criadoEm(LocalDateTime.of(2026, 5, 31, 10, 0))
-                .disponibilizadoEm(LocalDateTime.of(2026, 5, 31, 10, 1))
+                .criadoEm(LocalDateTime.of(2026, Month.MAY, 31, 10, 0))
+                .disponibilizadoEm(LocalDateTime.of(2026, Month.MAY, 31, 10, 1))
                 .totalServicos(new BigDecimal("100.00"))
                 .totalItens(new BigDecimal("50.00"))
                 .totalGeral(new BigDecimal("150.00"))

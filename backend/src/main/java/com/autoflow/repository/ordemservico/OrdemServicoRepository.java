@@ -28,4 +28,8 @@ public interface OrdemServicoRepository extends JpaRepository<OrdemServicoEntity
         """, nativeQuery = true)
     TempoMedioOrdemServicoProjection calcularTempoMedioFinalizacao();
 
+    Optional<OrdemServicoEntity> findByAcompanhamentoTokenHash(
+            String acompanhamentoTokenHash
+    );
+
 }

@@ -2,12 +2,9 @@ package com.autoflow.service.servico;
 
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
-import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
 import com.autoflow.infrastructure.persistence.repository.ServicoRepository;
-import com.autoflow.infrastructure.persistence.repository.ServicoSolicitadoRepository;
-import com.autoflow.infrastructure.persistence.repository.TempoMedioServicoProjection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,9 +36,6 @@ class ServicoServiceTest {
 
     @Mock
     private ServicoMapper servicoMapper;
-
-    @Mock
-    private ServicoSolicitadoRepository servicoSolicitadoRepository;
 
     private ServicoRequest request;
     private ServicoEntity entity;
@@ -190,34 +184,4 @@ class ServicoServiceTest {
         verify(servicoRepository, never()).save(any());
     }
 
-    @Test
-    void deveListarTempoMedioPorServico() {
-        TempoMedioServicoProjection projection = mock(TempoMedioServicoProjection.class);
-        when(projection.getServicoId()).thenReturn(1L);
-        when(projection.getNomeServico()).thenReturn("Troca de Óleo");
-        when(projection.getQuantidadeExecucoes()).thenReturn(2L);
-        when(projection.getTempoMedioSegundos()).thenReturn(3600.0);
-        when(servicoSolicitadoRepository.calcularTempoMedioPorServico()).thenReturn(List.of(projection));
-
-        List<TempoMedioServicoResponse> resultado = servicoService.listarTempoMedioPorServico();
-
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals(1L, resultado.getFirst().servicoId());
-        assertEquals("Troca de Óleo", resultado.getFirst().nomeServico());
-        assertEquals(2L, resultado.getFirst().quantidadeExecucoes());
-        assertEquals(3600.0, resultado.getFirst().tempoMedioSegundos());
-        verify(servicoSolicitadoRepository).calcularTempoMedioPorServico();
-    }
-
-    @Test
-    void deveRetornarListaVaziaQuandoNaoExistirServicoFinalizado() {
-        when(servicoSolicitadoRepository.calcularTempoMedioPorServico()).thenReturn(List.of());
-
-        List<TempoMedioServicoResponse> resultado = servicoService.listarTempoMedioPorServico();
-
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
-        verify(servicoSolicitadoRepository).calcularTempoMedioPorServico();
-    }
 }

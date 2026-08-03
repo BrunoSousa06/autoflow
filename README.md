@@ -157,7 +157,7 @@ Usuários criados pelo seed do banco (senha padrão: `Senha@1234`):
 | `/minha-conta`                         | CLIENTE                    | Perfil do cliente                  |
 | `/minha-conta/minhas-ordens`           | CLIENTE                    | OS do cliente logado               |
 | `/minha-conta/minhas-ordens/:numeroOs` | CLIENTE                    | Detalhe da OS + aprovar orçamento  |
-| `/public/acompanhamento`               | Público                    | Informa que login é necessário     |
+| `/public/acompanhamento?token=...`     | Público                    | Acompanha o progresso da OS por link seguro |
 
 ---
 

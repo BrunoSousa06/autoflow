@@ -1,8 +1,7 @@
 package com.autoflow.application.usecases.servico;
 
 import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
-import com.autoflow.infrastructure.persistence.repository.ServicoSolicitadoRepository;
-import com.autoflow.infrastructure.persistence.repository.TempoMedioServicoProjection;
+import com.autoflow.application.gateway.MetricsGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,22 +11,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CalcularTempoMedioServicoUseCase {
 
-    private final ServicoSolicitadoRepository servicoSolicitadoRepository;
+    private final MetricsGateway metricsGateway;
 
     public List<TempoMedioServicoMetricaOutput> execute() {
-        return servicoSolicitadoRepository.calcularTempoMedioPorServico()
+        return metricsGateway.calcularTempoMedioPorServico()
                 .stream()
                 .map(this::mapToOutput)
                 .toList();
     }
 
-    private TempoMedioServicoMetricaOutput mapToOutput(TempoMedioServicoProjection projection) {
-        Double tempoMedioSegundos = projection.getTempoMedioSegundos();
+    private TempoMedioServicoMetricaOutput mapToOutput(MetricsGateway.TempoMedioServicoData metrica) {
+        Double tempoMedioSegundos = metrica.tempoMedioSegundos();
 
         return TempoMedioServicoMetricaOutput.builder()
-                .servicoId(projection.getServicoId())
-                .nomeServico(projection.getNomeServico())
-                .quantidadeExecucoes(projection.getQuantidadeExecucoes())
+                .servicoId(metrica.servicoId())
+                .nomeServico(metrica.nomeServico())
+                .quantidadeExecucoes(metrica.quantidadeExecucoes())
                 .tempoMedioSegundos(tempoMedioSegundos)
                 .tempoMedioMinutos(tempoMedioSegundos != null ? tempoMedioSegundos / 60 : 0.0)
                 .tempoMedioHoras(tempoMedioSegundos != null ? tempoMedioSegundos / 3600 : 0.0)

@@ -1,6 +1,6 @@
 package com.autoflow.controller.ordemservico.response;
 
-import com.autoflow.controller.ordemservico.acompanhamento.response.OrcamentoResumoResponse;
+import com.autoflow.presentation.ordemservico.acompanhamento.response.OrcamentoResumoResponse;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;

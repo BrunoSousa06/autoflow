@@ -3,8 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ServicoService } from './servico.service';
 import { ServicoRequest, ServicoResponse } from './servico.model';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/servicos';
+const BASE = `${environment.apiUrl}/servicos`;
 
 describe('ServicoService', () => {
   let service: ServicoService;

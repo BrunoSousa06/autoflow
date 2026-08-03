@@ -3,8 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ReparoAdicionalService } from './reparo-adicional.service';
 import { CriarReparoAdicionalRequest, CriarReparoAdicionalResponse } from './reparo-adicional.model';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/ordens-servico';
+const BASE = `${environment.apiUrl}/ordens-servico`;
 
 describe('ReparoAdicionalService', () => {
   let service: ReparoAdicionalService;

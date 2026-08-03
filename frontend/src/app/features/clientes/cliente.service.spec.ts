@@ -3,8 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ClienteService } from './cliente.service';
 import { ClienteRequest, ClienteResponse } from './cliente.model';
+import { environment } from '../../../environments/environment';
 
-const BASE = 'http://localhost:8080/clientes';
+const BASE = `${environment.apiUrl}/clientes`;
 
 describe('ClienteService', () => {
   let service: ClienteService;
