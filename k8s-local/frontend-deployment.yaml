@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoflow-frontend
+  labels:
+    app: autoflow-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoflow-frontend
+  template:
+    metadata:
+      labels:
+        app: autoflow-frontend
+    spec:
+      containers:
+        - name: autoflow-frontend-container
+          image: brunosousa06/autoflow-frontend:latest
+          imagePullPolicy: IfNotPresent 
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: frontend-config
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 20
+            failureThreshold: 3
+            periodSeconds: 20
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10 
+            periodSeconds: 30

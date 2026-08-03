@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: autoflow-db
+spec:
+  serviceName: "postgresql-service" 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoflow-db
+  template:
+    metadata:
+      labels:
+        app: autoflow-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: autoflow-secrets
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: autoflow-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: autoflow-secrets
+              key: POSTGRES_PASSWORD

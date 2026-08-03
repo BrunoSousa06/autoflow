@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoflow-backend
+  labels:
+    app: autoflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoflow-backend
+  template:
+    metadata:
+      labels:
+        app: autoflow-backend
+    spec:
+      containers:
+        - name: autoflow-backend-container
+          image: brunosousa06/autoflow-backend:latest
+          imagePullPolicy: IfNotPresent 
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: autoflow-config
+            - secretRef:
+                name: autoflow-secrets
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            failureThreshold: 20
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            failureThreshold: 3
+            timeoutSeconds: 5 
+            periodSeconds: 20
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            timeoutSeconds: 5
+            periodSeconds: 30
+          
+        
+          
