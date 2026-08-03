@@ -13,7 +13,8 @@ import com.autoflow.repository.orcamento.OrcamentoSpecifications;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
 import com.autoflow.service.orcamento.impl.OrcamentoServiceImpl;
-import com.autoflow.service.ordemservico.reparoadicional.ReparoAdicionalService;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.service.usuario.UsuarioService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +49,10 @@ class OrcamentoServiceImplTest {
     OrcamentoPublicacaoService publicacaoService;
 
     @Mock
-    ReparoAdicionalService reparoAdicionalService;
+    AprovarReparoAdicionalPorOrcamentoUseCase aprovarReparoAdicionalPorOrcamentoUseCase;
+
+    @Mock
+    RecusarReparoAdicionalPorOrcamentoUseCase recusarReparoAdicionalPorOrcamentoUseCase;
 
     @Mock
     UsuarioService usuarioService;
@@ -138,14 +142,14 @@ class OrcamentoServiceImplTest {
         when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
         mockUsuario("cliente@exemplo.com", "Maria", RoleEnum.CLIENTE);
         when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(reparoAdicionalService.existePorOrcamentoId(10L)).thenReturn(true);
+        when(aprovarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(10L)).thenReturn(true);
 
         OrcamentoEntity result = service.aprovar(10L, "cliente@exemplo.com");
 
         assertEquals(StatusOrcamento.APROVADO, result.getStatus());
         assertEquals("Maria", result.getAssinaturaNome());
         assertNotNull(result.getAprovadoEm());
-        verify(reparoAdicionalService).aprovarSeExistirPorOrcamentoId(10L);
+        verify(aprovarReparoAdicionalPorOrcamentoUseCase).executeSeExistir(10L);
         verify(ordemServicoRepository, never()).findById(any());
         verify(ordemServicoRepository, never()).save(any());
     }
@@ -233,14 +237,18 @@ class OrcamentoServiceImplTest {
         when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
         mockUsuario("cliente@exemplo.com", "Maria", RoleEnum.CLIENTE);
         when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(reparoAdicionalService.existePorOrcamentoId(10L)).thenReturn(true);
+        when(recusarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(
+                10L,
+                "Cliente recusou adicional"
+        )).thenReturn(true);
 
         OrcamentoEntity result = service.recusar(10L, "Cliente recusou adicional", "cliente@exemplo.com");
 
         assertEquals(StatusOrcamento.REPROVADO, result.getStatus());
         assertEquals("Cliente recusou adicional", result.getRecusaMotivo());
         assertNotNull(result.getReprovadoEm());
-        verify(reparoAdicionalService).recusarSeExistirPorOrcamentoId(10L, "Cliente recusou adicional");
+        verify(recusarReparoAdicionalPorOrcamentoUseCase)
+                .executeSeExistir(10L, "Cliente recusou adicional");
         verify(ordemServicoRepository, never()).findById(any());
         verify(ordemServicoRepository, never()).save(any());
     }

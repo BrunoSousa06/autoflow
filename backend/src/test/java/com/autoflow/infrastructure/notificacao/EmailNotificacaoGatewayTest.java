@@ -17,13 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class EmailNotificacaoServiceTest {
+class EmailNotificacaoGatewayTest {
 
     @Mock
     private JavaMailSender mailSender;
 
     @InjectMocks
-    private EmailNotificacaoService service;
+    private EmailNotificacaoGateway service;
 
     @BeforeEach
     void setUp() {
