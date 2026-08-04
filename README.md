@@ -188,7 +188,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-API disponível em **http://localhost:8080**
+API disponível em **http://localhost:8081**
 
 ### Frontend
 
@@ -247,8 +247,8 @@ kubectl get pods (validar que todos pods subiram com sucesso)
 ```
 Observação: respeitar a ordem de subida acima  para evitar erros no deploy dos pods devido dependecias de arquivos.
 
-Acesso no frontend utilizar: http://localhost:30180 
-Acesso direto no backend utilizar : http://localhost:30080
+- Acesso no frontend : http://localhost:30180 
+- Acesso no backend  : http://localhost:30080
 
 ---
 
