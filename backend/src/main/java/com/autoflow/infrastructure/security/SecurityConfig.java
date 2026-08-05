@@ -27,7 +27,7 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
     @Bean
-    @SuppressWarnings("java:S4502") // Stateless API authenticated by bearer tokens; browsers do not send them automatically.
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
@@ -80,11 +80,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowedOrigins(List.of(
-                "http://localhost:4200"
-        ));
-
+        config.setAllowedOrigins(List.of("*"));
+        config.setAllowCredentials(false);
         config.setAllowedMethods(List.of(
                 "GET",
                 "POST",
@@ -104,7 +101,7 @@ public class SecurityConfig {
                 "Authorization"
         ));
 
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(false);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =

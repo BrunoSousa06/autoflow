@@ -188,7 +188,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-API disponível em **http://localhost:8080**
+API disponível em **http://localhost:8081**
 
 ### Frontend
 
@@ -200,7 +200,7 @@ npm start
 
 Acesse: **http://localhost:4200**
 
-> O frontend espera o backend em `http://localhost:8080`. Para alterar, edite `src/environments/environment.ts`.
+> O frontend espera o backend em `/api`. Para alterar, edite `src/environments/environment.ts`.
 
 ---
 
@@ -227,6 +227,42 @@ cd backend
 docker build -t autoflow-backend .
 docker run --env-file ../.env -p 8080:8080 autoflow-backend
 ```
+---
+
+
+## Executando localmente com Kubernetes
+
+É necessario ter o minikube/kind ou o Docker Desktop com a opção de kubernetes ativa para conseguir subir os manifestos kubernetes localmente.
+
+```bash
+cd k8s-local
+minikube start 
+kubectl apply -f configmap.yaml
+kubectl apply -f secret.yaml
+kubectl apply -f postgresql-service.yaml
+kubectl apply -f postgresql-stateful.yaml
+kubectl apply -f . 
+kubectl get pods (validar que todos pods subiram com sucesso)
+
+```
+Observação: respeitar a ordem de subida acima  para evitar erros no deploy dos pods devido dependecias de arquivos.
+
+- Acesso no frontend : http://localhost:30180 
+- Acesso no backend  : http://localhost:30080
+
+---
+
+## Executando via Terraform na AWS
+
+Necessario ter o terraform configurado com sua conta AWS.
+
+```bash
+cd infra
+terraform init
+terraform plan
+terraform apply
+```
+
 ---
 
 ## Documentação da API (Swagger)
