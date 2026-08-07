@@ -1,6 +1,7 @@
 package com.autoflow.application.security;
 
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.application.gateway.ClienteGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 
 
 import java.util.Optional;
@@ -24,7 +24,7 @@ class ClienteAutenticadoServiceTest {
     private UsuarioAutenticadoService usuarioAutenticadoService;
 
     @Mock
-    private ClienteRepository clienteRepository;
+    private ClienteGateway clienteRepository;
 
     @InjectMocks
     private ClienteAutenticadoService clienteAutenticadoService;

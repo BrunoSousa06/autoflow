@@ -6,6 +6,8 @@ import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEsto
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
+import com.autoflow.application.usecases.usuario.BuscarMecanicoPorIdUseCase;
+import com.autoflow.application.usecases.usuario.BuscarUsuarioPorEmailUseCase;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
@@ -31,7 +33,6 @@ import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
 import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
-import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -61,13 +62,13 @@ import static com.autoflow.presentation.ordemservico.acompanhamento.response.Aco
 @RequiredArgsConstructor
 public class OrdemServicoServiceImpl implements OrdemServicoService {
 
-    private static final long VALIDADE_TOKEN_EM_DIAS = 30;
     private static final SecureRandom TOKEN_RANDOM = new SecureRandom();
 
     private final OrdemServicoRepository ordemServicoRepository;
     private final BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
     private final ServicoService servicoService;
-    private final UsuarioService usuarioService;
+    private final BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase;
+    private final BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase;
     private final PecaInsumoService pecaInsumoService;
     private final ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
     private final OrdemServicoAccessPolicy ordemServicoAccessPolicy;
@@ -84,7 +85,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Autowired
     public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
-                                   UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService,
+                                   BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase, BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase,
+                                   HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService,
                                    OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl,
                                    OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl,
                                    ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoGateway orcamentoPublicacaoGateway,
@@ -95,7 +97,8 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.ordemServicoRepository = ordemServicoRepository;
         this.buscarOuCadastrarVeiculoUseCase = buscarOuCadastrarVeiculoUseCase;
         this.servicoService = servicoService;
-        this.usuarioService = usuarioService;
+        this.buscarUsuarioPorEmailUseCase = buscarUsuarioPorEmailUseCase;
+        this.buscarMecanicoPorIdUseCase = buscarMecanicoPorIdUseCase;
         this.historicoStatusOsRepository = historicoStatusOsRepository;
         this.pecaInsumoService = pecaInsumoService;
         this.ordemServicoAccessPolicy = ordemServicoAccessPolicy;
@@ -174,7 +177,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
         if (StatusOrdemServico.EM_DIAGNOSTICO.equals(ordemServico.getStatus())) {
-            UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+            UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
             if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
                 ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
             }
@@ -205,11 +208,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             String mecanicoEmail
     ) {
         if (mecanicoId != null) {
-            return usuarioService.buscarMecanicoPorId(mecanicoId);
+            return buscarMecanicoPorIdUseCase.execute(mecanicoId);
         }
 
         if (mecanicoEmail != null && !mecanicoEmail.isBlank()) {
-            UsuarioEntity usuario = usuarioService.buscarPorEmail(mecanicoEmail);
+            UsuarioEntity usuario = buscarUsuarioPorEmailUseCase.execute(mecanicoEmail);
 
             if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
                 throw new ResponseStatusException(
@@ -230,7 +233,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServicoEntity iniciarDiagnostico(String numeroOs, String emailUsuarioLogado) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
@@ -252,7 +255,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             List<ItemNecessarioEntity> itensNecessarios
     ) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
 
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
@@ -276,7 +279,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServicoEntity registrarLaudo(String numeroOs, String emailUsuarioLogado, String laudo){
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
         ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         ordemServico.registrarLaudo(laudo);
         return ordemServicoRepository.save(ordemServico);
@@ -286,7 +289,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public FinalizarDiagnosticoResult finalizarDiagnostico(String numeroOs, String emailUsuarioLogado){
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
 
         if(!RoleEnum.ADMIN.equals(usuarioLogado.getRole())){
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
@@ -396,7 +399,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Override
     public Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable, String emailUsuarioLogado) {
-        UsuarioEntity usuario = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuario = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
         String emailMecanico = RoleEnum.MECANICO.equals(usuario.getRole()) ? emailUsuarioLogado : null;
         return ordemServicoRepository.findAll(OrdemServicoSpecifications.comFiltros(filtro, emailMecanico), pageable);
     }

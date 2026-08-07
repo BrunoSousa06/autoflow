@@ -1,7 +1,7 @@
 package com.autoflow.application.security;
 
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
+import com.autoflow.application.gateway.ClienteGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class ClienteAutenticadoService {
 
     private final UsuarioAutenticadoService usuarioAutenticadoService;
-    private final ClienteRepository clienteRepository;
+    private final ClienteGateway clienteGateway;
 
     public ClienteEntity getClienteLogado() {
 
@@ -20,7 +20,7 @@ public class ClienteAutenticadoService {
             return null;
         }
 
-        return clienteRepository
+        return clienteGateway
                 .findByUsuarioEmail(usuarioAutenticadoService.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.FORBIDDEN,

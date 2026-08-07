@@ -7,8 +7,6 @@ import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.autoflow.presentation.usuario.response.UsuarioResponse;
-import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.service.usuario.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,13 +52,9 @@ public class UsuarioAdminController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','ATENDENTE')")
     public ResponseEntity<UsuarioResponse> cadastrarComoStaff(
-            @Valid @RequestBody RegistroRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        String roleName = userDetails.getAuthorities().iterator().next()
-                .getAuthority().replace("ROLE_", "");
-        RoleEnum callerRole = RoleEnum.valueOf(roleName);
+            @Valid @RequestBody RegistroRequest request) {
         RegistroInput input = usuarioMapper.mapToInput(request);
-        UsuarioOutput execute = cadastrarComoStaff.execute(input, callerRole);
+        UsuarioOutput execute = cadastrarComoStaff.execute(input);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(usuarioMapper.mapToResponse(execute));
     }
