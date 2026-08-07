@@ -288,7 +288,7 @@ export class DetalheOsComponent implements OnInit {
         width: '440px',
         data: {
           titulo: 'Finalizar Diagnóstico',
-          mensagem: 'Isso irá gerar o orçamento automaticamente e notificar o cliente por e-mail. O laudo deve estar registrado. Confirma?',
+          mensagem: 'Isso irá gerar o orçamento automaticamente e tentará notificar o cliente por e-mail. O laudo deve estar registrado. Confirma?',
           labelConfirmar: 'Finalizar',
         },
       },
@@ -299,7 +299,7 @@ export class DetalheOsComponent implements OnInit {
       this.service.finalizarDiagnostico(this.os()!.numeroOs).subscribe({
         next: () => {
           this.snackBar.open(
-            `Diagnóstico finalizado. Orçamento gerado e enviado ao cliente.`,
+            `Diagnóstico finalizado. Orçamento gerado; a notificação ao cliente foi solicitada.`,
             'Fechar',
             { duration: 5000 },
           );
@@ -521,7 +521,7 @@ export class DetalheOsComponent implements OnInit {
         next: (resultado) => {
           this.salvando.set(false);
           this.snackBar.open(
-            `Reparo adicional criado. Orçamento #${resultado.orcamentoId} enviado para aprovação do cliente.`,
+            `Reparo adicional criado. Orçamento #${resultado.orcamentoId} disponibilizado para aprovação; a notificação ao cliente foi solicitada.`,
             'Fechar',
             { duration: 6000 },
           );

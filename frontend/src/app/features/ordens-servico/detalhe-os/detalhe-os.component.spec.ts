@@ -219,6 +219,38 @@ describe('DetalheOsComponent', () => {
       expect(mockOsService.iniciarDiagnostico).not.toHaveBeenCalled();
     });
 
+    it('confirmarFinalizarDiagnostico deve informar que a notificacao foi solicitada', () => {
+      mockOsService.buscarPorNumeroOs.and.returnValue(of(osFixture()));
+      const component = criarComponente('ADMIN');
+      component.ngOnInit();
+      mockDialog.open.and.returnValue({ afterClosed: () => of(true) } as any);
+      mockOsService.finalizarDiagnostico.and.returnValue(of({} as any));
+
+      component.confirmarFinalizarDiagnostico();
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
+        'Diagnóstico finalizado. Orçamento gerado; a notificação ao cliente foi solicitada.',
+        'Fechar',
+        { duration: 5000 },
+      );
+    });
+
+    it('criarReparoAdicional deve informar que a notificacao foi solicitada', () => {
+      mockOsService.buscarPorNumeroOs.and.returnValue(of(osFixture({ status: 'EM_EXECUCAO' })));
+      const component = criarComponente('ADMIN');
+      component.ngOnInit();
+      mockDialog.open.and.returnValue({ afterClosed: () => of({ servicos: [] }) } as any);
+      mockReparoService.criar.and.returnValue(of({ reparoAdicionalId: 1, orcamentoId: 10, publicUrl: 'url' }));
+
+      component.criarReparoAdicional();
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
+        'Reparo adicional criado. Orçamento #10 disponibilizado para aprovação; a notificação ao cliente foi solicitada.',
+        'Fechar',
+        { duration: 6000 },
+      );
+    });
+
     it('aprovarOrcamento deve chamar orcamentoService.aprovar quando confirmado', () => {
       const os = osFixture({ orcamentoAtual: { id: 10, tipo: 'PRINCIPAL', versao: 1, status: 'DISPONIVEL', totalServicos: 100, totalItens: 0, totalGeral: 100, criadoEm: '2026-01-01T10:00:00Z', disponibilizadoEm: null, aprovadoEm: null, reprovadoEm: null, mensagem: null } });
       mockOsService.buscarPorNumeroOs.and.returnValue(of(os));

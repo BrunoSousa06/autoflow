@@ -307,7 +307,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                     publicUrl
             );
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error(
+                    "Falha ao notificar cliente sobre orçamento da OS {}. orcamentoId={}",
+                    ordemServico.getNumeroOs(),
+                    orcamentoSalvo.getId(),
+                    e
+            );
         }
         OrdemServicoEntity ordemServicoSalvo = salvarOs(ordemServico);
 
