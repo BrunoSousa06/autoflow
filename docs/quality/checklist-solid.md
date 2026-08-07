@@ -78,3 +78,13 @@ Use este checklist ao revisar qualquer card de refatoração do backlog de Clean
 - [ADR-001 — Sequência de migração para Clean Architecture](../adr/ADR-001-sequencia-migracao-clean-architecture.md)
 - [Convenção de pacotes](../conventions/package-convention.md)
 - [ArchitectureBoundaryTest](../../backend/src/test/java/com/autoflow/architecture/ArchitectureBoundaryTest.java)
+
+## Definition of Done do card
+
+- [ ] Testes focados e suite afetada foram executados e registrados.
+- [ ] Cobertura de linhas e branches foi medida sem exclusoes amplas novas.
+- [ ] `ArchitectureBoundaryTest` passou; qualquer divida preexistente permanece rastreada.
+- [ ] O contrato REST, as roles, o schema e as migrations foram confirmados sem alteracao.
+- [ ] Sonar foi executado ou ficou explicitamente bloqueado por `SONAR_TOKEN`/ambiente.
+- [ ] Relatorios e comandos reproduziveis estao documentados.
+- [ ] O card possui pendencias, riscos e proximo passo verificavel.

@@ -215,3 +215,18 @@ Executado em 12/07/2026. Comando: `ng test --no-watch --browsers=ChromeHeadless`
 Todos os diálogos de CRUD (cliente, veículo, usuário, serviço, peça/insumo) e suas telas de
 listagem correspondentes agora possuem specs. Cobertura de statements superou 86%, bem acima da
 meta original de 70%.
+
+## Medicao atual - 07/08/2026
+
+Comando: `npm run test:ci` (ChromeHeadlessCI), com 369 testes e 0 falhas.
+
+| Metrica | Valor medido |
+|---|---:|
+| Statements | 86,52% (1.226/1.417) |
+| Branches | 66,74% (301/451) |
+| Functions | 85,24% (393/461) |
+| Lines | 87,43% (1.113/1.273) |
+
+Comando de build: `npm run build`, concluido. Permanecem dois warnings de budget SCSS
+preexistentes em `acompanhamento.component.scss` e `detalhe-os.component.scss`; eles nao
+impedem o build e devem ser tratados em card visual proprio.
