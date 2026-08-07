@@ -223,7 +223,7 @@ class JwtFilterTest {
     }
 
     @Test
-    void deveDefinirRoleNoTokenDeAutenticacao() {
+    void deveUsarAuthoritiesAtuaisDoUsuarioEmVezDaRoleDoToken() {
 
         String token = "jwt-token";
 
@@ -232,17 +232,26 @@ class JwtFilterTest {
                 "Bearer " + token
         );
 
+        UserDetails usuarioComRoleAtualizada = new User(
+                "teste@email.com",
+                "123456",
+                List.of(() -> "ROLE_CLIENTE")
+        );
+
         when(jwtService.extrairEmail(token)).thenReturn("teste@email.com");
-        when(userDetailsService.loadUserByUsername("teste@email.com")).thenReturn(userDetails);
+        when(userDetailsService.loadUserByUsername("teste@email.com"))
+                .thenReturn(usuarioComRoleAtualizada);
         when(jwtService.tokenValido(token)).thenReturn(true);
-        when(jwtService.extrairRole(token)).thenReturn("ADMIN");
 
         assertDoesNotThrow(this::executarFiltro);
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(auth);
         assertTrue(auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE")));
+        assertFalse(auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
+        verify(jwtService, never()).extrairRole(token);
     }
 
     @ParameterizedTest(name = "Deve ignorar o filtro JWT para a rota: {0}")

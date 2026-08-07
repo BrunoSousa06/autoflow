@@ -1,13 +1,15 @@
 package com.autoflow.controller.orcamento;
 
+import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoAutenticadoUseCase;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentosUseCase;
+import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.controller.orcamento.request.RecusarOrcamentoRequest;
 import com.autoflow.controller.orcamento.response.OrcamentoResponse;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.service.orcamento.OrcamentoPdfService;
-import com.autoflow.service.orcamento.OrcamentoService;
-import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
+import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -30,8 +32,10 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class OrcamentoController {
 
-    private final OrcamentoService orcamentoService;
-    private final OrcamentoPdfService orcamentoPdfService;
+    private final OrcamentoDocumentoGateway orcamentoDocumentoGateway;
+    private final ConsultarOrcamentoAutenticadoUseCase consultarOrcamentoAutenticadoUseCase;
+    private final ConsultarOrcamentosUseCase consultarOrcamentosUseCase;
+    private final DecidirOrcamentoUseCase decidirOrcamentoUseCase;
 
     @Operation(summary = "Listar o orçamento da ordem de serviço", description = "Retorna as informações do orçamento da ordem de serviço")
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
@@ -45,7 +49,7 @@ public class OrcamentoController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         return OrcamentoResponse.from(
-                orcamentoService.consultarAutenticado(orcamentoId, userDetails.getUsername())
+                consultarOrcamentoAutenticadoUseCase.execute(orcamentoId, userDetails.getUsername())
         );
     }
 
@@ -62,7 +66,7 @@ public class OrcamentoController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         return OrcamentoResponse.from(
-                orcamentoService.aprovar(orcamentoId, userDetails.getUsername())
+                decidirOrcamentoUseCase.aprovarComoUsuario(orcamentoId, userDetails.getUsername())
         );
     }
 
@@ -82,7 +86,7 @@ public class OrcamentoController {
         String motivo = (req == null) ? null : req.motivo();
 
         return OrcamentoResponse.from(
-                orcamentoService.recusar(orcamentoId, motivo, userDetails.getUsername())
+                decidirOrcamentoUseCase.recusarComoUsuario(orcamentoId, motivo, userDetails.getUsername())
         );
     }
 
@@ -110,7 +114,7 @@ public class OrcamentoController {
                 tipo
         );
 
-        return orcamentoService.consultarOrcamentos(userDetails.getUsername(), filtro)
+        return consultarOrcamentosUseCase.execute(userDetails.getUsername(), filtro)
                 .stream()
                 .map(OrcamentoResponse::from)
                 .toList();
@@ -127,8 +131,8 @@ public class OrcamentoController {
             @PathVariable Long orcamentoId,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        OrcamentoEntity orcamento = orcamentoService.consultarAutenticado(orcamentoId, userDetails.getUsername());
-        byte[] pdf = orcamentoPdfService.gerarPdf(orcamento);
+        OrcamentoEntity orcamento = consultarOrcamentoAutenticadoUseCase.execute(orcamentoId, userDetails.getUsername());
+        byte[] pdf = orcamentoDocumentoGateway.gerarPdf(orcamento);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"orcamento-" + orcamentoId + ".pdf\"")

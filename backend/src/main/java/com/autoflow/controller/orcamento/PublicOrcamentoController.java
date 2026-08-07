@@ -1,8 +1,8 @@
 package com.autoflow.controller.orcamento;
 
+import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoPorTokenUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.service.orcamento.OrcamentoPdfService;
-import com.autoflow.service.orcamento.OrcamentoService;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
 import com.autoflow.controller.orcamento.response.OrcamentoResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.*;
 public class PublicOrcamentoController {
 
 
-    private final OrcamentoService orcamentoService;
-    private final OrcamentoPdfService orcamentoPdfService;
+    private final OrcamentoDocumentoGateway orcamentoDocumentoGateway;
+    private final ConsultarOrcamentoPorTokenUseCase consultarOrcamentoPorTokenUseCase;
     private final AcessarOrcamentoAcompanhamentoUseCase acessarOrcamentoAcompanhamentoUseCase;
 
     @Operation(summary = "Baixar o pdf com orçamento do cliente", description = "Retorna o pdf com as informações do orçamento do cliente")
@@ -33,9 +33,9 @@ public class PublicOrcamentoController {
             @PathVariable Long orcamentoId,
             @RequestParam String token
     ) {
-        OrcamentoEntity orcamento = orcamentoService.consultarPorToken(orcamentoId, token);
+        OrcamentoEntity orcamento = consultarOrcamentoPorTokenUseCase.execute(orcamentoId, token);
 
-        byte[] pdf = orcamentoPdfService.gerarPdf(orcamento);
+        byte[] pdf = orcamentoDocumentoGateway.gerarPdf(orcamento);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
@@ -55,7 +55,7 @@ public class PublicOrcamentoController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"orcamento-" + orcamentoId + ".pdf\"")
-                .body(orcamentoPdfService.gerarPdf(orcamento));
+                .body(orcamentoDocumentoGateway.gerarPdf(orcamento));
     }
 
     @PostMapping("/{orcamentoId}/aprovar/acompanhamento")

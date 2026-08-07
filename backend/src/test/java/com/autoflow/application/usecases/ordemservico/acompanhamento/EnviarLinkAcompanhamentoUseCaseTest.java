@@ -31,7 +31,7 @@ class EnviarLinkAcompanhamentoUseCaseTest {
     @BeforeEach
     void setUp() {
         useCase = new EnviarLinkAcompanhamentoUseCase(notificacaoGateway);
-        ReflectionTestUtils.setField(useCase, "frontendPublicBaseUrl", "https://app.autoflow.com");
+        ReflectionTestUtils.setField(useCase, "frontendPublicBaseUrl", "http://localhost:4200");
     }
 
     @Test
@@ -50,7 +50,7 @@ class EnviarLinkAcompanhamentoUseCaseTest {
         MensagemNotificacao mensagem = captor.getValue();
         assertAll(
                 () -> assertEquals("maria@email.com", mensagem.destinatario()),
-                () -> assertTrue(mensagem.corpo().contains("https://app.autoflow.com/public/acompanhamento?token=token-seguro")),
+                () -> assertTrue(mensagem.corpo().contains("http://localhost:4200/public/acompanhamento?token=token-seguro")),
                 () -> assertTrue(mensagem.corpo().contains("login e senha")),
                 () -> assertTrue(mensagem.corpo().contains("Minha Conta"))
         );

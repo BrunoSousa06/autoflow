@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new User(
                 usuarioEntity.getEmail(),
                 usuarioEntity.getSenha(),
-                List.of(new SimpleGrantedAuthority(usuarioEntity.getRole().name()))
+                List.of(new SimpleGrantedAuthority("ROLE_" + usuarioEntity.getRole().name()))
         );
     }
 }

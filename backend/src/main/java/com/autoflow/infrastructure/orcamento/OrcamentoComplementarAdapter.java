@@ -2,10 +2,10 @@ package com.autoflow.infrastructure.orcamento;
 
 import com.autoflow.application.gateway.OrcamentoComplementarGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
+import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
-import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

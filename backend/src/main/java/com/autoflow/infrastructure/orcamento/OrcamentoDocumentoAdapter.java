@@ -1,24 +1,28 @@
-package com.autoflow.service.orcamento.impl;
+package com.autoflow.infrastructure.orcamento;
 
+import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
 import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.service.orcamento.OrcamentoPdfService;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
-@Service
-public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
+
+import com.lowagie.text.pdf.PdfWriter;
+
+import java.io.ByteArrayOutputStream;
+import java.time.format.DateTimeFormatter;
+
+
+@Component
+public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
 
     private static final DateTimeFormatter DATA_HORA_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -49,6 +53,7 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
             throw new IllegalStateException("Erro ao gerar PDF do orçamento.", exception);
         }
     }
+
 
     private void adicionarAvisoReparoAdicional(
             Document document,
@@ -137,7 +142,7 @@ public class OrcamentoPdfServiceImpl implements OrcamentoPdfService {
 
     private void adicionarServicos(
             Document document,
-            List<OrcamentoServicoEntity> servicos
+            java.util.List<OrcamentoServicoEntity> servicos
     ) throws DocumentException {
         Paragraph subtitulo = new Paragraph(
                 "Serviços",

@@ -3,7 +3,7 @@ package com.autoflow.repository.orcamento;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
+import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("unchecked")
 class OrcamentoSpecificationsTest {
 
     @Mock private Root<OrcamentoEntity> root;

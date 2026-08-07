@@ -1,5 +1,7 @@
 package com.autoflow.controller.orcamento;
 
+import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoPorTokenUseCase;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
@@ -7,8 +9,6 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
-import com.autoflow.service.orcamento.OrcamentoPdfService;
-import com.autoflow.service.orcamento.OrcamentoService;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +40,10 @@ class PublicOrcamentoControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OrcamentoService orcamentoService;
+    private OrcamentoDocumentoGateway orcamentoDocumentoGateway;
 
     @MockitoBean
-    private OrcamentoPdfService orcamentoPdfService;
+    private ConsultarOrcamentoPorTokenUseCase consultarOrcamentoPorTokenUseCase;
 
     @MockitoBean
     private AcessarOrcamentoAcompanhamentoUseCase acessarOrcamentoAcompanhamentoUseCase;
@@ -59,8 +59,8 @@ class PublicOrcamentoControllerTest {
         OrcamentoEntity orcamento = baseOrcamento();
         byte[] pdf = "%PDF fake".getBytes();
 
-        when(orcamentoService.consultarPorToken(10L, "tok")).thenReturn(orcamento);
-        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdf);
+        when(consultarOrcamentoPorTokenUseCase.execute(10L, "tok")).thenReturn(orcamento);
+        when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn(pdf);
 
         mockMvc.perform(get("/public/orcamentos/{id}/pdf", 10L)
                         .param("token", "tok"))
@@ -68,8 +68,8 @@ class PublicOrcamentoControllerTest {
                 .andExpect(header().string("Content-Type", MediaType.APPLICATION_PDF_VALUE))
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"orcamento-10.pdf\""));
 
-        verify(orcamentoService).consultarPorToken(10L, "tok");
-        verify(orcamentoPdfService).gerarPdf(orcamento);
+        verify(consultarOrcamentoPorTokenUseCase).execute(10L, "tok");
+        verify(orcamentoDocumentoGateway).gerarPdf(orcamento);
     }
 
     @Test
@@ -77,21 +77,21 @@ class PublicOrcamentoControllerTest {
 
 
         doThrow(new ResponseStatusException(UNAUTHORIZED, "Token invalido"))
-                .when(orcamentoService)
-                .consultarPorToken(10L, "tok-invalido");
+                .when(consultarOrcamentoPorTokenUseCase)
+                .execute(10L, "tok-invalido");
 
         mockMvc.perform(get("/public/orcamentos/{id}/pdf", 10L)
                         .param("token", "tok-invalido"))
                 .andExpect(status().isUnauthorized());
 
-        verify(orcamentoService).consultarPorToken(10L, "tok-invalido");
+        verify(consultarOrcamentoPorTokenUseCase).execute(10L, "tok-invalido");
     }
 
     @Test
     void deveBaixarPdfComTokenDeAcompanhamento() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
         when(acessarOrcamentoAcompanhamentoUseCase.consultar(10L, "token-os")).thenReturn(orcamento);
-        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn("%PDF".getBytes());
+        when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn("%PDF".getBytes());
 
         mockMvc.perform(get("/public/orcamentos/{id}/pdf/acompanhamento", 10L)
                         .param("token", "token-os"))

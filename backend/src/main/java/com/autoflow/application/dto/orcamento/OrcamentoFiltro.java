@@ -1,4 +1,4 @@
-package com.autoflow.service.orcamento.dto;
+package com.autoflow.application.dto.orcamento;
 
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;

@@ -1,10 +1,9 @@
 package com.autoflow.service.orcamento;
 
+import com.autoflow.infrastructure.orcamento.OrcamentoPublicacaoAdapter;
+import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
-import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
-import com.autoflow.service.orcamento.impl.OrcamentoPublicacaoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,10 +24,10 @@ import static org.mockito.Mockito.when;
 class OrcamentoPublicacaoServiceImplTest {
 
     @Mock
-    OrcamentoRepository orcamentoRepository;
+    OrcamentoGateway orcamentoGateway;
 
     @InjectMocks
-    OrcamentoPublicacaoServiceImpl service;
+    OrcamentoPublicacaoAdapter service;
 
     @Test
     void publicar_deveGerarTokenHashEDefinirDisponibilizadoEm() {
@@ -37,19 +36,18 @@ class OrcamentoPublicacaoServiceImplTest {
         orc.setStatus(StatusOrcamento.DISPONIVEL);
         orc.setDisponibilizadoEm(null);
 
-        when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
-        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orc));
+        when(orcamentoGateway.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ReflectionTestUtils.setField(service, "publicBaseUrl", "http://localhost:8080");
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
 
-        PublicacaoOrcamentoResult result = service.publicar(10L);
+        String result = service.publicar(10L);
 
-        assertEquals(10L, result.orcamentoId());
         assertNotNull(orc.getPublicTokenHash());
         assertNotNull(orc.getDisponibilizadoEm());
-        assertTrue(result.url().startsWith("http://localhost:8080/public/orcamentos/10/pdf?token="));
-        verify(orcamentoRepository).save(orc);
+        assertTrue(result.startsWith("http://localhost:8080/public/orcamentos/10/pdf?token="));
+        verify(orcamentoGateway).save(orc);
     }
 
     @Test
@@ -60,8 +58,8 @@ class OrcamentoPublicacaoServiceImplTest {
         var disponibilizadoEm = java.time.LocalDateTime.of(2026, 6, 4, 10, 0);
         orc.setDisponibilizadoEm(disponibilizadoEm);
 
-        when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
-        when(orcamentoRepository.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orc));
+        when(orcamentoGateway.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ReflectionTestUtils.setField(service, "publicBaseUrl", "http://localhost:8080");
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
@@ -69,12 +67,12 @@ class OrcamentoPublicacaoServiceImplTest {
         service.publicar(10L);
 
         assertEquals(disponibilizadoEm, orc.getDisponibilizadoEm());
-        verify(orcamentoRepository).save(orc);
+        verify(orcamentoGateway).save(orc);
     }
 
     @Test
     void publicar_deveDarNotFoundQuandoOrcamentoNaoExistir() {
-        when(orcamentoRepository.findById(10L)).thenReturn(Optional.empty());
+        when(orcamentoGateway.findById(10L)).thenReturn(Optional.empty());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.publicar(10L));
 
@@ -87,7 +85,7 @@ class OrcamentoPublicacaoServiceImplTest {
         orc.setId(10L);
         orc.setStatus(StatusOrcamento.APROVADO);
 
-        when(orcamentoRepository.findById(10L)).thenReturn(Optional.of(orc));
+        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orc));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.publicar(10L));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
@@ -112,5 +110,6 @@ class OrcamentoPublicacaoServiceImplTest {
         orc.setPublicTokenHash(hash);
 
         assertTrue(service.validarToken(orc, token));
+        assertFalse(service.validarToken(orc, "token-invalido"));
     }
 }
