@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { DetalheOsComponent } from './detalhe-os.component';
+import { DetalheOsFacade } from './detalhe-os.facade';
 import { OrdemServicoService } from '../ordem-servico.service';
 import { OrcamentoService } from '../../orcamentos/orcamento.service';
 import { ReparoAdicionalService } from '../../reparos-adicionais/reparo-adicional.service';
@@ -60,6 +61,7 @@ describe('DetalheOsComponent', () => {
 
     TestBed.configureTestingModule({
       providers: [
+        DetalheOsFacade,
         { provide: OrdemServicoService, useValue: mockOsService },
         { provide: OrcamentoService, useValue: mockOrcamentoService },
         { provide: ReparoAdicionalService, useValue: mockReparoService },

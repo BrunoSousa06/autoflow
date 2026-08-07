@@ -11,7 +11,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/services/auth.service';
-import { OrdemServicoService } from '../ordem-servico.service';
 import {
   OrdemServicoDetalheResponse,
   StatusOrdemServico,
@@ -42,20 +41,20 @@ import {
   AdicionarServicoDiagnosticoDialogComponent,
 } from './adicionar-servico-dialog.component';
 import { ItensNecessariosRequest, ServicoOsResponse, ServicoSolicitadoRequest } from '../ordem-servico.model';
-import { OrcamentoService } from '../../orcamentos/orcamento.service';
 import { RecusarOrcamentoDialogComponent } from '../../orcamentos/recusar-orcamento-dialog.component';
-import { ReparoAdicionalService } from '../../reparos-adicionais/reparo-adicional.service';
 import {
   CriarReparoAdicionalDialogComponent,
   CriarReparoAdicionalDialogData,
 } from '../../reparos-adicionais/criar-reparo-adicional-dialog.component';
 import { CriarReparoAdicionalRequest } from '../../reparos-adicionais/reparo-adicional.model';
+import { DetalheOsFacade } from './detalhe-os.facade';
 
 type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 
 @Component({
   selector: 'app-detalhe-os',
   standalone: true,
+  providers: [DetalheOsFacade],
   imports: [
     CommonModule,
     DatePipe,
@@ -72,9 +71,7 @@ type PassoTimeline = 'concluido' | 'atual' | 'pendente';
   styleUrl: './detalhe-os.component.scss',
 })
 export class DetalheOsComponent implements OnInit {
-  private readonly service = inject(OrdemServicoService);
-  private readonly orcamentoService = inject(OrcamentoService);
-  private readonly reparoAdicionalService = inject(ReparoAdicionalService);
+  private readonly facade = inject(DetalheOsFacade);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -121,7 +118,7 @@ export class DetalheOsComponent implements OnInit {
       return;
     }
 
-    this.service.buscarPorNumeroOs(numeroOs).subscribe({
+    this.facade.buscar(numeroOs).subscribe({
       next: (os) => {
         this.os.set(os);
         this.loading.set(false);
@@ -188,7 +185,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.service.iniciarDiagnostico(this.os()!.numeroOs).subscribe({
+      this.facade.iniciarDiagnostico(this.os()!.numeroOs).subscribe({
         next: () => {
           this.snackBar.open('Diagnóstico iniciado.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -214,7 +211,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((resultado: RegistrarLaudoDialogResult | null) => {
       if (!resultado) return;
       this.salvando.set(true);
-      this.service.registrarLaudo(this.os()!.numeroOs, { laudo: resultado.laudo }).subscribe({
+      this.facade.registrarLaudo(this.os()!.numeroOs, { laudo: resultado.laudo }).subscribe({
         next: () => {
           this.snackBar.open('Laudo registrado com sucesso.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -239,7 +236,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((servicos: ServicoSolicitadoRequest[] | null) => {
       if (!servicos || servicos.length === 0) return;
       this.salvando.set(true);
-      this.service.incluirServicos(os.numeroOs, servicos).subscribe({
+      this.facade.incluirServicos(os.numeroOs, servicos).subscribe({
         next: () => {
           this.snackBar.open('Serviço(s) adicionado(s) com sucesso.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -267,7 +264,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((itens: ItensNecessariosRequest[] | null) => {
       if (!itens) return;
       this.salvando.set(true);
-      this.service.registrarItensServico(this.os()!.numeroOs, srv.servicoId, itens).subscribe({
+      this.facade.registrarItens(this.os()!.numeroOs, srv.servicoId, itens).subscribe({
         next: () => {
           this.snackBar.open('Itens registrados com sucesso.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -296,7 +293,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.service.finalizarDiagnostico(this.os()!.numeroOs).subscribe({
+      this.facade.finalizarDiagnostico(this.os()!.numeroOs).subscribe({
         next: () => {
           this.snackBar.open(
             `Diagnóstico finalizado. Orçamento gerado; a notificação ao cliente foi solicitada.`,
@@ -324,7 +321,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((resultado: AtribuirMecanicoDialogResult | null) => {
       if (!resultado) return;
       this.salvando.set(true);
-      this.service.atribuirMecanico(this.os()!.numeroOs, { mecanicoId: resultado.mecanicoId }).subscribe({
+      this.facade.atribuirMecanico(this.os()!.numeroOs, { mecanicoId: resultado.mecanicoId }).subscribe({
         next: () => {
           this.snackBar.open('Mecânico atribuído com sucesso.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -355,7 +352,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.service.entregar(os.numeroOs).subscribe({
+      this.facade.entregar(os.numeroOs).subscribe({
         next: () => {
           this.snackBar.open('Veículo entregue com sucesso.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -384,7 +381,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.service.iniciarServico(this.os()!.numeroOs, srv.servicoId).subscribe({
+      this.facade.iniciarServico(this.os()!.numeroOs, srv.servicoId).subscribe({
         next: () => {
           this.snackBar.open(`Serviço "${srv.nome}" iniciado.`, 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -413,7 +410,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.service.finalizarServico(this.os()!.numeroOs, srv.servicoId).subscribe({
+      this.facade.finalizarServico(this.os()!.numeroOs, srv.servicoId).subscribe({
         next: (result) => {
           const osStatus = result.servicos.every((s) => s.status === 'FINALIZADO')
             ? 'Serviço finalizado. OS finalizada automaticamente.'
@@ -432,7 +429,7 @@ export class DetalheOsComponent implements OnInit {
 
   baixarPdfOrcamento(orcamentoId: number): void {
     this.salvando.set(true);
-    this.orcamentoService.baixarPdf(orcamentoId).subscribe({
+    this.facade.baixarOrcamentoPdf(orcamentoId).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -465,7 +462,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((confirmado) => {
       if (!confirmado) return;
       this.salvando.set(true);
-      this.orcamentoService.aprovar(orcamentoId).subscribe({
+      this.facade.aprovarOrcamento(orcamentoId).subscribe({
         next: () => {
           this.snackBar.open('Orçamento aprovado. OS em execução.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -487,7 +484,7 @@ export class DetalheOsComponent implements OnInit {
     ref.afterClosed().subscribe((motivo: string | null | undefined) => {
       if (motivo === null || motivo === undefined) return;
       this.salvando.set(true);
-      this.orcamentoService.recusar(orcamentoId, motivo ?? null).subscribe({
+      this.facade.recusarOrcamento(orcamentoId, motivo ?? null).subscribe({
         next: () => {
           this.snackBar.open('Orçamento recusado.', 'Fechar', { duration: 3000 });
           this.recarregar();
@@ -517,7 +514,7 @@ export class DetalheOsComponent implements OnInit {
       if (!req) return;
 
       this.salvando.set(true);
-      this.reparoAdicionalService.criar(os.numeroOs, req).subscribe({
+      this.facade.criarReparoAdicional(os.numeroOs, req).subscribe({
         next: (resultado) => {
           this.salvando.set(false);
           this.snackBar.open(
@@ -541,7 +538,7 @@ export class DetalheOsComponent implements OnInit {
   }
 
   private recarregar(): void {
-    this.service.buscarPorNumeroOs(this.os()!.numeroOs).subscribe({
+    this.facade.buscar(this.os()!.numeroOs).subscribe({
       next: (os) => {
         this.os.set(os);
         this.salvando.set(false);

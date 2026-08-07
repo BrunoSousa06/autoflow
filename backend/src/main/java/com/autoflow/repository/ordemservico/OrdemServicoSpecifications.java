@@ -2,6 +2,7 @@ package com.autoflow.repository.ordemservico;
 
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
+import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class OrdemServicoSpecifications {
@@ -15,6 +16,10 @@ public final class OrdemServicoSpecifications {
                 cliente(filtro.cliente()),
                 mecanico(emailMecanico)
         );
+    }
+
+    public static Specification<OrdemServicoEntity> comFiltros(OrdemServicoFiltroInput filtro, String emailMecanico) {
+        return Specification.allOf(status(filtro.status()), numeroOs(filtro.numeroOs()), cliente(filtro.cliente()), mecanico(emailMecanico));
     }
 
     private static Specification<OrdemServicoEntity> status(com.autoflow.domain.ordemservico.StatusOrdemServico status) {

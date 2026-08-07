@@ -1,6 +1,21 @@
 package com.autoflow.controller.ordemservico;
 
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
+import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
+import com.autoflow.application.usecases.ordemservico.DetalharOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.ListarOrdensServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.IniciarDiagnosticoUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarItensNecessariosUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarLaudoUseCase;
+import com.autoflow.application.usecases.ordemservico.IniciarServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.FinalizarServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.EntregarOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.FinalizarDiagnosticoUseCase;
+import com.autoflow.application.usecases.ordemservico.CriarOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.IncluirServicosUseCase;
+import com.autoflow.application.usecases.ordemservico.AtribuirMecanicoUseCase;
 import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
 import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapperImpl;
 import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapperImpl;
@@ -13,10 +28,6 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
-import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
-import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
-import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,10 +80,43 @@ class OrdemServicoControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OrdemServicoServiceImpl ordemServicoService;
+    private CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase;
 
     @MockitoBean
-    private CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase;
+    private ListarOrdensServicoUseCase listarOrdensServicoUseCase;
+
+    @MockitoBean
+    private DetalharOrdemServicoUseCase detalharOrdemServicoUseCase;
+
+    @MockitoBean
+    private IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase;
+
+    @MockitoBean
+    private RegistrarItensNecessariosUseCase registrarItensNecessariosUseCase;
+
+    @MockitoBean
+    private RegistrarLaudoUseCase registrarLaudoUseCase;
+
+    @MockitoBean
+    private IniciarServicoUseCase iniciarServicoUseCase;
+
+    @MockitoBean
+    private FinalizarServicoUseCase finalizarServicoUseCase;
+
+    @MockitoBean
+    private EntregarOrdemServicoUseCase entregarOrdemServicoUseCase;
+
+    @MockitoBean
+    private FinalizarDiagnosticoUseCase finalizarDiagnosticoUseCase;
+
+    @MockitoBean
+    private CriarOrdemServicoUseCase criarOrdemServicoUseCase;
+
+    @MockitoBean
+    private IncluirServicosUseCase incluirServicosUseCase;
+
+    @MockitoBean
+    private AtribuirMecanicoUseCase atribuirMecanicoUseCase;
 
     @MockitoBean
     private JwtService jwtService;
@@ -85,8 +129,8 @@ class OrdemServicoControllerTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.criar(eq("52998224725"), any(VeiculoOrdemServicoRequest.class), anyList()))
-                .thenReturn(new OrdemServicoCriada(ordemServico, "token-acompanhamento"));
+        when(criarOrdemServicoUseCase.execute(eq("52998224725"), any(VeiculoOrdemServicoRequest.class), anyList()))
+                .thenReturn(new OrdemServicoCriadaOutput(ordemServico, "token-acompanhamento"));
 
         mockMvc.perform(post("/ordens-servico")
                         .with(csrf())
@@ -115,7 +159,7 @@ class OrdemServicoControllerTest {
 
         ArgumentCaptor<VeiculoOrdemServicoRequest> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoRequest.class);
         ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
-        verify(ordemServicoService).criar(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
+        verify(criarOrdemServicoUseCase).execute(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
         assertEquals("NEX0517", veiculoCaptor.getValue().placa());
         assertEquals("Honda", veiculoCaptor.getValue().marca());
         assertEquals("Civic", veiculoCaptor.getValue().modelo());
@@ -129,7 +173,7 @@ class OrdemServicoControllerTest {
     void deveIncluirServicosNaOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.incluirServicos(eq("OS-123"), anyList(), eq("mecanico@autoflow.com")))
+        when(incluirServicosUseCase.execute(eq("OS-123"), anyList(), eq("mecanico@autoflow.com")))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(post("/ordens-servico/{numeroOs}/servicos", "OS-123")
@@ -145,7 +189,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        verify(ordemServicoService).incluirServicos(eq("OS-123"), anyList(), eq("mecanico@autoflow.com"));
+        verify(incluirServicosUseCase).execute(eq("OS-123"), anyList(), eq("mecanico@autoflow.com"));
     }
 
     @Test
@@ -153,7 +197,7 @@ class OrdemServicoControllerTest {
     void deveAtribuirMecanicoPorEmail() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.atribuirMecanico(eq("OS-123"), isNull(), eq("mecanico@autoflow.com")))
+        when(atribuirMecanicoUseCase.execute(eq("OS-123"), isNull(), eq("mecanico@autoflow.com")))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/mecanico", "OS-123")
@@ -167,7 +211,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        verify(ordemServicoService).atribuirMecanico("OS-123", null, "mecanico@autoflow.com");
+        verify(atribuirMecanicoUseCase).execute("OS-123", null, "mecanico@autoflow.com");
     }
 
     @Test
@@ -175,7 +219,7 @@ class OrdemServicoControllerTest {
     void deveAtribuirMecanicoPorId() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.atribuirMecanico(eq("OS-123"), eq(2L), isNull()))
+        when(atribuirMecanicoUseCase.execute(eq("OS-123"), eq(2L), isNull()))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/mecanico", "OS-123")
@@ -189,7 +233,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        verify(ordemServicoService).atribuirMecanico("OS-123", 2L, null);
+        verify(atribuirMecanicoUseCase).execute("OS-123", 2L, null);
     }
 
     @Test
@@ -197,7 +241,7 @@ class OrdemServicoControllerTest {
     void deveRegistrarItensNecessariosComoMecanico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.registrarItemNecessario(eq("342-sb"),eq(55L), eq("mecanico@autoflow.com"),anyList()))
+        when(registrarItensNecessariosUseCase.execute(eq("342-sb"),eq(55L), eq("mecanico@autoflow.com"),anyList()))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/itens-necessarios", "342-sb", 55L)
@@ -215,7 +259,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L));
 
         ArgumentCaptor<List<ItemNecessarioEntity>> itensCaptor = captorDeLista();
-        verify(ordemServicoService).registrarItemNecessario(eq("342-sb"),
+        verify(registrarItensNecessariosUseCase).execute(eq("342-sb"),
                 eq(55L),
                 eq("mecanico@autoflow.com"),
                 itensCaptor.capture());
@@ -230,7 +274,7 @@ class OrdemServicoControllerTest {
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).iniciarServico(any(), any());
+        verify(iniciarServicoUseCase, never()).execute(any(), any());
     }
 
     @Test
@@ -239,14 +283,14 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.FINALIZADO);
 
-        when(ordemServicoService.finalizarServico("OS-123", 55L)).thenReturn(ordemServico);
+        when(finalizarServicoUseCase.execute("OS-123", 55L)).thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/finalizar", "OS-123", 55L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.servicos[0].status").value("FINALIZADO"));
 
-        verify(ordemServicoService).finalizarServico("OS-123", 55L);
+        verify(finalizarServicoUseCase).execute("OS-123", 55L);
     }
 
     @Test
@@ -256,7 +300,7 @@ class OrdemServicoControllerTest {
         ordemServico.setStatus(StatusOrdemServico.FINALIZADA);
         ordemServico.entregar();
 
-        when(ordemServicoService.entregar("OS-123")).thenReturn(ordemServico);
+        when(entregarOrdemServicoUseCase.execute("OS-123")).thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/entregar", "OS-123")
                         .with(csrf()))
@@ -265,7 +309,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.status").value("ENTREGUE"))
                 .andExpect(jsonPath("$.entregueEm").exists());
 
-        verify(ordemServicoService).entregar("OS-123");
+        verify(entregarOrdemServicoUseCase).execute("OS-123");
     }
 
     @Test
@@ -275,7 +319,7 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity segundaOrdem = criarOrdemServico(2L, 66L, "OS-456");
         var page = new PageImpl<>(List.of(primeiraOrdem, segundaOrdem));
 
-        when(ordemServicoService.listar(any(OrdemServicoFiltro.class), any(Pageable.class), anyString())).thenReturn(page);
+        when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(Pageable.class), anyString())).thenReturn(page);
 
         mockMvc.perform(get("/ordens-servico"))
                 .andExpect(status().isOk())
@@ -288,7 +332,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.content[1].servicos[0].id").value(66L))
                 .andExpect(jsonPath("$.page.totalElements").value(2));
 
-        verify(ordemServicoService).listar(any(OrdemServicoFiltro.class), any(Pageable.class), eq("admin@autoflow.com"));
+        verify(listarOrdensServicoUseCase).execute(any(OrdemServicoFiltroInput.class), any(Pageable.class), eq("admin@autoflow.com"));
     }
 
     @Test
@@ -297,14 +341,14 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         var page = new PageImpl<>(List.of(ordemServico));
 
-        when(ordemServicoService.listar(any(OrdemServicoFiltro.class), any(Pageable.class), anyString())).thenReturn(page);
+        when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(Pageable.class), anyString())).thenReturn(page);
 
         mockMvc.perform(get("/ordens-servico").param("cliente", "Cliente 1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].clienteNome").value("Cliente 1"))
                 .andExpect(jsonPath("$.page.totalElements").value(1));
 
-        verify(ordemServicoService).listar(
+        verify(listarOrdensServicoUseCase).execute(
                 argThat(f -> "Cliente 1".equals(f.cliente())),
                 any(Pageable.class),
                 anyString()
@@ -317,13 +361,13 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         var page = new PageImpl<>(List.of(ordemServico));
 
-        when(ordemServicoService.listar(any(OrdemServicoFiltro.class), any(Pageable.class), anyString())).thenReturn(page);
+        when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(Pageable.class), anyString())).thenReturn(page);
 
         mockMvc.perform(get("/ordens-servico").param("status", "RECEBIDA"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].status").value("RECEBIDA"));
 
-        verify(ordemServicoService).listar(
+        verify(listarOrdensServicoUseCase).execute(
                 argThat(f -> StatusOrdemServico.RECEBIDA.equals(f.status())),
                 any(Pageable.class),
                 anyString()
@@ -336,13 +380,13 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         var page = new PageImpl<>(List.of(ordemServico));
 
-        when(ordemServicoService.listar(any(OrdemServicoFiltro.class), any(Pageable.class), eq("mecanico@autoflow.com"))).thenReturn(page);
+        when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(Pageable.class), eq("mecanico@autoflow.com"))).thenReturn(page);
 
         mockMvc.perform(get("/ordens-servico"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page.totalElements").value(1));
 
-        verify(ordemServicoService).listar(any(OrdemServicoFiltro.class), any(Pageable.class), eq("mecanico@autoflow.com"));
+        verify(listarOrdensServicoUseCase).execute(any(OrdemServicoFiltroInput.class), any(Pageable.class), eq("mecanico@autoflow.com"));
     }
 
     @Test
@@ -351,8 +395,8 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getNumeroOs());
 
-        when(ordemServicoService.buscaOrdemServicoPorNumeroOs("OS-123")).thenReturn(ordemServico);
-        when(ordemServicoService.buscarOrcamentoAtual("OS-123")).thenReturn(orcamento);
+        when(detalharOrdemServicoUseCase.execute("OS-123"))
+                .thenReturn(new com.autoflow.application.dto.ordemservico.OrdemServicoDetalheOutput(ordemServico, orcamento));
 
         mockMvc.perform(get("/ordens-servico/{numeroOs}", "OS-123"))
                 .andExpect(status().isOk())
@@ -376,8 +420,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.orcamentoAtual.status").value("DISPONIVEL"))
                 .andExpect(jsonPath("$.orcamentoAtual.totalGeral").value(100.00));
 
-        verify(ordemServicoService).buscaOrdemServicoPorNumeroOs("OS-123");
-        verify(ordemServicoService).buscarOrcamentoAtual("OS-123");
+        verify(detalharOrdemServicoUseCase).execute("OS-123");
     }
 
     @Test
@@ -416,7 +459,7 @@ class OrdemServicoControllerTest {
         mockMvc.perform(get("/ordens-servico"))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).listar(any(), any(), any());
+        verify(listarOrdensServicoUseCase, never()).execute(any(), any(), any());
     }
 
     @Test
@@ -425,8 +468,7 @@ class OrdemServicoControllerTest {
         mockMvc.perform(get("/ordens-servico/{numeroOs}", "OS-123"))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).buscaOrdemServicoPorNumeroOs(anyString());
-        verify(ordemServicoService, never()).buscarOrcamentoAtual(anyString());
+        verify(detalharOrdemServicoUseCase, never()).execute(anyString());
     }
 
     @Test
@@ -435,8 +477,8 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
 
-        when(ordemServicoService.finalizarDiagnostico("OS-123", "mecanico@autoflow.com"))
-                .thenReturn(new FinalizarDiagnosticoResult(
+        when(finalizarDiagnosticoUseCase.execute("OS-123", "mecanico@autoflow.com"))
+                .thenReturn(new FinalizarDiagnosticoOutput(
                         ordemServico,
                         10L,
                         "http://localhost:8080/public/orcamentos/10?token=abc"
@@ -448,7 +490,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.ordemServico.id").value(1L))
                 .andExpect(jsonPath("$.orcamentoId").value(10L));
 
-        verify(ordemServicoService).finalizarDiagnostico("OS-123", "mecanico@autoflow.com");
+        verify(finalizarDiagnosticoUseCase).execute("OS-123", "mecanico@autoflow.com");
     }
 
     @Test
@@ -458,7 +500,7 @@ class OrdemServicoControllerTest {
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).iniciarServico(anyString(), anyLong());
+        verify(iniciarServicoUseCase, never()).execute(anyString(), anyLong());
     }
 
     @Test
@@ -468,7 +510,7 @@ class OrdemServicoControllerTest {
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).entregar(anyString());
+        verify(entregarOrdemServicoUseCase, never()).execute(anyString());
     }
 
     @Test
@@ -487,7 +529,7 @@ class OrdemServicoControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).registrarItemNecessario(anyString(),anyLong(), anyString(), anyList());
+        verify(registrarItensNecessariosUseCase, never()).execute(anyString(),anyLong(), anyString(), anyList());
     }
 
     @Test
@@ -496,7 +538,7 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
 
-        when(ordemServicoService.iniciarDiagnostico("OS-123", "mecanico@autoflow.com"))
+        when(iniciarDiagnosticoUseCase.execute("OS-123", "mecanico@autoflow.com"))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/iniciar", "OS-123")
@@ -505,7 +547,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.status").value("EM_DIAGNOSTICO"));
 
-        verify(ordemServicoService).iniciarDiagnostico("OS-123", "mecanico@autoflow.com");
+        verify(iniciarDiagnosticoUseCase).execute("OS-123", "mecanico@autoflow.com");
     }
 
     @Test
@@ -515,7 +557,7 @@ class OrdemServicoControllerTest {
                         .with(csrf()))
                 .andExpect(status().isForbidden());
 
-        verify(ordemServicoService, never()).iniciarDiagnostico(anyString(), anyString());
+        verify(iniciarDiagnosticoUseCase, never()).execute(anyString(), anyString());
     }
 
     @Test
@@ -523,7 +565,7 @@ class OrdemServicoControllerTest {
     void deveRegistrarLaudoComoMecanico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(ordemServicoService.registrarLaudo("OS-123", "mecanico@autoflow.com", "Motor com desgaste"))
+        when(registrarLaudoUseCase.execute("OS-123", "mecanico@autoflow.com", "Motor com desgaste"))
                 .thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/diagnostico/laudo", "OS-123")
@@ -537,7 +579,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        verify(ordemServicoService).registrarLaudo("OS-123", "mecanico@autoflow.com", "Motor com desgaste");
+        verify(registrarLaudoUseCase).execute("OS-123", "mecanico@autoflow.com", "Motor com desgaste");
     }
 
     @Test
@@ -546,14 +588,14 @@ class OrdemServicoControllerTest {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.EM_EXECUCAO);
 
-        when(ordemServicoService.iniciarServico("OS-123", 55L)).thenReturn(ordemServico);
+        when(iniciarServicoUseCase.execute("OS-123", 55L)).thenReturn(ordemServico);
 
         mockMvc.perform(patch("/ordens-servico/{numeroOs}/servicos/{servicoOsId}/iniciar", "OS-123", 55L)
                         .with(csrf()))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.servicos[0].status").value("EM_EXECUCAO"));
 
-        verify(ordemServicoService).iniciarServico("OS-123", 55L);
+        verify(iniciarServicoUseCase).execute("OS-123", 55L);
     }
 
     @Test
@@ -573,7 +615,7 @@ class OrdemServicoControllerTest {
                                 """))
                 .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(ordemServicoService);
+        verifyNoInteractions(criarOrdemServicoUseCase);
     }
 
     @Test
@@ -594,7 +636,7 @@ class OrdemServicoControllerTest {
                                 """))
                 .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(ordemServicoService);
+        verifyNoInteractions(criarOrdemServicoUseCase);
     }
 
     private OrdemServicoEntity criarOrdemServico(Long id, Long servicoOsId, String numeroOs) {

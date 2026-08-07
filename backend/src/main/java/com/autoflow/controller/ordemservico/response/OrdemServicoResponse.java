@@ -1,8 +1,8 @@
 package com.autoflow.controller.ordemservico.response;
 
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,13 +22,10 @@ public record OrdemServicoResponse(
 ) {
 
     public static OrdemServicoResponse fromDomain(
-            OrdemServicoCriada resultado,
+            OrdemServicoCriadaOutput resultado,
             String acompanhamentoUrl
     ) {
-        return fromEntity(
-                resultado.ordemServico(),
-                acompanhamentoUrl
-        );
+        return fromEntity(resultado.ordemServico(), acompanhamentoUrl);
     }
 
     public static OrdemServicoResponse fromDomain(
