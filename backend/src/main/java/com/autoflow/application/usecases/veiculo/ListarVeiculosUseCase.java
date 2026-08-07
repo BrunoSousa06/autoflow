@@ -1,42 +1,32 @@
 package com.autoflow.application.usecases.veiculo;
 
+import com.autoflow.application.dto.veiculo.PageInput;
+import com.autoflow.application.dto.veiculo.PageOutput;
+import com.autoflow.application.dto.veiculo.VeiculoFiltro;
 import com.autoflow.application.dto.veiculo.VeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.security.ClienteAutenticadoService;
-import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
-import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
-import com.autoflow.infrastructure.persistence.repository.VeiculoSpecifications;
-import com.autoflow.application.dto.veiculo.VeiculoFiltro;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class ListarVeiculosUseCase {
 
-    private final VeiculoRepository veiculoRepository;
-    private final VeiculoMapper veiculoMapper;
+    private final VeiculoGateway veiculoGateway;
     private final ClienteAutenticadoService clienteAutenticadoService;
 
-    public Page<VeiculoOutput> execute(VeiculoInput filtro,
-                                       Pageable pageable) {
-
-        Long clienteId = clienteAutenticadoService.getClienteId();
+    public PageOutput<VeiculoOutput> execute(VeiculoInput filtro, PageInput page) {
+        Long clienteId = clienteAutenticadoService.getClienteId().orElse(null);
 
         VeiculoFiltro filtroEfetivo = new VeiculoFiltro(
                 filtro.placa(),
                 filtro.marca(),
                 filtro.modelo(),
                 filtro.ano(),
-                clienteId
-        );
+                clienteId);
 
-        return veiculoRepository
-                .findAll(
-                        VeiculoSpecifications.comFiltros(filtroEfetivo),
-                        pageable)
-                .map(veiculoMapper::mapToOutput);
+        return veiculoGateway.findAll(filtroEfetivo, page);
     }
 }

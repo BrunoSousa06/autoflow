@@ -68,6 +68,19 @@ class DecidirOrcamentoUseCaseTest {
     }
 
     @Test
+    void deveNegarDecisaoDeMecanicoMesmoQuandoOrcamentoExiste() {
+        OrcamentoEntity orcamento = orcamento();
+        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
+        when(usuarioGateway.findByEmail("mecanico@exemplo.com"))
+                .thenReturn(Optional.of(usuario("Mecânico", RoleEnum.MECANICO)));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> useCase.aprovarComoUsuario(10L, "mecanico@exemplo.com"));
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+    }
+
+    @Test
     void deveAprovarPorAcompanhamentoComNomeDoCliente() {
         OrcamentoEntity orcamento = orcamento();
         when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));

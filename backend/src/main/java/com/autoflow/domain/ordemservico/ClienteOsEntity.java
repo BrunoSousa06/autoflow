@@ -46,4 +46,18 @@ public class ClienteOsEntity {
         }
         return new ClienteOsEntity(c.getId(), c.getNome(), c.getCpfCnpj(), c.getEmail(), c.getTelefone());
     }
+
+    public static ClienteOsEntity fromFields(
+            Long id,
+            String nome,
+            String cpfCnpj,
+            String email,
+            String telefone) {
+        if (id == null || nome == null || nome.isBlank()
+                || cpfCnpj == null || cpfCnpj.isBlank()
+                || email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Dados do cliente invalidos para OS.");
+        }
+        return new ClienteOsEntity(id, nome, cpfCnpj, email, telefone);
+    }
 }

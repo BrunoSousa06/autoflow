@@ -5,6 +5,9 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+
+import jakarta.persistence.LockModeType;
 
 import java.util.Optional;
 
@@ -12,7 +15,10 @@ import java.util.Optional;
 public interface OrcamentoRepository extends JpaRepository<OrcamentoEntity, Long>,
         JpaSpecificationExecutor<OrcamentoEntity> {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<OrcamentoEntity> findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(Long ordemServicoId, TipoOrcamento tipoOrcamento);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<OrcamentoEntity> findTopByNumeroOsAndTipoOrderByVersaoDesc(String numeroOs, TipoOrcamento tipoOrcamento);
 
     Optional<OrcamentoEntity> findByOrdemServicoIdAndStatus(Long ordemServicoId, StatusOrcamento status);

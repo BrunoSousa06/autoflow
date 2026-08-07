@@ -1,6 +1,8 @@
 package com.autoflow.presentation.veiculo;
 
 import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.dto.veiculo.PageInput;
+import com.autoflow.application.dto.veiculo.PageOutput;
 import com.autoflow.application.dto.veiculo.VeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.usecases.veiculo.AtualizarVeiculoUseCase;
@@ -8,7 +10,6 @@ import com.autoflow.application.usecases.veiculo.BuscarVeiculoUseCase;
 import com.autoflow.application.usecases.veiculo.CadastrarVeiculoUseCase;
 import com.autoflow.application.usecases.veiculo.DeletarVeiculoUseCase;
 import com.autoflow.application.usecases.veiculo.ListarVeiculosUseCase;
-import com.autoflow.infrastructure.persistence.mapper.VeiculoControllerMapper;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.presentation.veiculo.response.VeiculoResponse;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -130,26 +130,26 @@ class VeiculoControllerTest {
     @Test
     void deveListarVeiculosSemFiltros() throws Exception {
 
-        PageImpl<VeiculoOutput> pageOutput =
-                new PageImpl<>(List.of(veiculoOutput), PageRequest.of(0, 20), 1);
+        PageOutput<VeiculoOutput> pageOutput =
+                new PageOutput<>(List.of(veiculoOutput), 0, 20, 1);
 
-        when(listarVeiculosUseCase.execute(any(VeiculoInput.class), any(Pageable.class)))
+        when(listarVeiculosUseCase.execute(any(VeiculoInput.class), any(PageInput.class)))
                 .thenReturn(pageOutput);
 
         mockMvc.perform(get("/veiculos"))
                 .andExpect(status().isOk());
 
         verify(listarVeiculosUseCase)
-                .execute(any(VeiculoInput.class), any(Pageable.class));
+                .execute(any(VeiculoInput.class), any(PageInput.class));
     }
 
     @Test
     void deveListarVeiculosComFiltrosDePlacaEMarca() throws Exception {
 
-        PageImpl<VeiculoOutput> pageOutput =
-                new PageImpl<>(List.of(veiculoOutput), PageRequest.of(0, 20), 1);
+        PageOutput<VeiculoOutput> pageOutput =
+                new PageOutput<>(List.of(veiculoOutput), 0, 20, 1);
 
-        when(listarVeiculosUseCase.execute(any(VeiculoInput.class), any(Pageable.class)))
+        when(listarVeiculosUseCase.execute(any(VeiculoInput.class), any(PageInput.class)))
                 .thenReturn(pageOutput);
 
         mockMvc.perform(get("/veiculos")
@@ -158,7 +158,7 @@ class VeiculoControllerTest {
                 .andExpect(status().isOk());
 
         verify(listarVeiculosUseCase)
-                .execute(any(VeiculoInput.class), any(Pageable.class));
+                .execute(any(VeiculoInput.class), any(PageInput.class));
     }
 
     @Test

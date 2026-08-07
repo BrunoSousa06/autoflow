@@ -1,31 +1,47 @@
 package com.autoflow.application.security;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.gateway.CurrentUserGateway;
+import com.autoflow.domain.usuario.RoleEnum;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UsuarioAutenticadoService {
 
-    public Authentication getAuthentication() {
-        return SecurityContextHolder.getContext().getAuthentication();
+    private final CurrentUserGateway currentUserGateway;
+
+    public Optional<CurrentUser> getCurrentUser() {
+        return currentUserGateway.getCurrentUser();
     }
 
     public String getEmail() {
-        return getAuthentication().getName();
+        return getRequiredUser().email();
     }
 
     public boolean isCliente() {
-        return getAuthentication()
-                .getAuthorities()
-                .stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE"));
+        return hasRole(RoleEnum.CLIENTE);
     }
 
     public boolean isAdministrador() {
-        return getAuthentication()
-                .getAuthorities()
-                .stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return hasRole(RoleEnum.ADMIN);
+    }
+
+    private boolean hasRole(RoleEnum role) {
+        return getCurrentUser()
+                .map(user -> user.hasRole(role))
+                .orElse(false);
+    }
+
+    private CurrentUser getRequiredUser() {
+        return getCurrentUser().orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Usuário não autenticado"
+        ));
     }
 }

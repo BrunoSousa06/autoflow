@@ -1,6 +1,6 @@
 package com.autoflow.application.dto.cliente;
 
-import com.autoflow.presentation.veiculo.response.VeiculoClienteResponse;
+import com.autoflow.application.dto.cliente.ClienteVeiculoOutput;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +14,6 @@ public record ClienteOutput(
         String cpfCnpj,
         String telefone,
         String email,
-        List<VeiculoClienteResponse> veiculos
+        List<ClienteVeiculoOutput> veiculos
 ) {
 }

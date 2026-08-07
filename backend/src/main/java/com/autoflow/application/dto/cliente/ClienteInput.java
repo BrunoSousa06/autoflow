@@ -14,5 +14,11 @@ public record ClienteInput(
         String nome,
         String cpfCnpj,
         String telefone,
-        String email
-) {}
+        String email,
+        Long usuarioId
+) {
+
+    public ClienteInput(String nome, String cpfCnpj, String telefone, String email) {
+        this(nome, cpfCnpj, telefone, email, null);
+    }
+}

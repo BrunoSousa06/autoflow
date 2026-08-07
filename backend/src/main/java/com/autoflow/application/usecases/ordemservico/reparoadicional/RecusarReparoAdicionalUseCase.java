@@ -14,7 +14,7 @@ public class RecusarReparoAdicionalUseCase {
 
     @Transactional
     public ReparoAdicionalEntity execute(Long reparoAdicionalId, String motivo) {
-        ReparoAdicionalEntity reparo = reparoAdicionalGateway.findById(reparoAdicionalId)
+        ReparoAdicionalEntity reparo = reparoAdicionalGateway.findByIdForUpdate(reparoAdicionalId)
                 .orElseThrow(() -> new IllegalArgumentException("Reparo adicional não encontrado."));
 
         reparo.recusar(motivo);

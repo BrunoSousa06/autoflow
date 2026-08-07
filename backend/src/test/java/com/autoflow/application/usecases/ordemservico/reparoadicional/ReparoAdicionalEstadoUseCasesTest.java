@@ -49,8 +49,8 @@ class ReparoAdicionalEstadoUseCasesTest {
         var servicoOriginal = reparo.getServicos().getFirst();
         var itemOriginal = servicoOriginal.getItensNecessarios().getFirst();
         var ordemServico = ordemServico();
-        when(reparoAdicionalGateway.findById(40L)).thenReturn(Optional.of(reparo));
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(reparoAdicionalGateway.save(reparo)).thenReturn(reparo);
         when(ordemServicoGateway.save(ordemServico)).thenReturn(ordemServico);
 
@@ -83,8 +83,8 @@ class ReparoAdicionalEstadoUseCasesTest {
     void devePropagarFalhaAoSalvarOsParaPermitirRollbackTransacional() {
         var reparo = reparoPendente();
         var ordemServico = ordemServico();
-        when(reparoAdicionalGateway.findById(40L)).thenReturn(Optional.of(reparo));
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(reparoAdicionalGateway.save(reparo)).thenReturn(reparo);
         when(ordemServicoGateway.save(ordemServico)).thenThrow(new RuntimeException("banco indisponível"));
 
@@ -102,8 +102,8 @@ class ReparoAdicionalEstadoUseCasesTest {
     void deveRejeitarAprovacaoForaDoEstadoPendenteSemPersistir() {
         var reparo = reparoPendente();
         reparo.aprovar();
-        when(reparoAdicionalGateway.findById(40L)).thenReturn(Optional.of(reparo));
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico()));
+        when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico()));
 
         var useCase = new AprovarReparoAdicionalUseCase(
                 reparoAdicionalGateway,
@@ -118,7 +118,7 @@ class ReparoAdicionalEstadoUseCasesTest {
     @Test
     void deveRecusarReparoSemAlterarOrdemServico() {
         var reparo = reparoPendente();
-        when(reparoAdicionalGateway.findById(40L)).thenReturn(Optional.of(reparo));
+        when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
         when(reparoAdicionalGateway.save(reparo)).thenReturn(reparo);
 
         var resultado = new RecusarReparoAdicionalUseCase(reparoAdicionalGateway)
@@ -136,7 +136,7 @@ class ReparoAdicionalEstadoUseCasesTest {
     void deveRejeitarRecusaForaDoEstadoPendenteSemPersistir() {
         var reparo = reparoPendente();
         reparo.recusar("primeira recusa");
-        when(reparoAdicionalGateway.findById(40L)).thenReturn(Optional.of(reparo));
+        when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
 
         var useCase = new RecusarReparoAdicionalUseCase(reparoAdicionalGateway);
 
@@ -146,7 +146,7 @@ class ReparoAdicionalEstadoUseCasesTest {
 
     @Test
     void deveInformarReparoInexistenteNasOperacoesPorId() {
-        when(reparoAdicionalGateway.findById(99L)).thenReturn(Optional.empty());
+        when(reparoAdicionalGateway.findByIdForUpdate(99L)).thenReturn(Optional.empty());
 
         assertThrows(
                 IllegalArgumentException.class,

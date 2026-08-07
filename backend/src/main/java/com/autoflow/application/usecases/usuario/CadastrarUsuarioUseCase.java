@@ -2,10 +2,10 @@ package com.autoflow.application.usecases.usuario;
 
 import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.gateway.PasswordGateway;
+import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
-import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,27 +16,35 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class CadastrarUsuarioUseCase {
 
-    private final UsuarioRepository usuarioRepository;
-    private final UsuarioMapper usuarioMapper;
+    private final UsuarioGateway usuarioGateway;
+    private final PasswordGateway passwordGateway;
     private final CadastrarClienteUseCase cadastrarClienteUseCase;
 
     @Transactional
     public UsuarioOutput execute(RegistroInput request) {
 
-        if (usuarioRepository.existsByEmail(request.email())) {
+        if (usuarioGateway.existsByEmail(request.email())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Email já cadastrado");
         }
 
-        UsuarioEntity usuario = usuarioRepository.save(
-                usuarioMapper.mapToEntity(request)
-        );
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setNome(request.nome());
+        usuario.setEmail(request.email());
+        usuario.setSenha(passwordGateway.encode(request.senha()));
+        usuario.setRole(request.role());
+        usuario = usuarioGateway.save(usuario);
 
         if (RoleEnum.CLIENTE.equals(request.role())) {
             cadastrarClienteUseCase.execute(request, usuario);
         }
 
-        return usuarioMapper.mapToOutput(usuario);
+        return new UsuarioOutput(
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getRole()
+        );
     }
 }

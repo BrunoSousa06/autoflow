@@ -1,16 +1,15 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
-import com.autoflow.application.gateway.ClienteGateway;
+import com.autoflow.application.gateway.AcompanhamentoMapperGateway;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.infrastructure.persistence.mapper.AcompanhamentoMapper;
+import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,23 +21,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AcompanharOrdemServicoUseCase {
 
-    private final ClienteGateway clienteGateway;
+    private final VeiculoClienteGateway clienteGateway;
     private final OrdemServicoGateway ordemServicoGateway;
     private final OrcamentoGateway orcamentoGateway;
     private final HistoricoStatusOsGateway historicoStatusOsGateway;
-    private final AcompanhamentoMapper acompanhamentoMapper;
+    private final AcompanhamentoMapperGateway acompanhamentoMapper;
 
     public List<AcompanhamentoOrdemServicoOutput> execute(String emailCliente) {
-
-        ClienteEntity cliente = clienteGateway
-                .findByUsuarioEmail(emailCliente)
+        Long clienteId = clienteGateway.findIdByUsuarioEmail(emailCliente)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Cliente autenticado não encontrado."
-                ));
+                        "Cliente autenticado não encontrado."));
 
         return ordemServicoGateway
-                .findByClienteIdOrderByDataAberturaDesc(cliente.getId())
+                .findByClienteIdOrderByDataAberturaDesc(clienteId)
                 .stream()
                 .map(this::montarAcompanhamento)
                 .toList();
@@ -46,24 +42,16 @@ public class AcompanharOrdemServicoUseCase {
 
     private AcompanhamentoOrdemServicoOutput montarAcompanhamento(
             OrdemServicoEntity ordemServico) {
+        OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(ordemServico.getNumeroOs());
+        List<HistoricoStatusOsEntity> historico = historicoStatusOsGateway
+                .findByNumeroOsOrderByRegistradoEmAsc(ordemServico.getNumeroOs());
 
-        OrcamentoEntity orcamentoAtual =
-                buscarOrcamentoAtual(ordemServico.getNumeroOs());
-
-        List<HistoricoStatusOsEntity> historico =
-                historicoStatusOsGateway
-                        .findByNumeroOsOrderByRegistradoEmAsc(
-                                ordemServico.getNumeroOs());
-
-        return acompanhamentoMapper.mapToOutPut(ordemServico, orcamentoAtual, historico);
+        return acompanhamentoMapper.mapToOutput(ordemServico, orcamentoAtual, historico);
     }
 
     private OrcamentoEntity buscarOrcamentoAtual(String numeroOs) {
-
-        return orcamentoGateway
-                .findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
-                .or(() -> orcamentoGateway
-                        .findTopByNumeroOsOrderByVersaoDesc(numeroOs))
+        return orcamentoGateway.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
+                .or(() -> orcamentoGateway.findTopByNumeroOsOrderByVersaoDesc(numeroOs))
                 .orElse(null);
     }
 }

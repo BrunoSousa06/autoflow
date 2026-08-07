@@ -34,6 +34,11 @@ public class OrdemServicoRepositoryAdapter implements OrdemServicoGateway {
     }
 
     @Override
+    public Optional<OrdemServicoEntity> findByNumeroOsForUpdate(String numeroOs) {
+        return repository.findByNumeroOsForUpdate(numeroOs);
+    }
+
+    @Override
     public List<OrdemServicoEntity> findByClienteIdOrderByDataAberturaDesc(Long clienteId) {
         return repository.findByCliente_IdOrderByDataAberturaDesc(clienteId);
     }

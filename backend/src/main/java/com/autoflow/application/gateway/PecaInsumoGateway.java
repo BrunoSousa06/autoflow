@@ -1,7 +1,6 @@
 package com.autoflow.application.gateway;
 
 
-import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +27,4 @@ public interface PecaInsumoGateway {
 
     void deleteById(Long id);
 
-    List<PecaInsumoEntity> findAllById(List<Long> ids);
-
-    void saveAll(List<PecaInsumoEntity> alterados);
 }

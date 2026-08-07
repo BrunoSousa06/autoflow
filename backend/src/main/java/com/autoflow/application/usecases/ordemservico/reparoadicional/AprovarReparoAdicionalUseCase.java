@@ -22,10 +22,10 @@ public class AprovarReparoAdicionalUseCase {
 
     @Transactional
     public OrdemServicoEntity execute(Long reparoAdicionalId) {
-        ReparoAdicionalEntity reparo = reparoAdicionalGateway.findById(reparoAdicionalId)
+        ReparoAdicionalEntity reparo = reparoAdicionalGateway.findByIdForUpdate(reparoAdicionalId)
                 .orElseThrow(() -> new IllegalArgumentException("Reparo adicional não encontrado."));
 
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(reparo.getNumeroOs())
+        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(reparo.getNumeroOs())
                 .orElseThrow(() -> new IllegalArgumentException("Ordem de serviço não encontrada."));
 
         reparo.aprovar();

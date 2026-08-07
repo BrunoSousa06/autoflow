@@ -25,6 +25,11 @@ public class ReparoAdicionalPersistenceAdapter implements ReparoAdicionalGateway
     }
 
     @Override
+    public Optional<ReparoAdicionalEntity> findByIdForUpdate(Long id) {
+        return repository.findByIdForUpdate(id);
+    }
+
+    @Override
     public Optional<ReparoAdicionalEntity> findByOrcamentoId(Long orcamentoId) {
         return repository.findByOrcamentoId(orcamentoId);
     }

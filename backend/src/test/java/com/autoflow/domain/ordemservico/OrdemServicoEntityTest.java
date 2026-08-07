@@ -358,6 +358,47 @@ class OrdemServicoEntityTest {
         assertSame(primeiro, ordemServico.getDiagnostico());
     }
 
+    @Test
+    void deveCriarOrdemServicoComDadosInternosDoCliente() {
+        OrdemServicoEntity resultado = OrdemServicoEntity.criar(
+                1L, "Joao Silva", "12345678901", "joao@example.com", null, veiculo);
+
+        assertEquals(1L, resultado.getCliente().getId());
+        assertEquals("Joao Silva", resultado.getCliente().getNome());
+    }
+
+    @Test
+    void deveRejeitarDadosInvalidosDoClienteInterno() {
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        null, "Joao Silva", "12345678901", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, null, "12345678901", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "", "12345678901", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", null, "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", "", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", "12345678901", null, null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", "12345678901", "", null, veiculo)));
+    }
+
+    @Test
+    void testAcompanhamentoPublicoIndisponivelSemToken() {
+        assertFalse(ordemServico.acompanhamentoPublicoDisponivel(LocalDateTime.now()));
+    }
+
+    @Test
+    void testAcompanhamentoPublicoDisponivelComTokenSemExpiracao() {
+        LocalDateTime criadoEm = LocalDateTime.now().minusMinutes(1);
+        ordemServico.configurarAcompanhamentoPublico("hash-token", criadoEm, null);
+
+        assertTrue(ordemServico.acompanhamentoPublicoDisponivel(LocalDateTime.now()));
+    }
+
     // --- equals e hashCode ---
 
     @Test

@@ -48,6 +48,9 @@ class PublicAcompanhamentoIT extends AbstractIT {
         assertThat(json.get("status").asText()).isEqualTo("EM_EXECUCAO");
         assertThat(json.get("orcamentoId").asLong()).isEqualTo(orcamentoId);
         assertThat(json.get("dataAbertura").isTextual()).isTrue();
+        assertThat(json.has("email")).isFalse();
+        assertThat(json.has("cpfCnpj")).isFalse();
+        assertThat(json.has("telefone")).isFalse();
     }
 
     @Test
@@ -78,6 +81,23 @@ class PublicAcompanhamentoIT extends AbstractIT {
     @DisplayName("deve retornar 404 quando token estiver expirado")
     void deveRetornar404QuandoTokenEstiverExpirado() {
         inserirOrdemServico(TOKEN, LocalDateTime.now().minusMinutes(1));
+
+        var response = restTemplate.getForEntity(
+                "/public/ordens-servico/acompanhamento?token=" + TOKEN,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("deve retornar 404 quando token estiver revogado")
+    void deveRetornar404QuandoTokenEstiverRevogado() {
+        Long ordemServicoId = inserirOrdemServico(TOKEN, LocalDateTime.now().plusDays(1));
+        jdbcTemplate.update(
+                "UPDATE ordem_servico SET acompanhamento_token_revogado_em = NOW() WHERE id = ?",
+                ordemServicoId
+        );
 
         var response = restTemplate.getForEntity(
                 "/public/ordens-servico/acompanhamento?token=" + TOKEN,

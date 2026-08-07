@@ -57,7 +57,11 @@ public class DecidirOrcamentoUseCase {
         UsuarioEntity usuario = usuarioGateway.findByEmail(emailUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Usuário autenticado não encontrado"));
-        if (usuario.getRole() == RoleEnum.CLIENTE && !emailUsuario.equals(orcamento.getCliente().getEmail())) {
+        if (!RoleEnum.ADMIN.equals(usuario.getRole()) && !RoleEnum.CLIENTE.equals(usuario.getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente cliente ou administrador pode decidir o orçamento.");
+        }
+        if (RoleEnum.CLIENTE.equals(usuario.getRole()) && !emailUsuario.equals(orcamento.getCliente().getEmail())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return usuario;

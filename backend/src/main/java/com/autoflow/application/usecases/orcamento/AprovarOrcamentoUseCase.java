@@ -48,6 +48,6 @@ public class AprovarOrcamentoUseCase {
         ordemServico.iniciarExecucao();
         ordemServicoGateway.save(ordemServico);
 
-        return orcamentoGateway.save(orcamento);
+        return orcamentoSalvo;
     }
 }

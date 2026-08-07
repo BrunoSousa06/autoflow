@@ -1,10 +1,10 @@
 package com.autoflow.application.usecases.usuario;
 
 import com.autoflow.application.dto.usuario.RegistroInput;
+import com.autoflow.application.dto.cliente.ClienteInput;
+import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.gateway.ClienteGateway;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,10 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class CadastrarClienteUseCase {
 
     private final ClienteGateway clienteGateway;
-    private final UsuarioMapper usuarioMapper;
-
     @Transactional
-    public ClienteEntity execute(
+    public ClienteOutput execute(
             RegistroInput request,
             UsuarioEntity usuario) {
 
@@ -29,11 +27,13 @@ public class CadastrarClienteUseCase {
                     "CPF/CNPJ já cadastrado");
         }
 
-        ClienteEntity cliente =
-                usuarioMapper.mapToClienteEntity(request);
+        ClienteInput input = new ClienteInput(
+                request.nome(),
+                request.cpfCnpj(),
+                request.telefone(),
+                request.email(),
+                usuario.getId());
 
-        cliente.setUsuario(usuario);
-
-        return clienteGateway.save(cliente);
+        return clienteGateway.save(input);
     }
 }

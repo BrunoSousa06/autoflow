@@ -1,37 +1,40 @@
 package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
+import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
-import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.service.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
+import com.autoflow.application.usecases.usuario.BuscarMecanicoPorIdUseCase;
+import com.autoflow.application.usecases.usuario.BuscarUsuarioPorEmailUseCase;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
-import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
+import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
-import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
-import com.autoflow.service.orcamento.OrcamentoVersioningService;
+import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
+import com.autoflow.application.gateway.OrcamentoGateway;
+import com.autoflow.application.gateway.OrcamentoNotificacaoGateway;
+import com.autoflow.application.gateway.OrcamentoVersioningGateway;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.repository.ordemservico.OrdemServicoSpecifications;
 import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
-import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
-import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
-import com.autoflow.service.usuario.UsuarioService;
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -61,33 +64,34 @@ import static com.autoflow.presentation.ordemservico.acompanhamento.response.Aco
 @RequiredArgsConstructor
 public class OrdemServicoServiceImpl implements OrdemServicoService {
 
-    private static final long VALIDADE_TOKEN_EM_DIAS = 30;
     private static final SecureRandom TOKEN_RANDOM = new SecureRandom();
 
     private final OrdemServicoRepository ordemServicoRepository;
-    private final BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
+    private final BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoUseCase;
     private final ServicoService servicoService;
-    private final UsuarioService usuarioService;
-    private final PecaInsumoService pecaInsumoService;
+    private final BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase;
+    private final BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase;
+    private final BaixarEstoqueUseCase baixarEstoqueUseCase;
     private final ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
     private final OrdemServicoAccessPolicy ordemServicoAccessPolicy;
     private final OrcamentoFactory orcamentoFactoryImpl;
-    private final OrcamentoVersioningService orcamentoVersioningServiceImpl;
-    private final OrcamentoRepository orcamentoRepository;
+    private final OrcamentoVersioningGateway orcamentoVersioningGateway;
+    private final OrcamentoGateway orcamentoGateway;
     private final OrcamentoPublicacaoGateway orcamentoPublicacaoGateway;
     private final ClienteRepository clienteRepository;
     private final HistoricoStatusOsRepository historicoStatusOsRepository;
-    private final OrcamentoNotificacaoService orcamentoNotificacaoService;
+    private final OrcamentoNotificacaoGateway orcamentoNotificacaoGateway;
     private final BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
     private final GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase;
     private final EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase;
 
     @Autowired
-    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
-                                   UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService,
+    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
+                                   BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase, BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase,
+                                   HistoricoStatusOsRepository historicoStatusOsRepository, BaixarEstoqueUseCase baixarEstoqueUseCase,
                                    OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl,
-                                   OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl,
-                                   ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoGateway orcamentoPublicacaoGateway,
+                                   OrcamentoNotificacaoGateway orcamentoNotificacaoGateway, OrcamentoVersioningGateway orcamentoVersioningGateway,
+                                   ClienteRepository clienteRepository, OrcamentoGateway orcamentoGateway, OrcamentoPublicacaoGateway orcamentoPublicacaoGateway,
                                    BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase,
                                    GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase,
                                    EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase,
@@ -95,15 +99,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.ordemServicoRepository = ordemServicoRepository;
         this.buscarOuCadastrarVeiculoUseCase = buscarOuCadastrarVeiculoUseCase;
         this.servicoService = servicoService;
-        this.usuarioService = usuarioService;
+        this.buscarUsuarioPorEmailUseCase = buscarUsuarioPorEmailUseCase;
+        this.buscarMecanicoPorIdUseCase = buscarMecanicoPorIdUseCase;
         this.historicoStatusOsRepository = historicoStatusOsRepository;
-        this.pecaInsumoService = pecaInsumoService;
+        this.baixarEstoqueUseCase = baixarEstoqueUseCase;
         this.ordemServicoAccessPolicy = ordemServicoAccessPolicy;
         this.orcamentoFactoryImpl = orcamentoFactoryImpl;
-        this.orcamentoNotificacaoService = orcamentoNotificacaoService;
-        this.orcamentoVersioningServiceImpl = orcamentoVersioningServiceImpl;
+        this.orcamentoNotificacaoGateway = orcamentoNotificacaoGateway;
+        this.orcamentoVersioningGateway = orcamentoVersioningGateway;
         this.clienteRepository = clienteRepository;
-        this.orcamentoRepository = orcamentoRepository;
+        this.orcamentoGateway = orcamentoGateway;
         this.orcamentoPublicacaoGateway = orcamentoPublicacaoGateway;
         this.buscarClientePorCpfCnpjUseCase = buscarClientePorCpfCnpjUseCase;
         this.gerarTokenAcompanhamentoUseCase = gerarTokenAcompanhamentoUseCase;
@@ -114,22 +119,19 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Transactional
     public OrdemServicoCriada criar(
             String cpfCnpj,
-            VeiculoOrdemServicoRequest veiculoRequest,
+            VeiculoOrdemServicoInput veiculoRequest,
             List<ServicoSolicitadoEntity> servicosSolicitados
     ) {
-        ClienteEntity cliente =
-                buscarClientePorCpfCnpjUseCase.execute(cpfCnpj);
+        ClienteOutput cliente = buscarClientePorCpfCnpjUseCase.execute(cpfCnpj);
 
         VeiculoEntity veiculo =
-                buscarOuCadastrarVeiculoUseCase.execute(
-                        cliente,
-                        veiculoRequest
-                );
+                buscarOuCadastrarVeiculoUseCase.execute(cliente, veiculoRequest);
 
         validarServicosSolicitados(servicosSolicitados);
 
         OrdemServicoEntity ordemServico =
-                OrdemServicoEntity.criar(cliente, veiculo);
+                OrdemServicoEntity.criar(
+                        cliente.id(), cliente.nome(), cliente.cpfCnpj(), cliente.email(), cliente.telefone(), veiculo);
 
         List<ServicoSolicitadoEntity> servicosComDados =
                 servicosSolicitados.stream()
@@ -174,7 +176,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
 
         if (StatusOrdemServico.EM_DIAGNOSTICO.equals(ordemServico.getStatus())) {
-            UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+            UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
             if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
                 ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
             }
@@ -205,11 +207,11 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             String mecanicoEmail
     ) {
         if (mecanicoId != null) {
-            return usuarioService.buscarMecanicoPorId(mecanicoId);
+            return buscarMecanicoPorIdUseCase.execute(mecanicoId);
         }
 
         if (mecanicoEmail != null && !mecanicoEmail.isBlank()) {
-            UsuarioEntity usuario = usuarioService.buscarPorEmail(mecanicoEmail);
+            UsuarioEntity usuario = buscarUsuarioPorEmailUseCase.execute(mecanicoEmail);
 
             if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
                 throw new ResponseStatusException(
@@ -230,7 +232,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServicoEntity iniciarDiagnostico(String numeroOs, String emailUsuarioLogado) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
@@ -252,7 +254,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
             List<ItemNecessarioEntity> itensNecessarios
     ) {
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
 
         if (!RoleEnum.ADMIN.equals(usuarioLogado.getRole())) {
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
@@ -276,7 +278,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public OrdemServicoEntity registrarLaudo(String numeroOs, String emailUsuarioLogado, String laudo){
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
         ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         ordemServico.registrarLaudo(laudo);
         return ordemServicoRepository.save(ordemServico);
@@ -286,28 +288,32 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Override
     public FinalizarDiagnosticoResult finalizarDiagnostico(String numeroOs, String emailUsuarioLogado){
         OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
-        UsuarioEntity usuarioLogado = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuarioLogado = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
 
         if(!RoleEnum.ADMIN.equals(usuarioLogado.getRole())){
             ordemServicoAccessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuarioLogado);
         }
         ordemServico.finalizarDiagnostico();
-        int versao = orcamentoVersioningServiceImpl.proximaVersaoPrincipalNumeroOs(numeroOs);
+        int versao = orcamentoVersioningGateway.proximaVersaoPorNumeroOs(numeroOs, TipoOrcamento.PRINCIPAL);
         OrcamentoEntity orcamento = orcamentoFactoryImpl.criarPrincipalDisponivel(
                 ordemServico, versao, LocalDateTime.now(ZoneId.systemDefault()));
 
         ordemServico.aguardarAprovacao();
 
-        OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
+        OrcamentoEntity orcamentoSalvo = orcamentoGateway.save(orcamento);
         String publicUrl = orcamentoPublicacaoGateway.publicar(orcamentoSalvo.getId());
         try {
-            orcamentoNotificacaoService.enviarLinkOrcamentoParaCliente(
-                    orcamentoSalvo,
-                    ordemServico,
-                    publicUrl
-            );
+            var cliente = orcamentoSalvo.getCliente();
+            orcamentoNotificacaoGateway.notificar(new OrcamentoNotificacao(
+                    orcamentoSalvo.getId(), orcamentoSalvo.getTipo(), orcamentoSalvo.getNumeroOs(),
+                    cliente.getNome(), cliente.getEmail(), publicUrl));
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error(
+                    "Falha ao notificar cliente sobre orçamento da OS {}. orcamentoId={}",
+                    ordemServico.getNumeroOs(),
+                    orcamentoSalvo.getId(),
+                    e
+            );
         }
         OrdemServicoEntity ordemServicoSalvo = salvarOs(ordemServico);
 
@@ -329,17 +335,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Transactional
     @Override
     public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoId) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
+        OrdemServicoEntity ordemServico = ordemServicoRepository.findByNumeroOsForUpdate(numeroOs)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
         if (ordemServico.getStatus() != StatusOrdemServico.EM_EXECUCAO) {
             throw new IllegalStateException("O serviço só pode ser iniciado após a aprovação do orçamento.");
         }
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
+        servico.validarPodeIniciar();
 
-        BaixaEstoqueResult baixaEstoqueResult =
-                pecaInsumoService.verificarDisponibilidadeEBaixar(servico.getItensNecessarios());
-
-        servico.iniciar(baixaEstoqueResult.itensAtualizados());
+        servico.iniciar(baixarEstoqueUseCase.execute(servico.getItensNecessarios()));
 
         return ordemServicoRepository.save(ordemServico);
     }
@@ -391,15 +396,15 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
     @Override
     public Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable, String emailUsuarioLogado) {
-        UsuarioEntity usuario = usuarioService.buscarPorEmail(emailUsuarioLogado);
+        UsuarioEntity usuario = buscarUsuarioPorEmailUseCase.execute(emailUsuarioLogado);
         String emailMecanico = RoleEnum.MECANICO.equals(usuario.getRole()) ? emailUsuarioLogado : null;
         return ordemServicoRepository.findAll(OrdemServicoSpecifications.comFiltros(filtro, emailMecanico), pageable);
     }
 
     @Override
     public OrcamentoEntity buscarOrcamentoAtual(String numeroOs) {
-        return orcamentoRepository.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
-                .or(() -> orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc(numeroOs))
+        return orcamentoGateway.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
+                .or(() -> orcamentoGateway.findTopByNumeroOsOrderByVersaoDesc(numeroOs))
                 .orElse(null);
     }
 

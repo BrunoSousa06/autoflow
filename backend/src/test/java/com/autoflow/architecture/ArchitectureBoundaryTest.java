@@ -3,7 +3,6 @@ package com.autoflow.architecture;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
-import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.freeze.FreezingArchRule;
 
@@ -73,4 +72,33 @@ class ArchitectureBoundaryTest {
             .resideInAPackage("jakarta.persistence..")
             .because("dominio nao deve depender de JPA — violacoes conhecidas serao corrigidas "
                 + "incrementalmente por componente conforme ADR-001"));
+
+    @ArchTest
+    static final ArchRule presentationNaoAcessaRepositorioDiretamente =
+        noClasses()
+            .that().resideInAPackage("..presentation..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("..repository..", "..repository")
+            .because("presentation deve acessar dados somente por casos de uso");
+
+    @ArchTest
+    static final FreezingArchRule applicationNaoAcessaDetalhesExternos =
+        freeze(noClasses()
+            .that().resideInAPackage("..application..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                "..infrastructure..",
+                "..presentation..",
+                "..controller..",
+                "..repository..",
+                "..service..")
+            .because("application deve depender de domain e portas internas; dividas legadas ficam congeladas"));
+
+    @ArchTest
+    static final FreezingArchRule infrastructureNaoAcessaPresentation =
+        freeze(noClasses()
+            .that().resideInAPackage("..infrastructure..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("..presentation..", "..controller..")
+            .because("infrastructure nao deve depender de contratos de entrada"));
 }

@@ -107,6 +107,26 @@ public class OrdemServicoEntity {
         return ordemServico;
     }
 
+    public static OrdemServicoEntity criar(
+            Long clienteId,
+            String clienteNome,
+            String clienteCpfCnpj,
+            String clienteEmail,
+            String clienteTelefone,
+            VeiculoEntity veiculo) {
+        validarVeiculo(veiculo);
+
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity(
+                gerarNumeroOs(),
+                veiculo,
+                StatusOrdemServico.RECEBIDA,
+                agora());
+        ordemServico.cliente = ClienteOsEntity.fromFields(
+                clienteId, clienteNome, clienteCpfCnpj, clienteEmail, clienteTelefone);
+        ordemServico.atualizarUltimaAtualizacao();
+        return ordemServico;
+    }
+
     public void atualizarUltimaAtualizacao() {
         this.ultimaAtualizacao = agora();
     }

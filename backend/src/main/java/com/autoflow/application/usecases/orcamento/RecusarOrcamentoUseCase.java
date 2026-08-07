@@ -39,7 +39,14 @@ public class RecusarOrcamentoUseCase {
         orcamento.setStatus(StatusOrcamento.REPROVADO);
         orcamento.setReprovadoEm(LocalDateTime.now(ZoneId.systemDefault()));
         orcamento.setAssinaturaNome(assinaturaNome);
-        if(motivo != null) orcamento.setRecusaMotivo(motivo);
+        if (motivo != null) {
+            String motivoNormalizado = motivo.trim();
+            if (motivoNormalizado.length() > 500) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Motivo da recusa deve ter no máximo 500 caracteres");
+            }
+            orcamento.setRecusaMotivo(motivoNormalizado);
+        }
 
         OrcamentoEntity orcamentoSalvo = orcamentoGateway.save(orcamento);
 
@@ -51,6 +58,6 @@ public class RecusarOrcamentoUseCase {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS nao encontrada"));
         ordemServico.finalizarPorOrcamentoRecusado();
         ordemServicoGateway.save(ordemServico);
-        return orcamento;
+        return orcamentoSalvo;
     }
 }

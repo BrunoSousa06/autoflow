@@ -26,7 +26,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -167,8 +166,7 @@ class UsuarioAdminControllerTest {
         autenticarComo("admin@autoflow.com", "ADMIN");
 
         when(cadastrarStaffUseCase.execute(
-                any(RegistroInput.class),
-                eq(RoleEnum.ADMIN)))
+                any(RegistroInput.class)))
                 .thenReturn(usuarioOutputAtendente);
 
         mockMvc.perform(post("/usuarios")
@@ -182,7 +180,7 @@ class UsuarioAdminControllerTest {
                         .value("ATENDENTE"));
 
         verify(cadastrarStaffUseCase)
-                .execute(any(RegistroInput.class), eq(RoleEnum.ADMIN));
+                .execute(any(RegistroInput.class));
     }
 
     @Test
@@ -198,8 +196,7 @@ class UsuarioAdminControllerTest {
                 .build();
 
         when(cadastrarStaffUseCase.execute(
-                any(RegistroInput.class),
-                eq(RoleEnum.ATENDENTE)))
+                any(RegistroInput.class)))
                 .thenReturn(clienteOutput);
 
         mockMvc.perform(post("/usuarios")
@@ -211,8 +208,7 @@ class UsuarioAdminControllerTest {
                         .value("CLIENTE"));
 
         verify(cadastrarStaffUseCase)
-                .execute(any(RegistroInput.class),
-                        eq(RoleEnum.ATENDENTE));
+                .execute(any(RegistroInput.class));
     }
 
     @Test
@@ -221,8 +217,7 @@ class UsuarioAdminControllerTest {
         autenticarComo("admin@autoflow.com", "ADMIN");
 
         when(cadastrarStaffUseCase.execute(
-                any(RegistroInput.class),
-                eq(RoleEnum.ADMIN)))
+                any(RegistroInput.class)))
                 .thenReturn(usuarioOutputAdmin);
 
         mockMvc.perform(post("/usuarios")

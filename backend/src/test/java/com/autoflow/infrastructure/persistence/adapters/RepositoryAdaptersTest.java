@@ -7,6 +7,7 @@ import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.repository.PecaInsumoRepository;
@@ -57,6 +58,8 @@ class RepositoryAdaptersTest {
         when(pecaRepository.findAll(spec, pageable)).thenReturn(new PageImpl<>(List.of(entity)));
         when(pecaRepository.existsById(1L)).thenReturn(true);
         when(pecaRepository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+        when(pecaRepository.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(entity));
+        var estoque = new EstoqueItemOutput(1L, null, CategoriaPecaInsumo.PECA, null, 0);
 
         assertEquals(Optional.of(entity), adapter.findById(1L));
         assertEquals(Optional.of(entity), adapter.findByNomeIgnoreCase("Filtro"));
@@ -64,12 +67,33 @@ class RepositoryAdaptersTest {
         assertEquals(List.of(entity), adapter.findAll());
         assertEquals(List.of(entity), adapter.findAll(spec, pageable).getContent());
         assertTrue(adapter.existsById(1L));
-        assertEquals(List.of(entity), adapter.findAllById(List.of(1L)));
+        assertEquals(List.of(estoque), adapter.findAllById(List.of(1L)));
+        assertEquals(List.of(estoque), adapter.findAllByIdForUpdate(List.of(1L)));
         adapter.deleteById(1L);
-        adapter.saveAll(List.of(entity));
+        adapter.saveAll(List.of(estoque));
 
         verify(pecaRepository).deleteById(1L);
         verify(pecaRepository).saveAll(List.of(entity));
+    }
+
+    @Test
+    void pecaAdapterNaoDevePersistirListaDeEstoqueVazia() {
+        var adapter = new PecaInsumoAdapter(pecaRepository);
+
+        adapter.saveAll(List.of());
+
+        verifyNoInteractions(pecaRepository);
+    }
+
+    @Test
+    void pecaAdapterDeveFalharQuandoEstoqueNaoExistir() {
+        var adapter = new PecaInsumoAdapter(pecaRepository);
+        var estoque = new EstoqueItemOutput(9L, "Item", CategoriaPecaInsumo.PECA, null, 1);
+        when(pecaRepository.findAllById(List.of(9L))).thenReturn(List.of());
+
+        assertThrows(IllegalStateException.class, () -> adapter.saveAll(List.of(estoque)));
+
+        verify(pecaRepository, never()).saveAll(any());
     }
 
     @Test
@@ -141,6 +165,7 @@ class RepositoryAdaptersTest {
         when(ordemRepository.save(ordem)).thenReturn(ordem);
         when(ordemRepository.findById(1L)).thenReturn(esperado);
         when(ordemRepository.findByNumeroOs("OS-1")).thenReturn(esperado);
+        when(ordemRepository.findByNumeroOsForUpdate("OS-1")).thenReturn(esperado);
         when(ordemRepository.findByCliente_IdOrderByDataAberturaDesc(2L)).thenReturn(List.of(ordem));
         when(ordemRepository.findAllByOrderByDataAberturaDesc()).thenReturn(List.of(ordem));
         when(ordemRepository.findAll(spec, pageable)).thenReturn(new PageImpl<>(List.of(ordem)));
@@ -148,6 +173,7 @@ class RepositoryAdaptersTest {
         assertSame(ordem, adapter.save(ordem));
         assertEquals(esperado, adapter.findById(1L));
         assertEquals(esperado, adapter.findByNumeroOs("OS-1"));
+        assertEquals(esperado, adapter.findByNumeroOsForUpdate("OS-1"));
         assertEquals(List.of(ordem), adapter.findByClienteIdOrderByDataAberturaDesc(2L));
         assertEquals(List.of(ordem), adapter.findAllByOrderByDataAberturaDesc());
         assertEquals(List.of(ordem), adapter.findAll(spec, pageable).getContent());

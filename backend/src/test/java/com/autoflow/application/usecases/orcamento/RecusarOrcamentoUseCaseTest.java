@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -54,6 +55,30 @@ class RecusarOrcamentoUseCaseTest {
         useCase.execute(orcamento, "Motivo", "Maria");
 
         verifyNoInteractions(ordemServicoGateway);
+    }
+
+    @Test
+    void deveAceitarRecusaSemMotivo() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+        OrdemServicoEntity os = osAguardandoAprovacao();
+        when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(reparoUseCase.executeSeExistir(10L, null)).thenReturn(false);
+        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+
+        useCase.execute(orcamento, null, "Maria");
+
+        assertNull(orcamento.getRecusaMotivo());
+        assertEquals(StatusOrdemServico.FINALIZADA, os.getStatus());
+    }
+
+    @Test
+    void deveRejeitarMotivoMaiorQueLimiteDaColuna() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+
+        assertThrows(ResponseStatusException.class,
+                () -> useCase.execute(orcamento, "x".repeat(501), "Maria"));
+
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
     }
 
     private OrcamentoEntity orcamentoDisponivel() {

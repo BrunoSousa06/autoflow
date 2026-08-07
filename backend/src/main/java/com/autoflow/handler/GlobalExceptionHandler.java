@@ -3,6 +3,12 @@ package com.autoflow.handler;
 import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoException;
 import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
+import com.autoflow.application.exception.ClienteDuplicadoException;
+import com.autoflow.application.exception.ClienteNaoEncontradoException;
+import com.autoflow.application.exception.VeiculoDadosInvalidosException;
+import com.autoflow.application.exception.VeiculoDuplicadoException;
+import com.autoflow.application.exception.VeiculoNaoEncontradoException;
+import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -63,6 +69,48 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ex.getStatusCode())
                 .body(error);
+    }
+
+    @ExceptionHandler(ClienteNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handleClienteNaoEncontrado(
+            ClienteNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ClienteDuplicadoException.class)
+    public ResponseEntity<Map<String, String>> handleClienteDuplicado(
+            ClienteDuplicadoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(VeiculoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handleVeiculoNaoEncontrado(
+            VeiculoNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(VeiculoDuplicadoException.class)
+    public ResponseEntity<Map<String, String>> handleVeiculoDuplicado(
+            VeiculoDuplicadoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(VeiculoDadosInvalidosException.class)
+    public ResponseEntity<Map<String, String>> handleVeiculoDadosInvalidos(
+            VeiculoDadosInvalidosException ex) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(EstoqueItemNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handleEstoqueItemNaoEncontrado(
+            EstoqueItemNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("erro", ex.getMessage()));
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})

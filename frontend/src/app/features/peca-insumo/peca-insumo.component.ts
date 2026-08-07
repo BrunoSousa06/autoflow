@@ -17,7 +17,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/services/auth.service';
 import { PecaInsumoService } from './peca-insumo.service';
-import { CategoriaPecaInsumo, PecaInsumoResponse } from './peca-insumo.model';
+import {
+  CATEGORIA_PECA_INSUMO_LABEL,
+  CategoriaPecaInsumo,
+  PecaInsumoResponse,
+} from './peca-insumo.model';
 import { PecaInsumoFormDialogComponent } from './peca-insumo-form-dialog.component';
 import { normalizePage } from '../../core/utils/pagination.util';
 
@@ -64,6 +68,11 @@ export class PecaInsumoComponent implements OnInit {
 
   get temFiltrosAtivos(): boolean {
     return !!(this.filtroNome.trim() || this.filtroTipo);
+  }
+
+  tipoLabel(tipo: CategoriaPecaInsumo | null | undefined): string {
+    if (!tipo) return '';
+    return CATEGORIA_PECA_INSUMO_LABEL[tipo] ?? tipo;
   }
 
   readonly role = this.auth.getRole();

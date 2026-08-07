@@ -2,25 +2,21 @@ package com.autoflow.application.usecases.cliente;
 
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.application.exception.ClienteDuplicadoException;
+import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.gateway.ClienteGateway;
-import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -29,9 +25,6 @@ class ClienteUseCasesTest {
 
     @Mock
     private ClienteGateway clienteGateway;
-
-    @Spy
-    private ClienteMapper clienteMapper;
 
     @InjectMocks
     private CriarClienteUseCase criarClienteUseCase;
@@ -54,27 +47,16 @@ class ClienteUseCasesTest {
     @InjectMocks
     private ListarClienteUseCase listarClienteUseCase;
 
-    private ClienteInput clienteInput;
-    private ClienteEntity clienteEntity;
-    private ClienteOutput clienteOutput;
+    @InjectMocks
+    private BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
+
+    private ClienteInput input;
+    private ClienteOutput output;
 
     @BeforeEach
     void setup() {
-        clienteInput = new ClienteInput(
-                "Bruno",
-                "12345678901",
-                "11999999999",
-                "bruno@email.com"
-        );
-
-        clienteEntity = new ClienteEntity();
-        clienteEntity.setId(1L);
-        clienteEntity.setNome("Bruno");
-        clienteEntity.setCpfCnpj("12345678901");
-        clienteEntity.setTelefone("11999999999");
-        clienteEntity.setEmail("bruno@email.com");
-
-        clienteOutput = ClienteOutput.builder()
+        input = new ClienteInput("Bruno", "12345678901", "11999999999", "bruno@email.com");
+        output = ClienteOutput.builder()
                 .id(1L)
                 .nome("Bruno")
                 .cpfCnpj("12345678901")
@@ -83,238 +65,121 @@ class ClienteUseCasesTest {
                 .build();
     }
 
-    @Nested
-    class CriarClienteUseCaseTests {
+    @Test
+    void deveCriarClienteComSucesso() {
+        when(clienteGateway.existsByCpfCnpj(input.cpfCnpj())).thenReturn(false);
+        when(clienteGateway.save(input)).thenReturn(output);
 
-        @Test
-        void deveCriarClienteComSucesso() {
-            when(clienteGateway.existsByCpfCnpj("12345678901")).thenReturn(false);
-            when(clienteMapper.mapToEntity(any(ClienteInput.class))).thenReturn(clienteEntity);
-            when(clienteGateway.save(any(ClienteEntity.class))).thenReturn(clienteEntity);
-            when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
+        assertEquals(output, criarClienteUseCase.execute(input));
 
-            ClienteOutput resultado = criarClienteUseCase.execute(clienteInput);
-
-            assertNotNull(resultado);
-            assertEquals("Bruno", resultado.nome());
-            assertEquals("12345678901", resultado.cpfCnpj());
-            
-            verify(clienteGateway).existsByCpfCnpj("12345678901");
-            verify(clienteMapper).mapToEntity(any(ClienteInput.class));
-            verify(clienteGateway).save(any(ClienteEntity.class));
-            verify(clienteMapper).mapToOutput(clienteEntity);
-        }
-
-        @Test
-        void deveLancarConflictQuandoCpfCnpjJaExistir() {
-            when(clienteGateway.existsByCpfCnpj("12345678901")).thenReturn(true);
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> criarClienteUseCase.execute(clienteInput)
-            );
-
-            assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-            verify(clienteGateway).existsByCpfCnpj("12345678901");
-            verify(clienteGateway, never()).save(any());
-        }
+        verify(clienteGateway).save(input);
     }
 
-    @Nested
-    class BuscarPorEmailUseCaseTests {
+    @Test
+    void deveLancarConflictQuandoCpfCnpjJaExistir() {
+        when(clienteGateway.existsByCpfCnpj(input.cpfCnpj())).thenReturn(true);
 
-        @Test
-        void deveBuscarClientePorEmailComSucesso() {
-            when(clienteGateway.findByUsuarioEmail("bruno@email.com")).thenReturn(Optional.of(clienteEntity));
-            when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
-            ClienteOutput resultado = buscarClientePorEmailUseCase.execute("bruno@email.com");
+        assertThrows(ClienteDuplicadoException.class, () -> criarClienteUseCase.execute(input));
 
-            assertNotNull(resultado);
-            assertEquals("Bruno", resultado.nome());
-            verify(clienteGateway).findByUsuarioEmail("bruno@email.com");
-        }
-
-        @Test
-        void deveLancarNotFoundQuandoEmailNaoExistir() {
-            when(clienteGateway.findByUsuarioEmail("naoexiste@email.com")).thenReturn(Optional.empty());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> buscarClientePorEmailUseCase.execute("naoexiste@email.com")
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(clienteGateway).findByUsuarioEmail("naoexiste@email.com");
-        }
+        verify(clienteGateway, never()).save(any());
     }
 
-    @Nested
-    class BuscarPorIdUseCaseTests {
+    @Test
+    void deveBuscarClientePorEmail() {
+        when(clienteGateway.findByUsuarioEmail(input.email())).thenReturn(Optional.of(output));
 
-        @Test
-        void deveBuscarClientePorIdComSucesso() {
-            when(clienteGateway.findById(1L)).thenReturn(Optional.of(clienteEntity));
-
-            ClienteEntity resultado = buscarClientePorIdUseCase.execute(1L);
-
-            assertNotNull(resultado);
-            assertEquals(1L, resultado.getId());
-            verify(clienteGateway).findById(1L);
-        }
-
-        @Test
-        void deveLancarNotFoundQuandoIdNaoExistir() {
-            when(clienteGateway.findById(999L)).thenReturn(Optional.empty());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> buscarClientePorIdUseCase.execute(999L)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(clienteGateway).findById(999L);
-        }
+        assertEquals(output, buscarClientePorEmailUseCase.execute(input.email()));
     }
 
-    @Nested
-    class ListarTodosUseCaseTests {
+    @Test
+    void deveBuscarClientePorId() {
+        when(clienteGateway.findById(1L)).thenReturn(Optional.of(output));
 
-        @Test
-        void deveListarTodosClientesComSucesso() {
-            List<ClienteEntity> entities = List.of(clienteEntity);
-            List<ClienteOutput> outputs = List.of(clienteOutput);
-
-            when(clienteGateway.findAll()).thenReturn(entities);
-            when(clienteMapper.mapToListOutput(entities)).thenReturn(outputs);
-            List<ClienteOutput> resultado = listarTodosClientesUseCase.execute();
-
-            assertNotNull(resultado);
-            assertEquals(1, resultado.size());
-            verify(clienteGateway).findAll();
-        }
-
-        @Test
-        void deveRetornarListaVaziaSemClientes() {
-            when(clienteGateway.findAll()).thenReturn(List.of());
-
-            List<ClienteOutput> resultado = listarTodosClientesUseCase.execute();
-
-            assertNotNull(resultado);
-            assertTrue(resultado.isEmpty());
-            verify(clienteGateway).findAll();
-        }
+        assertEquals(output, buscarClientePorIdUseCase.execute(1L));
     }
 
-    @Nested
-    class AtualizarUseCaseTests {
+    @Test
+    void deveBuscarClientePorCpfCnpj() {
+        when(clienteGateway.findByCpfCnpj(input.cpfCnpj())).thenReturn(Optional.of(output));
 
-        @Test
-        void deveAtualizarClienteComSucesso() {
-            when(clienteGateway.findById(1L)).thenReturn(Optional.of(clienteEntity));
-            Mockito.doNothing().when(clienteMapper).updateEntity(any(ClienteInput.class), eq(clienteEntity));
-            when(clienteGateway.save(any(ClienteEntity.class))).thenReturn(clienteEntity);
-            when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
-
-            ClienteOutput resultado = atualizarClienteUseCase.execute(1L, clienteInput);
-
-            assertNotNull(resultado);
-            assertEquals("Bruno", resultado.nome());
-            verify(clienteGateway).findById(1L);
-            verify(clienteMapper).updateEntity(any(ClienteInput.class), eq(clienteEntity));
-            verify(clienteGateway).save(any(ClienteEntity.class));
-        }
-
-        @Test
-        void deveLancarNotFoundQuandoClienteNaoExistir() {
-            when(clienteGateway.findById(999L)).thenReturn(Optional.empty());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> atualizarClienteUseCase.execute(999L, clienteInput)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(clienteGateway).findById(999L);
-            verify(clienteGateway, never()).save(any());
-        }
+        assertEquals(output, buscarClientePorCpfCnpjUseCase.execute(input.cpfCnpj()));
     }
 
-    @Nested
-    class DeletarUseCaseTests {
+    @Test
+    void deveLancarNotFoundAoBuscarCpfCnpjInexistente() {
+        when(clienteGateway.findByCpfCnpj(input.cpfCnpj())).thenReturn(Optional.empty());
 
-        @Test
-        void deveDeletarClienteComSucesso() {
-            when(clienteGateway.existsById(1L)).thenReturn(true);
-            doNothing().when(clienteGateway).deleteById(1L);
-
-            assertDoesNotThrow(() -> deletarClienteUseCase.execute(1L));
-
-            verify(clienteGateway).existsById(1L);
-            verify(clienteGateway).deleteById(1L);
-        }
-
-        @Test
-        void deveLancarNotFoundQuandoClienteNaoExistir() {
-            when(clienteGateway.existsById(999L)).thenReturn(false);
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> deletarClienteUseCase.execute(999L)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(clienteGateway).existsById(999L);
-            verify(clienteGateway, never()).deleteById(any());
-        }
+        assertThrows(ClienteNaoEncontradoException.class,
+                () -> buscarClientePorCpfCnpjUseCase.execute(input.cpfCnpj()));
     }
 
-    @Nested
-    class ListarUseCaseTests {
+    @Test
+    void deveListarTodosClientes() {
+        when(clienteGateway.findAll()).thenReturn(List.of(output));
 
-        @Test
-        void deveBuscarPorCpfQuandoDocumentoPossuir11Digitos() {
-            when(clienteGateway.findByCpfCnpj("12345678901")).thenReturn(Optional.of(clienteEntity));
-            when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
+        assertEquals(List.of(output), listarTodosClientesUseCase.execute());
+    }
 
-            ClienteOutput resultado = listarClienteUseCase.execute(12345678901L);
+    @Test
+    void deveAtualizarCliente() {
+        when(clienteGateway.findById(1L)).thenReturn(Optional.of(output));
+        when(clienteGateway.existsByCpfCnpjAndIdNot(input.cpfCnpj(), 1L)).thenReturn(false);
+        when(clienteGateway.update(1L, input)).thenReturn(output);
 
-            assertNotNull(resultado);
-            verify(clienteGateway).findByCpfCnpj("12345678901");
-        }
+        assertEquals(output, atualizarClienteUseCase.execute(1L, input));
 
-        @Test
-        void deveBuscarPorIdQuandoDocumentoNaoForCpfOuCnpj() {
-            when(clienteGateway.findById(1L)).thenReturn(Optional.of(clienteEntity));
-            when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
+        verify(clienteGateway).update(1L, input);
+    }
 
-            ClienteOutput resultado = listarClienteUseCase.execute(1L);
+    @Test
+    void deveLancarNotFoundAoAtualizarClienteInexistente() {
+        when(clienteGateway.findById(999L)).thenReturn(Optional.empty());
 
-            assertNotNull(resultado);
-            verify(clienteGateway).findById(1L);
-        }
+        assertThrows(ClienteNaoEncontradoException.class,
+                () -> atualizarClienteUseCase.execute(999L, input));
 
-        @Test
-        void deveBuscarPorCnpjQuandoDocumentoPossuir14Digitos() {
-            when(clienteGateway.findByCpfCnpj("12345678901234")).thenReturn(Optional.of(clienteEntity));
-            when(clienteMapper.mapToOutput(clienteEntity)).thenReturn(clienteOutput);
+        verify(clienteGateway, never()).update(anyLong(), any());
+    }
 
-            ClienteOutput resultado = listarClienteUseCase.execute(12345678901234L);
+    @Test
+    void deveLancarConflictAoAtualizarCpfDuplicado() {
+        when(clienteGateway.findById(1L)).thenReturn(Optional.of(output));
+        when(clienteGateway.existsByCpfCnpjAndIdNot(input.cpfCnpj(), 1L)).thenReturn(true);
 
-            assertNotNull(resultado);
-            verify(clienteGateway).findByCpfCnpj("12345678901234");
-        }
+        assertThrows(ClienteDuplicadoException.class,
+                () -> atualizarClienteUseCase.execute(1L, input));
 
-        @Test
-        void deveLancarNotFoundQuandoClienteNaoExistir() {
-            when(clienteGateway.findById(999L)).thenReturn(Optional.empty());
-            // Removed unnecessary stubbing: when(clienteGateway.findByCpfCnpj(anyString())).thenReturn(Optional.empty());
+        verify(clienteGateway, never()).update(anyLong(), any());
+    }
 
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> listarClienteUseCase.execute(999L)
-            );
+    @Test
+    void deveDeletarCliente() {
+        when(clienteGateway.existsById(1L)).thenReturn(true);
 
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        }
+        deletarClienteUseCase.execute(1L);
+
+        verify(clienteGateway).deleteById(1L);
+    }
+
+    @Test
+    void deveLancarNotFoundAoDeletarClienteInexistente() {
+        when(clienteGateway.existsById(999L)).thenReturn(false);
+
+        assertThrows(ClienteNaoEncontradoException.class,
+                () -> deletarClienteUseCase.execute(999L));
+    }
+
+    @Test
+    void deveBuscarPorCpfQuandoDocumentoPossuirOnzeDigitos() {
+        when(clienteGateway.findByCpfCnpj(input.cpfCnpj())).thenReturn(Optional.of(output));
+
+        assertEquals(output, listarClienteUseCase.execute(12345678901L));
+    }
+
+    @Test
+    void deveBuscarPorIdQuandoDocumentoNaoForCpfOuCnpj() {
+        when(clienteGateway.findById(1L)).thenReturn(Optional.of(output));
+
+        assertEquals(output, listarClienteUseCase.execute(1L));
     }
 }

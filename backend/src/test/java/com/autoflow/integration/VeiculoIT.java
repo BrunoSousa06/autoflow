@@ -336,6 +336,6 @@ class VeiculoIT extends AbstractIT {
 
         ResponseEntity<String> response = delete("/veiculos/" + veiculoId, adminToken);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 }

@@ -1,15 +1,19 @@
 package com.autoflow.presentation.usuario;
 
 import com.autoflow.application.dto.usuario.RegistroInput;
+import com.autoflow.application.dto.usuario.LoginInput;
+import com.autoflow.application.dto.usuario.LoginOutput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
-import com.autoflow.application.usecases.usuario.*;
+import com.autoflow.application.usecases.usuario.BuscarMecanicosUseCase;
+import com.autoflow.application.usecases.usuario.CadastrarUsuarioPublicoUseCase;
+import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
+import com.autoflow.application.usecases.usuario.LoginUsuarioUseCase;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.presentation.usuario.request.LoginRequest;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.autoflow.presentation.usuario.response.LoginResponse;
 import com.autoflow.presentation.usuario.response.UsuarioCadastroResponse;
 import com.autoflow.presentation.usuario.response.UsuarioResponse;
-import com.autoflow.domain.usuario.RoleEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,7 +24,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -30,7 +33,7 @@ import java.util.List;
 @Tag(name = "autenticação", description = "Endpoints para gerenciamento de autenticação dos usuarios")
 public class UsuarioController {
 
-    private final CadastrarUsuarioUseCase cadastrarUsuarioUseCase;
+    private final CadastrarUsuarioPublicoUseCase cadastrarUsuarioPublicoUseCase;
     private final LoginUsuarioUseCase loginUsuarioUseCase;
     private final ListarUsuariosUseCase listarUsuariosUseCase;
     private final BuscarMecanicosUseCase buscarMecanicosUseCase;
@@ -43,12 +46,8 @@ public class UsuarioController {
     @ApiResponse(responseCode = "409", description = "CPF/CNPJ ou email ja foram cadastrados")
     @PostMapping("/cadastro")
     public ResponseEntity<UsuarioCadastroResponse> cadastrar(@Valid @RequestBody RegistroRequest request) {
-        if (!RoleEnum.CLIENTE.equals(request.role())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Cadastro público permite apenas a role CLIENTE");
-        }
         RegistroInput input = usuarioMapper.mapToInput(request);
-        UsuarioOutput execute = cadastrarUsuarioUseCase.execute(input);
+        UsuarioOutput execute = cadastrarUsuarioPublicoUseCase.execute(input);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioMapper.mapToCadastroResponse(execute));
     }
@@ -58,7 +57,9 @@ public class UsuarioController {
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-       return new LoginResponse(loginUsuarioUseCase.execute(request));
+       LoginInput input = new LoginInput(request.email(), request.senha());
+       LoginOutput output = loginUsuarioUseCase.execute(input);
+       return new LoginResponse(output.token());
 
     }
 

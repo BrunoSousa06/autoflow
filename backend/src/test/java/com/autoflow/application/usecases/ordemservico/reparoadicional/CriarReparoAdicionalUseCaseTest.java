@@ -11,8 +11,11 @@ import com.autoflow.application.gateway.ReparoAdicionalGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
+import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
@@ -20,6 +23,7 @@ import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -94,12 +98,14 @@ class CriarReparoAdicionalUseCaseTest {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         var mecanico = new UsuarioEntity();
         mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
         var servicoCatalogo = servicoCatalogo(5L);
         var itemEnriquecido = itemEnriquecido(7L, 2);
         var orcamento = new OrcamentoEntity();
         orcamento.setId(30L);
+        orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
 
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido));
@@ -150,14 +156,14 @@ class CriarReparoAdicionalUseCaseTest {
         ordem.verify(orcamentoComplementarGateway).criarESalvar(any(), any(), any());
         ordem.verify(orcamentoPublicacaoGateway).publicar(30L);
         ordem.verify(orcamentoNotificacaoGateway)
-                .notificar(orcamento, ordemServico, "https://publicacao/orcamento/30");
+                .notificar(any(OrcamentoNotificacao.class));
         ordem.verify(reparoAdicionalGateway).save(any());
     }
 
     @ParameterizedTest
     @EnumSource(value = StatusOrdemServico.class, names = {"FINALIZADA", "ENTREGUE"})
     void deveRejeitarOrdemServicoEmEstadoFinal(StatusOrdemServico status) {
-        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(status)));
 
         assertThrows(IllegalStateException.class, () -> useCase.execute(command(5L, 7L, 2)));
@@ -199,7 +205,7 @@ class CriarReparoAdicionalUseCaseTest {
 
     @Test
     void deveRejeitarServicoDuplicadoNaPropriaRequisicao() {
-        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
         var servico = new ServicoReparoAdicionalCommand(
                 5L,
@@ -221,7 +227,7 @@ class CriarReparoAdicionalUseCaseTest {
     void deveRejeitarServicoJaPresenteNaOrdemServico() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         ordemServico.adicionarServicosSolicitados(List.of(new ServicoSolicitadoEntity(5L)));
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
 
         var erro = assertThrows(
                 IllegalArgumentException.class,
@@ -233,11 +239,105 @@ class CriarReparoAdicionalUseCaseTest {
     }
 
     @Test
+    void deveRejeitarMecanicoNaoAtribuido() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(21L);
+        mecanico.setRole(RoleEnum.MECANICO);
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+
+        var erro = assertThrows(ResponseStatusException.class,
+                () -> useCase.execute(command(5L, 7L, 2)));
+
+        assertEquals(HttpStatus.FORBIDDEN, erro.getStatusCode());
+        verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
+    }
+
+    @Test
+    void devePermitirAdministradorSemMecanicoAtribuido() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        ordemServico.setDiagnostico(null);
+        var admin = new UsuarioEntity();
+        admin.setId(1L);
+        admin.setRole(RoleEnum.ADMIN);
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(admin));
+        when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
+        when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido(7L, 2)));
+
+        var orcamento = new OrcamentoEntity();
+        orcamento.setId(30L);
+        orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
+        when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
+            ReparoAdicionalEntity reparo = invocation.getArgument(0);
+            reparo.setId(40L);
+            return reparo;
+        });
+        when(orcamentoComplementarGateway.criarESalvar(any(), any(), any())).thenReturn(orcamento);
+        when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
+
+        assertEquals(30L, useCase.execute(command(5L, 7L, 2)).orcamentoId());
+    }
+
+    @Test
+    void deveRejeitarUsuarioQueNaoPossuiPapelPermitido() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        var usuario = new UsuarioEntity();
+        usuario.setId(30L);
+        usuario.setRole(RoleEnum.ATENDENTE);
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(usuario));
+
+        var erro = assertThrows(ResponseStatusException.class,
+                () -> useCase.execute(command(5L, 7L, 2)));
+
+        assertEquals(HttpStatus.FORBIDDEN, erro.getStatusCode());
+        verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveRejeitarMecanicoQuandoOsNaoPossuirAtribuicao() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        ordemServico.setDiagnostico(null);
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+
+        var erro = assertThrows(ResponseStatusException.class,
+                () -> useCase.execute(command(5L, 7L, 2)));
+
+        assertEquals(HttpStatus.BAD_REQUEST, erro.getStatusCode());
+        verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveRejeitarPecaRepetidaEntreServicosDoMesmoReparo() {
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
+                .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
+        var servico1 = new ServicoReparoAdicionalCommand(5L,
+                List.of(new ItemReparoAdicionalCommand(7L, 1)));
+        var servico2 = new ServicoReparoAdicionalCommand(6L,
+                List.of(new ItemReparoAdicionalCommand(7L, 1)));
+
+        var command = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com", List.of(servico1, servico2));
+
+        var erro = assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
+
+        assertTrue(erro.getMessage().contains("Peça/Insumo duplicado"));
+        verifyNoInteractions(usuarioGateway, servicoGateway, reparoAdicionalGateway);
+    }
+
+    @Test
     void deveRejeitarServicoSemItens() {
-        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
         var mecanico = new UsuarioEntity();
         mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         var command = new CriarReparoAdicionalCommand(
                 "OS-123",
@@ -253,10 +353,11 @@ class CriarReparoAdicionalUseCaseTest {
 
     @Test
     void deveRejeitarQuantidadeDeItemNaoPositiva() {
-        when(ordemServicoGateway.findByNumeroOs("OS-123"))
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
         var mecanico = new UsuarioEntity();
         mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
 
@@ -271,18 +372,19 @@ class CriarReparoAdicionalUseCaseTest {
 
     @Test
     void deveInformarOrdemServicoMecanicoEServicoInexistentes() {
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.empty());
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.empty());
         var erroOs = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
         assertEquals(HttpStatus.NOT_FOUND, erroOs.getStatusCode());
 
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.empty());
         var erroUsuario = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
         assertEquals(HttpStatus.NOT_FOUND, erroUsuario.getStatusCode());
 
         var mecanico = new UsuarioEntity();
         mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
         var erroServico = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
@@ -294,9 +396,11 @@ class CriarReparoAdicionalUseCaseTest {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         var mecanico = new UsuarioEntity();
         mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
         var orcamento = new OrcamentoEntity();
         orcamento.setId(30L);
-        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
+        orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido(7L, 2)));
@@ -309,7 +413,7 @@ class CriarReparoAdicionalUseCaseTest {
         when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
         org.mockito.Mockito.doThrow(new RuntimeException("smtp indisponivel"))
                 .when(orcamentoNotificacaoGateway)
-                .notificar(any(), any(), any());
+                .notificar(any(OrcamentoNotificacao.class));
 
         var output = useCase.execute(command(5L, 7L, 2));
 
@@ -333,6 +437,11 @@ class CriarReparoAdicionalUseCaseTest {
         ordemServico.setId(10L);
         ordemServico.setNumeroOs("OS-123");
         ordemServico.setStatus(status);
+        var diagnostico = new DiagnosticoEntity();
+        var mecanicoAtribuido = new UsuarioEntity();
+        mecanicoAtribuido.setId(20L);
+        diagnostico.setMecanico(mecanicoAtribuido);
+        ordemServico.setDiagnostico(diagnostico);
         return ordemServico;
     }
 

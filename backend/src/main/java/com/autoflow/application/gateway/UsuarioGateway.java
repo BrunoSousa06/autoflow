@@ -17,4 +17,6 @@ public interface UsuarioGateway {
 
     boolean existsByEmail(String email);
 
+    UsuarioEntity save(UsuarioEntity usuario);
+
 }

@@ -40,4 +40,9 @@ public class UsuarioRepositoryAdapter implements UsuarioGateway {
     public boolean existsByEmail(String email) {
         return usuarioRepository.existsByEmail(email);
     }
+
+    @Override
+    public UsuarioEntity save(UsuarioEntity usuario) {
+        return usuarioRepository.save(usuario);
+    }
 }

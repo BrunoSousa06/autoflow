@@ -2,6 +2,11 @@ export type CategoriaPecaInsumo = 'PECA' | 'INSUMO';
 
 export const CATEGORIAS_PECA_INSUMO: CategoriaPecaInsumo[] = ['PECA', 'INSUMO'];
 
+export const CATEGORIA_PECA_INSUMO_LABEL: Record<CategoriaPecaInsumo, string> = {
+  PECA: 'Peça',
+  INSUMO: 'Insumo',
+};
+
 export interface PecaInsumoRequest {
   nome: string;
   valor: number | null;

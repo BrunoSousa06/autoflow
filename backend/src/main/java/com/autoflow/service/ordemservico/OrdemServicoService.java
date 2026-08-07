@@ -1,7 +1,7 @@
 package com.autoflow.service.ordemservico;
 
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
-import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
@@ -18,7 +18,7 @@ import java.util.List;
 public interface OrdemServicoService {
     OrdemServicoCriada criar(
             String cpfCnpj,
-            VeiculoOrdemServicoRequest veiculo,
+            VeiculoOrdemServicoInput veiculo,
             List<ServicoSolicitadoEntity> servicosSolicitados
     );
     @Transactional

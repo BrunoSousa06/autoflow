@@ -1,23 +1,24 @@
 package com.autoflow.application.usecases.usuario;
 
 import com.autoflow.application.dto.usuario.RegistroInput;
+import com.autoflow.application.dto.usuario.LoginInput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.gateway.AuthenticationGateway;
 import com.autoflow.application.gateway.ClienteGateway;
+import com.autoflow.application.gateway.CurrentUserGateway;
+import com.autoflow.application.gateway.PasswordGateway;
+import com.autoflow.application.gateway.TokenGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
-import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
-import com.autoflow.infrastructure.security.service.JwtService;
-import com.autoflow.presentation.usuario.request.LoginRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -31,11 +32,11 @@ import static org.mockito.Mockito.*;
 class UsuarioUseCasesTest {
 
     @Mock UsuarioGateway gateway;
-    @Mock UsuarioRepository repository;
     @Mock UsuarioMapper mapper;
+    @Mock PasswordGateway passwordGateway;
     @Mock ClienteGateway clienteGateway;
-    @Mock AuthenticationManager authenticationManager;
-    @Mock JwtService jwtService;
+    @Mock AuthenticationGateway authenticationGateway;
+    @Mock TokenGateway tokenGateway;
 
     private UsuarioEntity usuario;
     private RegistroInput input;
@@ -90,12 +91,9 @@ class UsuarioUseCasesTest {
 
     @Test
     void deveCadastrarClienteEImpedirDocumentoDuplicado() {
-        var cliente = new ClienteEntity();
-        var useCase = new CadastrarClienteUseCase(clienteGateway, mapper);
-        when(mapper.mapToClienteEntity(input)).thenReturn(cliente);
-        when(clienteGateway.save(cliente)).thenReturn(cliente);
-        assertSame(cliente, useCase.execute(input, usuario));
-        assertSame(usuario, cliente.getUsuario());
+        var useCase = new CadastrarClienteUseCase(clienteGateway);
+        when(clienteGateway.save(any())).thenReturn(null);
+        assertNull(useCase.execute(input, usuario));
 
         when(clienteGateway.existsByCpfCnpj(input.cpfCnpj())).thenReturn(true);
         assertEquals(HttpStatus.CONFLICT,
@@ -105,19 +103,27 @@ class UsuarioUseCasesTest {
     @Test
     void deveCadastrarUsuarioEClienteQuandoAplicavel() {
         var cadastrarCliente = mock(CadastrarClienteUseCase.class);
-        var useCase = new CadastrarUsuarioUseCase(repository, mapper, cadastrarCliente);
-        when(mapper.mapToEntity(input)).thenReturn(usuario);
-        when(repository.save(usuario)).thenReturn(usuario);
-        when(mapper.mapToOutput(usuario)).thenReturn(output);
+        var useCase = new CadastrarUsuarioUseCase(gateway, passwordGateway, cadastrarCliente);
+        when(passwordGateway.encode(input.senha())).thenReturn("senha-hash");
+        when(gateway.save(any(UsuarioEntity.class))).thenAnswer(invocation -> {
+            UsuarioEntity saved = invocation.getArgument(0);
+            saved.setId(1L);
+            return saved;
+        });
         assertEquals(output, useCase.execute(input));
         verifyNoInteractions(cadastrarCliente);
 
         var clienteInput = new RegistroInput("Cliente", "cliente@email.com", "123", "119", "senha", RoleEnum.CLIENTE);
-        when(mapper.mapToEntity(clienteInput)).thenReturn(usuario);
-        assertEquals(output, useCase.execute(clienteInput));
-        verify(cadastrarCliente).execute(clienteInput, usuario);
+        UsuarioOutput clienteOutput = new UsuarioOutput(
+                1L,
+                "Cliente",
+                "cliente@email.com",
+                RoleEnum.CLIENTE
+        );
+        assertEquals(clienteOutput, useCase.execute(clienteInput));
+        verify(cadastrarCliente).execute(eq(clienteInput), any(UsuarioEntity.class));
 
-        when(repository.existsByEmail(input.email())).thenReturn(true);
+        when(gateway.existsByEmail(input.email())).thenReturn(true);
         assertEquals(HttpStatus.CONFLICT,
                 assertThrows(ResponseStatusException.class, () -> useCase.execute(input)).getStatusCode());
     }
@@ -125,25 +131,51 @@ class UsuarioUseCasesTest {
     @Test
     void deveAplicarPermissoesAoCadastrarStaff() {
         var cadastrar = mock(CadastrarUsuarioUseCase.class);
-        var useCase = new CadastrarStaffUseCase(cadastrar);
+        var currentUserGateway = mock(CurrentUserGateway.class);
+        var useCase = new CadastrarStaffUseCase(cadastrar, currentUserGateway);
+        when(currentUserGateway.getCurrentUser()).thenReturn(java.util.Optional.of(
+                new CurrentUser("admin@email.com", RoleEnum.ADMIN)));
         when(cadastrar.execute(input)).thenReturn(output);
-        assertEquals(output, useCase.execute(input, RoleEnum.ADMIN));
+        assertEquals(output, useCase.execute(input));
+
+        when(currentUserGateway.getCurrentUser()).thenReturn(java.util.Optional.of(
+                new CurrentUser("atendente@email.com", RoleEnum.ATENDENTE)));
+        assertEquals(HttpStatus.FORBIDDEN,
+                assertThrows(ResponseStatusException.class,
+                        () -> useCase.execute(input)).getStatusCode());
+    }
+
+    @Test
+    void devePermitirCadastroPublicoSomenteParaCliente() {
+        var cadastrar = mock(CadastrarUsuarioUseCase.class);
+        var useCase = new CadastrarUsuarioPublicoUseCase(cadastrar);
+        var clienteInput = new RegistroInput(
+                "Cliente",
+                "cliente@email.com",
+                "123",
+                "119",
+                "senha",
+                RoleEnum.CLIENTE
+        );
+        when(cadastrar.execute(clienteInput)).thenReturn(output);
+
+        assertEquals(output, useCase.execute(clienteInput));
 
         assertEquals(HttpStatus.FORBIDDEN,
                 assertThrows(ResponseStatusException.class,
-                        () -> useCase.execute(input, RoleEnum.ATENDENTE)).getStatusCode());
+                        () -> useCase.execute(input)).getStatusCode());
     }
 
     @Test
     void deveAutenticarEGerarToken() {
-        var request = new LoginRequest(usuario.getEmail(), "senha");
-        var useCase = new LoginUsuarioUseCase(authenticationManager, repository, jwtService);
-        when(repository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
-        when(jwtService.gerarToken(usuario.getEmail(), RoleEnum.MECANICO.name())).thenReturn("token");
-        assertEquals("token", useCase.execute(request));
-        verify(authenticationManager).authenticate(any());
+        var input = new LoginInput(usuario.getEmail(), "senha");
+        var useCase = new LoginUsuarioUseCase(authenticationGateway, gateway, tokenGateway);
+        when(gateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(tokenGateway.generateToken(usuario.getEmail(), RoleEnum.MECANICO.name())).thenReturn("token");
+        assertEquals("token", useCase.execute(input).token());
+        verify(authenticationGateway).authenticate(usuario.getEmail(), "senha");
 
-        when(repository.findByEmail(usuario.getEmail())).thenReturn(Optional.empty());
-        assertThrows(java.util.NoSuchElementException.class, () -> useCase.execute(request));
+        when(gateway.findByEmail(usuario.getEmail())).thenReturn(Optional.empty());
+        assertThrows(java.util.NoSuchElementException.class, () -> useCase.execute(input));
     }
 }

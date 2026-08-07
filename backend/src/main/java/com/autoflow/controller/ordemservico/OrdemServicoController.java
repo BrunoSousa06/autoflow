@@ -1,6 +1,21 @@
 package com.autoflow.controller.ordemservico;
 
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
+import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.usecases.ordemservico.DetalharOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.ListarOrdensServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.IniciarDiagnosticoUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarItensNecessariosUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarLaudoUseCase;
+import com.autoflow.application.usecases.ordemservico.IniciarServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.FinalizarServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.EntregarOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.FinalizarDiagnosticoUseCase;
+import com.autoflow.service.ordemservico.CriarOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.IncluirServicosUseCase;
+import com.autoflow.application.usecases.ordemservico.AtribuirMecanicoUseCase;
 import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
 import com.autoflow.controller.ordemservico.request.*;
 import com.autoflow.controller.ordemservico.response.FinalizarDiagnosticoResponse;
@@ -9,12 +24,8 @@ import com.autoflow.controller.ordemservico.response.OrdemServicoResponse;
 import com.autoflow.controller.ordemservico.response.TempoMedioOrdemServicoResponse;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
-import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapper;
 import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapper;
-import com.autoflow.service.ordemservico.OrdemServicoService;
-import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,22 +51,56 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class OrdemServicoController {
 
-    private final OrdemServicoService ordemServicoService;
     private final ServicoSolicitadoMapper servicoSolicitadoMapper;
     private final ItensNecessariosMapper itensNecessariosMapper;
     private final CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase;
+    private final ListarOrdensServicoUseCase listarOrdensServicoUseCase;
+    private final DetalharOrdemServicoUseCase detalharOrdemServicoUseCase;
+    private final IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase;
+    private final RegistrarItensNecessariosUseCase registrarItensNecessariosUseCase;
+    private final RegistrarLaudoUseCase registrarLaudoUseCase;
+    private final IniciarServicoUseCase iniciarServicoUseCase;
+    private final FinalizarServicoUseCase finalizarServicoUseCase;
+    private final EntregarOrdemServicoUseCase entregarOrdemServicoUseCase;
+    private final FinalizarDiagnosticoUseCase finalizarDiagnosticoUseCase;
+    private final CriarOrdemServicoUseCase criarOrdemServicoUseCase;
+    private final IncluirServicosUseCase incluirServicosUseCase;
+    private final AtribuirMecanicoUseCase atribuirMecanicoUseCase;
 
     @Value("${app.frontend-public-base-url}")
     private String frontendPublicBaseUrl;
 
-    public OrdemServicoController(OrdemServicoServiceImpl ordemServicoService,
+    public OrdemServicoController(
                                   ServicoSolicitadoMapper servicoSolicitadoMapper,
                                   ItensNecessariosMapper itensNecessariosMapper,
-                                  CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase) {
-        this.ordemServicoService = ordemServicoService;
+                                  CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase,
+                                  ListarOrdensServicoUseCase listarOrdensServicoUseCase,
+                                  DetalharOrdemServicoUseCase detalharOrdemServicoUseCase,
+                                  IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase,
+                                  RegistrarItensNecessariosUseCase registrarItensNecessariosUseCase,
+                                  RegistrarLaudoUseCase registrarLaudoUseCase,
+                                  IniciarServicoUseCase iniciarServicoUseCase,
+                                  FinalizarServicoUseCase finalizarServicoUseCase,
+                                  EntregarOrdemServicoUseCase entregarOrdemServicoUseCase,
+                                  FinalizarDiagnosticoUseCase finalizarDiagnosticoUseCase,
+                                  CriarOrdemServicoUseCase criarOrdemServicoUseCase,
+                                  IncluirServicosUseCase incluirServicosUseCase,
+                                  AtribuirMecanicoUseCase atribuirMecanicoUseCase) {
         this.servicoSolicitadoMapper = servicoSolicitadoMapper;
         this.itensNecessariosMapper = itensNecessariosMapper;
         this.calcularTempoMedioOrdemServicoUseCase = calcularTempoMedioOrdemServicoUseCase;
+        this.listarOrdensServicoUseCase = listarOrdensServicoUseCase;
+        this.detalharOrdemServicoUseCase = detalharOrdemServicoUseCase;
+        this.iniciarDiagnosticoUseCase = iniciarDiagnosticoUseCase;
+        this.registrarItensNecessariosUseCase = registrarItensNecessariosUseCase;
+        this.registrarLaudoUseCase = registrarLaudoUseCase;
+        this.iniciarServicoUseCase = iniciarServicoUseCase;
+        this.finalizarServicoUseCase = finalizarServicoUseCase;
+        this.entregarOrdemServicoUseCase = entregarOrdemServicoUseCase;
+        this.finalizarDiagnosticoUseCase = finalizarDiagnosticoUseCase;
+        this.criarOrdemServicoUseCase = criarOrdemServicoUseCase;
+        this.incluirServicosUseCase = incluirServicosUseCase;
+        this.atribuirMecanicoUseCase = atribuirMecanicoUseCase;
     }
 
     @Operation(summary = "Criar a ordem de serviço", description = "Cria uma nova ordem de serviço identificando o cliente por CPF/CNPJ e buscando ou cadastrando o veiculo pela placa")
@@ -76,9 +121,13 @@ public class OrdemServicoController {
                         request.servicosSolicitados()
                 );
 
-        OrdemServicoCriada osCriada = ordemServicoService.criar(
+        OrdemServicoCriadaOutput osCriada = criarOrdemServicoUseCase.execute(
                 request.cpfCnpj(),
-                request.veiculo(),
+                new VeiculoOrdemServicoInput(
+                        request.veiculo().placa(),
+                        request.veiculo().marca(),
+                        request.veiculo().modelo(),
+                        request.veiculo().ano()),
                 servicos
         );
 
@@ -106,7 +155,7 @@ public class OrdemServicoController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request);
-        return OrdemServicoResponse.fromDomain(ordemServicoService.incluirServicos(numeroOs, servicos, userDetails.getUsername()));
+        return OrdemServicoResponse.fromDomain(incluirServicosUseCase.execute(numeroOs, servicos, userDetails.getUsername()));
     }
 
     @Operation(
@@ -123,7 +172,7 @@ public class OrdemServicoController {
     public OrdemServicoResponse atribuirMecanico(
             @PathVariable String numeroOs,
             @Valid @RequestBody IncluirMecanicoRequest request){
-        return OrdemServicoResponse.fromDomain(ordemServicoService.atribuirMecanico(
+        return OrdemServicoResponse.fromDomain(atribuirMecanicoUseCase.execute(
                 numeroOs,
                 request.mecanicoId(),
                 request.mecanicoEmail()));
@@ -141,7 +190,7 @@ public class OrdemServicoController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
     public OrdemServicoResponse iniciarDiagnostico(@PathVariable String numeroOs, @AuthenticationPrincipal UserDetails userDetails){
-        return OrdemServicoResponse.fromDomain(ordemServicoService.iniciarDiagnostico(
+        return OrdemServicoResponse.fromDomain(iniciarDiagnosticoUseCase.execute(
                 numeroOs,
                 userDetails.getUsername()));
     }
@@ -164,7 +213,7 @@ public class OrdemServicoController {
             @Valid @RequestBody List<ItensNecessariosRequest> request
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.registrarItemNecessario(
+                registrarItensNecessariosUseCase.execute(
                         numeroOs,
                         servicoId,
                         userDetails.getUsername(),
@@ -189,7 +238,7 @@ public class OrdemServicoController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody RegistrarLaudoRequest request
     ){
-        return OrdemServicoResponse.fromDomain(ordemServicoService.registrarLaudo(
+        return OrdemServicoResponse.fromDomain(registrarLaudoUseCase.execute(
                 numeroOs,
                 userDetails.getUsername(),
                 request.laudo()
@@ -211,7 +260,7 @@ public class OrdemServicoController {
             @PathVariable String numeroOs,
             @AuthenticationPrincipal UserDetails userDetails
     ){
-        return FinalizarDiagnosticoResponse.from(ordemServicoService.finalizarDiagnostico(
+        return FinalizarDiagnosticoResponse.from(finalizarDiagnosticoUseCase.execute(
                 numeroOs,
                 userDetails.getUsername()
         ));
@@ -233,7 +282,7 @@ public class OrdemServicoController {
             @PathVariable Long servicoId
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.iniciarServico(numeroOs, servicoId)
+                iniciarServicoUseCase.execute(numeroOs, servicoId)
         );
     }
 
@@ -253,7 +302,7 @@ public class OrdemServicoController {
             @PathVariable Long servicoId
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.finalizarServico(numeroOs, servicoId)
+                finalizarServicoUseCase.execute(numeroOs, servicoId)
         );
     }
 
@@ -272,7 +321,7 @@ public class OrdemServicoController {
             @PathVariable String numeroOs
     ) {
         return OrdemServicoResponse.fromDomain(
-                ordemServicoService.entregar(numeroOs)
+                entregarOrdemServicoUseCase.execute(numeroOs)
         );
     }
 
@@ -293,9 +342,9 @@ public class OrdemServicoController {
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        OrdemServicoFiltro filtro = new OrdemServicoFiltro(cliente, numeroOs, status);
+        OrdemServicoFiltroInput filtro = new OrdemServicoFiltroInput(cliente, numeroOs, status);
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataAbertura"));
-        return ordemServicoService.listar(filtro, pageable, userDetails.getUsername()).map(OrdemServicoResponse::fromDomain);
+        return listarOrdensServicoUseCase.execute(filtro, pageable, userDetails.getUsername()).map(OrdemServicoResponse::fromDomain);
     }
 
     @Operation(
@@ -313,10 +362,8 @@ public class OrdemServicoController {
     @GetMapping("/{numeroOs}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO')")
     public OrdemServicoDetalheResponse detalhar(@PathVariable String numeroOs) {
-        return OrdemServicoDetalheResponse.fromDomain(
-                ordemServicoService.buscaOrdemServicoPorNumeroOs(numeroOs),
-                ordemServicoService.buscarOrcamentoAtual(numeroOs)
-        );
+        var detalhe = detalharOrdemServicoUseCase.execute(numeroOs);
+        return OrdemServicoDetalheResponse.fromDomain(detalhe.ordemServico(), detalhe.orcamentoAtual());
     }
 
     @Operation(
