@@ -1,6 +1,7 @@
 package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
@@ -19,13 +20,11 @@ import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.orcamento.OrcamentoRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
-import com.autoflow.service.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
-import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
+import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.repository.ordemservico.OrdemServicoSpecifications;
 import com.autoflow.service.ordemservico.OrdemServicoService;
-import com.autoflow.infrastructure.security.SecureTokenAcompanhamentoAdapter;
 import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
@@ -48,7 +47,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
@@ -76,7 +74,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OrcamentoFactory orcamentoFactoryImpl;
     private final OrcamentoVersioningService orcamentoVersioningServiceImpl;
     private final OrcamentoRepository orcamentoRepository;
-    private final OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl;
+    private final OrcamentoPublicacaoGateway orcamentoPublicacaoGateway;
     private final ClienteRepository clienteRepository;
     private final HistoricoStatusOsRepository historicoStatusOsRepository;
     private final OrcamentoNotificacaoService orcamentoNotificacaoService;
@@ -89,7 +87,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                                    UsuarioService usuarioService, HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService,
                                    OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl,
                                    OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl,
-                                   ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoService orcamentoPublicacaoServiceImpl,
+                                   ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoGateway orcamentoPublicacaoGateway,
                                    BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase,
                                    GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase,
                                    EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase,
@@ -106,7 +104,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.orcamentoVersioningServiceImpl = orcamentoVersioningServiceImpl;
         this.clienteRepository = clienteRepository;
         this.orcamentoRepository = orcamentoRepository;
-        this.orcamentoPublicacaoServiceImpl = orcamentoPublicacaoServiceImpl;
+        this.orcamentoPublicacaoGateway = orcamentoPublicacaoGateway;
         this.buscarClientePorCpfCnpjUseCase = buscarClientePorCpfCnpjUseCase;
         this.gerarTokenAcompanhamentoUseCase = gerarTokenAcompanhamentoUseCase;
         this.enviarLinkAcompanhamentoUseCase = enviarLinkAcompanhamentoUseCase;
@@ -301,7 +299,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         ordemServico.aguardarAprovacao();
 
         OrcamentoEntity orcamentoSalvo = orcamentoRepository.save(orcamento);
-        String publicUrl = orcamentoPublicacaoServiceImpl.publicar(orcamentoSalvo.getId()).url();
+        String publicUrl = orcamentoPublicacaoGateway.publicar(orcamentoSalvo.getId());
         try {
             orcamentoNotificacaoService.enviarLinkOrcamentoParaCliente(
                     orcamentoSalvo,

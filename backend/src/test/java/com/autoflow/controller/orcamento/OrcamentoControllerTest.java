@@ -1,5 +1,9 @@
 package com.autoflow.controller.orcamento;
 
+import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoAutenticadoUseCase;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentosUseCase;
+import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
@@ -10,9 +14,7 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.service.orcamento.OrcamentoPdfService;
-import com.autoflow.service.orcamento.OrcamentoService;
-import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
+import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -69,10 +71,16 @@ class OrcamentoControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OrcamentoService orcamentoService;
+    private DecidirOrcamentoUseCase decidirOrcamentoUseCase;
 
     @MockitoBean
-    private OrcamentoPdfService orcamentoPdfService;
+    private OrcamentoDocumentoGateway orcamentoDocumentoGateway;
+
+    @MockitoBean
+    private ConsultarOrcamentoAutenticadoUseCase consultarOrcamentoAutenticadoUseCase;
+
+    @MockitoBean
+    private ConsultarOrcamentosUseCase consultarOrcamentosUseCase;
 
     @MockitoBean
     private JwtService jwtService;
@@ -84,7 +92,7 @@ class OrcamentoControllerTest {
     @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
     void deveConsultarOrcamentoAutenticado() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
-        when(orcamentoService.consultarAutenticado(10L, "admin@autoflow.com")).thenReturn(orcamento);
+        when(consultarOrcamentoAutenticadoUseCase.execute(10L, "admin@autoflow.com")).thenReturn(orcamento);
 
         mockMvc.perform(get("/orcamentos/{id}", 10L))
                 .andExpect(status().isOk())
@@ -102,7 +110,7 @@ class OrcamentoControllerTest {
                 .andExpect(jsonPath("$.itens[0].quantidade").value(2))
                 .andExpect(jsonPath("$.itens[0].valorTotal").value(50.00));
 
-        verify(orcamentoService).consultarAutenticado(10L, "admin@autoflow.com");
+        verify(consultarOrcamentoAutenticadoUseCase).execute(10L, "admin@autoflow.com");
     }
 
     @Test
@@ -110,14 +118,14 @@ class OrcamentoControllerTest {
     void deveAprovarOrcamentoAutenticadoSemTokenPublico() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.APROVADO);
-        when(orcamentoService.aprovar(10L, "cliente@exemplo.com")).thenReturn(orcamento);
+        when(decidirOrcamentoUseCase.aprovarComoUsuario(10L, "cliente@exemplo.com")).thenReturn(orcamento);
 
         mockMvc.perform(post("/orcamentos/{id}/aprovar", 10L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APROVADO"));
 
-        verify(orcamentoService).aprovar(10L, "cliente@exemplo.com");
+        verify(decidirOrcamentoUseCase).aprovarComoUsuario(10L, "cliente@exemplo.com");
     }
 
     @Test
@@ -125,7 +133,7 @@ class OrcamentoControllerTest {
     void deveRecusarOrcamentoAutenticadoSemTokenPublico() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
-        when(orcamentoService.recusar(10L, "Nao quero", "cliente@exemplo.com")).thenReturn(orcamento);
+        when(decidirOrcamentoUseCase.recusarComoUsuario(10L, "Nao quero", "cliente@exemplo.com")).thenReturn(orcamento);
 
         mockMvc.perform(post("/orcamentos/{id}/recusar", 10L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -135,7 +143,7 @@ class OrcamentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REPROVADO"));
 
-        verify(orcamentoService).recusar(10L, "Nao quero", "cliente@exemplo.com");
+        verify(decidirOrcamentoUseCase).recusarComoUsuario(10L, "Nao quero", "cliente@exemplo.com");
     }
 
     @Test
@@ -143,14 +151,14 @@ class OrcamentoControllerTest {
     void deveRecusarOrcamentoAutenticadoSemBody() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
-        when(orcamentoService.recusar(10L, null, "cliente@exemplo.com")).thenReturn(orcamento);
+        when(decidirOrcamentoUseCase.recusarComoUsuario(10L, null, "cliente@exemplo.com")).thenReturn(orcamento);
 
         mockMvc.perform(post("/orcamentos/{id}/recusar", 10L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REPROVADO"));
 
-        verify(orcamentoService).recusar(10L, null, "cliente@exemplo.com");
+        verify(decidirOrcamentoUseCase).recusarComoUsuario(10L, null, "cliente@exemplo.com");
     }
 
     @Test
@@ -166,7 +174,7 @@ class OrcamentoControllerTest {
                 TipoOrcamento.PRINCIPAL
         );
 
-        when(orcamentoService.consultarOrcamentos("atendente@autoflow.com", filtroEsperado))
+        when(consultarOrcamentosUseCase.execute("atendente@autoflow.com", filtroEsperado))
                 .thenReturn(List.of(orcamento));
 
         mockMvc.perform(get("/orcamentos")
@@ -180,7 +188,7 @@ class OrcamentoControllerTest {
                 .andExpect(jsonPath("$[0].id").value(10L))
                 .andExpect(jsonPath("$[0].status").value("DISPONIVEL"));
 
-        verify(orcamentoService).consultarOrcamentos(
+        verify(consultarOrcamentosUseCase).execute(
                 "atendente@autoflow.com",
                 filtroEsperado
         );
@@ -191,16 +199,16 @@ class OrcamentoControllerTest {
     void deveBaixarPdfComoAdmin() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
         byte[] pdfBytes = new byte[]{1, 2, 3};
-        when(orcamentoService.consultarAutenticado(10L, "admin@autoflow.com")).thenReturn(orcamento);
-        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdfBytes);
+        when(consultarOrcamentoAutenticadoUseCase.execute(10L, "admin@autoflow.com")).thenReturn(orcamento);
+        when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn(pdfBytes);
 
         mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"orcamento-10.pdf\""));
 
-        verify(orcamentoService).consultarAutenticado(10L, "admin@autoflow.com");
-        verify(orcamentoPdfService).gerarPdf(orcamento);
+        verify(consultarOrcamentoAutenticadoUseCase).execute(10L, "admin@autoflow.com");
+        verify(orcamentoDocumentoGateway).gerarPdf(orcamento);
     }
 
     @Test
@@ -208,14 +216,14 @@ class OrcamentoControllerTest {
     void deveBaixarPdfComoCliente() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
         byte[] pdfBytes = new byte[]{1, 2, 3};
-        when(orcamentoService.consultarAutenticado(10L, "cliente@exemplo.com")).thenReturn(orcamento);
-        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdfBytes);
+        when(consultarOrcamentoAutenticadoUseCase.execute(10L, "cliente@exemplo.com")).thenReturn(orcamento);
+        when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn(pdfBytes);
 
         mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
 
-        verify(orcamentoService).consultarAutenticado(10L, "cliente@exemplo.com");
+        verify(consultarOrcamentoAutenticadoUseCase).execute(10L, "cliente@exemplo.com");
     }
 
     @Test
@@ -223,14 +231,14 @@ class OrcamentoControllerTest {
     void deveBaixarPdfComoAtendente() throws Exception {
         OrcamentoEntity orcamento = baseOrcamento();
         byte[] pdfBytes = new byte[]{1, 2, 3};
-        when(orcamentoService.consultarAutenticado(10L, "atendente@autoflow.com")).thenReturn(orcamento);
-        when(orcamentoPdfService.gerarPdf(orcamento)).thenReturn(pdfBytes);
+        when(consultarOrcamentoAutenticadoUseCase.execute(10L, "atendente@autoflow.com")).thenReturn(orcamento);
+        when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn(pdfBytes);
 
         mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
 
-        verify(orcamentoService).consultarAutenticado(10L, "atendente@autoflow.com");
+        verify(consultarOrcamentoAutenticadoUseCase).execute(10L, "atendente@autoflow.com");
     }
 
     @Test
@@ -239,14 +247,14 @@ class OrcamentoControllerTest {
         mockMvc.perform(get("/orcamentos/{id}/pdf", 10L))
                 .andExpect(status().isForbidden());
 
-        verify(orcamentoService, never()).consultarAutenticado(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
-        verify(orcamentoPdfService, never()).gerarPdf(org.mockito.ArgumentMatchers.any());
+        verify(consultarOrcamentoAutenticadoUseCase, never()).execute(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        verify(orcamentoDocumentoGateway, never()).gerarPdf(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
     void deveRetornar404AoBaixarPdfDeOrcamentoInexistente() throws Exception {
-        when(orcamentoService.consultarAutenticado(99L, "admin@autoflow.com"))
+        when(consultarOrcamentoAutenticadoUseCase.execute(99L, "admin@autoflow.com"))
                 .thenThrow(new org.springframework.web.server.ResponseStatusException(
                         org.springframework.http.HttpStatus.NOT_FOUND, "Orçamento não encontrado"));
 

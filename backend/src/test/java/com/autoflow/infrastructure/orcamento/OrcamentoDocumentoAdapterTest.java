@@ -1,4 +1,4 @@
-package com.autoflow.service.orcamento;
+package com.autoflow.infrastructure.orcamento;
 
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -8,7 +8,6 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.service.orcamento.impl.OrcamentoPdfServiceImpl;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -17,9 +16,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-class OrcamentoPdfServiceImplTest {
 
-    private final OrcamentoPdfServiceImpl service = new OrcamentoPdfServiceImpl();
+class OrcamentoDocumentoAdapterTest {
+
+    private final OrcamentoDocumentoAdapter orcamentoDocumentoAdapter = new OrcamentoDocumentoAdapter();
 
     @Test
     void deveGerarPdfParaOrcamentoCompleto() {
@@ -53,7 +53,7 @@ class OrcamentoPdfServiceImplTest {
                 .totalGeral(new BigDecimal("150.00"))
                 .build();
 
-        byte[] pdf = service.gerarPdf(orcamento);
+        byte[] pdf = orcamentoDocumentoAdapter.gerarPdf(orcamento);
 
         assertPdfValido(pdf);
     }
@@ -76,7 +76,7 @@ class OrcamentoPdfServiceImplTest {
                 .totalGeral(null)
                 .build();
 
-        byte[] pdf = service.gerarPdf(orcamento);
+        byte[] pdf = orcamentoDocumentoAdapter.gerarPdf(orcamento);
 
         assertPdfValido(pdf);
     }
@@ -99,7 +99,7 @@ class OrcamentoPdfServiceImplTest {
                 .totalGeral(BigDecimal.ZERO)
                 .build();
 
-        byte[] pdf = service.gerarPdf(orcamento);
+        byte[] pdf = orcamentoDocumentoAdapter.gerarPdf(orcamento);
 
         assertPdfValido(pdf);
     }

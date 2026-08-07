@@ -1,7 +1,7 @@
 package com.autoflow.repository.orcamento;
 
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.service.orcamento.dto.OrcamentoFiltro;
+import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class OrcamentoSpecifications {

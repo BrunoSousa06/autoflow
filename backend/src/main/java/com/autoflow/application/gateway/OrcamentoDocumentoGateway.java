@@ -1,8 +1,8 @@
-package com.autoflow.service.orcamento;
+package com.autoflow.application.gateway;
 
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 
-public interface OrcamentoPdfService {
+public interface OrcamentoDocumentoGateway {
 
     byte[] gerarPdf(OrcamentoEntity orcamento);
 }

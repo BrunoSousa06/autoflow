@@ -1,10 +1,15 @@
-package com.autoflow.service.orcamento.impl;
+package com.autoflow.application.usecases.orcamento;
 
-import com.autoflow.domain.orcamento.*;
+import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
+import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
+import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
+import com.autoflow.domain.orcamento.StatusOrcamento;
+import com.autoflow.domain.orcamento.TipoOrcamento;
+import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
-import com.autoflow.service.orcamento.OrcamentoFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -15,9 +20,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
-public class OrcamentoFactoryImpl implements OrcamentoFactory {
+public class OrcamentoFactory {
 
-    @Override
     public OrcamentoEntity criarPrincipalDisponivel(OrdemServicoEntity ordemServico, int versao, LocalDateTime now) {
         List<OrcamentoServicoEntity> orcamentoServicoEntities = ordemServico.getServicosSolicitados().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
@@ -56,7 +60,6 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                 .build();
     }
 
-    @Override
     public OrcamentoEntity criarAdicionalDisponivel(OrdemServicoEntity ordemServico, ReparoAdicionalEntity reparoSalvo, int versao, LocalDateTime now) {
         List<OrcamentoServicoEntity> orcamentoServicoEntities = reparoSalvo.getServicos().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
@@ -95,7 +98,6 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
                 .build();
     }
 
-    @Override
     public OrcamentoEntity criarPrincipalConsolidadoDisponivel(
             OrdemServicoEntity ordemServico,
             ReparoAdicionalEntity reparo,
@@ -153,7 +155,7 @@ public class OrcamentoFactoryImpl implements OrcamentoFactory {
     }
 
     private BigDecimal totalServicos(List<OrcamentoServicoEntity> servicos) {
-        if(servicos == null || servicos.isEmpty())return BigDecimal.ZERO;
+        if (servicos == null || servicos.isEmpty()) return BigDecimal.ZERO;
         return servicos.stream()
                 .map(OrcamentoServicoEntity::getValor)
                 .filter(Objects::nonNull)

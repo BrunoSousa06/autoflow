@@ -4,11 +4,9 @@ import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
-import com.autoflow.service.orcamento.OrcamentoFactory;
+import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.service.orcamento.OrcamentoNotificacaoService;
-import com.autoflow.service.orcamento.OrcamentoPublicacaoService;
 import com.autoflow.service.orcamento.OrcamentoVersioningService;
-import com.autoflow.service.orcamento.dto.PublicacaoOrcamentoResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -17,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -29,7 +26,6 @@ class OrcamentoReparoAdicionalAdaptersTest {
     @Mock OrcamentoVersioningService versioningService;
     @Mock OrcamentoFactory factory;
     @Mock OrcamentoGateway orcamentoGateway;
-    @Mock OrcamentoPublicacaoService publicacaoService;
     @Mock OrcamentoNotificacaoService notificacaoService;
 
     @Test
@@ -58,16 +54,6 @@ class OrcamentoReparoAdicionalAdaptersTest {
         ordem.verify(versioningService).proximaVersaoPrincipalNumeroOs("OS-123");
         ordem.verify(factory).criarAdicionalDisponivel(ordemServico, reparo, 2, criadoEm);
         ordem.verify(orcamentoGateway).save(orcamentoCriado);
-    }
-
-    @Test
-    void deveAdaptarPublicacaoParaUrl() {
-        var adapter = new OrcamentoPublicacaoAdapter(publicacaoService);
-        when(publicacaoService.publicar(30L))
-                .thenReturn(new PublicacaoOrcamentoResult(30L, "https://publicacao/orcamento/30"));
-
-        assertEquals("https://publicacao/orcamento/30", adapter.publicar(30L));
-        verify(publicacaoService).publicar(30L);
     }
 
     @Test

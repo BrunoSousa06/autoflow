@@ -4,10 +4,11 @@ import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoExce
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoDaOsUseCase;
+import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
-import com.autoflow.service.orcamento.OrcamentoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +32,8 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
 
     @Mock private AcompanhamentoPublicoGateway acompanhamentoGateway;
     @Mock private TokenAcompanhamentoGateway tokenGateway;
-    @Mock private OrcamentoService orcamentoService;
+    @Mock private ConsultarOrcamentoDaOsUseCase consultarOrcamentoDaOsUseCase;
+    @Mock private DecidirOrcamentoUseCase decidirOrcamentoUseCase;
     @Mock private OrcamentoEntity orcamento;
 
     private AcessarOrcamentoAcompanhamentoUseCase useCase;
@@ -40,27 +42,27 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
     void setUp() {
         var clock = Clock.fixed(Instant.parse("2026-08-01T12:00:00Z"), ZoneOffset.UTC);
         useCase = new AcessarOrcamentoAcompanhamentoUseCase(
-                acompanhamentoGateway, tokenGateway, orcamentoService, clock);
+                acompanhamentoGateway, tokenGateway, consultarOrcamentoDaOsUseCase, decidirOrcamentoUseCase, clock);
     }
 
     @Test
     void deveConsultarOrcamentoQuandoTokenEstiverDisponivel() {
         prepararAcessoDisponivel();
-        when(orcamentoService.consultarDaOrdem(10L, NUMERO_OS)).thenReturn(orcamento);
+        when(consultarOrcamentoDaOsUseCase.execute(10L, NUMERO_OS)).thenReturn(orcamento);
 
         assertThat(useCase.consultar(10L, TOKEN)).isSameAs(orcamento);
 
-        verify(orcamentoService).consultarDaOrdem(10L, NUMERO_OS);
+        verify(consultarOrcamentoDaOsUseCase).execute(10L, NUMERO_OS);
     }
 
     @Test
     void deveAprovarOrcamentoQuandoTokenEstiverDisponivel() {
         prepararAcessoDisponivel();
-        when(orcamentoService.aprovarDaOrdem(10L, NUMERO_OS)).thenReturn(orcamento);
+        when(decidirOrcamentoUseCase.aprovarDaOrdem(10L, NUMERO_OS)).thenReturn(orcamento);
 
         assertThat(useCase.aprovar(10L, TOKEN)).isSameAs(orcamento);
 
-        verify(orcamentoService).aprovarDaOrdem(10L, NUMERO_OS);
+        verify(decidirOrcamentoUseCase).aprovarDaOrdem(10L, NUMERO_OS);
     }
 
     @Test
@@ -70,7 +72,7 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
         assertThatThrownBy(() -> useCase.consultar(10L, " "))
                 .isInstanceOf(TokenAcompanhamentoObrigatorioException.class);
 
-        verifyNoInteractions(tokenGateway, acompanhamentoGateway, orcamentoService);
+        verifyNoInteractions(tokenGateway, acompanhamentoGateway, consultarOrcamentoDaOsUseCase, decidirOrcamentoUseCase);
     }
 
     @Test
@@ -81,7 +83,7 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
         assertThatThrownBy(() -> useCase.consultar(10L, TOKEN))
                 .isInstanceOf(AcompanhamentoPublicoNaoEncontradoException.class);
 
-        verifyNoInteractions(orcamentoService);
+        verifyNoInteractions(consultarOrcamentoDaOsUseCase, decidirOrcamentoUseCase);
     }
 
     @Test
@@ -93,7 +95,7 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
         assertThatThrownBy(() -> useCase.consultar(10L, TOKEN))
                 .isInstanceOf(AcompanhamentoPublicoNaoEncontradoException.class);
 
-        verifyNoInteractions(orcamentoService);
+        verifyNoInteractions(consultarOrcamentoDaOsUseCase, decidirOrcamentoUseCase);
     }
 
     private void prepararAcessoDisponivel() {

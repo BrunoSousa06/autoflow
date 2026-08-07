@@ -70,7 +70,7 @@ class CustomUserDetailsServiceTest {
                         .stream()
                         .anyMatch(authority ->
                                 authority.getAuthority()
-                                        .equals("ADMIN"))
+                                        .equals("ROLE_ADMIN"))
         );
 
         verify(usuarioRepository)

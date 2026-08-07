@@ -4,8 +4,9 @@ import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoExce
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
+import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoDaOsUseCase;
+import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.service.orcamento.OrcamentoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,15 +19,16 @@ public class AcessarOrcamentoAcompanhamentoUseCase {
 
     private final AcompanhamentoPublicoGateway acompanhamentoGateway;
     private final TokenAcompanhamentoGateway tokenGateway;
-    private final OrcamentoService orcamentoService;
+    private final ConsultarOrcamentoDaOsUseCase consultarOrcamentoDaOsUseCase;
+    private final DecidirOrcamentoUseCase decidirOrcamentoUseCase;
     private final Clock clock;
 
     public OrcamentoEntity consultar(Long orcamentoId, String token) {
-        return orcamentoService.consultarDaOrdem(orcamentoId, validarEObterNumeroOs(token));
+        return consultarOrcamentoDaOsUseCase.execute(orcamentoId, validarEObterNumeroOs(token));
     }
 
     public OrcamentoEntity aprovar(Long orcamentoId, String token) {
-        return orcamentoService.aprovarDaOrdem(orcamentoId, validarEObterNumeroOs(token));
+        return decidirOrcamentoUseCase.aprovarDaOrdem(orcamentoId, validarEObterNumeroOs(token));
     }
 
     private String validarEObterNumeroOs(String token) {

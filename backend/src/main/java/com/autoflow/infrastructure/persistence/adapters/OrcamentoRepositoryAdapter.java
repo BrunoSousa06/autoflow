@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.List;
+import com.autoflow.repository.orcamento.OrcamentoSpecifications;
+import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 
 @Component
 @RequiredArgsConstructor
@@ -66,5 +69,10 @@ public class OrcamentoRepositoryAdapter implements OrcamentoGateway {
             String numeroOs) {
 
         return repository.findTopByNumeroOsOrderByVersaoDesc(numeroOs);
+    }
+
+    @Override
+    public List<OrcamentoEntity> findAll(OrcamentoFiltro filtro) {
+        return repository.findAll(OrcamentoSpecifications.comFiltros(filtro));
     }
 }

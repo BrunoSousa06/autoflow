@@ -16,6 +16,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       APP_PUBLIC_TOKEN_SECRET: ${APP_PUBLIC_TOKEN_SECRET}
       FRONTEND_PUBLIC_BASE_URL: ${FRONTEND_PUBLIC_BASE_URL:-http://localhost:4200}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
     depends_on:
       db:
         condition: service_healthy
@@ -37,7 +38,7 @@ services:
     ports:
       - "4200:8080"
     environment:
-      BACKEND_URL: ${BACKEND_URL}
+      BACKEND_URL: ${BACKEND_URL:-http://app:8081}
     depends_on:
       app:
         condition: service_healthy
