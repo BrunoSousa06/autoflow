@@ -4,6 +4,7 @@ import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.usecases.ordemservico.DetalharOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.ListarOrdensServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.IniciarDiagnosticoUseCase;
@@ -13,7 +14,7 @@ import com.autoflow.application.usecases.ordemservico.IniciarServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.FinalizarServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.EntregarOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.FinalizarDiagnosticoUseCase;
-import com.autoflow.application.usecases.ordemservico.CriarOrdemServicoUseCase;
+import com.autoflow.service.ordemservico.CriarOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.IncluirServicosUseCase;
 import com.autoflow.application.usecases.ordemservico.AtribuirMecanicoUseCase;
 import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
@@ -21,7 +22,6 @@ import com.autoflow.infrastructure.persistence.mapper.ItensNecessariosMapperImpl
 import com.autoflow.infrastructure.persistence.mapper.ServicoSolicitadoMapperImpl;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
-import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -129,7 +129,7 @@ class OrdemServicoControllerTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(criarOrdemServicoUseCase.execute(eq("52998224725"), any(VeiculoOrdemServicoRequest.class), anyList()))
+        when(criarOrdemServicoUseCase.execute(eq("52998224725"), any(VeiculoOrdemServicoInput.class), anyList()))
                 .thenReturn(new OrdemServicoCriadaOutput(ordemServico, "token-acompanhamento"));
 
         mockMvc.perform(post("/ordens-servico")
@@ -157,7 +157,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.status").value("RECEBIDA"))
                 .andExpect(jsonPath("$.servicos[0].id").value(55L));
 
-        ArgumentCaptor<VeiculoOrdemServicoRequest> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoRequest.class);
+        ArgumentCaptor<VeiculoOrdemServicoInput> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoInput.class);
         ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
         verify(criarOrdemServicoUseCase).execute(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
         assertEquals("NEX0517", veiculoCaptor.getValue().placa());

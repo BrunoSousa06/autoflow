@@ -2,19 +2,21 @@ package com.autoflow.presentation.veiculo;
 
 
 import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.dto.veiculo.PageInput;
+import com.autoflow.application.dto.veiculo.PageOutput;
 import com.autoflow.application.dto.veiculo.VeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.usecases.veiculo.*;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.presentation.veiculo.response.VeiculoResponse;
-import com.autoflow.infrastructure.persistence.mapper.VeiculoControllerMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -84,17 +86,21 @@ public class VeiculoController {
 
         VeiculoInput input =
                 new VeiculoInput(
-                        placa,
+                        marca,
                         ano,
-                        modelo,
-                        marca
+                        placa,
+                        modelo
                 );
 
-        Page<VeiculoOutput> output =
-                listarVeiculosUseCase.execute(input, pageable);
+        PageOutput<VeiculoOutput> output =
+                listarVeiculosUseCase.execute(input, new PageInput(page, size));
 
-        return ResponseEntity.ok(
-                output.map(mapper::toResponse));
+        Page<VeiculoResponse> response = new PageImpl<>(
+                output.content().stream().map(mapper::toResponse).toList(),
+                pageable,
+                output.totalElements());
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Atualizar veículo")

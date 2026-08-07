@@ -2,10 +2,10 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 
-final class StatusOrdemServicoMensagemPolicy {
+public final class StatusOrdemServicoMensagemPolicy {
     private StatusOrdemServicoMensagemPolicy() {}
 
-    static String mensagem(StatusOrdemServico status) {
+    public static String mensagem(StatusOrdemServico status) {
         return switch (status) {
             case RECEBIDA -> "Recebemos sua ordem de serviço. Em breve iniciaremos o diagnóstico.";
             case EM_DIAGNOSTICO -> "Seu veículo está em diagnóstico técnico.";

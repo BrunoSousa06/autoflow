@@ -5,11 +5,11 @@ import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
-import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.service.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
 import com.autoflow.application.usecases.usuario.BuscarMecanicoPorIdUseCase;
 import com.autoflow.application.usecases.usuario.BuscarUsuarioPorEmailUseCase;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
-import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -65,7 +65,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private static final SecureRandom TOKEN_RANDOM = new SecureRandom();
 
     private final OrdemServicoRepository ordemServicoRepository;
-    private final BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
+    private final BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoUseCase;
     private final ServicoService servicoService;
     private final BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase;
     private final BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase;
@@ -84,7 +84,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase;
 
     @Autowired
-    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
+    public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
                                    BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase, BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase,
                                    HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService,
                                    OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl,
@@ -117,7 +117,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Transactional
     public OrdemServicoCriada criar(
             String cpfCnpj,
-            VeiculoOrdemServicoRequest veiculoRequest,
+            VeiculoOrdemServicoInput veiculoRequest,
             List<ServicoSolicitadoEntity> servicosSolicitados
     ) {
         ClienteEntity cliente =

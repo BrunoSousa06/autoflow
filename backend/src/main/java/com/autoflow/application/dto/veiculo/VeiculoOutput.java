@@ -6,7 +6,19 @@ public record VeiculoOutput(
         String marca,
         String modelo,
         Integer ano,
-        Long clienteId
+        Long clienteId,
+        VeiculoClienteOutput cliente
 
 ) {
+
+    public VeiculoOutput(
+            Long id,
+            String placa,
+            String marca,
+            String modelo,
+            Integer ano,
+            Long clienteId
+    ) {
+        this(id, placa, marca, modelo, ano, clienteId, null);
+    }
 }

@@ -1,70 +1,43 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.policy.PlacaPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class BuscarOuCadastrarVeiculoUseCase {
 
-    private final VeiculoRepository veiculoRepository;
+    private final VeiculoGateway veiculoGateway;
 
-    public VeiculoEntity execute(
-            ClienteEntity cliente,
-            VeiculoOrdemServicoRequest request) {
+    public VeiculoOutput execute(Long clienteId, VeiculoOrdemServicoInput input) {
+        String placa = PlacaPolicy.normalizar(input.placa());
+        VeiculoOutput existente = veiculoGateway.findByPlaca(placa).orElse(null);
 
-        String placa = normalizarPlaca(request.placa());
-
-        Optional<VeiculoEntity> existente =
-                veiculoRepository.findByPlaca(placa);
-
-        if (existente.isPresent()) {
-
-            VeiculoEntity veiculo = existente.get();
-
-            if (!veiculo.getCliente().getId().equals(cliente.getId())) {
-
+        if (existente != null) {
+            if (!existente.clienteId().equals(clienteId)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
                         "Placa já cadastrada para outro cliente.");
             }
-
-            return veiculo;
+            return existente;
         }
 
-        if (request.marca() == null
-                || request.marca().isBlank()
-                || request.modelo() == null
-                || request.modelo().isBlank()
-                || request.ano() == null) {
-
+        if (input.marca() == null || input.marca().isBlank()
+                || input.modelo() == null || input.modelo().isBlank()
+                || input.ano() == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Marca, modelo e ano são obrigatórios para cadastrar um novo veículo.");
         }
 
-        VeiculoEntity novo = new VeiculoEntity();
-        novo.setCliente(cliente);
-        novo.setPlaca(placa);
-        novo.setMarca(request.marca());
-        novo.setModelo(request.modelo());
-        novo.setAno(request.ano());
-
-        return veiculoRepository.save(novo);
-    }
-
-    private String normalizarPlaca(String placa) {
-
-        return placa
-                .replaceAll("[^A-Za-z0-9]", "")
-                .toUpperCase();
+        return veiculoGateway.save(
+                new VeiculoOrdemServicoInput(placa, input.marca(), input.modelo(), input.ano()),
+                clienteId);
     }
 }

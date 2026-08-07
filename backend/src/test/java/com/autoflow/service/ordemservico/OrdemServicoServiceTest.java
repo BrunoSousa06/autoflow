@@ -5,7 +5,8 @@ import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
-import com.autoflow.application.usecases.veiculo.BuscarOuCadastrarVeiculoUseCase;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.service.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
 import com.autoflow.application.usecases.usuario.BuscarMecanicoPorIdUseCase;
 import com.autoflow.application.usecases.usuario.BuscarUsuarioPorEmailUseCase;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
@@ -66,7 +67,7 @@ class OrdemServicoServiceTest {
     @Mock
     OrdemServicoRepository repository;
     @Mock
-    BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
+    BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoUseCase;
     @Mock
     ServicoService servicoService;
     @Mock
@@ -140,7 +141,7 @@ class OrdemServicoServiceTest {
         when(
                 buscarOuCadastrarVeiculoUseCase.execute(
                         cliente,
-                        veiculoRequest
+                        toVeiculoInput(veiculoRequest)
                 )
         ).thenReturn(veiculo);
 
@@ -165,7 +166,7 @@ class OrdemServicoServiceTest {
 
         OrdemServicoCriada resultado = service.criar(
                 "12345678901",
-                veiculoRequest,
+                toVeiculoInput(veiculoRequest),
                 List.of(solicitado)
         );
 
@@ -276,7 +277,7 @@ class OrdemServicoServiceTest {
         when(
                 buscarOuCadastrarVeiculoUseCase.execute(
                         cliente,
-                        veiculoRequest
+                        toVeiculoInput(veiculoRequest)
                 )
         ).thenReturn(veiculo);
 
@@ -284,7 +285,7 @@ class OrdemServicoServiceTest {
                 IllegalArgumentException.class,
                 () -> service.criar(
                         "12345678901",
-                        veiculoRequest,
+                        toVeiculoInput(veiculoRequest),
                         null
                 )
         );
@@ -302,7 +303,7 @@ class OrdemServicoServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> service.criar("12345678901", veiculoRequest, servicosSolicitados)
+                () -> service.criar("12345678901", toVeiculoInput(veiculoRequest), servicosSolicitados)
         );
 
         assertSame(erro, exception);
@@ -321,12 +322,12 @@ class OrdemServicoServiceTest {
         ResponseStatusException erro = new ResponseStatusException(HttpStatus.CONFLICT, "Placa ja cadastrada para outro cliente.");
 
         when(buscarClientePorCpfCnpjUseCase.execute("12345678901")).thenReturn(cliente);
-        when(buscarOuCadastrarVeiculoUseCase.execute(cliente, veiculoRequest)).thenThrow(erro);
+        when(buscarOuCadastrarVeiculoUseCase.execute(cliente, toVeiculoInput(veiculoRequest))).thenThrow(erro);
         List<ServicoSolicitadoEntity> servicosSolicitados = List.of(new ServicoSolicitadoEntity(10L));
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> service.criar("12345678901", veiculoRequest, servicosSolicitados)
+                () -> service.criar("12345678901", toVeiculoInput(veiculoRequest), servicosSolicitados)
         );
 
         assertSame(erro, exception);
@@ -1148,6 +1149,14 @@ class OrdemServicoServiceTest {
 
     private VeiculoOrdemServicoRequest criarVeiculoRequestCompleto() {
         return new VeiculoOrdemServicoRequest("ABC1D23", "Honda", "Civic", 2020);
+    }
+
+    private VeiculoOrdemServicoInput toVeiculoInput(VeiculoOrdemServicoRequest request) {
+        return new VeiculoOrdemServicoInput(
+                request.placa(),
+                request.marca(),
+                request.modelo(),
+                request.ano());
     }
 
     private UsuarioEntity criarUsuario(Long usuarioId, String nome, String email, RoleEnum role) {

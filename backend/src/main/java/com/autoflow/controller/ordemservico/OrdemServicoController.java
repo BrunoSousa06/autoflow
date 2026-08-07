@@ -3,6 +3,7 @@ package com.autoflow.controller.ordemservico;
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.usecases.ordemservico.DetalharOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.ListarOrdensServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.IniciarDiagnosticoUseCase;
@@ -12,7 +13,7 @@ import com.autoflow.application.usecases.ordemservico.IniciarServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.FinalizarServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.EntregarOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.FinalizarDiagnosticoUseCase;
-import com.autoflow.application.usecases.ordemservico.CriarOrdemServicoUseCase;
+import com.autoflow.service.ordemservico.CriarOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.IncluirServicosUseCase;
 import com.autoflow.application.usecases.ordemservico.AtribuirMecanicoUseCase;
 import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
@@ -122,7 +123,11 @@ public class OrdemServicoController {
 
         OrdemServicoCriadaOutput osCriada = criarOrdemServicoUseCase.execute(
                 request.cpfCnpj(),
-                request.veiculo(),
+                new VeiculoOrdemServicoInput(
+                        request.veiculo().placa(),
+                        request.veiculo().marca(),
+                        request.veiculo().modelo(),
+                        request.veiculo().ano()),
                 servicos
         );
 

@@ -1,10 +1,6 @@
 package com.autoflow.application.security;
 
-import com.autoflow.domain.ordemservico.ClienteOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import org.junit.jupiter.api.BeforeEach;
+import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,101 +9,49 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class AuthorizationServiceTest {
 
     @Mock
-    private UsuarioAutenticadoService usuarioAutenticadoService;
-
-    @Mock
     private ClienteAutenticadoService clienteAutenticadoService;
-
     @InjectMocks
-    private AuthorizationService authorizationService;
+    private AuthorizationService service;
 
-    private ClienteEntity cliente1;
-    private ClienteEntity cliente2;
-    private VeiculoEntity veiculoCliente1;
-    private OrdemServicoEntity osCliente1;
+    private final VeiculoOutput veiculo =
+            new VeiculoOutput(10L, "ABC1234", "Honda", "Civic", 2020, 1L);
 
-    @BeforeEach
-    void setUp() {
+    @Test
+    void devePermitirAcessoParaStaff() {
+        when(clienteAutenticadoService.getClienteId()).thenReturn(Optional.empty());
 
-        cliente1 = new ClienteEntity();
-        cliente1.setId(1L);
-        cliente1.setNome("Bruno");
-        cliente1.setCpfCnpj("12345678901");
-        cliente1.setTelefone("11999999999");
-        cliente1.setEmail("bruno@email.com");
-
-        cliente2 = new ClienteEntity();
-        cliente2.setId(2L);
-        cliente2.setNome("João");
-        cliente2.setCpfCnpj("98765432100");
-        cliente2.setTelefone("11888888888");
-        cliente2.setEmail("joao@email.com");
-
-        veiculoCliente1 = new VeiculoEntity();
-        veiculoCliente1.setId(10L);
-        veiculoCliente1.setCliente(cliente1);
-
-
-        osCliente1 = new OrdemServicoEntity();
-        osCliente1.setId(20L);
-        osCliente1.setVeiculo(veiculoCliente1);
+        assertDoesNotThrow(() -> service.validarPermissao(veiculo));
     }
 
     @Test
-    void devePermitirAcessoVeiculoParaNaoCliente() {
-        when(usuarioAutenticadoService.isCliente()).thenReturn(false);
+    void devePermitirAcessoAoProprietario() {
+        when(clienteAutenticadoService.getClienteId()).thenReturn(Optional.of(1L));
 
-        assertDoesNotThrow(() -> authorizationService.validarPermissao(veiculoCliente1));
-
-        verify(usuarioAutenticadoService).isCliente();
-        verifyNoInteractions(clienteAutenticadoService);
-    }
-
-    @Test
-    void devePermitirAcessoVeiculoParaClienteProprietario() {
-        when(usuarioAutenticadoService.isCliente()).thenReturn(true);
-        when(clienteAutenticadoService.getClienteId()).thenReturn(cliente1.getId());
-
-        assertDoesNotThrow(() -> authorizationService.validarPermissao(veiculoCliente1));
-
-        verify(usuarioAutenticadoService).isCliente();
+        assertDoesNotThrow(() -> service.validarPermissao(veiculo));
         verify(clienteAutenticadoService).getClienteId();
     }
 
     @Test
-    void deveNegarAcessoVeiculoParaClienteNaoProprietario() {
-        when(usuarioAutenticadoService.isCliente()).thenReturn(true);
-        when(clienteAutenticadoService.getClienteId()).thenReturn(cliente2.getId());
+    void deveNegarAcessoAClienteDiferente() {
+        when(clienteAutenticadoService.getClienteId()).thenReturn(Optional.of(2L));
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> authorizationService.validarPermissao(veiculoCliente1)
-        );
+                () -> service.validarPermissao(veiculo));
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
-        assertEquals(
-                "Você não tem permissão para acessar este veículo.",
-                exception.getReason()
-        );
-
-        verify(usuarioAutenticadoService).isCliente();
-        verify(clienteAutenticadoService).getClienteId();
+        assertEquals("Você não tem permissão para acessar este veículo.", exception.getReason());
     }
-
-    @Test
-    void devePermitirAcessoOrdemServicoParaNaoCliente() {
-        when(usuarioAutenticadoService.isCliente()).thenReturn(false);
-
-        assertDoesNotThrow(() -> authorizationService.validarPermissao(osCliente1));
-
-        verify(usuarioAutenticadoService).isCliente();
-        verifyNoInteractions(clienteAutenticadoService);
-    }
-
 }
