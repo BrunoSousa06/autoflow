@@ -3,7 +3,6 @@ package com.autoflow.application.usecases.pecainsumo;
 import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
@@ -42,22 +41,31 @@ class BaixarEstoqueUseCaseTest {
     }
 
     @Test
-    void deveBaixarItensDisponiveisEManterPendentes() {
+    void deveBloquearBaixaQuandoQualquerItemEstiverInsuficiente() {
         EstoqueItemOutput disponivel = estoque(1L, 5);
         EstoqueItemOutput insuficiente = estoque(2L, 1);
         when(gateway.findAllByIdForUpdate(List.of(1L, 2L)))
                 .thenReturn(List.of(disponivel, insuficiente));
 
-        var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(
+        assertThrows(IllegalStateException.class, () -> new BaixarEstoqueUseCase(gateway).execute(List.of(
                 item(1L, 3),
-                item(2L, 2)));
+                item(2L, 2))));
+
+        verify(gateway, never()).saveAll(any());
+    }
+
+    @Test
+    void deveBaixarTodosOsItensQuandoEstoqueForSuficiente() {
+        when(gateway.findAllByIdForUpdate(List.of(1L, 2L)))
+                .thenReturn(List.of(estoque(1L, 5), estoque(2L, 3)));
+
+        var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(
+                item(1L, 3), item(2L, 2)));
 
         assertEquals(2, resultado.size());
         assertEquals(StatusItemNecessario.UTILIZADO, resultado.get(0).getStatus());
-        assertEquals(StatusItemNecessario.PENDENTE, resultado.get(1).getStatus());
-        assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE,
-                resultado.get(1).getMotivoPendencia());
-        verify(gateway).saveAll(List.of(estoque(1L, 2)));
+        assertEquals(StatusItemNecessario.UTILIZADO, resultado.get(1).getStatus());
+        verify(gateway).saveAll(List.of(estoque(1L, 2), estoque(2L, 1)));
     }
 
     @Test
@@ -86,18 +94,10 @@ class BaixarEstoqueUseCaseTest {
     }
 
     @Test
-    void deveConsumirUmaUnicaQuantidadeParaItensRepetidosDoMesmoEstoque() {
-        EstoqueItemOutput estoque = estoque(1L, 5);
-        when(gateway.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(estoque));
-
-        var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(
-                item(1L, 3),
-                item(1L, 3)
-        ));
-
-        assertEquals(StatusItemNecessario.UTILIZADO, resultado.get(0).getStatus());
-        assertEquals(StatusItemNecessario.PENDENTE, resultado.get(1).getStatus());
-        verify(gateway).saveAll(List.of(estoque(1L, 2)));
+    void deveRejeitarItensRepetidosDoMesmoEstoque() {
+        assertThrows(IllegalArgumentException.class, () -> new BaixarEstoqueUseCase(gateway).execute(List.of(
+                item(1L, 3), item(1L, 3))));
+        verify(gateway, never()).saveAll(any());
     }
 
     @Test
@@ -133,9 +133,8 @@ class BaixarEstoqueUseCaseTest {
     void naoDevePersistirQuandoNenhumItemPuderSerBaixado() {
         when(gateway.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(estoque(1L, 0)));
 
-        var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(item(1L, 1)));
-
-        assertEquals(StatusItemNecessario.PENDENTE, resultado.getFirst().getStatus());
+        assertThrows(IllegalStateException.class,
+                () -> new BaixarEstoqueUseCase(gateway).execute(List.of(item(1L, 1))));
         verify(gateway, never()).saveAll(any());
     }
 

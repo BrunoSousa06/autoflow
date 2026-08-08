@@ -36,13 +36,14 @@ class OrcamentoReparoAdicionalAdaptersTest {
                 orcamentoGateway
         );
         var ordemServico = new OrdemServicoEntity();
+        ordemServico.setId(10L);
         ordemServico.setNumeroOs("OS-123");
         var reparo = new ReparoAdicionalEntity();
         var criadoEm = LocalDateTime.of(2026, 8, 2, 12, 30);
         var orcamentoCriado = new OrcamentoEntity();
         var orcamentoSalvo = new OrcamentoEntity();
 
-        when(versioningService.proximaVersaoPrincipalNumeroOs("OS-123")).thenReturn(2);
+        when(versioningService.proximaVersaoAdicional(10L)).thenReturn(2);
         when(factory.criarAdicionalDisponivel(ordemServico, reparo, 2, criadoEm))
                 .thenReturn(orcamentoCriado);
         when(orcamentoGateway.save(orcamentoCriado)).thenReturn(orcamentoSalvo);
@@ -51,7 +52,7 @@ class OrcamentoReparoAdicionalAdaptersTest {
 
         assertSame(orcamentoSalvo, resultado);
         InOrder ordem = inOrder(versioningService, factory, orcamentoGateway);
-        ordem.verify(versioningService).proximaVersaoPrincipalNumeroOs("OS-123");
+        ordem.verify(versioningService).proximaVersaoAdicional(10L);
         ordem.verify(factory).criarAdicionalDisponivel(ordemServico, reparo, 2, criadoEm);
         ordem.verify(orcamentoGateway).save(orcamentoCriado);
     }

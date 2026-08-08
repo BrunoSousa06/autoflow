@@ -19,6 +19,8 @@ import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.usuario.RoleEnum;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +56,7 @@ public class CriarReparoAdicionalUseCase {
     public CriarReparoAdicionalOutput execute(CriarReparoAdicionalCommand command) {
         validarCommand(command);
 
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(command.numeroOs())
+        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(command.numeroOs())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Ordem de serviço não encontrada."
@@ -63,12 +65,13 @@ public class CriarReparoAdicionalUseCase {
         validarStatus(ordemServico);
         validarServicosDuplicados(command.servicos(), ordemServico);
 
-        Long mecanicoId = usuarioGateway.findByEmail(command.emailMecanico())
+        var usuario = usuarioGateway.findByEmail(command.emailMecanico())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Usuário autenticado não encontrado."
-                ))
-                .getId();
+                ));
+        validarAutorizacao(ordemServico, usuario);
+        Long mecanicoId = usuario.getId();
 
         List<ServicoSolicitadoEntity> servicos = command.servicos().stream()
                 .map(this::enriquecerServico)
@@ -123,11 +126,30 @@ public class CriarReparoAdicionalUseCase {
         }
     }
 
+    private void validarAutorizacao(OrdemServicoEntity ordemServico, UsuarioEntity usuario) {
+        if (RoleEnum.ADMIN.equals(usuario.getRole())) {
+            return;
+        }
+        if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente mecânico atribuído ou administrador pode criar reparo adicional.");
+        }
+        if (ordemServico.getDiagnostico() == null || ordemServico.getDiagnostico().getMecanico() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A ordem de serviço ainda não possui mecânico atribuído.");
+        }
+        if (!java.util.Objects.equals(ordemServico.getDiagnostico().getMecanico().getId(), usuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente o mecânico atribuído pode criar reparo adicional.");
+        }
+    }
+
     private void validarServicosDuplicados(
             List<ServicoReparoAdicionalCommand> servicos,
             OrdemServicoEntity ordemServico
     ) {
         Set<Long> idsInformados = new HashSet<>();
+        Set<Long> pecasInformadas = new HashSet<>();
         for (ServicoReparoAdicionalCommand servico : servicos) {
             if (servico == null || servico.servicoId() == null) {
                 throw new IllegalArgumentException("Servico e obrigatorio.");
@@ -136,6 +158,16 @@ public class CriarReparoAdicionalUseCase {
                 throw new IllegalArgumentException(
                         "Serviço duplicado no reparo adicional: ID " + servico.servicoId()
                 );
+            }
+            if (servico.itensNecessarios() == null || servico.itensNecessarios().isEmpty()) {
+                continue;
+            }
+            for (ItemReparoAdicionalCommand item : servico.itensNecessarios()) {
+                if (item != null && item.pecaInsumoId() != null && !pecasInformadas.add(item.pecaInsumoId())) {
+                    throw new IllegalArgumentException(
+                            "Peça/Insumo duplicado no reparo adicional: ID " + item.pecaInsumoId()
+                    );
+                }
             }
         }
 

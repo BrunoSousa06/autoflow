@@ -26,7 +26,7 @@ public class OrcamentoComplementarAdapter implements OrcamentoComplementarGatewa
             ReparoAdicionalEntity reparo,
             LocalDateTime criadoEm
     ) {
-        int versao = versioningService.proximaVersaoPrincipalNumeroOs(ordemServico.getNumeroOs());
+        int versao = versioningService.proximaVersaoAdicional(ordemServico.getId());
         OrcamentoEntity orcamento = factory.criarAdicionalDisponivel(
                 ordemServico,
                 reparo,
