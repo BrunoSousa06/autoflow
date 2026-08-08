@@ -245,6 +245,10 @@ public class OrdemServicoEntity {
         return veiculo.getId();
     }
 
+    public String getVeiculoPlaca() {
+        return veiculo.getPlaca();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

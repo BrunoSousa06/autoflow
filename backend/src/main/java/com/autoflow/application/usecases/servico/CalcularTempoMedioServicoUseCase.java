@@ -3,11 +3,9 @@ package com.autoflow.application.usecases.servico;
 import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
 import com.autoflow.application.gateway.MetricsGateway;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component
 @RequiredArgsConstructor
 public class CalcularTempoMedioServicoUseCase {
 

@@ -143,4 +143,14 @@ class PecaInsumoIT extends AbstractIT {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
+
+    @Test
+    @DisplayName("deve retornar 400 ao cadastrar quantidade negativa")
+    void deveRetornar400QuantidadeNegativa() {
+        var body = TestUtils.pecaRequest("Peca com Quantidade Negativa", -1, 50.00, "PECA");
+
+        ResponseEntity<String> response = post("/peca-insumo", body, adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
 }

@@ -4,11 +4,13 @@ import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoExce
 import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.exception.ClienteDuplicadoException;
+import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
 import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.exception.VeiculoDadosInvalidosException;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.exception.VeiculoNaoEncontradoException;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
+import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -82,6 +84,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleClienteDuplicado(
             ClienteDuplicadoException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ClienteAutenticadoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handleClienteAutenticadoNaoEncontrado(
+            ClienteAutenticadoNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("erro", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UsuarioNaoAutenticadoException.class)
+    public ResponseEntity<Map<String, String>> handleUsuarioNaoAutenticado(
+            UsuarioNaoAutenticadoException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("erro", ex.getMessage()));
     }
 

@@ -3,23 +3,19 @@ package com.autoflow.presentation.servico;
 import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
+import com.autoflow.application.dto.servico.PageInput;
+import com.autoflow.application.dto.servico.PageOutput;
 import com.autoflow.application.usecases.servico.*;
-import com.autoflow.infrastructure.persistence.mapper.ServicoMapperImpl;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
 import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
-import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
-import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -54,7 +50,7 @@ class ServicoControllerTest {
     @Mock
     private CalcularTempoMedioServicoUseCase calcularTempoMedioServicoUseCase;
 
-    private ServicoMapper servicoMapper;
+    private ServicoControllerMapper servicoMapper;
 
     private ServicoController servicoController;
 
@@ -65,7 +61,7 @@ class ServicoControllerTest {
     @BeforeEach
     void setup() {
 
-        servicoMapper = new ServicoMapperImpl();
+        servicoMapper = new ServicoControllerMapperImpl();
 
         servicoController = new ServicoController(
                 criarServicoUseCase,
@@ -153,10 +149,10 @@ class ServicoControllerTest {
     @Test
     void deveListarTodosServicos() {
 
-        Page<ServicoOutput> outputPage =
-                new PageImpl<>(List.of(servicoOutput));
+        PageOutput<ServicoOutput> outputPage =
+                new PageOutput<>(List.of(servicoOutput), 0, 20, 1);
 
-        when(listarServicosUseCase.execute(any(Pageable.class)))
+        when(listarServicosUseCase.execute(any(PageInput.class)))
                 .thenReturn(outputPage);
 
         ResponseEntity<Page<ServicoResponse>> resultado =
@@ -169,8 +165,7 @@ class ServicoControllerTest {
                 "Troca de Óleo",
                 resultado.getBody().getContent().getFirst().nome());
 
-        verify(listarServicosUseCase)
-                .execute(any(Pageable.class));
+        verify(listarServicosUseCase).execute(any(PageInput.class));
     }
 
     @Test

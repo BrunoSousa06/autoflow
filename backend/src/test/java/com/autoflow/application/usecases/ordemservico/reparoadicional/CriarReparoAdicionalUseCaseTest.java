@@ -9,6 +9,7 @@ import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
@@ -24,7 +25,6 @@ import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -251,6 +251,9 @@ class CriarReparoAdicionalUseCaseTest {
                 () -> useCase.execute(command(5L, 7L, 2)));
 
         assertEquals(HttpStatus.FORBIDDEN, erro.getStatusCode());
+        assertEquals("Somente o mecânico atribuído pode criar reparo adicional.", erro.getReason());
+        assertEquals(20L, ordemServico.getDiagnostico().getMecanico().getId());
+        assertEquals(21L, mecanico.getId());
         verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
     }
 
@@ -445,12 +448,13 @@ class CriarReparoAdicionalUseCaseTest {
         return ordemServico;
     }
 
-    private ServicoEntity servicoCatalogo(Long id) {
-        var servico = new ServicoEntity();
-        servico.setId(id);
-        servico.setNome("Troca de pastilha");
-        servico.setValor(new BigDecimal("120.00"));
-        return servico;
+    private ServicoOutput servicoCatalogo(Long id) {
+        return ServicoOutput.builder()
+                .id(id)
+                .nome("Troca de pastilha")
+                .valor(new BigDecimal("120.00"))
+                .ativo(true)
+                .build();
     }
 
     private ItemNecessarioEntity itemEnriquecido(Long id, int quantidade) {

@@ -1,18 +1,19 @@
 package com.autoflow.service.ordemservico;
 
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
+import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.AcompanharOrdemServicoUseCase;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.service.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
 import com.autoflow.application.usecases.usuario.BuscarMecanicoPorIdUseCase;
 import com.autoflow.application.usecases.usuario.BuscarUsuarioPorEmailUseCase;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
-import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.controller.ordemservico.request.VeiculoOrdemServicoRequest;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
@@ -24,7 +25,6 @@ import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoNotificacaoGateway;
 import com.autoflow.application.gateway.OrcamentoVersioningGateway;
@@ -90,8 +90,6 @@ class OrdemServicoServiceTest {
     @Mock
     OrcamentoPublicacaoGateway orcamentoPublicacaoGateway;
     @Mock
-    ClienteRepository clienteRepository;
-    @Mock
     HistoricoStatusOsRepository historicoStatusOsRepository;
     @Mock
     OrcamentoNotificacaoGateway orcamentoNotificacaoGateway;
@@ -103,6 +101,8 @@ class OrdemServicoServiceTest {
             gerarTokenAcompanhamentoUseCase;
     @Mock
     private EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase;
+    @Mock
+    private AcompanharOrdemServicoUseCase acompanharOrdemServicoUseCase;
 
     @Test
     void deveCriarOrdemServicoComServicosVinculadosETokenDeAcompanhamento() {
@@ -986,40 +986,17 @@ class OrdemServicoServiceTest {
     }
 
     @Test
-    void deveListarAcompanhamentoDoClienteAutenticado() {
-        ClienteEntity cliente = criarCliente(1L);
-        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
-        os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
-        OrcamentoEntity orcamento = criarOrcamento(99L, os.getNumeroOs());
-        HistoricoStatusOsEntity historico = HistoricoStatusOsEntity.criar(
-                os.getId(),
-                StatusOrdemServico.AGUARDANDO_APROVACAO,
-                "O orçamento está disponível e aguardando sua aprovação.",
-                os.getNumeroOs()
-        );
+    void deveDelegarAcompanhamentoParaUseCaseEDevolverOutputInterno() {
+        AcompanhamentoOrdemServicoOutput output = mock(AcompanhamentoOrdemServicoOutput.class);
+        when(acompanharOrdemServicoUseCase.execute("cliente@autoflow.com"))
+                .thenReturn(List.of(output));
 
-        when(clienteRepository.findByUsuarioEmail("cliente@autoflow.com")).thenReturn(Optional.of(cliente));
-        when(repository.findByCliente_IdOrderByDataAberturaDesc(cliente.getId())).thenReturn(List.of(os));
-        when(orcamentoGateway.findByNumeroOsAndStatus(os.getNumeroOs(), com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL))
-                .thenReturn(Optional.of(orcamento));
-        when(historicoStatusOsRepository.findByNumeroOsOrderByRegistradoEmAsc(os.getNumeroOs()))
-                .thenReturn(List.of(historico));
+        List<AcompanhamentoOrdemServicoOutput> resultado =
+                service.listarAcompanhamentoCliente("cliente@autoflow.com");
 
-        var resultado = service.listarAcompanhamentoCliente("cliente@autoflow.com");
-
-        assertEquals(1, resultado.size());
-        var acompanhamento = resultado.getFirst();
-        assertEquals(os.getNumeroOs(), acompanhamento.numeroOs());
-        assertEquals("ABC1D23", acompanhamento.placa());
-        assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, acompanhamento.statusAtual());
-        assertEquals(os.getUltimaAtualizacao(), acompanhamento.ultimaAtualizacao());
-        assertEquals(
-                AcompanhamentoOrdemServicoResponse.mensagemParaCliente(StatusOrdemServico.AGUARDANDO_APROVACAO),
-                acompanhamento.mensagemParaCliente()
-        );
-        assertEquals(99L, acompanhamento.orcamentoAtual().id());
-        assertEquals(com.autoflow.domain.orcamento.StatusOrcamento.DISPONIVEL, acompanhamento.situacaoAprovacao());
-        assertEquals(1, acompanhamento.historicoStatus().size());
+        assertSame(output, resultado.getFirst());
+        verify(acompanharOrdemServicoUseCase).execute("cliente@autoflow.com");
+        verifyNoInteractions(repository, historicoStatusOsRepository);
     }
 
     @Test
@@ -1112,14 +1089,16 @@ class OrdemServicoServiceTest {
 
     @Test
     void deveLancarNotFoundQuandoClienteAutenticadoNaoExistirNoAcompanhamento() {
-        when(clienteRepository.findByUsuarioEmail("cliente@autoflow.com")).thenReturn(Optional.empty());
+        ResponseStatusException erro = new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Cliente autenticado nao encontrado.");
+        when(acompanharOrdemServicoUseCase.execute("cliente@autoflow.com")).thenThrow(erro);
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
                 () -> service.listarAcompanhamentoCliente("cliente@autoflow.com")
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertSame(erro, exception);
         verifyNoInteractions(repository, historicoStatusOsRepository);
     }
 

@@ -11,6 +11,7 @@ import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -193,7 +194,7 @@ public class CriarReparoAdicionalUseCase {
             throw new IllegalArgumentException("Servico do reparo adicional deve ter ao menos um item necessario.");
         }
 
-        var servicoCatalogo = servicoGateway.findById(command.servicoId())
+        ServicoOutput servicoCatalogo = servicoGateway.findById(command.servicoId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Serviço não encontrado com o ID: " + command.servicoId()

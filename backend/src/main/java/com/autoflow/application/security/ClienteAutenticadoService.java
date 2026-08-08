@@ -1,13 +1,13 @@
 package com.autoflow.application.security;
 
 import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
+import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -20,8 +20,7 @@ public class ClienteAutenticadoService {
 
     public Optional<Long> getClienteId() {
         CurrentUser currentUser = currentUserGateway.getCurrentUser()
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
+                .orElseThrow(() -> new UsuarioNaoAutenticadoException(
                         "Usuário não autenticado"));
 
         if (!currentUser.hasRole(RoleEnum.CLIENTE)) {
@@ -29,8 +28,7 @@ public class ClienteAutenticadoService {
         }
 
         Long clienteId = clienteGateway.findIdByUsuarioEmail(currentUser.email())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
+                .orElseThrow(() -> new ClienteAutenticadoNaoEncontradoException(
                         "Cliente não encontrado para o usuário autenticado"));
 
         return Optional.of(clienteId);

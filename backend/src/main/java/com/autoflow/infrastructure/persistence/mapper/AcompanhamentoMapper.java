@@ -5,16 +5,12 @@ import com.autoflow.application.dto.ordemservico.acompanhamento.HistoricoStatusO
 import com.autoflow.application.dto.ordemservico.acompanhamento.OrcamentoResumoOutput;
 import com.autoflow.application.dto.ordemservico.acompanhamento.ItemNecessarioOutput;
 import com.autoflow.application.dto.ordemservico.acompanhamento.ServicoSolicitadoOutput;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.HistoricoStatusOsResponse;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.OrcamentoResumoResponse;
 import com.autoflow.controller.ordemservico.response.ItemNecessarioResponse;
 import com.autoflow.controller.ordemservico.response.ServicoOsResponse;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 import java.util.List;
 
@@ -47,34 +43,4 @@ public interface AcompanhamentoMapper {
                 .map(this::toResponse).toList());
     }
 
-    default AcompanhamentoOrdemServicoOutput mapToOutPut(
-            OrdemServicoEntity ordemServico,
-            OrcamentoEntity orcamentoAtual,
-            List<HistoricoStatusOsEntity> historico) {
-
-        return new AcompanhamentoOrdemServicoOutput(
-                ordemServico.getNumeroOs(),
-                ordemServico.getVeiculo().getPlaca(),
-                ordemServico.getStatus(),
-                ordemServico.getDataAbertura(),
-                ordemServico.getUltimaAtualizacao(),
-                ordemServico.getServicosSolicitados().stream()
-                        .map(ServicoSolicitadoOutput::from)
-                        .toList(),
-                orcamentoAtual == null ? null : OrcamentoResumoOutput.from(orcamentoAtual),
-                orcamentoAtual == null ? null : orcamentoAtual.getStatus(),
-                mensagemParaCliente(ordemServico),
-                historico.stream().map(HistoricoStatusOsOutput::from).toList());
-    }
-
-    private static String mensagemParaCliente(OrdemServicoEntity ordemServico) {
-        return switch (ordemServico.getStatus()) {
-            case RECEBIDA -> "Recebemos sua ordem de serviço. Em breve iniciaremos o diagnóstico.";
-            case EM_DIAGNOSTICO -> "Seu veículo está em diagnóstico técnico.";
-            case AGUARDANDO_APROVACAO -> "O orçamento está disponível e aguardando sua aprovação.";
-            case EM_EXECUCAO -> "Os serviços aprovados estão em execução.";
-            case FINALIZADA -> "Os serviços foram finalizados. Seu veículo está aguardando entrega.";
-            case ENTREGUE -> "Seu veículo foi entregue. Obrigado por utilizar a AutoFlow.";
-        };
-    }
 }

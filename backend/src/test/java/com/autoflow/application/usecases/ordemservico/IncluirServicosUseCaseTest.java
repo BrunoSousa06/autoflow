@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.ordemservico;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
@@ -10,7 +11,6 @@ import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -43,7 +43,7 @@ class IncluirServicosUseCaseTest {
     @Test
     void deveIncluirServicoParaAdminDuranteDiagnostico() {
         OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
-        ServicoEntity catalogo = servico(5L);
+        ServicoOutput catalogo = servico(5L);
         UsuarioEntity admin = usuario(RoleEnum.ADMIN, 1L);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findByEmail("admin@autoflow.com"))
@@ -65,7 +65,7 @@ class IncluirServicosUseCaseTest {
         OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
         ordem.setDiagnostico(new DiagnosticoEntity());
         UsuarioEntity mecanico = usuario(RoleEnum.MECANICO, 2L);
-        ServicoEntity catalogo = servico(6L);
+        ServicoOutput catalogo = servico(6L);
         when(ordemServicoGateway.findByNumeroOs("OS-2")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com"))
                 .thenReturn(Optional.of(mecanico));
@@ -123,12 +123,13 @@ class IncluirServicosUseCaseTest {
         return ordem;
     }
 
-    private static ServicoEntity servico(Long id) {
-        var servico = new ServicoEntity();
-        servico.setId(id);
-        servico.setNome("Troca de oleo");
-        servico.setValor(new BigDecimal("100.00"));
-        return servico;
+    private static ServicoOutput servico(Long id) {
+        return ServicoOutput.builder()
+                .id(id)
+                .nome("Troca de oleo")
+                .valor(new BigDecimal("100.00"))
+                .ativo(true)
+                .build();
     }
 
     private static UsuarioEntity usuario(RoleEnum role, Long id) {

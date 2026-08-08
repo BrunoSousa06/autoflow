@@ -7,12 +7,12 @@ import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.AcompanharOrdemServicoUseCase;
+import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.service.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
 import com.autoflow.application.usecases.usuario.BuscarMecanicoPorIdUseCase;
 import com.autoflow.application.usecases.usuario.BuscarUsuarioPorEmailUseCase;
-import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
@@ -21,7 +21,6 @@ import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
 import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
@@ -56,7 +55,7 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 
-import static com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse.mensagemParaCliente;
+import static com.autoflow.application.usecases.ordemservico.StatusOrdemServicoMensagemPolicy.mensagem;
 
 
 @Slf4j
@@ -78,12 +77,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OrcamentoVersioningGateway orcamentoVersioningGateway;
     private final OrcamentoGateway orcamentoGateway;
     private final OrcamentoPublicacaoGateway orcamentoPublicacaoGateway;
-    private final ClienteRepository clienteRepository;
     private final HistoricoStatusOsRepository historicoStatusOsRepository;
     private final OrcamentoNotificacaoGateway orcamentoNotificacaoGateway;
     private final BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
     private final GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase;
     private final EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase;
+    private final AcompanharOrdemServicoUseCase acompanharOrdemServicoUseCase;
 
     @Autowired
     public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
@@ -91,11 +90,12 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                                    HistoricoStatusOsRepository historicoStatusOsRepository, BaixarEstoqueUseCase baixarEstoqueUseCase,
                                    OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl,
                                    OrcamentoNotificacaoGateway orcamentoNotificacaoGateway, OrcamentoVersioningGateway orcamentoVersioningGateway,
-                                   ClienteRepository clienteRepository, OrcamentoGateway orcamentoGateway, OrcamentoPublicacaoGateway orcamentoPublicacaoGateway,
-                                   BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase,
-                                   GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase,
-                                   EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase,
-                                   ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase) {
+                                    OrcamentoGateway orcamentoGateway, OrcamentoPublicacaoGateway orcamentoPublicacaoGateway,
+                                    BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase,
+                                    GerarTokenAcompanhamentoUseCase gerarTokenAcompanhamentoUseCase,
+                                    EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase,
+                                    ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase,
+                                    AcompanharOrdemServicoUseCase acompanharOrdemServicoUseCase) {
         this.ordemServicoRepository = ordemServicoRepository;
         this.buscarOuCadastrarVeiculoUseCase = buscarOuCadastrarVeiculoUseCase;
         this.servicoService = servicoService;
@@ -107,13 +107,13 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.orcamentoFactoryImpl = orcamentoFactoryImpl;
         this.orcamentoNotificacaoGateway = orcamentoNotificacaoGateway;
         this.orcamentoVersioningGateway = orcamentoVersioningGateway;
-        this.clienteRepository = clienteRepository;
         this.orcamentoGateway = orcamentoGateway;
         this.orcamentoPublicacaoGateway = orcamentoPublicacaoGateway;
         this.buscarClientePorCpfCnpjUseCase = buscarClientePorCpfCnpjUseCase;
         this.gerarTokenAcompanhamentoUseCase = gerarTokenAcompanhamentoUseCase;
         this.enviarLinkAcompanhamentoUseCase = enviarLinkAcompanhamentoUseCase;
         this.consultarDisponibilidadeEstoqueUseCase = consultarDisponibilidadeEstoqueUseCase;
+        this.acompanharOrdemServicoUseCase = acompanharOrdemServicoUseCase;
     }
 
     @Transactional
@@ -375,23 +375,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         return salva;
     }
 
-    public List<AcompanhamentoOrdemServicoResponse> listarAcompanhamentoCliente(String emailCliente) {
-        ClienteEntity cliente = clienteRepository.findByUsuarioEmail(emailCliente)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Cliente autenticado nao encontrado."
-                ));
-
-        return ordemServicoRepository.findByCliente_IdOrderByDataAberturaDesc(cliente.getId())
-                .stream()
-                .map(os -> {
-                    OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(os.getNumeroOs());
-                    List<HistoricoStatusOsEntity> historico =
-                            historicoStatusOsRepository.findByNumeroOsOrderByRegistradoEmAsc(os.getNumeroOs());
-
-                    return AcompanhamentoOrdemServicoResponse.from(os, orcamentoAtual, historico);
-                })
-                .toList();
+    @Override
+    public List<AcompanhamentoOrdemServicoOutput> listarAcompanhamentoCliente(String emailCliente) {
+        return acompanharOrdemServicoUseCase.execute(emailCliente);
     }
 
     @Override
@@ -439,7 +425,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                 HistoricoStatusOsEntity.criar(
                         os.getId(),
                         os.getStatus(),
-                        mensagemParaCliente(os.getStatus()),
+                        mensagem(os.getStatus()),
                         os.getNumeroOs()
                 )
         );

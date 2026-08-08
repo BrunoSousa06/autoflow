@@ -4,6 +4,7 @@ import com.autoflow.integration.config.AbstractIT;
 import com.autoflow.integration.utils.TestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Testa fluxos de orçamento: consulta autenticada, aprovação, recusa, acesso negado e filtros.
@@ -228,5 +230,40 @@ class OrcamentoIT extends AbstractIT {
                 "/public/orcamentos/999999/pdf?token=token-invalido", byte[].class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("deve rejeitar versao duplicada para o mesmo tipo e OS")
+    void deveRejeitarVersaoDuplicadaParaMesmoTipoNaMesmaOs() {
+        int quantidadeAntes = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM orcamento
+                WHERE ordem_servico_id = (SELECT ordem_servico_id FROM orcamento WHERE id = ?)
+                  AND tipo = (SELECT tipo FROM orcamento WHERE id = ?)
+                  AND versao = (SELECT versao FROM orcamento WHERE id = ?)
+                """, Integer.class, orcamentoId, orcamentoId, orcamentoId);
+
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+                INSERT INTO orcamento (
+                    ordem_servico_id, numero_os, tipo, versao, status,
+                    criado_em, disponibilizado_em, total_servicos, total_itens, total_geral
+                )
+                SELECT ordem_servico_id, numero_os, tipo, versao, 'APROVADO',
+                       criado_em, disponibilizado_em, total_servicos, total_itens, total_geral
+                FROM orcamento
+                WHERE id = ?
+                """, orcamentoId))
+                .isInstanceOf(DataIntegrityViolationException.class);
+
+        int quantidadeDepois = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM orcamento
+                WHERE ordem_servico_id = (SELECT ordem_servico_id FROM orcamento WHERE id = ?)
+                  AND tipo = (SELECT tipo FROM orcamento WHERE id = ?)
+                  AND versao = (SELECT versao FROM orcamento WHERE id = ?)
+                """, Integer.class, orcamentoId, orcamentoId, orcamentoId);
+
+        assertThat(quantidadeDepois).isEqualTo(quantidadeAntes);
     }
 }

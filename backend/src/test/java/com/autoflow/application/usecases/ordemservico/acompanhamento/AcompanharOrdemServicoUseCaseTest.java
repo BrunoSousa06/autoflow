@@ -1,7 +1,5 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
-import com.autoflow.application.gateway.AcompanhamentoMapperGateway;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
@@ -36,9 +34,6 @@ class AcompanharOrdemServicoUseCaseTest {
     private OrcamentoGateway orcamentoGateway;
     @Mock
     private HistoricoStatusOsGateway historicoStatusOsGateway;
-    @Mock
-    private AcompanhamentoMapperGateway acompanhamentoMapper;
-
     @InjectMocks
     private AcompanharOrdemServicoUseCase useCase;
 
@@ -46,26 +41,26 @@ class AcompanharOrdemServicoUseCaseTest {
     void deveRetornarListaDeAcompanhamentos() {
         OrdemServicoEntity ordemServico = ordemServico("OS001");
         OrcamentoEntity orcamento = new OrcamentoEntity();
+        orcamento.setStatus(StatusOrcamento.DISPONIVEL);
         HistoricoStatusOsEntity historico = new HistoricoStatusOsEntity();
-        AcompanhamentoOrdemServicoOutput output = mock(AcompanhamentoOrdemServicoOutput.class);
-
         configurarClienteComOs(ordemServico);
         when(orcamentoGateway.findByNumeroOsAndStatus("OS001", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.of(orcamento));
         when(historicoStatusOsGateway.findByNumeroOsOrderByRegistradoEmAsc("OS001"))
                 .thenReturn(List.of(historico));
-        when(acompanhamentoMapper.mapToOutput(ordemServico, orcamento, List.of(historico)))
-                .thenReturn(output);
+        var resultado = useCase.execute("cliente@email.com");
 
-        assertEquals(List.of(output), useCase.execute("cliente@email.com"));
+        assertEquals(1, resultado.size());
+        assertEquals("OS001", resultado.get(0).numeroOs());
+        assertEquals(StatusOrcamento.DISPONIVEL, resultado.get(0).situacaoAprovacao());
+        assertEquals(1, resultado.get(0).historicoStatus().size());
     }
 
     @Test
     void deveUtilizarUltimaVersaoQuandoNaoExistirOrcamentoDisponivel() {
         OrdemServicoEntity ordemServico = ordemServico("OS001");
         OrcamentoEntity ultimaVersao = new OrcamentoEntity();
-        AcompanhamentoOrdemServicoOutput output = mock(AcompanhamentoOrdemServicoOutput.class);
-
+        ultimaVersao.setStatus(StatusOrcamento.DISPONIVEL);
         configurarClienteComOs(ordemServico);
         when(orcamentoGateway.findByNumeroOsAndStatus("OS001", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.empty());
@@ -73,17 +68,15 @@ class AcompanharOrdemServicoUseCaseTest {
                 .thenReturn(Optional.of(ultimaVersao));
         when(historicoStatusOsGateway.findByNumeroOsOrderByRegistradoEmAsc("OS001"))
                 .thenReturn(Collections.emptyList());
-        when(acompanhamentoMapper.mapToOutput(ordemServico, ultimaVersao, Collections.emptyList()))
-                .thenReturn(output);
+        var resultado = useCase.execute("cliente@email.com");
 
-        assertEquals(List.of(output), useCase.execute("cliente@email.com"));
+        assertEquals(1, resultado.size());
+        assertEquals(StatusOrcamento.DISPONIVEL, resultado.get(0).situacaoAprovacao());
     }
 
     @Test
     void deveRetornarOrcamentoNuloQuandoNaoExistirOrcamento() {
         OrdemServicoEntity ordemServico = ordemServico("OS001");
-        AcompanhamentoOrdemServicoOutput output = mock(AcompanhamentoOrdemServicoOutput.class);
-
         configurarClienteComOs(ordemServico);
         when(orcamentoGateway.findByNumeroOsAndStatus("OS001", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.empty());
@@ -91,10 +84,10 @@ class AcompanharOrdemServicoUseCaseTest {
                 .thenReturn(Optional.empty());
         when(historicoStatusOsGateway.findByNumeroOsOrderByRegistradoEmAsc("OS001"))
                 .thenReturn(Collections.emptyList());
-        when(acompanhamentoMapper.mapToOutput(ordemServico, null, Collections.emptyList()))
-                .thenReturn(output);
+        var resultado = useCase.execute("cliente@email.com");
 
-        assertEquals(List.of(output), useCase.execute("cliente@email.com"));
+        assertEquals(1, resultado.size());
+        assertNull(resultado.get(0).orcamentoAtual());
     }
 
     @Test
@@ -106,7 +99,7 @@ class AcompanharOrdemServicoUseCaseTest {
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         verifyNoInteractions(ordemServicoGateway, orcamentoGateway,
-                historicoStatusOsGateway, acompanhamentoMapper);
+                historicoStatusOsGateway);
     }
 
     @Test
@@ -116,7 +109,7 @@ class AcompanharOrdemServicoUseCaseTest {
                 .thenReturn(Collections.emptyList());
 
         assertTrue(useCase.execute("cliente@email.com").isEmpty());
-        verifyNoInteractions(orcamentoGateway, historicoStatusOsGateway, acompanhamentoMapper);
+        verifyNoInteractions(orcamentoGateway, historicoStatusOsGateway);
     }
 
     private void configurarClienteComOs(OrdemServicoEntity ordemServico) {
@@ -128,6 +121,10 @@ class AcompanharOrdemServicoUseCaseTest {
     private OrdemServicoEntity ordemServico(String numeroOs) {
         OrdemServicoEntity ordemServico = new OrdemServicoEntity();
         ordemServico.setNumeroOs(numeroOs);
+        ordemServico.setVeiculo(new com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity());
+        ordemServico.getVeiculo().setPlaca("ABC1D23");
+        ordemServico.setStatus(com.autoflow.domain.ordemservico.StatusOrdemServico.RECEBIDA);
+        ordemServico.setServicosSolicitados(Collections.emptyList());
         return ordemServico;
     }
 }

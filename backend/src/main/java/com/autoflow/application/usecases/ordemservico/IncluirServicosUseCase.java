@@ -3,12 +3,12 @@ package com.autoflow.application.usecases.ordemservico;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,7 +40,7 @@ public class IncluirServicosUseCase {
             throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
         }
         List<ServicoSolicitadoEntity> preenchidos = servicos.stream().map(servico -> {
-            ServicoEntity catalogo = servicoGateway.findById(servico.getServicoId())
+            ServicoOutput catalogo = servicoGateway.findById(servico.getServicoId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Serviço não encontrado com o ID: " + servico.getServicoId()));
             ServicoSolicitadoEntity resultado = new ServicoSolicitadoEntity();

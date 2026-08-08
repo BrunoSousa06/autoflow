@@ -1,6 +1,6 @@
 package com.autoflow.service.ordemservico;
 
-import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
+import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
@@ -44,7 +44,7 @@ public interface OrdemServicoService {
 
     OrdemServicoEntity entregar(String numeroOs);
 
-    List<AcompanhamentoOrdemServicoResponse> listarAcompanhamentoCliente(String username);
+    List<AcompanhamentoOrdemServicoOutput> listarAcompanhamentoCliente(String username);
 
     Page<OrdemServicoEntity> listar(OrdemServicoFiltro filtro, Pageable pageable, String emailUsuarioLogado);
 

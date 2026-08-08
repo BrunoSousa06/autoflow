@@ -2,6 +2,7 @@ package com.autoflow.service.ordemservico;
 
 import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
@@ -14,7 +15,6 @@ import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenA
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +68,7 @@ public class CriarOrdemServicoUseCase {
     private ServicoSolicitadoEntity preencherServico(
             OrdemServicoEntity os,
             ServicoSolicitadoEntity solicitado) {
-        ServicoEntity servico = servicoGateway.findById(solicitado.getServicoId())
+        ServicoOutput servico = servicoGateway.findById(solicitado.getServicoId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Serviço não encontrado com o ID: " + solicitado.getServicoId()));

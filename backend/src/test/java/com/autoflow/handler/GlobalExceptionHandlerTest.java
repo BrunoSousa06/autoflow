@@ -1,8 +1,10 @@
 package com.autoflow.handler;
 
 import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoException;
+import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
 import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
+import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpStatus;
@@ -97,6 +99,33 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Cliente não encontrado", response.getBody().get("erro"));
+    }
+
+    @Test
+    void deveRetornar403QuandoClienteAutenticadoNaoForEncontrado() {
+        ClienteAutenticadoNaoEncontradoException exception =
+                new ClienteAutenticadoNaoEncontradoException(
+                        "Cliente não encontrado para o usuário autenticado");
+
+        ResponseEntity<Map<String, String>> response =
+                handler.handleClienteAutenticadoNaoEncontrado(exception);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(exception.getMessage(), response.getBody().get("erro"));
+    }
+
+    @Test
+    void deveRetornar401QuandoUsuarioNaoEstiverAutenticado() {
+        UsuarioNaoAutenticadoException exception =
+                new UsuarioNaoAutenticadoException("Usuário não autenticado");
+
+        ResponseEntity<Map<String, String>> response =
+                handler.handleUsuarioNaoAutenticado(exception);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(exception.getMessage(), response.getBody().get("erro"));
     }
 
     @Test

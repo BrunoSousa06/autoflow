@@ -1,11 +1,14 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
-import com.autoflow.application.gateway.AcompanhamentoMapperGateway;
+import com.autoflow.application.dto.ordemservico.acompanhamento.HistoricoStatusOsOutput;
+import com.autoflow.application.dto.ordemservico.acompanhamento.OrcamentoResumoOutput;
+import com.autoflow.application.dto.ordemservico.acompanhamento.ServicoSolicitadoOutput;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.usecases.ordemservico.StatusOrdemServicoMensagemPolicy;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
@@ -25,7 +28,6 @@ public class AcompanharOrdemServicoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final OrcamentoGateway orcamentoGateway;
     private final HistoricoStatusOsGateway historicoStatusOsGateway;
-    private final AcompanhamentoMapperGateway acompanhamentoMapper;
 
     public List<AcompanhamentoOrdemServicoOutput> execute(String emailCliente) {
         Long clienteId = clienteGateway.findIdByUsuarioEmail(emailCliente)
@@ -46,7 +48,19 @@ public class AcompanharOrdemServicoUseCase {
         List<HistoricoStatusOsEntity> historico = historicoStatusOsGateway
                 .findByNumeroOsOrderByRegistradoEmAsc(ordemServico.getNumeroOs());
 
-        return acompanhamentoMapper.mapToOutput(ordemServico, orcamentoAtual, historico);
+        return new AcompanhamentoOrdemServicoOutput(
+                ordemServico.getNumeroOs(),
+                ordemServico.getVeiculoPlaca(),
+                ordemServico.getStatus(),
+                ordemServico.getDataAbertura(),
+                ordemServico.getUltimaAtualizacao(),
+                ordemServico.getServicosSolicitados().stream()
+                        .map(ServicoSolicitadoOutput::from)
+                        .toList(),
+                orcamentoAtual == null ? null : OrcamentoResumoOutput.from(orcamentoAtual),
+                orcamentoAtual == null ? null : orcamentoAtual.getStatus(),
+                StatusOrdemServicoMensagemPolicy.mensagem(ordemServico.getStatus()),
+                historico.stream().map(HistoricoStatusOsOutput::from).toList());
     }
 
     private OrcamentoEntity buscarOrcamentoAtual(String numeroOs) {

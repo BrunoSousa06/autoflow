@@ -1,6 +1,8 @@
 package com.autoflow.application.security;
 
 import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
+import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -9,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -57,21 +57,21 @@ class ClienteAutenticadoServiceTest {
         when(clienteGateway.findIdByUsuarioEmail("cliente@test.com"))
                 .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        ClienteAutenticadoNaoEncontradoException exception = assertThrows(
+                ClienteAutenticadoNaoEncontradoException.class,
                 () -> service.getClienteId());
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        assertEquals("Cliente não encontrado para o usuário autenticado", exception.getMessage());
     }
 
     @Test
     void deveRetornar401QuandoNaoHouverUsuarioAtual() {
         when(currentUserGateway.getCurrentUser()).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
+        UsuarioNaoAutenticadoException exception = assertThrows(
+                UsuarioNaoAutenticadoException.class,
                 () -> service.getClienteId());
 
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+        assertEquals("Usuário não autenticado", exception.getMessage());
     }
 }
