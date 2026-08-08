@@ -1,12 +1,6 @@
 package com.autoflow.application.usecases.orcamento;
 
-import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
-import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
-import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
+import com.autoflow.domain.orcamento.*;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;

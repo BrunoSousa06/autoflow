@@ -1,12 +1,12 @@
 package com.autoflow.application.gateway;
 
+import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 
-import java.util.Optional;
 import java.util.List;
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import java.util.Optional;
 
 public interface OrcamentoGateway {
 

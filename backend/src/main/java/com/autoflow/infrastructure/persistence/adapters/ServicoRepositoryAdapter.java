@@ -6,7 +6,7 @@ import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
-import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
+import com.autoflow.infrastructure.persistence.mapper.ServicoPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.ServicoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ import java.util.Optional;
 public class ServicoRepositoryAdapter implements ServicoGateway {
 
     private final ServicoRepository servicoRepository;
-    private final ServicoMapper servicoMapper;
+    private final ServicoPersistenceMapper servicoMapper;
 
     @Override
     public ServicoOutput save(ServicoInput input) {

@@ -1,11 +1,7 @@
 package com.autoflow.presentation.veiculo;
 
 
-import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.dto.veiculo.PageInput;
-import com.autoflow.application.dto.veiculo.PageOutput;
-import com.autoflow.application.dto.veiculo.VeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.dto.veiculo.*;
 import com.autoflow.application.usecases.veiculo.*;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;
@@ -15,11 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -4,6 +4,7 @@ import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOr
 import com.autoflow.application.dto.ordemservico.acompanhamento.HistoricoStatusOsOutput;
 import com.autoflow.application.dto.ordemservico.acompanhamento.OrcamentoResumoOutput;
 import com.autoflow.application.dto.ordemservico.acompanhamento.ServicoSolicitadoOutput;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
@@ -14,13 +15,10 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
-@Service
+
 @RequiredArgsConstructor
 public class AcompanharOrdemServicoUseCase {
 
@@ -31,8 +29,7 @@ public class AcompanharOrdemServicoUseCase {
 
     public List<AcompanhamentoOrdemServicoOutput> execute(String emailCliente) {
         Long clienteId = clienteGateway.findIdByUsuarioEmail(emailCliente)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> ApplicationException.notFound(
                         "Cliente autenticado não encontrado."));
 
         return ordemServicoGateway

@@ -1,14 +1,13 @@
 package com.autoflow.presentation.usuario;
 
-import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.LoginInput;
 import com.autoflow.application.dto.usuario.LoginOutput;
+import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.usecases.usuario.BuscarMecanicosUseCase;
 import com.autoflow.application.usecases.usuario.CadastrarUsuarioPublicoUseCase;
 import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
 import com.autoflow.application.usecases.usuario.LoginUsuarioUseCase;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.presentation.usuario.request.LoginRequest;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.autoflow.presentation.usuario.response.LoginResponse;
@@ -37,8 +36,7 @@ public class UsuarioController {
     private final LoginUsuarioUseCase loginUsuarioUseCase;
     private final ListarUsuariosUseCase listarUsuariosUseCase;
     private final BuscarMecanicosUseCase buscarMecanicosUseCase;
-    private final UsuarioMapper usuarioMapper;
-
+    private final UsuarioControllerMapper usuarioMapper;
 
 
     @Operation(summary = "Cadastrar um usuario", description = "Retorna as informações do usuario cadastrado")
@@ -46,10 +44,10 @@ public class UsuarioController {
     @ApiResponse(responseCode = "409", description = "CPF/CNPJ ou email ja foram cadastrados")
     @PostMapping("/cadastro")
     public ResponseEntity<UsuarioCadastroResponse> cadastrar(@Valid @RequestBody RegistroRequest request) {
-        RegistroInput input = usuarioMapper.mapToInput(request);
+        RegistroInput input = usuarioMapper.toInput(request);
         UsuarioOutput execute = cadastrarUsuarioPublicoUseCase.execute(input);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioMapper.mapToCadastroResponse(execute));
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioMapper.toCadastroResponse(execute));
     }
 
     @Operation(summary = "Autenticar o usuario", description = "Autentica o usuario cadastrado")
@@ -57,9 +55,9 @@ public class UsuarioController {
     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-       LoginInput input = new LoginInput(request.email(), request.senha());
-       LoginOutput output = loginUsuarioUseCase.execute(input);
-       return new LoginResponse(output.token());
+        LoginInput input = new LoginInput(request.email(), request.senha());
+        LoginOutput output = loginUsuarioUseCase.execute(input);
+        return new LoginResponse(output.token());
 
     }
 
@@ -72,7 +70,7 @@ public class UsuarioController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> listarUsuarios() {
         List<UsuarioOutput> todosUsuarios = listarUsuariosUseCase.execute();
-        return ResponseEntity.ok(usuarioMapper.mapToResponse(todosUsuarios));
+        return ResponseEntity.ok(usuarioMapper.toResponse(todosUsuarios));
     }
 
     @Operation(summary = "Listar todos mecanicos cadastrados no sistema", description = "Retorna a lista dos mecanicos cadastrados")
@@ -84,6 +82,6 @@ public class UsuarioController {
     @PreAuthorize("hasAnyRole('ADMIN','ATENDENTE')")
     public ResponseEntity<List<UsuarioResponse>> listarMecanicos() {
         List<UsuarioOutput> todosMecanicos = buscarMecanicosUseCase.execute();
-        return ResponseEntity.ok(usuarioMapper.mapToResponse(todosMecanicos));
-        }
+        return ResponseEntity.ok(usuarioMapper.toResponse(todosMecanicos));
+    }
 }

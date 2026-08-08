@@ -1,10 +1,10 @@
 package com.autoflow.application.gateway;
 
 
+import com.autoflow.application.dto.PageQuery;
+import com.autoflow.application.dto.PageResult;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoFiltro;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +21,7 @@ public interface PecaInsumoGateway {
 
     List<PecaInsumoEntity> findAll();
 
-    Page<PecaInsumoEntity> findAll(Specification<PecaInsumoEntity> spec, Pageable pageable);
+    PageResult<PecaInsumoEntity> findAll(PecaInsumoFiltro filtro, PageQuery pageQuery);
 
     boolean existsById(Long id);
 

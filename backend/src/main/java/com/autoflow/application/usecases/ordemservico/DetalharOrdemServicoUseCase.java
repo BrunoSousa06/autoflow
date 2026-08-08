@@ -1,16 +1,14 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.dto.ordemservico.OrdemServicoDetalheOutput;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.dto.ordemservico.OrdemServicoDetalheOutput;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
-@Component
+
 @RequiredArgsConstructor
 public class DetalharOrdemServicoUseCase {
 
@@ -19,8 +17,7 @@ public class DetalharOrdemServicoUseCase {
 
     public OrdemServicoDetalheOutput execute(String numeroOs) {
         OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> ApplicationException.notFound(
                         "Ordem de serviço não encontrada."
                 ));
         var orcamento = orcamentoGateway.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)

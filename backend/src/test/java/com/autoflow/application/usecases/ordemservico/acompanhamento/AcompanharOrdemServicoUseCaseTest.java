@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
@@ -13,15 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AcompanharOrdemServicoUseCaseTest {
@@ -94,10 +94,10 @@ class AcompanharOrdemServicoUseCaseTest {
     void deveLancarExcecaoQuandoClienteNaoForEncontrado() {
         when(clienteGateway.findIdByUsuarioEmail("ausente@email.com")).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ApplicationException exception = assertThrows(ApplicationException.class,
                 () -> useCase.execute("ausente@email.com"));
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
         verifyNoInteractions(ordemServicoGateway, orcamentoGateway,
                 historicoStatusOsGateway);
     }

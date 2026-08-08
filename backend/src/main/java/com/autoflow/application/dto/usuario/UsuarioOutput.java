@@ -5,7 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record UsuarioOutput(Long id,
-                             String nome,
-                             String email,
-                             RoleEnum role) {
+                            String nome,
+                            String email,
+                            RoleEnum role) {
 }

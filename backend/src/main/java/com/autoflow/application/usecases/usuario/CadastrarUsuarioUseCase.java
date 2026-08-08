@@ -2,17 +2,15 @@ package com.autoflow.application.usecases.usuario;
 
 import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.PasswordGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-@Service
+
 @RequiredArgsConstructor
 public class CadastrarUsuarioUseCase {
 
@@ -20,13 +18,11 @@ public class CadastrarUsuarioUseCase {
     private final PasswordGateway passwordGateway;
     private final CadastrarClienteUseCase cadastrarClienteUseCase;
 
-    @Transactional
+    @TransactionalUseCase
     public UsuarioOutput execute(RegistroInput request) {
 
         if (usuarioGateway.existsByEmail(request.email())) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Email já cadastrado");
+            throw ApplicationException.conflict("Email já cadastrado");
         }
 
         UsuarioEntity usuario = new UsuarioEntity();

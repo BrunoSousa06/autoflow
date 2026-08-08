@@ -4,27 +4,21 @@ import com.autoflow.application.dto.servico.PageInput;
 import com.autoflow.application.dto.servico.PageOutput;
 import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.MetricsGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ServicoUseCasesTest {
@@ -52,14 +46,15 @@ class ServicoUseCasesTest {
     void deveRejeitarNomeDuplicadoSemSalvar() {
         ServicoInput input = input("Revisão Completa");
         when(servicoGateway.existsByNomeIgnoreCase(input.nome())).thenReturn(true);
+        var useCase = new CriarServicoUseCase(servicoGateway);
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> new CriarServicoUseCase(servicoGateway).execute(input)
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(input)
         );
 
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        assertEquals("Serviço já foi cadastrado", exception.getReason());
+        assertEquals(ApplicationException.ErrorType.CONFLICT, exception.type());
+        assertEquals("Serviço já foi cadastrado", exception.getMessage());
         verify(servicoGateway, never()).save(any());
     }
 
@@ -76,13 +71,14 @@ class ServicoUseCasesTest {
     @Test
     void deveRetornar404AoBuscarServicoInexistente() {
         when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
+        var useCase = new BuscarServicoPorIdUseCase(servicoGateway);
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> new BuscarServicoPorIdUseCase(servicoGateway).execute(1L)
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(1L)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
     }
 
     @Test
@@ -116,13 +112,15 @@ class ServicoUseCasesTest {
     @Test
     void deveRetornar404AoAtualizarServicoInexistente() {
         when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
+        ServicoInput input = input("Revisão Premium");
+        var useCase = new AtualizarServicoUseCase(servicoGateway);
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> new AtualizarServicoUseCase(servicoGateway).execute(1L, input("Revisão Premium"))
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(1L, input)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
         verify(servicoGateway, never()).update(any(), any());
     }
 
@@ -138,13 +136,14 @@ class ServicoUseCasesTest {
     @Test
     void deveRetornar404AoInativarServicoInexistente() {
         when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
+        var useCase = new InativarServicoUseCase(servicoGateway);
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> new InativarServicoUseCase(servicoGateway).execute(1L)
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(1L)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
         verify(servicoGateway, never()).inativar(1L);
     }
 

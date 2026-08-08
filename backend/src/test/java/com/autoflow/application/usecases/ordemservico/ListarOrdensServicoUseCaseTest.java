@@ -1,8 +1,10 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.dto.PageQuery;
+import com.autoflow.application.dto.PageResult;
+import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
-import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
@@ -10,11 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,23 +35,27 @@ class ListarOrdensServicoUseCaseTest {
     void deveListarOrdensDoMecanicoUsandoEmailComoRestricao() {
         UsuarioEntity mecanico = new UsuarioEntity();
         mecanico.setRole(RoleEnum.MECANICO);
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<OrdemServicoEntity> esperado = new PageImpl<>(List.of());
+        PageQuery pageQuery = new PageQuery(0, 10);
+        PageResult<OrdemServicoEntity> esperado = new PageResult<>(List.of(), 0, 0, 10);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
-        when(ordemServicoGateway.findAll(any(Specification.class), eq(pageable))).thenReturn(esperado);
+        when(ordemServicoGateway.findAll(any(), eq("mecanico@autoflow.com"), eq(pageQuery)))
+                .thenReturn(esperado);
 
-        Page<OrdemServicoEntity> resultado = new ListarOrdensServicoUseCase(ordemServicoGateway, usuarioGateway)
-                .execute(new OrdemServicoFiltroInput(null, null, null), pageable, "mecanico@autoflow.com");
+        PageResult<OrdemServicoEntity> resultado = new ListarOrdensServicoUseCase(ordemServicoGateway, usuarioGateway)
+                .execute(new OrdemServicoFiltroInput(null, null, null), pageQuery, "mecanico@autoflow.com");
 
         assertSame(esperado, resultado);
-        verify(ordemServicoGateway).findAll(any(Specification.class), eq(pageable));
+        verify(ordemServicoGateway).findAll(any(), eq("mecanico@autoflow.com"), eq(pageQuery));
     }
 
     @Test
     void deveRejeitarUsuarioAutenticadoInexistente() {
-        when(usuarioGateway.findByEmail("ausente@autoflow.com")).thenReturn(Optional.empty());
+        var useCase = new ListarOrdensServicoUseCase(ordemServicoGateway, usuarioGateway);
+        var filtro = new OrdemServicoFiltroInput(null, null, null);
+        var pageQuery = new PageQuery(0, 10);
+        var email = "ausente@autoflow.com";
+        when(usuarioGateway.findByEmail(email)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> new ListarOrdensServicoUseCase(ordemServicoGateway, usuarioGateway)
-                .execute(new OrdemServicoFiltroInput(null, null, null), PageRequest.of(0, 10), "ausente@autoflow.com"));
+        assertThrows(RuntimeException.class, () -> useCase.execute(filtro, pageQuery, email));
     }
 }

@@ -5,12 +5,11 @@ import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 
-@Service
+
 @RequiredArgsConstructor
 public class GerarTokenAcompanhamentoUseCase {
 

@@ -1,16 +1,13 @@
 package com.autoflow.application.policy;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class OrdemServicoAccessPolicyTest {
 
@@ -31,11 +28,12 @@ class OrdemServicoAccessPolicyTest {
 
     @Test
     void deveRejeitarUsuarioSemMecanicoAtribuido() {
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> policy.validarPodeAlterarDiagnostico(new OrdemServicoEntity(),
-                        usuario(2L, RoleEnum.MECANICO)));
+        OrdemServicoEntity ordem = new OrdemServicoEntity();
+        UsuarioEntity mecanico = usuario(2L, RoleEnum.MECANICO);
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> policy.validarPodeAlterarDiagnostico(ordem, mecanico));
 
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
     }
 
     @Test
@@ -44,12 +42,12 @@ class OrdemServicoAccessPolicyTest {
         DiagnosticoEntity diagnostico = new DiagnosticoEntity();
         diagnostico.setMecanico(usuario(2L, RoleEnum.MECANICO));
         ordem.setDiagnostico(diagnostico);
+        UsuarioEntity mecanico = usuario(3L, RoleEnum.MECANICO);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> policy.validarPodeAlterarDiagnostico(ordem,
-                        usuario(3L, RoleEnum.MECANICO)));
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> policy.validarPodeAlterarDiagnostico(ordem, mecanico));
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
     }
 
     private static UsuarioEntity usuario(Long id, RoleEnum role) {

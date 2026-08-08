@@ -1,17 +1,17 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
+import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
+import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
+import com.autoflow.infrastructure.persistence.repository.OrcamentoSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
 import java.util.List;
-import com.autoflow.repository.orcamento.OrcamentoSpecifications;
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor

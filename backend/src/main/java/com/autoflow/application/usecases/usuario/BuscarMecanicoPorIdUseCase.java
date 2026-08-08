@@ -1,14 +1,12 @@
 package com.autoflow.application.usecases.usuario;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-@Service
+
 @RequiredArgsConstructor
 public class BuscarMecanicoPorIdUseCase {
 
@@ -17,13 +15,11 @@ public class BuscarMecanicoPorIdUseCase {
     public UsuarioEntity execute(Long mecanicoId) {
 
         UsuarioEntity usuario = usuarioGateway.findById(mecanicoId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> ApplicationException.notFound(
                         "Mecânico não encontrado."));
 
         if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw ApplicationException.badRequest(
                     "Usuário informado não é um mecânico."
             );
         }

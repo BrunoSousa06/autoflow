@@ -1,16 +1,11 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.dto.veiculo.PageInput;
-import com.autoflow.application.dto.veiculo.PageOutput;
-import com.autoflow.application.dto.veiculo.VeiculoFiltro;
-import com.autoflow.application.dto.veiculo.VeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.dto.veiculo.*;
 import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.security.ClienteAutenticadoService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class ListarVeiculosUseCase {
 

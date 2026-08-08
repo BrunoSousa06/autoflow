@@ -5,14 +5,13 @@ import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.usecases.usuario.CadastrarStaffUseCase;
 import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapperImpl;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -47,7 +46,7 @@ class UsuarioAdminControllerTest {
     @Mock
     private CadastrarStaffUseCase cadastrarStaffUseCase;
 
-    private UsuarioMapper usuarioMapper;
+    private UsuarioControllerMapper usuarioMapper;
 
     private UsuarioAdminController usuarioAdminController;
 
@@ -60,7 +59,7 @@ class UsuarioAdminControllerTest {
     @BeforeEach
     void setup() {
 
-        usuarioMapper = new UsuarioMapperImpl();
+        usuarioMapper = Mappers.getMapper(UsuarioControllerMapper.class);
 
         usuarioAdminController = new UsuarioAdminController(
                 listarUsuariosUseCase,

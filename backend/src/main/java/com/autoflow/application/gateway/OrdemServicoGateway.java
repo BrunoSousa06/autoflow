@@ -1,10 +1,9 @@
 package com.autoflow.application.gateway;
 
+import com.autoflow.application.dto.PageQuery;
+import com.autoflow.application.dto.PageResult;
+import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-
 
 import java.util.List;
 import java.util.Optional;
@@ -23,8 +22,9 @@ public interface OrdemServicoGateway {
 
     List<OrdemServicoEntity> findAllByOrderByDataAberturaDesc();
 
-    Page<OrdemServicoEntity> findAll(
-            Specification<OrdemServicoEntity> specification,
-            Pageable pageable);
+    PageResult<OrdemServicoEntity> findAll(
+            OrdemServicoFiltroInput filtro,
+            String emailMecanico,
+            PageQuery pageQuery);
 
 }

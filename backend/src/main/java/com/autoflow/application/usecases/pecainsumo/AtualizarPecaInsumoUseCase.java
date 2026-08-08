@@ -3,12 +3,11 @@ package com.autoflow.application.usecases.pecainsumo;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.mapper.PecaInsumoMapper;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class AtualizarPecaInsumoUseCase {
 

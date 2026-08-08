@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface ClienteMapper {
 

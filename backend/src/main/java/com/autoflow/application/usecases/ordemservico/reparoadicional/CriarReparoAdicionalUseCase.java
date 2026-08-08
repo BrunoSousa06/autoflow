@@ -1,34 +1,22 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
+import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
-import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
-import com.autoflow.application.gateway.OrcamentoComplementarGateway;
-import com.autoflow.application.gateway.OrcamentoNotificacaoGateway;
-import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
-import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.gateway.ReparoAdicionalGateway;
-import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.*;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.domain.ordemservico.StatusServicoOs;
+import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -39,7 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Service
+
 @Slf4j
 @RequiredArgsConstructor
 public class CriarReparoAdicionalUseCase {
@@ -54,13 +42,12 @@ public class CriarReparoAdicionalUseCase {
     private final OrcamentoNotificacaoGateway orcamentoNotificacaoGateway;
     private final Clock clock;
 
-    @Transactional
+    @TransactionalUseCase
     public CriarReparoAdicionalOutput execute(CriarReparoAdicionalCommand command) {
         validarCommand(command);
 
         OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(command.numeroOs())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> ApplicationException.notFound(
                         "Ordem de serviço não encontrada."
                 ));
 
@@ -68,8 +55,7 @@ public class CriarReparoAdicionalUseCase {
         validarServicosDuplicados(command.servicos(), ordemServico);
 
         var usuario = usuarioGateway.findByEmail(command.emailMecanico())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> ApplicationException.notFound(
                         "Usuário autenticado não encontrado."
                 ));
         validarAutorizacao(ordemServico, usuario);
@@ -96,7 +82,7 @@ public class CriarReparoAdicionalUseCase {
         reparoSalvo.setOrcamentoId(orcamento.getId());
         String urlPublica = orcamentoPublicacaoGateway.publicar(orcamento.getId());
 
-        tentarNotificar(orcamento, ordemServico, urlPublica);
+        tentarNotificar(orcamento, urlPublica);
         reparoAdicionalGateway.save(reparoSalvo);
 
         return new CriarReparoAdicionalOutput(
@@ -133,15 +119,15 @@ public class CriarReparoAdicionalUseCase {
             return;
         }
         if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            throw ApplicationException.forbidden(
                     "Somente mecânico atribuído ou administrador pode criar reparo adicional.");
         }
         if (ordemServico.getDiagnostico() == null || ordemServico.getDiagnostico().getMecanico() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw ApplicationException.badRequest(
                     "A ordem de serviço ainda não possui mecânico atribuído.");
         }
         if (!java.util.Objects.equals(ordemServico.getDiagnostico().getMecanico().getId(), usuario.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            throw ApplicationException.forbidden(
                     "Somente o mecânico atribuído pode criar reparo adicional.");
         }
     }
@@ -195,8 +181,7 @@ public class CriarReparoAdicionalUseCase {
         }
 
         ServicoOutput servicoCatalogo = servicoGateway.findById(command.servicoId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> ApplicationException.notFound(
                         "Serviço não encontrado com o ID: " + command.servicoId()
                 ));
 
@@ -231,7 +216,6 @@ public class CriarReparoAdicionalUseCase {
 
     private void tentarNotificar(
             OrcamentoEntity orcamento,
-            OrdemServicoEntity ordemServico,
             String urlPublica
     ) {
         try {

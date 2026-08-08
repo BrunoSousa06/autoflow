@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -79,8 +80,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/swagger-ui.html")
-                ||path.startsWith("/auth")
-                ||path.startsWith("/public/orcamentos")
+                || path.startsWith("/auth")
+                || path.startsWith("/public/orcamentos")
                 || path.equals("/swagger-ui.html");
     }
 }

@@ -7,9 +7,8 @@ import com.autoflow.application.gateway.TokenGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class LoginUsuarioUseCase {
 

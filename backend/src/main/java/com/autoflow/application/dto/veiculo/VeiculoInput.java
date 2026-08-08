@@ -12,8 +12,8 @@ public record VeiculoInput(
         Integer ano,
 
         @NotBlank(message = "A placa não pode estar em branco")
-        @Pattern(regexp = "^[A-Z]{3}-?[0-9]{4}$|^[A-Z]{3}[0-9]{4}[A-Z]{2}$", 
-                 message = "Formato de placa inválido (XXX-1234 ou XXX1234AB)")
+        @Pattern(regexp = "^[A-Z]{3}-?\\d{4}$|^[A-Z]{3}\\d{4}[A-Z]{2}$",
+                message = "Formato de placa inválido (XXX-1234 ou XXX1234AB)")
         String placa,
 
         @NotBlank(message = "O modelo não pode estar em branco")

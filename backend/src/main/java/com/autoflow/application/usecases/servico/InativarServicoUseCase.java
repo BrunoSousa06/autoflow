@@ -1,13 +1,10 @@
 package com.autoflow.application.usecases.servico;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ServicoGateway;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
 
-@Component
 @RequiredArgsConstructor
 public class InativarServicoUseCase {
 
@@ -15,7 +12,7 @@ public class InativarServicoUseCase {
 
     public void execute(Long id) {
         servicoGateway.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> ApplicationException.notFound(
                         "Serviço não encontrado com o ID: " + id));
         servicoGateway.inativar(id);
     }

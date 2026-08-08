@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.orcamento;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
@@ -12,8 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -62,10 +61,10 @@ class AprovarOrcamentoUseCaseTest {
         OrcamentoEntity orcamento = orcamentoDisponivel();
         orcamento.setStatus(StatusOrcamento.SUBSTITUIDO);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ApplicationException exception = assertThrows(ApplicationException.class,
                 () -> useCase.execute(orcamento, "Maria"));
 
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
         verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
     }
 

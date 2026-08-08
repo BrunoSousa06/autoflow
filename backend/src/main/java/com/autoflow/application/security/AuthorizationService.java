@@ -1,10 +1,9 @@
 package com.autoflow.application.security;
 
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -16,8 +15,7 @@ public class AuthorizationService {
         Long clienteId = clienteAutenticadoService.getClienteId().orElse(null);
 
         if (clienteId != null && !veiculo.clienteId().equals(clienteId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
+            throw ApplicationException.forbidden(
                     "Você não tem permissão para acessar este veículo.");
         }
     }

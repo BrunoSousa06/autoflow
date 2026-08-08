@@ -5,9 +5,8 @@ import com.autoflow.application.dto.servico.PageOutput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.ServicoGateway;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
-@Component
+
 @RequiredArgsConstructor
 public class ListarServicosUseCase {
 

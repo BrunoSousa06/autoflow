@@ -1,32 +1,25 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
+import com.autoflow.application.gateway.EstoqueGateway;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.EstoquePolicy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Component
+
 @RequiredArgsConstructor
 public class BaixarEstoqueUseCase {
     private final EstoqueGateway estoqueGateway;
 
-    @Transactional
+    @TransactionalUseCase
     public List<ItemNecessarioEntity> execute(List<ItemNecessarioEntity> itens) {
         if (itens == null || itens.isEmpty()) return Collections.emptyList();
 

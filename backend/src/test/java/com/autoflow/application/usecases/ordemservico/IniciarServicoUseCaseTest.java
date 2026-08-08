@@ -1,19 +1,14 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.domain.ordemservico.StatusServicoOs;
+import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,10 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IniciarServicoUseCaseTest {
@@ -62,10 +54,10 @@ class IniciarServicoUseCaseTest {
         servico.iniciar(List.of());
         ordem.adicionarServicosSolicitados(List.of(servico));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-1")).thenReturn(Optional.of(ordem));
+        var useCase = new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase);
 
         assertThrows(IllegalStateException.class,
-                () -> new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase)
-                        .execute("OS-1", 10L));
+                () -> useCase.execute("OS-1", 10L));
 
         verifyNoInteractions(baixarEstoqueUseCase);
         verify(ordemServicoGateway, never()).save(ordem);
@@ -74,12 +66,12 @@ class IniciarServicoUseCaseTest {
     @Test
     void deveInformarQuandoOrdemNaoExistir() {
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-404")).thenReturn(Optional.empty());
+        var useCase = new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase);
 
-        var erro = assertThrows(ResponseStatusException.class,
-                () -> new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase)
-                        .execute("OS-404", 10L));
+        var erro = assertThrows(ApplicationException.class,
+                () -> useCase.execute("OS-404", 10L));
 
-        assertEquals(HttpStatus.NOT_FOUND, erro.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, erro.type());
         verifyNoInteractions(baixarEstoqueUseCase);
     }
 
@@ -90,10 +82,10 @@ class IniciarServicoUseCaseTest {
         var servico = servico(10L);
         ordem.adicionarServicosSolicitados(List.of(servico));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-1")).thenReturn(Optional.of(ordem));
+        var useCase = new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase);
 
         assertThrows(IllegalStateException.class,
-                () -> new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase)
-                        .execute("OS-1", 10L));
+                () -> useCase.execute("OS-1", 10L));
 
         verifyNoInteractions(baixarEstoqueUseCase);
         verify(ordemServicoGateway, never()).save(ordem);

@@ -7,9 +7,8 @@ import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.policy.PlacaPolicy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class BuscarOuCadastrarVeiculoUseCase {
 

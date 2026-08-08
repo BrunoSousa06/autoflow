@@ -15,7 +15,7 @@ public record RegistroRequest(
         @NotBlank(message = "A senha é obrigatoria") @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$",
                 message = "A senha deve possuir no mínimo 8 caracteres,uma letra minúscula, uma letra maiúscula, um número e um caractere especial"
-        )String senha,
+        ) String senha,
         RoleEnum role
 ) {
 

@@ -1,24 +1,22 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.policy.OrdemServicoAccessPolicy;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
-@Component
+
 @RequiredArgsConstructor
 public class IncluirServicosUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
@@ -26,14 +24,14 @@ public class IncluirServicosUseCase {
     private final UsuarioGateway usuarioGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
 
-    @Transactional
+    @TransactionalUseCase
     public OrdemServicoEntity execute(String numeroOs, List<ServicoSolicitadoEntity> servicos,
                                       String emailUsuarioLogado) {
         OrdemServicoEntity os = ordemServicoGateway.findByNumeroOs(numeroOs)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
+                .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
         if (StatusOrdemServico.EM_DIAGNOSTICO.equals(os.getStatus())) {
             UsuarioEntity usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário autenticado não encontrado."));
+                    .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
             if (!RoleEnum.ADMIN.equals(usuario.getRole())) accessPolicy.validarPodeAlterarDiagnostico(os, usuario);
         }
         if (servicos == null || servicos.isEmpty()) {
@@ -41,7 +39,7 @@ public class IncluirServicosUseCase {
         }
         List<ServicoSolicitadoEntity> preenchidos = servicos.stream().map(servico -> {
             ServicoOutput catalogo = servicoGateway.findById(servico.getServicoId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    .orElseThrow(() -> ApplicationException.notFound(
                             "Serviço não encontrado com o ID: " + servico.getServicoId()));
             ServicoSolicitadoEntity resultado = new ServicoSolicitadoEntity();
             resultado.setServicoId(catalogo.getId());

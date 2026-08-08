@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
@@ -10,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -49,12 +48,12 @@ class EntregarOrdemServicoUseCaseTest {
     @Test
     void deveRetornar404QuandoOsNaoExiste() {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.empty());
+        var useCase = new EntregarOrdemServicoUseCase(ordemServicoGateway, historicoStatusOsGateway);
 
-        var exception = assertThrows(ResponseStatusException.class,
-                () -> new EntregarOrdemServicoUseCase(ordemServicoGateway, historicoStatusOsGateway)
-                        .execute("OS-1"));
+        var exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute("OS-1"));
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
     }
 
     @Test
@@ -62,10 +61,10 @@ class EntregarOrdemServicoUseCaseTest {
         var os = ordemFinalizada();
         os.setStatus(StatusOrdemServico.EM_EXECUCAO);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
+        var useCase = new EntregarOrdemServicoUseCase(ordemServicoGateway, historicoStatusOsGateway);
 
         assertThrows(IllegalStateException.class,
-                () -> new EntregarOrdemServicoUseCase(ordemServicoGateway, historicoStatusOsGateway)
-                        .execute("OS-1"));
+                () -> useCase.execute("OS-1"));
     }
 
     private OrdemServicoEntity ordemFinalizada() {

@@ -1,12 +1,6 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.dto.veiculo.PageInput;
-import com.autoflow.application.dto.veiculo.PageOutput;
-import com.autoflow.application.dto.veiculo.VeiculoFiltro;
-import com.autoflow.application.dto.veiculo.VeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.dto.veiculo.*;
 
 import java.util.Optional;
 

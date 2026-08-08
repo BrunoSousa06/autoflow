@@ -1,11 +1,10 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.exception.VeiculoNaoEncontradoException;
+import com.autoflow.application.gateway.VeiculoGateway;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class DeletarVeiculoUseCase {
 

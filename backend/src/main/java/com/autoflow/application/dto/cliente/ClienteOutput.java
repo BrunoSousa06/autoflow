@@ -1,9 +1,6 @@
 package com.autoflow.application.dto.cliente;
 
-import com.autoflow.application.dto.cliente.ClienteVeiculoOutput;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 

@@ -1,30 +1,20 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
+import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
-import com.autoflow.application.gateway.OrcamentoComplementarGateway;
-import com.autoflow.application.gateway.OrcamentoNotificacaoGateway;
-import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
-import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.gateway.ReparoAdicionalGateway;
-import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.*;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.DiagnosticoEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.StatusItemNecessario;
-import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.usuario.RoleEnum;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,30 +24,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CriarReparoAdicionalUseCaseTest {
@@ -165,8 +141,9 @@ class CriarReparoAdicionalUseCaseTest {
     void deveRejeitarOrdemServicoEmEstadoFinal(StatusOrdemServico status) {
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(status)));
+        var command = command(5L, 7L, 2);
 
-        assertThrows(IllegalStateException.class, () -> useCase.execute(command(5L, 7L, 2)));
+        assertThrows(IllegalStateException.class, () -> useCase.execute(command));
 
         verifyNoInteractions(usuarioGateway, servicoGateway, reparoAdicionalGateway);
     }
@@ -204,6 +181,26 @@ class CriarReparoAdicionalUseCaseTest {
     }
 
     @Test
+    void deveRejeitarCommandENovosCamposObrigatoriosNulos() {
+        CriarReparoAdicionalCommand commandValido = command(5L, 7L, 2);
+        CriarReparoAdicionalCommand semNumero = new CriarReparoAdicionalCommand(
+                null, "mecanico@autoflow.com", commandValido.servicos());
+        CriarReparoAdicionalCommand semEmail = new CriarReparoAdicionalCommand(
+                "OS-123", null, commandValido.servicos());
+        CriarReparoAdicionalCommand semServicos = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com", null);
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(semNumero)),
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(semEmail)),
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(semServicos))
+        );
+
+        verifyNoInteractions(ordemServicoGateway);
+    }
+
+    @Test
     void deveRejeitarServicoDuplicadoNaPropriaRequisicao() {
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
@@ -224,14 +221,34 @@ class CriarReparoAdicionalUseCaseTest {
     }
 
     @Test
+    void deveRejeitarServicoNuloOuSemId() {
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
+                .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
+
+        CriarReparoAdicionalCommand servicoNulo = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com",
+                Collections.singletonList((ServicoReparoAdicionalCommand) null));
+        CriarReparoAdicionalCommand servicoSemId = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com",
+                List.of(new ServicoReparoAdicionalCommand(null, List.of())));
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(servicoNulo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(servicoSemId))
+        );
+        verifyNoInteractions(usuarioGateway, reparoAdicionalGateway);
+    }
+
+    @Test
     void deveRejeitarServicoJaPresenteNaOrdemServico() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         ordemServico.adicionarServicosSolicitados(List.of(new ServicoSolicitadoEntity(5L)));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
+        var command = command(5L, 7L, 2);
 
         var erro = assertThrows(
                 IllegalArgumentException.class,
-                () -> useCase.execute(command(5L, 7L, 2))
+                () -> useCase.execute(command)
         );
 
         assertTrue(erro.getMessage().contains("já incluído na ordem de serviço"));
@@ -246,12 +263,13 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        var command = command(5L, 7L, 2);
 
-        var erro = assertThrows(ResponseStatusException.class,
-                () -> useCase.execute(command(5L, 7L, 2)));
+        var erro = assertThrows(ApplicationException.class,
+                () -> useCase.execute(command));
 
-        assertEquals(HttpStatus.FORBIDDEN, erro.getStatusCode());
-        assertEquals("Somente o mecânico atribuído pode criar reparo adicional.", erro.getReason());
+        assertEquals(ApplicationException.ErrorType.FORBIDDEN, erro.type());
+        assertEquals("Somente o mecânico atribuído pode criar reparo adicional.", erro.getMessage());
         assertEquals(20L, ordemServico.getDiagnostico().getMecanico().getId());
         assertEquals(21L, mecanico.getId());
         verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
@@ -291,11 +309,12 @@ class CriarReparoAdicionalUseCaseTest {
         usuario.setRole(RoleEnum.ATENDENTE);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(usuario));
+        var command = command(5L, 7L, 2);
 
-        var erro = assertThrows(ResponseStatusException.class,
-                () -> useCase.execute(command(5L, 7L, 2)));
+        var erro = assertThrows(ApplicationException.class,
+                () -> useCase.execute(command));
 
-        assertEquals(HttpStatus.FORBIDDEN, erro.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.FORBIDDEN, erro.type());
         verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
     }
 
@@ -308,11 +327,30 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        var command = command(5L, 7L, 2);
 
-        var erro = assertThrows(ResponseStatusException.class,
+        var erro = assertThrows(ApplicationException.class,
+                () -> useCase.execute(command));
+
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, erro.type());
+        verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
+    }
+
+    @Test
+    void deveRejeitarMecanicoQuandoDiagnosticoNaoPossuirMecanico() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        ordemServico.setDiagnostico(new DiagnosticoEntity());
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
+                .thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+
+        ApplicationException erro = assertThrows(ApplicationException.class,
                 () -> useCase.execute(command(5L, 7L, 2)));
 
-        assertEquals(HttpStatus.BAD_REQUEST, erro.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, erro.type());
         verifyNoInteractions(servicoGateway, disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
     }
 
@@ -363,10 +401,11 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
+        var command = command(5L, 7L, 0);
 
         var erro = assertThrows(
                 IllegalArgumentException.class,
-                () -> useCase.execute(command(5L, 7L, 0))
+                () -> useCase.execute(command)
         );
 
         assertEquals("Quantidade do item deve ser maior que zero.", erro.getMessage());
@@ -374,24 +413,64 @@ class CriarReparoAdicionalUseCaseTest {
     }
 
     @Test
+    void deveRejeitarItensNulosOuIncompletos() {
+        var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
+        var mecanico = new UsuarioEntity();
+        mecanico.setId(20L);
+        mecanico.setRole(RoleEnum.MECANICO);
+        when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
+                .thenReturn(Optional.of(ordemServico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
+
+        List<ItemReparoAdicionalCommand> itemNulo =
+                Collections.singletonList((ItemReparoAdicionalCommand) null);
+        List<ItemReparoAdicionalCommand> pecaNula =
+                List.of(new ItemReparoAdicionalCommand(null, 1));
+        List<ItemReparoAdicionalCommand> quantidadeNula =
+                List.of(new ItemReparoAdicionalCommand(7L, null));
+        CriarReparoAdicionalCommand itensNulos = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com",
+                List.of(new ServicoReparoAdicionalCommand(5L, null)));
+        CriarReparoAdicionalCommand itemNuloCommand = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com",
+                List.of(new ServicoReparoAdicionalCommand(5L, itemNulo)));
+        CriarReparoAdicionalCommand pecaNulaCommand = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com",
+                List.of(new ServicoReparoAdicionalCommand(5L, pecaNula)));
+        CriarReparoAdicionalCommand quantidadeNulaCommand = new CriarReparoAdicionalCommand(
+                "OS-123", "mecanico@autoflow.com",
+                List.of(new ServicoReparoAdicionalCommand(5L, quantidadeNula)));
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(itensNulos)),
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(itemNuloCommand)),
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(pecaNulaCommand)),
+                () -> assertThrows(IllegalArgumentException.class, () -> useCase.execute(quantidadeNulaCommand))
+        );
+        verifyNoInteractions(disponibilidadeEstoqueUseCase, reparoAdicionalGateway);
+    }
+
+    @Test
     void deveInformarOrdemServicoMecanicoEServicoInexistentes() {
+        var command = command(5L, 7L, 2);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.empty());
-        var erroOs = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
-        assertEquals(HttpStatus.NOT_FOUND, erroOs.getStatusCode());
+        var erroOs = assertThrows(ApplicationException.class, () -> useCase.execute(command));
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, erroOs.type());
 
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.empty());
-        var erroUsuario = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
-        assertEquals(HttpStatus.NOT_FOUND, erroUsuario.getStatusCode());
+        var erroUsuario = assertThrows(ApplicationException.class, () -> useCase.execute(command));
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, erroUsuario.type());
 
         var mecanico = new UsuarioEntity();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
-        var erroServico = assertThrows(ResponseStatusException.class, () -> useCase.execute(command(5L, 7L, 2)));
-        assertEquals(HttpStatus.NOT_FOUND, erroServico.getStatusCode());
+        var erroServico = assertThrows(ApplicationException.class, () -> useCase.execute(command));
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, erroServico.type());
     }
 
     @Test
@@ -414,7 +493,7 @@ class CriarReparoAdicionalUseCaseTest {
         });
         when(orcamentoComplementarGateway.criarESalvar(any(), any(), any())).thenReturn(orcamento);
         when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
-        org.mockito.Mockito.doThrow(new RuntimeException("smtp indisponivel"))
+        doThrow(new RuntimeException("smtp indisponivel"))
                 .when(orcamentoNotificacaoGateway)
                 .notificar(any(OrcamentoNotificacao.class));
 

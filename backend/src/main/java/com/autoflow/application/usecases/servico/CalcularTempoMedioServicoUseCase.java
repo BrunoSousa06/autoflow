@@ -26,8 +26,8 @@ public class CalcularTempoMedioServicoUseCase {
                 .nomeServico(metrica.nomeServico())
                 .quantidadeExecucoes(metrica.quantidadeExecucoes())
                 .tempoMedioSegundos(tempoMedioSegundos)
-                .tempoMedioMinutos(tempoMedioSegundos != null ? tempoMedioSegundos / 60 : 0.0)
-                .tempoMedioHoras(tempoMedioSegundos != null ? tempoMedioSegundos / 3600 : 0.0)
+                .tempoMedioMinutos(tempoMedioSegundos == null ? null : tempoMedioSegundos / 60)
+                .tempoMedioHoras(tempoMedioSegundos == null ? null : tempoMedioSegundos / 3600)
                 .build();
     }
 

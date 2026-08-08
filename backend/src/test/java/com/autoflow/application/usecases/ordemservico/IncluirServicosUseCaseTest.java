@@ -1,9 +1,10 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
-import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
@@ -15,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,9 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IncluirServicosUseCaseTest {
@@ -86,29 +83,9 @@ class IncluirServicosUseCaseTest {
         verify(usuarioGateway, never()).findByEmail("nao-consulta@autoflow.com");
     }
 
-    @Test
-    void deveRejeitarEntradasEReferenciasInexistentes() {
-        when(ordemServicoGateway.findByNumeroOs("ausente")).thenReturn(Optional.empty());
-        assertStatus(HttpStatus.NOT_FOUND, () -> incluir("ausente", List.of(), "admin"));
-
-        OrdemServicoEntity ordem = ordem(StatusOrdemServico.RECEBIDA);
-        when(ordemServicoGateway.findByNumeroOs("OS-3")).thenReturn(Optional.of(ordem));
-        assertThrows(IllegalArgumentException.class,
-                () -> incluir("OS-3", null, "admin"));
-        assertThrows(IllegalArgumentException.class,
-                () -> incluir("OS-3", List.of(), "admin"));
-
-        ordem.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-        when(usuarioGateway.findByEmail("ausente"))
-                .thenReturn(Optional.empty());
-        assertStatus(HttpStatus.NOT_FOUND,
-                () -> incluir("OS-3", List.of(new ServicoSolicitadoEntity(5L)), "ausente"));
-
-        when(usuarioGateway.findByEmail("atendente"))
-                .thenReturn(Optional.of(usuario(RoleEnum.ATENDENTE, 3L)));
-        when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
-        assertStatus(HttpStatus.NOT_FOUND,
-                () -> incluir("OS-3", List.of(new ServicoSolicitadoEntity(5L)), "atendente"));
+    private static void assertType(ApplicationException.ErrorType type,
+                                   org.junit.jupiter.api.function.Executable executable) {
+        assertEquals(type, assertThrows(ApplicationException.class, executable).type());
     }
 
     private OrdemServicoEntity incluir(String numeroOs, List<ServicoSolicitadoEntity> servicos,
@@ -139,8 +116,28 @@ class IncluirServicosUseCaseTest {
         return usuario;
     }
 
-    private static void assertStatus(HttpStatus status,
-                                     org.junit.jupiter.api.function.Executable executable) {
-        assertEquals(status, assertThrows(ResponseStatusException.class, executable).getStatusCode());
+    @Test
+    void deveRejeitarEntradasEReferenciasInexistentes() {
+        when(ordemServicoGateway.findByNumeroOs("ausente")).thenReturn(Optional.empty());
+        assertType(ApplicationException.ErrorType.NOT_FOUND, () -> incluir("ausente", List.of(), "admin"));
+
+        OrdemServicoEntity ordem = ordem(StatusOrdemServico.RECEBIDA);
+        when(ordemServicoGateway.findByNumeroOs("OS-3")).thenReturn(Optional.of(ordem));
+        assertThrows(IllegalArgumentException.class,
+                () -> incluir("OS-3", null, "admin"));
+        assertThrows(IllegalArgumentException.class,
+                () -> incluir("OS-3", List.of(), "admin"));
+
+        ordem.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+        when(usuarioGateway.findByEmail("ausente"))
+                .thenReturn(Optional.empty());
+        assertType(ApplicationException.ErrorType.NOT_FOUND,
+                () -> incluir("OS-3", List.of(new ServicoSolicitadoEntity(5L)), "ausente"));
+
+        when(usuarioGateway.findByEmail("atendente"))
+                .thenReturn(Optional.of(usuario(RoleEnum.ATENDENTE, 3L)));
+        when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
+        assertType(ApplicationException.ErrorType.NOT_FOUND,
+                () -> incluir("OS-3", List.of(new ServicoSolicitadoEntity(5L)), "atendente"));
     }
 }

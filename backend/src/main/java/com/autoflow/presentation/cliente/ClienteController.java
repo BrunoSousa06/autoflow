@@ -4,9 +4,9 @@ package com.autoflow.presentation.cliente;
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.usecases.cliente.*;
+import com.autoflow.presentation.cliente.mapper.ClienteControllerMapper;
 import com.autoflow.presentation.cliente.request.ClienteRequest;
 import com.autoflow.presentation.cliente.response.ClienteResponse;
-import com.autoflow.presentation.cliente.mapper.ClienteControllerMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -55,7 +55,7 @@ public class ClienteController {
     @ApiResponse(responseCode = "409", description = "CPF/CNPJ ja cadastrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @PostMapping
-    public ResponseEntity<ClienteResponse> cadastrarCliente(@Valid @RequestBody ClienteRequest request){
+    public ResponseEntity<ClienteResponse> cadastrarCliente(@Valid @RequestBody ClienteRequest request) {
 
         ClienteInput input = clienteMapper.toInput(request);
         ClienteOutput output = criarClienteUseCase.execute(input);
@@ -71,7 +71,7 @@ public class ClienteController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping("/{documento}")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public ResponseEntity<ClienteResponse> listar(@PathVariable Long documento ){
+    public ResponseEntity<ClienteResponse> listar(@PathVariable Long documento) {
         ClienteOutput output = listarClienteUseCase.execute(documento);
         ClienteResponse response = clienteMapper.toResponse(output);
         return ResponseEntity.ok(response);
@@ -83,7 +83,7 @@ public class ClienteController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public ResponseEntity<List<ClienteResponse>> listarTodosClientes(){
+    public ResponseEntity<List<ClienteResponse>> listarTodosClientes() {
         List<ClienteOutput> outputs = listarTodosClientesUseCase.execute();
         List<ClienteResponse> responses = outputs.stream()
                 .map(clienteMapper::toResponse).toList();
@@ -97,7 +97,7 @@ public class ClienteController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{id}/atualizacao")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public ResponseEntity<ClienteResponse> atualizar(@Valid @RequestBody ClienteRequest request, @PathVariable Long id){
+    public ResponseEntity<ClienteResponse> atualizar(@Valid @RequestBody ClienteRequest request, @PathVariable Long id) {
         ClienteInput input = clienteMapper.toInput(request);
         ClienteOutput output = atualizarClienteUseCase.execute(id, input);
         ClienteResponse response = clienteMapper.toResponse(output);
@@ -111,7 +111,7 @@ public class ClienteController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deletar(@PathVariable Long id){
+    public ResponseEntity<String> deletar(@PathVariable Long id) {
         deletarClienteUseCase.execute(id);
         return ResponseEntity.ok().body("cliente deletado com sucesso");
     }

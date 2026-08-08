@@ -1,11 +1,11 @@
 package com.autoflow.presentation.ordemservico.acompanhamento.response;
 
-import com.autoflow.controller.ordemservico.response.ServicoOsResponse;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.presentation.ordemservico.response.ServicoOsResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -4,10 +4,10 @@ import com.autoflow.application.gateway.OrcamentoVersioningGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
+import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -35,8 +35,8 @@ public class OrcamentoVersioningAdapter implements OrcamentoVersioningGateway {
     @Override
     @Transactional
     public void substituirDisponivelAtual(Long ordemServicoId, TipoOrcamento tipo) {
-        repository.findByOrdemServicoIdAndStatus(ordemServicoId, StatusOrcamento.DISPONIVEL)
-                .filter(orcamento -> tipo.equals(orcamento.getTipo()))
+        repository.findByOrdemServicoIdAndTipoAndStatus(
+                        ordemServicoId, tipo, StatusOrcamento.DISPONIVEL)
                 .ifPresent(orcamento -> {
                     orcamento.setStatus(StatusOrcamento.SUBSTITUIDO);
                     repository.saveAndFlush(orcamento);

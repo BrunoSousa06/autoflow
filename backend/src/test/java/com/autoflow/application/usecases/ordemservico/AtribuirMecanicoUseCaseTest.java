@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.ordemservico.DiagnosticoEntity;
@@ -10,14 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,33 +57,8 @@ class AtribuirMecanicoUseCaseTest {
         assertSame(mecanico, diagnostico.getMecanico());
     }
 
-    @Test
-    void deveRejeitarOsMecanicoInvalidoEParametrosAusentes() {
-        when(ordemServicoGateway.findByNumeroOs("ausente")).thenReturn(Optional.empty());
-        assertStatus(HttpStatus.NOT_FOUND, () -> new AtribuirMecanicoUseCase(
-                ordemServicoGateway, usuarioGateway).execute("ausente", 1L, null));
-
-        OrdemServicoEntity ordem = new OrdemServicoEntity();
-        when(ordemServicoGateway.findByNumeroOs("OS-3")).thenReturn(Optional.of(ordem));
-        when(usuarioGateway.findById(12L)).thenReturn(Optional.empty());
-        assertStatus(HttpStatus.NOT_FOUND, () -> new AtribuirMecanicoUseCase(
-                ordemServicoGateway, usuarioGateway).execute("OS-3", 12L, null));
-
-        when(usuarioGateway.findByEmail("ausente@autoflow.com"))
-                .thenReturn(Optional.empty());
-        assertStatus(HttpStatus.NOT_FOUND, () -> new AtribuirMecanicoUseCase(
-                ordemServicoGateway, usuarioGateway).execute("OS-3", null, "ausente@autoflow.com"));
-
-        assertStatus(HttpStatus.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
-                ordemServicoGateway, usuarioGateway).execute("OS-3", null, "  "));
-
-        UsuarioEntity atendente = usuario(13L, RoleEnum.ATENDENTE);
-        when(usuarioGateway.findById(13L)).thenReturn(Optional.of(atendente));
-        assertStatus(HttpStatus.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
-                ordemServicoGateway, usuarioGateway).execute("OS-3", 13L, null));
-
-        assertStatus(HttpStatus.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
-                ordemServicoGateway, usuarioGateway).execute("OS-3", null, null));
+    private static void assertType(ApplicationException.ErrorType type, Executable executable) {
+        assertEquals(type, assertThrows(ApplicationException.class, executable).type());
     }
 
     private static UsuarioEntity usuario(Long id, RoleEnum role) {
@@ -97,8 +69,33 @@ class AtribuirMecanicoUseCaseTest {
         return usuario;
     }
 
-    private static void assertStatus(HttpStatus status, Executable executable) {
-        assertEquals(status, assertThrows(ResponseStatusException.class, executable).getStatusCode());
+    @Test
+    void deveRejeitarOsMecanicoInvalidoEParametrosAusentes() {
+        when(ordemServicoGateway.findByNumeroOs("ausente")).thenReturn(Optional.empty());
+        assertType(ApplicationException.ErrorType.NOT_FOUND, () -> new AtribuirMecanicoUseCase(
+                ordemServicoGateway, usuarioGateway).execute("ausente", 1L, null));
+
+        OrdemServicoEntity ordem = new OrdemServicoEntity();
+        when(ordemServicoGateway.findByNumeroOs("OS-3")).thenReturn(Optional.of(ordem));
+        when(usuarioGateway.findById(12L)).thenReturn(Optional.empty());
+        assertType(ApplicationException.ErrorType.NOT_FOUND, () -> new AtribuirMecanicoUseCase(
+                ordemServicoGateway, usuarioGateway).execute("OS-3", 12L, null));
+
+        when(usuarioGateway.findByEmail("ausente@autoflow.com"))
+                .thenReturn(Optional.empty());
+        assertType(ApplicationException.ErrorType.NOT_FOUND, () -> new AtribuirMecanicoUseCase(
+                ordemServicoGateway, usuarioGateway).execute("OS-3", null, "ausente@autoflow.com"));
+
+        assertType(ApplicationException.ErrorType.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
+                ordemServicoGateway, usuarioGateway).execute("OS-3", null, "  "));
+
+        UsuarioEntity atendente = usuario(13L, RoleEnum.ATENDENTE);
+        when(usuarioGateway.findById(13L)).thenReturn(Optional.of(atendente));
+        assertType(ApplicationException.ErrorType.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
+                ordemServicoGateway, usuarioGateway).execute("OS-3", 13L, null));
+
+        assertType(ApplicationException.ErrorType.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
+                ordemServicoGateway, usuarioGateway).execute("OS-3", null, null));
     }
 
     @FunctionalInterface

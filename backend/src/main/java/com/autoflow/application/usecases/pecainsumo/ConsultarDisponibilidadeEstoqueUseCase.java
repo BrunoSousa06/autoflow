@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
+import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
@@ -10,15 +10,12 @@ import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.EstoqueDisponibilidade;
 import com.autoflow.domain.pecainsumo.EstoquePolicy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Service
+
 @RequiredArgsConstructor
 public class ConsultarDisponibilidadeEstoqueUseCase {
 
@@ -85,9 +82,15 @@ public class ConsultarDisponibilidadeEstoqueUseCase {
     }
 
     private void validarItens(List<ItemNecessarioEntity> itens) {
+        Set<Long> ids = new HashSet<>();
         itens.forEach(item -> {
             if (item == null || item.getPecaInsumoId() == null || item.getQuantidade() == null) {
                 throw new IllegalArgumentException("Item necessario e obrigatorio.");
+            }
+            if (!ids.add(item.getPecaInsumoId())) {
+                throw new IllegalArgumentException(
+                        "Peça/Insumo duplicado no mesmo serviço: ID " + item.getPecaInsumoId()
+                );
             }
         });
     }

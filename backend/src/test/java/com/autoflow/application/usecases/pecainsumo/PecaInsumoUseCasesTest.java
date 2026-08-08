@@ -1,27 +1,26 @@
 package com.autoflow.application.usecases.pecainsumo;
 
+import com.autoflow.application.dto.PageQuery;
+import com.autoflow.application.dto.PageResult;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.mapper.PecaInsumoMapper;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
-import com.autoflow.presentation.pecainsumo.response.PecaInsumoResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -57,8 +56,7 @@ class PecaInsumoUseCasesTest {
         assertEquals(output, useCase.execute(input));
 
         when(gateway.findByNomeIgnoreCase("Filtro")).thenReturn(Optional.of(entity));
-        var erro = assertThrows(ResponseStatusException.class, () -> useCase.execute(input));
-        assertEquals(HttpStatus.BAD_REQUEST, erro.getStatusCode());
+        assertThrows(ApplicationException.class, () -> useCase.execute(input));
     }
 
     @Test
@@ -69,8 +67,7 @@ class PecaInsumoUseCasesTest {
         assertEquals(output, useCase.execute(1L));
 
         when(gateway.findById(2L)).thenReturn(Optional.empty());
-        assertEquals(HttpStatus.NOT_FOUND,
-                assertThrows(ResponseStatusException.class, () -> useCase.execute(2L)).getStatusCode());
+        assertThrows(RuntimeException.class, () -> useCase.execute(2L));
     }
 
     @Test
@@ -84,22 +81,20 @@ class PecaInsumoUseCasesTest {
         verify(gateway).save(entity);
 
         when(gateway.findById(2L)).thenReturn(Optional.empty());
-        assertThrows(ResponseStatusException.class, () -> buscar.execute(2L));
+        assertThrows(ApplicationException.class, () -> buscar.execute(2L));
     }
 
     @Test
     void deveListarEListarPaginado() {
-        var response = new PecaInsumoResponse(1L, "Filtro", new BigDecimal("50.00"), 10, CategoriaPecaInsumo.PECA);
         when(gateway.findAll()).thenReturn(List.of(entity));
-        when(mapper.toResponseList(List.of(entity))).thenReturn(List.of(response));
-        assertEquals(List.of(response), new ListarPecaInsumoUseCase(gateway, mapper).execute());
-
-        var pageable = PageRequest.of(0, 10);
-        when(gateway.findAll(any(), eq(pageable))).thenReturn(new PageImpl<>(List.of(entity)));
         when(mapper.mapToOutput(entity)).thenReturn(output);
+        assertEquals(List.of(output), new ListarPecaInsumoUseCase(gateway, mapper).execute());
+
+        var pageQuery = new PageQuery(0, 10);
+        when(gateway.findAll(any(), eq(pageQuery))).thenReturn(new PageResult<>(List.of(entity), 1, 0, 10));
         assertEquals(List.of(output),
                 new ListarPecaInsumoPaginadoUseCase(gateway, mapper)
-                        .execute(pageable, "Fil", CategoriaPecaInsumo.PECA).getContent());
+                        .execute(pageQuery, "Fil", CategoriaPecaInsumo.PECA).content());
     }
 
     @Test
@@ -110,8 +105,7 @@ class PecaInsumoUseCasesTest {
         verify(gateway).deleteById(1L);
 
         when(gateway.existsById(2L)).thenReturn(false);
-        assertEquals(HttpStatus.NOT_FOUND,
-                assertThrows(ResponseStatusException.class, () -> useCase.execute(2L)).getStatusCode());
+        assertThrows(ApplicationException.class, () -> useCase.execute(2L));
     }
 
 }

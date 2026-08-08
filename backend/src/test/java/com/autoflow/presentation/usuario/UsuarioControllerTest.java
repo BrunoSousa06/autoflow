@@ -1,22 +1,21 @@
 package com.autoflow.presentation.usuario;
 
-import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.LoginInput;
 import com.autoflow.application.dto.usuario.LoginOutput;
+import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.usecases.usuario.BuscarMecanicosUseCase;
 import com.autoflow.application.usecases.usuario.CadastrarUsuarioPublicoUseCase;
 import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
 import com.autoflow.application.usecases.usuario.LoginUsuarioUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapperImpl;
 import com.autoflow.presentation.usuario.request.LoginRequest;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,8 +31,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -64,7 +63,7 @@ class UsuarioControllerTest {
     @Mock
     private BuscarMecanicosUseCase buscarMecanicosUseCase;
 
-    private UsuarioMapper usuarioMapper;
+    private UsuarioControllerMapper usuarioMapper;
 
     @InjectMocks
     private UsuarioController usuarioController;
@@ -72,7 +71,7 @@ class UsuarioControllerTest {
     @BeforeEach
     void setup() {
 
-        usuarioMapper = new UsuarioMapperImpl();
+        usuarioMapper = Mappers.getMapper(UsuarioControllerMapper.class);
 
         usuarioController = new UsuarioController(
                 cadastrarUsuarioPublicoUseCase,

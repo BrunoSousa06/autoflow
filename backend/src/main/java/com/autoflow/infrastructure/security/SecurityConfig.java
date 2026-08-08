@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/public/**").permitAll()
 
                         .requestMatchers(
-                                 "/actuator/health",
+                                "/actuator/health",
                                 "/actuator/health/liveness",
                                 "/actuator/health/readiness",
                                 "/v3/api-docs",

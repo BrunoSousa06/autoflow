@@ -3,9 +3,7 @@ package com.autoflow.application.usecases.cliente;
 import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.gateway.ClienteGateway;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
 public class DeletarClienteUseCase {
 

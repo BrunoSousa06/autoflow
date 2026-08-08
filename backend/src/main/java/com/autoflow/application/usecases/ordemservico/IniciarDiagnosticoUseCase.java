@@ -1,21 +1,18 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.policy.OrdemServicoAccessPolicy;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-@Component
+
 @RequiredArgsConstructor
 public class IniciarDiagnosticoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
@@ -23,11 +20,11 @@ public class IniciarDiagnosticoUseCase {
     private final HistoricoStatusOsGateway historicoStatusOsGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
 
-    @Transactional
+    @TransactionalUseCase
     public OrdemServicoEntity execute(String numeroOs, String emailUsuarioLogado) {
         OrdemServicoEntity ordemServico = buscar(numeroOs);
         UsuarioEntity usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário autenticado não encontrado."));
+                .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
             accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);
         }
@@ -40,6 +37,6 @@ public class IniciarDiagnosticoUseCase {
 
     private OrdemServicoEntity buscar(String numeroOs) {
         return ordemServicoGateway.findByNumeroOs(numeroOs)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
+                .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
     }
 }

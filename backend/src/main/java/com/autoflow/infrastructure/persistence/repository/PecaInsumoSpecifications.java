@@ -6,7 +6,8 @@ import org.springframework.data.jpa.domain.Specification;
 
 public final class PecaInsumoSpecifications {
 
-    private PecaInsumoSpecifications() {}
+    private PecaInsumoSpecifications() {
+    }
 
     public static Specification<PecaInsumoEntity> comFiltros(String nome, CategoriaPecaInsumo tipo) {
         return Specification.allOf(

@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 
 @Documented
 @Constraint(validatedBy = CpfCnpjValidator.class)
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CpfCnpj {
 

@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
@@ -14,8 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,9 +22,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrarItensNecessariosUseCaseTest {
@@ -84,15 +81,16 @@ class RegistrarItensNecessariosUseCaseTest {
         os.setStatus(StatusOrdemServico.RECEBIDA);
         var usuario = usuario(RoleEnum.ADMIN, "admin@autoflow.com");
         var itens = List.of(itemSolicitado());
+        var email = usuario.getEmail();
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
+        var useCase = new RegistrarItensNecessariosUseCase(
+                ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque);
 
-        var exception = assertThrows(ResponseStatusException.class,
-                () -> new RegistrarItensNecessariosUseCase(
-                        ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque)
-                        .execute("OS-1", 10L, usuario.getEmail(), itens));
+        var exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute("OS-1", 10L, email, itens));
 
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
         verify(disponibilidadeEstoque, never()).execute(itens);
         verify(ordemServicoGateway, never()).save(os);
     }

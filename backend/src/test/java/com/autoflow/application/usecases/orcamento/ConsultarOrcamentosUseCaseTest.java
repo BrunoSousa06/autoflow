@@ -1,6 +1,7 @@
 package com.autoflow.application.usecases.orcamento;
 
 import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -10,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,12 +38,13 @@ class ConsultarOrcamentosUseCaseTest {
     @Test
     void deveNegarFiltroDeOutroCliente() {
         UsuarioEntity usuario = usuario("cliente@exemplo.com", RoleEnum.CLIENTE);
-        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        var email = usuario.getEmail();
+        when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
         OrcamentoFiltro filtro = new OrcamentoFiltro(null, null, null, "outro@exemplo.com", null, null);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> useCase.execute(usuario.getEmail(), filtro));
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute(email, filtro));
+        assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
         verifyNoInteractions(orcamentoGateway);
     }
 

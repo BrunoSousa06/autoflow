@@ -1,5 +1,9 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
+import com.autoflow.application.dto.PageQuery;
+import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoFiltro;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
@@ -7,23 +11,16 @@ import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.persistence.repository.PecaInsumoRepository;
-import com.autoflow.infrastructure.persistence.repository.ServicoSolicitadoRepository;
-import com.autoflow.infrastructure.persistence.repository.TempoMedioServicoProjection;
-import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
-import com.autoflow.repository.ordemservico.OrdemServicoRepository;
-import com.autoflow.repository.ordemservico.TempoMedioOrdemServicoProjection;
-import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
+import com.autoflow.infrastructure.persistence.repository.*;
+import com.autoflow.infrastructure.persistence.repository.historico.HistoricoStatusOsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
@@ -48,14 +45,14 @@ class RepositoryAdaptersTest {
         var entity = new PecaInsumoEntity();
         entity.setId(1L);
         entity.setTipo(CategoriaPecaInsumo.PECA);
-        var pageable = PageRequest.of(0, 10);
-        Specification<PecaInsumoEntity> spec = (root, query, cb) -> cb.conjunction();
+
 
         when(pecaRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(pecaRepository.findByNomeIgnoreCase("Filtro")).thenReturn(Optional.of(entity));
         when(pecaRepository.save(entity)).thenReturn(entity);
         when(pecaRepository.findAll()).thenReturn(List.of(entity));
-        when(pecaRepository.findAll(spec, pageable)).thenReturn(new PageImpl<>(List.of(entity)));
+        when(pecaRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(entity)));
         when(pecaRepository.existsById(1L)).thenReturn(true);
         when(pecaRepository.findAllById(List.of(1L))).thenReturn(List.of(entity));
         when(pecaRepository.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(entity));
@@ -65,7 +62,7 @@ class RepositoryAdaptersTest {
         assertEquals(Optional.of(entity), adapter.findByNomeIgnoreCase("Filtro"));
         assertSame(entity, adapter.save(entity));
         assertEquals(List.of(entity), adapter.findAll());
-        assertEquals(List.of(entity), adapter.findAll(spec, pageable).getContent());
+        assertEquals(List.of(entity), adapter.findAll(new PecaInsumoFiltro(null, null), new PageQuery(0, 10)).content());
         assertTrue(adapter.existsById(1L));
         assertEquals(List.of(estoque), adapter.findAllById(List.of(1L)));
         assertEquals(List.of(estoque), adapter.findAllByIdForUpdate(List.of(1L)));
@@ -90,8 +87,9 @@ class RepositoryAdaptersTest {
         var adapter = new PecaInsumoAdapter(pecaRepository);
         var estoque = new EstoqueItemOutput(9L, "Item", CategoriaPecaInsumo.PECA, null, 1);
         when(pecaRepository.findAllById(List.of(9L))).thenReturn(List.of());
+        var itens = List.of(estoque);
 
-        assertThrows(IllegalStateException.class, () -> adapter.saveAll(List.of(estoque)));
+        assertThrows(IllegalStateException.class, () -> adapter.saveAll(itens));
 
         verify(pecaRepository, never()).saveAll(any());
     }
@@ -160,15 +158,16 @@ class RepositoryAdaptersTest {
         var adapter = new OrdemServicoRepositoryAdapter(ordemRepository);
         var ordem = new OrdemServicoEntity();
         var esperado = Optional.of(ordem);
-        var pageable = PageRequest.of(0, 10);
-        Specification<OrdemServicoEntity> spec = (root, query, cb) -> cb.conjunction();
+
+
         when(ordemRepository.save(ordem)).thenReturn(ordem);
         when(ordemRepository.findById(1L)).thenReturn(esperado);
         when(ordemRepository.findByNumeroOs("OS-1")).thenReturn(esperado);
         when(ordemRepository.findByNumeroOsForUpdate("OS-1")).thenReturn(esperado);
         when(ordemRepository.findByCliente_IdOrderByDataAberturaDesc(2L)).thenReturn(List.of(ordem));
         when(ordemRepository.findAllByOrderByDataAberturaDesc()).thenReturn(List.of(ordem));
-        when(ordemRepository.findAll(spec, pageable)).thenReturn(new PageImpl<>(List.of(ordem)));
+        when(ordemRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(ordem)));
 
         assertSame(ordem, adapter.save(ordem));
         assertEquals(esperado, adapter.findById(1L));
@@ -176,7 +175,8 @@ class RepositoryAdaptersTest {
         assertEquals(esperado, adapter.findByNumeroOsForUpdate("OS-1"));
         assertEquals(List.of(ordem), adapter.findByClienteIdOrderByDataAberturaDesc(2L));
         assertEquals(List.of(ordem), adapter.findAllByOrderByDataAberturaDesc());
-        assertEquals(List.of(ordem), adapter.findAll(spec, pageable).getContent());
+        assertEquals(List.of(ordem), adapter.findAll(
+                new OrdemServicoFiltroInput(null, null, null), null, new PageQuery(0, 10)).content());
     }
 
     @Test
@@ -203,5 +203,16 @@ class RepositoryAdaptersTest {
         assertEquals("Alinhamento", servicos.getFirst().nomeServico());
         assertEquals(3L, servicos.getFirst().quantidadeExecucoes());
         assertEquals(900.0, servicos.getFirst().tempoMedioSegundos());
+    }
+
+    @Test
+    void metricsAdapterDevePreservarTempoNuloQuandoProjectionDeOrdensForNula() {
+        when(ordemRepository.calcularTempoMedioFinalizacao()).thenReturn(null);
+
+        var ordem = new MetricsRepositoryAdapter(ordemRepository, servicoSolicitadoRepository)
+                .calcularTempoMedioOrdensServico();
+
+        assertEquals(0L, ordem.quantidadeOrdensFinalizadas());
+        org.junit.jupiter.api.Assertions.assertNull(ordem.tempoMedioSegundos());
     }
 }

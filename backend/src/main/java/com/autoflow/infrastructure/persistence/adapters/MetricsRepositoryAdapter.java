@@ -1,11 +1,12 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.gateway.MetricsGateway;
+import com.autoflow.infrastructure.persistence.repository.OrdemServicoRepository;
 import com.autoflow.infrastructure.persistence.repository.ServicoSolicitadoRepository;
-import com.autoflow.repository.ordemservico.OrdemServicoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -18,6 +19,9 @@ public class MetricsRepositoryAdapter implements MetricsGateway {
     @Override
     public TempoMedioOrdemServicoData calcularTempoMedioOrdensServico() {
         var projection = ordemServicoRepository.calcularTempoMedioFinalizacao();
+        if (projection == null) {
+            return new TempoMedioOrdemServicoData(0L, null);
+        }
         return new TempoMedioOrdemServicoData(
                 projection.getQuantidadeOrdensFinalizadas(),
                 projection.getTempoMedioSegundos()
@@ -26,7 +30,11 @@ public class MetricsRepositoryAdapter implements MetricsGateway {
 
     @Override
     public List<TempoMedioServicoData> calcularTempoMedioPorServico() {
-        return servicoSolicitadoRepository.calcularTempoMedioPorServico()
+        var projections = servicoSolicitadoRepository.calcularTempoMedioPorServico();
+        if (projections == null) {
+            return Collections.emptyList();
+        }
+        return projections
                 .stream()
                 .map(projection -> new TempoMedioServicoData(
                         projection.getServicoId(),

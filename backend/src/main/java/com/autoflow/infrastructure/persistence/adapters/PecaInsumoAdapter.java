@@ -1,15 +1,18 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
+import com.autoflow.application.dto.PageQuery;
+import com.autoflow.application.dto.PageResult;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoFiltro;
 import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.gateway.PecaInsumoGateway;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
-import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
 import com.autoflow.infrastructure.persistence.repository.PecaInsumoRepository;
+import com.autoflow.infrastructure.persistence.repository.PecaInsumoSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -45,8 +48,12 @@ public class PecaInsumoAdapter implements PecaInsumoGateway, EstoqueGateway {
     }
 
     @Override
-    public Page<PecaInsumoEntity> findAll(Specification<PecaInsumoEntity> spec, Pageable pageable) {
-        return pecaInsumoRepository.findAll(spec, pageable);
+    public PageResult<PecaInsumoEntity> findAll(PecaInsumoFiltro filtro, PageQuery pageQuery) {
+        Page<PecaInsumoEntity> page = pecaInsumoRepository.findAll(
+                PecaInsumoSpecifications.comFiltros(filtro.nome(), filtro.tipo()),
+                PageRequest.of(pageQuery.page(), pageQuery.size(), Sort.by("nome").ascending()));
+        return new PageResult<>(page.getContent(), page.getTotalElements(),
+                pageQuery.page(), pageQuery.size());
     }
 
     @Override

@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
+import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
@@ -15,15 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ConsultarDisponibilidadeEstoqueUseCaseTest {
@@ -84,18 +78,16 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
     }
 
     @Test
-    void deveBuscarIdsDistintosEmUmaUnicaConsulta() {
+    void deveRejeitarPecaDuplicadaAntesDeConsultarEstoque() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
         var primeiro = itemSolicitado(1L, 2);
         var segundo = itemSolicitado(1L, 3);
-        var estoque = itemEstoque(1L, 5);
-        when(gateway.findAllById(List.of(1L))).thenReturn(List.of(estoque));
+        var itensDuplicados = List.of(primeiro, segundo);
 
-        var resultado = useCase.execute(List.of(primeiro, segundo));
+        assertThrows(IllegalArgumentException.class,
+                () -> useCase.execute(itensDuplicados));
 
-        assertEquals(2, resultado.size());
-        verify(gateway).findAllById(List.of(1L));
-        assertEquals(5, estoque.quantidade());
+        verify(gateway, never()).findAllById(any());
         verificarQueNaoHouvePersistencia();
     }
 
@@ -114,10 +106,11 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
     void deveInformarItemInexistenteSemPersistirAlteracoes() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
         when(gateway.findAllById(List.of(9L))).thenReturn(List.of());
+        var itens = List.of(itemSolicitado(9L, 1));
 
-        var erro = assertThrows(
+        assertThrows(
                 EstoqueItemNaoEncontradoException.class,
-                () -> useCase.execute(List.of(itemSolicitado(9L, 1))));
+                () -> useCase.execute(itens));
 
         verificarQueNaoHouvePersistencia();
     }
@@ -126,18 +119,20 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
     void deveRejeitarQuantidadeNaoPositiva() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
         when(gateway.findAllById(List.of(1L))).thenReturn(List.of(itemEstoque(1L, 5)));
+        var itens = List.of(itemSolicitado(1L, 0));
 
         assertThrows(IllegalArgumentException.class,
-                () -> useCase.execute(List.of(itemSolicitado(1L, 0))));
+                () -> useCase.execute(itens));
         verificarQueNaoHouvePersistencia();
     }
 
     @Test
     void deveRejeitarItemNuloAntesDeConsultarEstoque() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var itens = java.util.Collections.singletonList((ItemNecessarioEntity) null);
 
         assertThrows(IllegalArgumentException.class,
-                () -> useCase.execute(java.util.Collections.singletonList(null)));
+                () -> useCase.execute(itens));
 
         verify(gateway, never()).findAllById(any());
     }
@@ -145,9 +140,10 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
     @Test
     void deveRejeitarItemSemPecaAntesDeConsultarEstoque() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var itens = List.of(itemSolicitado(null, 1));
 
         assertThrows(IllegalArgumentException.class,
-                () -> useCase.execute(List.of(itemSolicitado(null, 1))));
+                () -> useCase.execute(itens));
 
         verify(gateway, never()).findAllById(any());
     }
@@ -157,9 +153,10 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
         var item = new ItemNecessarioEntity();
         item.setPecaInsumoId(1L);
+        var itens = List.of(item);
 
         assertThrows(IllegalArgumentException.class,
-                () -> useCase.execute(List.of(item)));
+                () -> useCase.execute(itens));
 
         verify(gateway, never()).findAllById(any());
     }

@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.orcamento;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -74,9 +74,12 @@ class RecusarOrcamentoUseCaseTest {
     @Test
     void deveRejeitarMotivoMaiorQueLimiteDaColuna() {
         OrcamentoEntity orcamento = orcamentoDisponivel();
+        String motivo = "x".repeat(501);
 
-        assertThrows(ResponseStatusException.class,
-                () -> useCase.execute(orcamento, "x".repeat(501), "Maria"));
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute(orcamento, motivo, "Maria"));
+
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
 
         verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
     }

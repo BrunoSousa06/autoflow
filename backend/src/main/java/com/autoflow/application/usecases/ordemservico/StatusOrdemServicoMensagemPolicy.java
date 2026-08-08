@@ -3,7 +3,8 @@ package com.autoflow.application.usecases.ordemservico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 
 public final class StatusOrdemServicoMensagemPolicy {
-    private StatusOrdemServicoMensagemPolicy() {}
+    private StatusOrdemServicoMensagemPolicy() {
+    }
 
     public static String mensagem(StatusOrdemServico status) {
         return switch (status) {

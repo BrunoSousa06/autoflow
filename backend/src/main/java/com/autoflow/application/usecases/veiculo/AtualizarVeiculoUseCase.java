@@ -8,9 +8,8 @@ import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.policy.PlacaPolicy;
 import com.autoflow.application.security.AuthorizationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class AtualizarVeiculoUseCase {
 

@@ -1,11 +1,7 @@
 package com.autoflow.presentation.servico;
 
 
-import com.autoflow.application.dto.servico.PageInput;
-import com.autoflow.application.dto.servico.PageOutput;
-import com.autoflow.application.dto.servico.ServicoInput;
-import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
+import com.autoflow.application.dto.servico.*;
 import com.autoflow.application.usecases.servico.*;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
@@ -50,7 +46,7 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping
     @PreAuthorize("hasAnyRole('MECANICO', 'ADMIN')")
-    public ResponseEntity<ServicoResponse> cadastrar(@Valid @RequestBody ServicoRequest request ){
+    public ResponseEntity<ServicoResponse> cadastrar(@Valid @RequestBody ServicoRequest request) {
         ServicoInput input = servicoMapper.toInput(request);
         ServicoOutput output = criarServicoUseCase.execute(input);
         ServicoResponse response = servicoMapper.toResponse(output);
@@ -64,7 +60,7 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
-    public ResponseEntity<ServicoResponse> listar(@PathVariable Long id ){
+    public ResponseEntity<ServicoResponse> listar(@PathVariable Long id) {
         ServicoOutput output = buscarServicoPorIdUseCase.execute(id);
         ServicoResponse response = servicoMapper.toResponse(output);
         return ResponseEntity.ok(response);
@@ -95,7 +91,7 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{id}/atualizacao")
     @PreAuthorize("hasAnyRole('MECANICO', 'ADMIN')")
-    public ResponseEntity<ServicoResponse> atualizar(@Valid @RequestBody ServicoRequest request, @PathVariable Long id){
+    public ResponseEntity<ServicoResponse> atualizar(@Valid @RequestBody ServicoRequest request, @PathVariable Long id) {
         ServicoInput input = servicoMapper.toInput(request);
         ServicoOutput output = atualizarServicoUseCase.execute(id, input);
         ServicoResponse response = servicoMapper.toResponse(output);
@@ -109,7 +105,7 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> inativar(@PathVariable Long id){
+    public ResponseEntity<String> inativar(@PathVariable Long id) {
         inativarServicoUseCase.execute(id);
         return ResponseEntity.ok().body("Serviço inativado com sucesso");
     }

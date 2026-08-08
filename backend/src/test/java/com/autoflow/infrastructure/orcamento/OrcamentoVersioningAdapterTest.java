@@ -3,7 +3,7 @@ package com.autoflow.infrastructure.orcamento;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
+import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -12,9 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrcamentoVersioningAdapterTest {
@@ -53,7 +51,8 @@ class OrcamentoVersioningAdapterTest {
     @Test
     void deveSubstituirSomenteDisponivelDoMesmoTipo() {
         var atual = orcamento(1, TipoOrcamento.COMPLEMENTAR, StatusOrcamento.DISPONIVEL);
-        when(repository.findByOrdemServicoIdAndStatus(10L, StatusOrcamento.DISPONIVEL))
+        when(repository.findByOrdemServicoIdAndTipoAndStatus(
+                10L, TipoOrcamento.COMPLEMENTAR, StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.of(atual));
 
         adapter().substituirDisponivelAtual(10L, TipoOrcamento.COMPLEMENTAR);
@@ -65,8 +64,9 @@ class OrcamentoVersioningAdapterTest {
     @Test
     void naoDeveSubstituirDisponivelDeOutroTipo() {
         var atual = orcamento(1, TipoOrcamento.PRINCIPAL, StatusOrcamento.DISPONIVEL);
-        when(repository.findByOrdemServicoIdAndStatus(10L, StatusOrcamento.DISPONIVEL))
-                .thenReturn(Optional.of(atual));
+        when(repository.findByOrdemServicoIdAndTipoAndStatus(
+                10L, TipoOrcamento.COMPLEMENTAR, StatusOrcamento.DISPONIVEL))
+                .thenReturn(Optional.empty());
 
         adapter().substituirDisponivelAtual(10L, TipoOrcamento.COMPLEMENTAR);
 

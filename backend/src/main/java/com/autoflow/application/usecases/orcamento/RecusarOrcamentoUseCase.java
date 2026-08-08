@@ -1,21 +1,19 @@
 package com.autoflow.application.usecases.orcamento;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-@Service
+
 @RequiredArgsConstructor
 public class RecusarOrcamentoUseCase {
 
@@ -23,17 +21,17 @@ public class RecusarOrcamentoUseCase {
     private final OrcamentoGateway orcamentoGateway;
     private final OrdemServicoGateway ordemServicoGateway;
 
-    @Transactional
-    public OrcamentoEntity execute(OrcamentoEntity orcamento, String motivo, String assinaturaNome){
+    @TransactionalUseCase
+    public OrcamentoEntity execute(OrcamentoEntity orcamento, String motivo, String assinaturaNome) {
         if (orcamento.getStatus() == StatusOrcamento.APROVADO) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Orçamento já aprovado, não é possivel recusar");
+            throw ApplicationException.badRequest("Orçamento já aprovado, não é possivel recusar");
         }
         if (orcamento.getStatus() == StatusOrcamento.REPROVADO) {
             return orcamento;
         }
 
         if (orcamento.getStatus() != StatusOrcamento.DISPONIVEL) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Orçamento não esta disponivel");
+            throw ApplicationException.badRequest("Orçamento não esta disponivel");
         }
 
         orcamento.setStatus(StatusOrcamento.REPROVADO);
@@ -42,7 +40,7 @@ public class RecusarOrcamentoUseCase {
         if (motivo != null) {
             String motivoNormalizado = motivo.trim();
             if (motivoNormalizado.length() > 500) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                throw ApplicationException.badRequest(
                         "Motivo da recusa deve ter no máximo 500 caracteres");
             }
             orcamento.setRecusaMotivo(motivoNormalizado);
@@ -55,7 +53,7 @@ public class RecusarOrcamentoUseCase {
         }
 
         OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(orcamento.getNumeroOs())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OS nao encontrada"));
+                .orElseThrow(() -> ApplicationException.notFound("OS nao encontrada"));
         ordemServico.finalizarPorOrcamentoRecusado();
         ordemServicoGateway.save(ordemServico);
         return orcamentoSalvo;

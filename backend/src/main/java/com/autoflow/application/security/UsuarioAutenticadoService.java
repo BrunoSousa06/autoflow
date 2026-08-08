@@ -1,16 +1,13 @@
 package com.autoflow.application.security;
 
 import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
-@Service
 @RequiredArgsConstructor
 public class UsuarioAutenticadoService {
 
@@ -39,8 +36,7 @@ public class UsuarioAutenticadoService {
     }
 
     private CurrentUser getRequiredUser() {
-        return getCurrentUser().orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
+        return getCurrentUser().orElseThrow(() -> ApplicationException.unauthorized(
                 "Usuário não autenticado"
         ));
     }
