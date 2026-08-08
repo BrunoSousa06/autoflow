@@ -25,6 +25,7 @@ class OrcamentoIT extends AbstractIT {
 
     private String adminToken;
     private String clienteToken;
+    private String outroClienteToken;
     private Long mecanicoId;
     private Long servicoId;
     private Long orcamentoId;
@@ -47,7 +48,7 @@ class OrcamentoIT extends AbstractIT {
 
         clienteToken = registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
 
-        registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_CLIENTE_2, "CLIENTE");
+        outroClienteToken = registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_CLIENTE_2, "CLIENTE");
 
         post("/clientes", TestUtils.clienteRequest("Cliente Orçamento", TestUtils.CPF_CLIENTE, TestUtils.EMAIL_CLIENTE), adminToken);
 
@@ -265,5 +266,39 @@ class OrcamentoIT extends AbstractIT {
                 """, Integer.class, orcamentoId, orcamentoId, orcamentoId);
 
         assertThat(quantidadeDepois).isEqualTo(quantidadeAntes);
+    }
+
+    @Test
+    @Order(13)
+    @DisplayName("admin deve gerar PDF do orçamento autenticado com headers corretos")
+    void adminDeveGerarPdfDoOrcamentoAutenticado() {
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                "/orcamentos/" + orcamentoId + "/pdf",
+                org.springframework.http.HttpMethod.GET,
+                authEntity(adminToken),
+                byte[].class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentType())
+                .isEqualTo(org.springframework.http.MediaType.APPLICATION_PDF);
+        assertThat(response.getHeaders().getFirst("Content-Disposition"))
+                .isEqualTo("attachment; filename=\"orcamento-" + orcamentoId + ".pdf\"");
+        assertThat(response.getBody()).isNotEmpty();
+        assertThat(new String(response.getBody(), 0, 4)).isEqualTo("%PDF");
+    }
+
+    @Test
+    @Order(14)
+    @DisplayName("cliente não deve consultar nem aprovar orçamento de outro cliente")
+    void clienteNaoDeveAcessarOrcamentoDeOutroCliente() {
+        ResponseEntity<String> consulta = get("/orcamentos/" + orcamentoId, outroClienteToken);
+        ResponseEntity<String> aprovacao = post("/orcamentos/" + orcamentoId + "/aprovar", null, outroClienteToken);
+
+        assertThat(consulta.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(aprovacao.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT status FROM orcamento WHERE id = ?", String.class, orcamentoId))
+                .isEqualTo("DISPONIVEL");
     }
 }

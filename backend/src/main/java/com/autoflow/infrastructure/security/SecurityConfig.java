@@ -48,7 +48,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(
+                                "/auth/cadastro",
+                                "/auth/login"
+                        ).permitAll()
                         .requestMatchers("/public/**").permitAll()
 
                         .requestMatchers(

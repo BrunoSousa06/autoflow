@@ -73,14 +73,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
         return "OPTIONS".equalsIgnoreCase(request.getMethod())
                 || path.startsWith("/public/")
-                || path.startsWith("/auth/")
+                || path.equals("/auth/cadastro")
+                || path.equals("/auth/login")
                 || path.equals("/actuator/health")
                 || path.equals("/actuator/health/liveness")
                 || path.equals("/actuator/health/readiness")
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/swagger-ui.html")
-                || path.startsWith("/auth")
                 || path.startsWith("/public/orcamentos")
                 || path.equals("/swagger-ui.html");
     }
