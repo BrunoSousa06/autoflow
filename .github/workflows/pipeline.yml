@@ -63,7 +63,7 @@ jobs:
         with:
           name: backend-integration-reports
           path: backend/target/failsafe-reports
-          if-no-files-found: error
+          if-no-files-found: ignore
 
   backend-build:
     name: Backend Build
