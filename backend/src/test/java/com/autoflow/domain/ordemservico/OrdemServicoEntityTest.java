@@ -358,6 +358,19 @@ class OrdemServicoEntityTest {
         assertSame(primeiro, ordemServico.getDiagnostico());
     }
 
+    @Test
+    void testAcompanhamentoPublicoIndisponivelSemToken() {
+        assertFalse(ordemServico.acompanhamentoPublicoDisponivel(LocalDateTime.now()));
+    }
+
+    @Test
+    void testAcompanhamentoPublicoDisponivelComTokenSemExpiracao() {
+        LocalDateTime criadoEm = LocalDateTime.now().minusMinutes(1);
+        ordemServico.configurarAcompanhamentoPublico("hash-token", criadoEm, null);
+
+        assertTrue(ordemServico.acompanhamentoPublicoDisponivel(LocalDateTime.now()));
+    }
+
     // --- equals e hashCode ---
 
     @Test

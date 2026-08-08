@@ -2,6 +2,7 @@ package com.autoflow.service.ordemservico.impl;
 
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
+import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
@@ -30,8 +31,6 @@ import com.autoflow.service.ordemservico.OrdemServicoService;
 import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.FinalizarDiagnosticoResult;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
-import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
-import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import jakarta.transaction.Transactional;
@@ -69,7 +68,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final ServicoService servicoService;
     private final BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase;
     private final BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase;
-    private final PecaInsumoService pecaInsumoService;
+    private final BaixarEstoqueUseCase baixarEstoqueUseCase;
     private final ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
     private final OrdemServicoAccessPolicy ordemServicoAccessPolicy;
     private final OrcamentoFactory orcamentoFactoryImpl;
@@ -86,7 +85,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Autowired
     public OrdemServicoServiceImpl(OrdemServicoRepository ordemServicoRepository, BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoUseCase, ServicoService servicoService,
                                    BuscarUsuarioPorEmailUseCase buscarUsuarioPorEmailUseCase, BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase,
-                                   HistoricoStatusOsRepository historicoStatusOsRepository, PecaInsumoService pecaInsumoService,
+                                   HistoricoStatusOsRepository historicoStatusOsRepository, BaixarEstoqueUseCase baixarEstoqueUseCase,
                                    OrdemServicoAccessPolicy ordemServicoAccessPolicy, OrcamentoFactory orcamentoFactoryImpl,
                                    OrcamentoNotificacaoService orcamentoNotificacaoService, OrcamentoVersioningService orcamentoVersioningServiceImpl,
                                    ClienteRepository clienteRepository, OrcamentoRepository orcamentoRepository, OrcamentoPublicacaoGateway orcamentoPublicacaoGateway,
@@ -100,7 +99,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
         this.buscarUsuarioPorEmailUseCase = buscarUsuarioPorEmailUseCase;
         this.buscarMecanicoPorIdUseCase = buscarMecanicoPorIdUseCase;
         this.historicoStatusOsRepository = historicoStatusOsRepository;
-        this.pecaInsumoService = pecaInsumoService;
+        this.baixarEstoqueUseCase = baixarEstoqueUseCase;
         this.ordemServicoAccessPolicy = ordemServicoAccessPolicy;
         this.orcamentoFactoryImpl = orcamentoFactoryImpl;
         this.orcamentoNotificacaoService = orcamentoNotificacaoService;
@@ -337,17 +336,16 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     @Transactional
     @Override
     public OrdemServicoEntity iniciarServico(String numeroOs, Long servicoId) {
-        OrdemServicoEntity ordemServico = buscaOrdemServicoPorNumeroOs(numeroOs);
+        OrdemServicoEntity ordemServico = ordemServicoRepository.findByNumeroOsForUpdate(numeroOs)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
         if (ordemServico.getStatus() != StatusOrdemServico.EM_EXECUCAO) {
             throw new IllegalStateException("O serviço só pode ser iniciado após a aprovação do orçamento.");
         }
 
         ServicoSolicitadoEntity servico = ordemServico.buscarServicoSolicitado(servicoId);
+        servico.validarPodeIniciar();
 
-        BaixaEstoqueResult baixaEstoqueResult =
-                pecaInsumoService.verificarDisponibilidadeEBaixar(servico.getItensNecessarios());
-
-        servico.iniciar(baixaEstoqueResult.itensAtualizados());
+        servico.iniciar(baixarEstoqueUseCase.execute(servico.getItensNecessarios()));
 
         return ordemServicoRepository.save(ordemServico);
     }

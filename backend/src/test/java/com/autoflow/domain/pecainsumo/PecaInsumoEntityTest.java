@@ -52,13 +52,14 @@ class PecaInsumoEntityTest {
     }
 
     @Test
-    void testBaixarDoEstoqueNegativo() {
+    void testBaixarDoEstoqueRejeitaQuantidadeInsuficiente() {
         PecaInsumoEntity pecaRemover = new PecaInsumoEntity();
         pecaRemover.setQuantidade(60);
 
-        pecaInsumo.baixarDoEstoque(pecaRemover);
+        assertThrows(IllegalStateException.class,
+                () -> pecaInsumo.baixarDoEstoque(pecaRemover));
 
-        assertEquals(-10, pecaInsumo.getQuantidade());
+        assertEquals(50, pecaInsumo.getQuantidade());
     }
 
     @Test
@@ -86,6 +87,12 @@ class PecaInsumoEntityTest {
     void testPecaInsumoQuantidadeZero() {
         pecaInsumo.setQuantidade(0);
         assertEquals(0, pecaInsumo.getQuantidade());
+    }
+
+    @Test
+    void testBaixarQuantidadeRejeitaQuantidadeNaoPositiva() {
+        assertThrows(IllegalArgumentException.class, () -> pecaInsumo.baixarQuantidade(0));
+        assertEquals(50, pecaInsumo.getQuantidade());
     }
 
     @Test

@@ -17,6 +17,8 @@ public interface OrdemServicoGateway {
 
     Optional<OrdemServicoEntity> findByNumeroOs(String numeroOs);
 
+    Optional<OrdemServicoEntity> findByNumeroOsForUpdate(String numeroOs);
+
     List<OrdemServicoEntity> findByClienteIdOrderByDataAberturaDesc(Long clienteId);
 
     List<OrdemServicoEntity> findAllByOrderByDataAberturaDesc();

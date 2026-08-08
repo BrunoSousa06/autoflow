@@ -3,9 +3,6 @@ package com.autoflow.application.usecases.pecainsumo;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.gateway.PecaInsumoGateway;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
-import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
@@ -117,50 +114,4 @@ class PecaInsumoUseCasesTest {
                 assertThrows(ResponseStatusException.class, () -> useCase.execute(2L)).getStatusCode());
     }
 
-    @Test
-    void deveBaixarEstoqueSuficienteEPreservarInsuficiente() {
-        var useCase = new VerificarDisponibilidadeEBaixarEstoqueUseCase(gateway);
-        var suficiente = item(1L, 3);
-        var insuficiente = item(2L, 4);
-        var estoqueInsuficiente = estoque(2L, 2);
-        when(gateway.findAllById(List.of(1L, 2L))).thenReturn(List.of(entity, estoqueInsuficiente));
-
-        var resultado = useCase.execute(List.of(suficiente, insuficiente)).itensAtualizados();
-
-        assertAll(
-                () -> assertEquals(7, entity.getQuantidade()),
-                () -> assertEquals(StatusItemNecessario.UTILIZADO, resultado.get(0).getStatus()),
-                () -> assertEquals(2, estoqueInsuficiente.getQuantidade()),
-                () -> assertEquals(StatusItemNecessario.PENDENTE, resultado.get(1).getStatus()),
-                () -> assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE, resultado.get(1).getMotivoPendencia()));
-        verify(gateway).saveAll(List.of(entity));
-    }
-
-    @Test
-    void deveTratarListaNulaVaziaEItemInexistente() {
-        var useCase = new VerificarDisponibilidadeEBaixarEstoqueUseCase(gateway);
-        assertTrue(useCase.execute(null).itensAtualizados().isEmpty());
-        assertTrue(useCase.execute(List.of()).itensAtualizados().isEmpty());
-
-        when(gateway.findAllById(List.of(9L))).thenReturn(List.of());
-        assertEquals(HttpStatus.NOT_FOUND,
-                assertThrows(ResponseStatusException.class,
-                        () -> useCase.execute(List.of(item(9L, 1)))).getStatusCode());
-        verify(gateway, never()).saveAll(any());
-    }
-
-    private ItemNecessarioEntity item(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(
-                id, "Item", CategoriaPecaInsumo.PECA, BigDecimal.ONE, quantidade, null);
-    }
-
-    private PecaInsumoEntity estoque(Long id, int quantidade) {
-        var estoque = new PecaInsumoEntity();
-        estoque.setId(id);
-        estoque.setNome("Item " + id);
-        estoque.setTipo(CategoriaPecaInsumo.PECA);
-        estoque.setValor(BigDecimal.ONE);
-        estoque.setQuantidade(quantidade);
-        return estoque;
-    }
 }

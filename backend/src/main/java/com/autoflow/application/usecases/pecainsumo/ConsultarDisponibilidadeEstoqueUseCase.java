@@ -1,11 +1,13 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.gateway.EstoqueGateway;
+import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.domain.pecainsumo.EstoqueDisponibilidade;
+import com.autoflow.domain.pecainsumo.EstoquePolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,26 +23,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ConsultarDisponibilidadeEstoqueUseCase {
 
-    private final PecaInsumoGateway pecaInsumoGateway;
+    private final EstoqueGateway estoqueGateway;
 
     public List<ItemNecessarioEntity> execute(List<ItemNecessarioEntity> itensNecessarios) {
         if (itensNecessarios == null || itensNecessarios.isEmpty()) {
             return Collections.emptyList();
         }
 
+        validarItens(itensNecessarios);
         List<Long> ids = itensNecessarios.stream()
                 .map(ItemNecessarioEntity::getPecaInsumoId)
                 .distinct()
                 .toList();
-        List<PecaInsumoEntity> itensEstoque = pecaInsumoGateway.findAllById(ids);
+        List<EstoqueItemOutput> itensEstoque = estoqueGateway.findAllById(ids);
 
-        Map<Long, PecaInsumoEntity> estoquePorId = itensEstoque.stream()
-                .collect(Collectors.toMap(PecaInsumoEntity::getId,
+        Map<Long, EstoqueItemOutput> estoquePorId = itensEstoque.stream()
+                .collect(Collectors.toMap(EstoqueItemOutput::id,
                         Function.identity()));
 
         return itensNecessarios.stream()
                 .map(itemSolicitado -> {
-                    PecaInsumoEntity estoque = estoquePorId.get(itemSolicitado.getPecaInsumoId());
+                    EstoqueItemOutput estoque = estoquePorId.get(itemSolicitado.getPecaInsumoId());
                     if (estoque == null) {
                         throw new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
@@ -48,28 +51,46 @@ public class ConsultarDisponibilidadeEstoqueUseCase {
                                         + itemSolicitado.getPecaInsumoId()
                         );
                     }
-                    boolean disponivel = estoque.getQuantidade() >= itemSolicitado.getQuantidade();
+                    validarQuantidadeSolicitada(itemSolicitado);
+                    EstoqueDisponibilidade disponibilidade = EstoquePolicy.classificar(
+                            estoque.quantidade(),
+                            itemSolicitado.getQuantidade()
+                    );
 
-                    StatusItemNecessario status = disponivel
+                    StatusItemNecessario status = disponibilidade.disponivel()
                             ? StatusItemNecessario.DISPONIVEL
                             : StatusItemNecessario.PENDENTE;
 
-                    MotivoPendenciaItem motivoPendencia = disponivel
+                    MotivoPendenciaItem motivoPendencia = disponibilidade.disponivel()
                             ? null
                             : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE;
 
                     return ItemNecessarioEntity.criar(
-                            estoque.getId(),
-                            estoque.getNome(),
-                            estoque.getTipo(),
-                            estoque.getValor(),
+                            estoque.id(),
+                            estoque.nome(),
+                            estoque.tipo(),
+                            estoque.valor(),
                             itemSolicitado.getQuantidade(),
                             status,
                             new SituacaoEstoque(
-                                    estoque.getQuantidade(),
+                                    disponibilidade.quantidadeDisponivel(),
                                     motivoPendencia
                             )
                     );
                 }).toList();
+    }
+
+    private void validarQuantidadeSolicitada(ItemNecessarioEntity item) {
+        if (item.getQuantidade() <= 0) {
+            throw new IllegalArgumentException("Quantidade do item deve ser maior que zero.");
+        }
+    }
+
+    private void validarItens(List<ItemNecessarioEntity> itens) {
+        itens.forEach(item -> {
+            if (item == null || item.getPecaInsumoId() == null || item.getQuantidade() == null) {
+                throw new IllegalArgumentException("Item necessario e obrigatorio.");
+            }
+        });
     }
 }

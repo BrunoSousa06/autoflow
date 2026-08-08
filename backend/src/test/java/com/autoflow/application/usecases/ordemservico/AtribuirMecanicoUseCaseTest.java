@@ -84,6 +84,9 @@ class AtribuirMecanicoUseCaseTest {
         when(usuarioGateway.findById(13L)).thenReturn(Optional.of(atendente));
         assertStatus(HttpStatus.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
                 ordemServicoGateway, usuarioGateway).execute("OS-3", 13L, null));
+
+        assertStatus(HttpStatus.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
+                ordemServicoGateway, usuarioGateway).execute("OS-3", null, null));
     }
 
     private static UsuarioEntity usuario(Long id, RoleEnum role) {

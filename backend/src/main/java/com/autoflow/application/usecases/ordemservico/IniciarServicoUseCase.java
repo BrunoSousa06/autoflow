@@ -19,12 +19,13 @@ public class IniciarServicoUseCase {
 
     @Transactional
     public OrdemServicoEntity execute(String numeroOs, Long servicoId) {
-        OrdemServicoEntity os = ordemServicoGateway.findByNumeroOs(numeroOs)
+        OrdemServicoEntity os = ordemServicoGateway.findByNumeroOsForUpdate(numeroOs)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem de serviço não encontrada."));
         if (!StatusOrdemServico.EM_EXECUCAO.equals(os.getStatus())) {
             throw new IllegalStateException("O serviço só pode ser iniciado após a aprovação do orçamento.");
         }
         ServicoSolicitadoEntity servico = os.buscarServicoSolicitado(servicoId);
+        servico.validarPodeIniciar();
         servico.iniciar(baixarEstoqueUseCase.execute(servico.getItensNecessarios()));
         return ordemServicoGateway.save(os);
     }

@@ -1,6 +1,7 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
+import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.gateway.PecaInsumoGateway;
 import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
@@ -12,11 +13,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class PecaInsumoAdapter implements PecaInsumoGateway {
+public class PecaInsumoAdapter implements PecaInsumoGateway, EstoqueGateway {
 
     private final PecaInsumoRepository pecaInsumoRepository;
 
@@ -56,12 +60,48 @@ public class PecaInsumoAdapter implements PecaInsumoGateway {
     }
 
     @Override
-    public List<PecaInsumoEntity> findAllById(List<Long> ids) {
-        return pecaInsumoRepository.findAllById(ids);
+    public List<EstoqueItemOutput> findAllById(List<Long> ids) {
+        return toEstoqueOutput(pecaInsumoRepository.findAllById(ids));
     }
 
     @Override
-    public void saveAll(List<PecaInsumoEntity> alterados) {
-        pecaInsumoRepository.saveAll(alterados);
+    public List<EstoqueItemOutput> findAllByIdForUpdate(List<Long> ids) {
+        return toEstoqueOutput(pecaInsumoRepository.findAllByIdForUpdate(ids));
+    }
+
+    @Override
+    public void saveAll(List<EstoqueItemOutput> alterados) {
+        if (alterados.isEmpty()) {
+            return;
+        }
+
+        List<Long> ids = alterados.stream().map(EstoqueItemOutput::id).toList();
+        Map<Long, PecaInsumoEntity> entidades = pecaInsumoRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(PecaInsumoEntity::getId, Function.identity()));
+
+        List<PecaInsumoEntity> entidadesAlteradas = alterados.stream()
+                .map(item -> {
+                    PecaInsumoEntity entidade = entidades.get(item.id());
+                    if (entidade == null) {
+                        throw new IllegalStateException("Peça/Insumo não encontrado com o ID: " + item.id());
+                    }
+                    entidade.setQuantidade(item.quantidade());
+                    return entidade;
+                })
+                .toList();
+
+        pecaInsumoRepository.saveAll(entidadesAlteradas);
+    }
+
+    private List<EstoqueItemOutput> toEstoqueOutput(List<PecaInsumoEntity> itens) {
+        return itens.stream()
+                .map(item -> new EstoqueItemOutput(
+                        item.getId(),
+                        item.getNome(),
+                        item.getTipo(),
+                        item.getValor(),
+                        item.getQuantidade()
+                ))
+                .toList();
     }
 }

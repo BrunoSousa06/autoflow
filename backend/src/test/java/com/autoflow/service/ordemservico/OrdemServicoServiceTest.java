@@ -2,6 +2,7 @@ package com.autoflow.service.ordemservico;
 
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
@@ -33,8 +34,6 @@ import com.autoflow.service.ordemservico.dto.OrdemServicoCriada;
 import com.autoflow.service.ordemservico.dto.OrdemServicoFiltro;
 import com.autoflow.service.ordemservico.impl.OrdemServicoAccessPolicy;
 import com.autoflow.service.ordemservico.impl.OrdemServicoServiceImpl;
-import com.autoflow.service.pecainsumo.BaixaEstoqueResult;
-import com.autoflow.service.pecainsumo.PecaInsumoService;
 import com.autoflow.service.servico.ServicoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -75,7 +74,7 @@ class OrdemServicoServiceTest {
     @Mock
     BuscarMecanicoPorIdUseCase buscarMecanicoPorIdUseCase;
     @Mock
-    PecaInsumoService pecaInsumoService;
+    BaixarEstoqueUseCase baixarEstoqueUseCase;
     @Mock
     ConsultarDisponibilidadeEstoqueUseCase consultarDisponibilidadeEstoqueUseCase;
     @Mock
@@ -381,6 +380,24 @@ class OrdemServicoServiceTest {
     }
 
     @Test
+    void deveIncluirServicosEmDiagnosticoComoAdminSemValidarMecanico() {
+        UsuarioEntity admin = criarUsuario(1L, "Admin", "admin@autoflow.com", RoleEnum.ADMIN);
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
+        ServicoSolicitadoEntity solicitado = new ServicoSolicitadoEntity(20L);
+        ServicoEntity servicoCatalogo = criarServico(20L, "Troca oleo", new BigDecimal("80.00"));
+
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+        when(buscarUsuarioPorEmailUseCase.execute("admin@autoflow.com")).thenReturn(admin);
+        when(servicoService.buscarEntityPorId(20L)).thenReturn(servicoCatalogo);
+        when(repository.save(os)).thenReturn(os);
+
+        service.incluirServicos("OS-123", List.of(solicitado), "admin@autoflow.com");
+
+        verify(ordemServicoAccessPolicy, never()).validarPodeAlterarDiagnostico(any(), any());
+    }
+
+    @Test
     void deveBloquearInclusaoDeServicosEmDiagnosticoParaMecanicoNaoAtribuido() {
         UsuarioEntity mecanicoAtribuido = criarUsuario(2L, "Mecanico", "mecanico@autoflow.com", RoleEnum.MECANICO);
         UsuarioEntity outroMecanico = criarUsuario(3L, "Outro", "outro@autoflow.com", RoleEnum.MECANICO);
@@ -492,6 +509,21 @@ class OrdemServicoServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         verify(buscarMecanicoPorIdUseCase, never()).execute(anyLong());
         verify(buscarUsuarioPorEmailUseCase, never()).execute(anyString());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarBadRequestQuandoIdEEmailDoMecanicoForemNulos() {
+        OrdemServicoEntity os = criarOrdemServicoComServico("OS-123", 55L);
+        when(repository.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.atribuirMecanico("OS-123", null, null)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(buscarMecanicoPorIdUseCase, buscarUsuarioPorEmailUseCase);
         verify(repository, never()).save(any());
     }
 
@@ -724,13 +756,13 @@ class OrdemServicoServiceTest {
         Long servicoOsId = 55L;
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
-        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOsForUpdate(numeroOs)).thenReturn(Optional.of(os));
 
         assertThrows(IllegalStateException.class, () -> service.iniciarServico(numeroOs, servicoOsId));
 
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, os.getStatus());
         assertEquals(StatusServicoOs.AGUARDANDO, os.buscarServicoSolicitado(servicoOsId).getStatus());
-        verifyNoInteractions(pecaInsumoService);
+        verifyNoInteractions(baixarEstoqueUseCase);
         verify(repository, never()).save(any());
     }
 
@@ -747,9 +779,9 @@ class OrdemServicoServiceTest {
                 10L, "Filtro", CategoriaPecaInsumo.PECA, new BigDecimal("50.00"), 2, StatusItemNecessario.DISPONIVEL
         );
 
-        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
-        when(pecaInsumoService.verificarDisponibilidadeEBaixar(List.of(itemOriginal)))
-                .thenReturn(new BaixaEstoqueResult(List.of(itemAtualizado)));
+        when(repository.findByNumeroOsForUpdate(numeroOs)).thenReturn(Optional.of(os));
+        when(baixarEstoqueUseCase.execute(List.of(itemOriginal)))
+                .thenReturn(List.of(itemAtualizado));
         when(repository.save(os)).thenReturn(os);
 
         OrdemServicoEntity resultado = service.iniciarServico(os.getNumeroOs(), servicoOsId);
@@ -767,11 +799,11 @@ class OrdemServicoServiceTest {
         String numeroOs = "OS-123";
         OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
         os.setStatus(StatusOrdemServico.RECEBIDA);
-        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
+        when(repository.findByNumeroOsForUpdate(numeroOs)).thenReturn(Optional.of(os));
 
         assertThrows(IllegalStateException.class, () -> service.iniciarServico(numeroOs, servicoOsId));
 
-        verifyNoInteractions(pecaInsumoService);
+        verifyNoInteractions(baixarEstoqueUseCase);
         verify(repository, never()).save(any());
     }
 
@@ -798,6 +830,27 @@ class OrdemServicoServiceTest {
         verify(historicoStatusOsRepository).save(argThat(historico ->
                 StatusOrdemServico.FINALIZADA.equals(historico.getStatus())
         ));
+    }
+
+    @Test
+    void deveFinalizarServicoSemFinalizarOsQuandoAindaHouverServicoPendente() {
+        String numeroOs = "OS-123";
+        Long servicoOsId = 55L;
+        OrdemServicoEntity os = criarOrdemServicoComServico(numeroOs, servicoOsId);
+        os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
+        os.iniciarExecucao();
+        os.buscarServicoSolicitado(servicoOsId).iniciar(List.of());
+        os.adicionarServicosSolicitados(List.of(
+                ServicoSolicitadoEntity.criar(56L, "Servico pendente", BigDecimal.TEN)
+        ));
+
+        when(repository.findByNumeroOs(numeroOs)).thenReturn(Optional.of(os));
+        when(repository.save(os)).thenReturn(os);
+
+        OrdemServicoEntity resultado = service.finalizarServico(numeroOs, servicoOsId);
+
+        assertEquals(StatusOrdemServico.EM_EXECUCAO, resultado.getStatus());
+        verify(historicoStatusOsRepository, never()).save(any());
     }
 
     @Test

@@ -48,6 +48,7 @@ import {
 } from '../../reparos-adicionais/criar-reparo-adicional-dialog.component';
 import { CriarReparoAdicionalRequest } from '../../reparos-adicionais/reparo-adicional.model';
 import { DetalheOsFacade } from './detalhe-os.facade';
+import { CATEGORIA_PECA_INSUMO_LABEL } from '../../peca-insumo/peca-insumo.model';
 
 type PassoTimeline = 'concluido' | 'atual' | 'pendente';
 
@@ -155,6 +156,10 @@ export class DetalheOsComponent implements OnInit {
 
   labelStatusItem(status: StatusItemNecessario): string {
     return STATUS_ITEM_NECESSARIO_LABEL[status] ?? status;
+  }
+
+  labelTipoItem(tipo: string): string {
+    return CATEGORIA_PECA_INSUMO_LABEL[tipo as keyof typeof CATEGORIA_PECA_INSUMO_LABEL] ?? tipo;
   }
 
   tooltipDiagnostico(statusNecessario: StatusOrdemServico): string {

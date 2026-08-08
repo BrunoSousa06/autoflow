@@ -1,11 +1,11 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.gateway.EstoqueGateway;
+import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 class BaixarEstoqueUseCaseTest {
 
     @Mock
-    private PecaInsumoGateway gateway;
+    private EstoqueGateway gateway;
 
     @Test
     void deveRetornarListaVaziaSemConsultarEstoque() {
@@ -37,15 +37,15 @@ class BaixarEstoqueUseCaseTest {
         assertTrue(useCase.execute(null).isEmpty());
         assertTrue(useCase.execute(List.of()).isEmpty());
 
-        verify(gateway, never()).findAllById(any());
+        verify(gateway, never()).findAllByIdForUpdate(any());
         verify(gateway, never()).saveAll(any());
     }
 
     @Test
     void deveBaixarItensDisponiveisEManterPendentes() {
-        PecaInsumoEntity disponivel = estoque(1L, 5);
-        PecaInsumoEntity insuficiente = estoque(2L, 1);
-        when(gateway.findAllById(List.of(1L, 2L)))
+        EstoqueItemOutput disponivel = estoque(1L, 5);
+        EstoqueItemOutput insuficiente = estoque(2L, 1);
+        when(gateway.findAllByIdForUpdate(List.of(1L, 2L)))
                 .thenReturn(List.of(disponivel, insuficiente));
 
         var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(
@@ -53,18 +53,16 @@ class BaixarEstoqueUseCaseTest {
                 item(2L, 2)));
 
         assertEquals(2, resultado.size());
-        assertEquals(2, disponivel.getQuantidade());
         assertEquals(StatusItemNecessario.UTILIZADO, resultado.get(0).getStatus());
-        assertEquals(1, insuficiente.getQuantidade());
         assertEquals(StatusItemNecessario.PENDENTE, resultado.get(1).getStatus());
         assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE,
                 resultado.get(1).getMotivoPendencia());
-        verify(gateway).saveAll(List.of(disponivel));
+        verify(gateway).saveAll(List.of(estoque(1L, 2)));
     }
 
     @Test
     void deveFalharQuandoPecaNaoExisteNoEstoque() {
-        when(gateway.findAllById(List.of(9L))).thenReturn(List.of());
+        when(gateway.findAllByIdForUpdate(List.of(9L))).thenReturn(List.of());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
                 () -> new BaixarEstoqueUseCase(gateway).execute(List.of(item(9L, 1))));
@@ -73,18 +71,86 @@ class BaixarEstoqueUseCaseTest {
         verify(gateway, never()).saveAll(any());
     }
 
+    @Test
+    void deveValidarTodosOsItensAntesDeAlterarEstoque() {
+        EstoqueItemOutput existente = estoque(1L, 5);
+        when(gateway.findAllByIdForUpdate(List.of(1L, 9L))).thenReturn(List.of(existente));
+
+        assertThrows(ResponseStatusException.class,
+                () -> new BaixarEstoqueUseCase(gateway).execute(List.of(
+                        item(1L, 2),
+                        item(9L, 1)
+                )));
+
+        verify(gateway, never()).saveAll(any());
+    }
+
+    @Test
+    void deveConsumirUmaUnicaQuantidadeParaItensRepetidosDoMesmoEstoque() {
+        EstoqueItemOutput estoque = estoque(1L, 5);
+        when(gateway.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(estoque));
+
+        var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(
+                item(1L, 3),
+                item(1L, 3)
+        ));
+
+        assertEquals(StatusItemNecessario.UTILIZADO, resultado.get(0).getStatus());
+        assertEquals(StatusItemNecessario.PENDENTE, resultado.get(1).getStatus());
+        verify(gateway).saveAll(List.of(estoque(1L, 2)));
+    }
+
+    @Test
+    void deveRejeitarItemNuloAntesDeConsultarEstoque() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new BaixarEstoqueUseCase(gateway)
+                        .execute(java.util.Collections.singletonList(null)));
+
+        verify(gateway, never()).findAllByIdForUpdate(any());
+    }
+
+    @Test
+    void deveRejeitarItemSemPecaAntesDeConsultarEstoque() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new BaixarEstoqueUseCase(gateway)
+                        .execute(List.of(item(null, 1))));
+
+        verify(gateway, never()).findAllByIdForUpdate(any());
+    }
+
+    @Test
+    void deveRejeitarItemSemQuantidadeAntesDeConsultarEstoque() {
+        var item = new ItemNecessarioEntity();
+        item.setPecaInsumoId(1L);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> new BaixarEstoqueUseCase(gateway).execute(List.of(item)));
+
+        verify(gateway, never()).findAllByIdForUpdate(any());
+    }
+
+    @Test
+    void naoDevePersistirQuandoNenhumItemPuderSerBaixado() {
+        when(gateway.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(estoque(1L, 0)));
+
+        var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(item(1L, 1)));
+
+        assertEquals(StatusItemNecessario.PENDENTE, resultado.getFirst().getStatus());
+        verify(gateway, never()).saveAll(any());
+    }
+
     private static ItemNecessarioEntity item(Long id, int quantidade) {
         return ItemNecessarioEntity.criar(id, "Item", CategoriaPecaInsumo.PECA,
                 BigDecimal.ONE, quantidade, null);
     }
 
-    private static PecaInsumoEntity estoque(Long id, int quantidade) {
-        var estoque = new PecaInsumoEntity();
-        estoque.setId(id);
-        estoque.setNome("Item " + id);
-        estoque.setTipo(CategoriaPecaInsumo.PECA);
-        estoque.setValor(BigDecimal.ONE);
-        estoque.setQuantidade(quantidade);
-        return estoque;
+    private static EstoqueItemOutput estoque(Long id, int quantidade) {
+        return new EstoqueItemOutput(
+                id,
+                "Item " + id,
+                CategoriaPecaInsumo.PECA,
+                BigDecimal.ONE,
+                quantidade
+        );
     }
 }

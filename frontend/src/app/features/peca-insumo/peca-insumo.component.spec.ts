@@ -95,6 +95,14 @@ describe('PecaInsumoComponent', () => {
     expect(component.temFiltrosAtivos).toBeTrue();
   });
 
+  it('tipoLabel deve traduzir os tipos do contrato', () => {
+    mockService.listar.and.returnValue(of(pageVazia));
+    const component = criarComponente();
+
+    expect(component.tipoLabel('PECA')).toBe('Peça');
+    expect(component.tipoLabel('INSUMO')).toBe('Insumo');
+  });
+
   it('buscar deve recarregar a partir da primeira pagina', () => {
     mockService.listar.and.returnValue(of(pageVazia));
     const component = criarComponente();

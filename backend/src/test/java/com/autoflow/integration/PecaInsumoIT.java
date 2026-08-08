@@ -120,7 +120,7 @@ class PecaInsumoIT extends AbstractIT {
         ResponseEntity<String> response = post("/peca-insumo",
                 TestUtils.pecaRequest("Amortecedor Dianteiro", 5, 380.00, "PECA"), adminToken);
 
-        // PecaInsumoService lança ResponseStatusException(BAD_REQUEST) para nomes duplicados
+        // O caso de uso de cadastro rejeita nomes duplicados com BAD_REQUEST.
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
