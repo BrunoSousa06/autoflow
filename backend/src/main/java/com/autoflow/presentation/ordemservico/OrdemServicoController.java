@@ -11,6 +11,7 @@ import com.autoflow.presentation.ordemservico.request.*;
 import com.autoflow.presentation.ordemservico.response.FinalizarDiagnosticoResponse;
 import com.autoflow.presentation.ordemservico.response.OrdemServicoDetalheResponse;
 import com.autoflow.presentation.ordemservico.response.OrdemServicoResponse;
+import com.autoflow.presentation.ordemservico.response.StatusOrdemServicoResponse;
 import com.autoflow.presentation.ordemservico.response.TempoMedioOrdemServicoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -325,6 +326,26 @@ public class OrdemServicoController {
     public OrdemServicoDetalheResponse detalhar(@PathVariable String numeroOs) {
         var detalhe = queryUseCases.detalhar().execute(numeroOs);
         return OrdemServicoDetalheResponse.fromDomain(detalhe.ordemServico(), detalhe.orcamentoAtual());
+    }
+
+    @Operation(
+            summary = "Consultar status da ordem de serviço",
+            description = "Retorna somente o número da OS, seu status técnico atual e a data da última atualização."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Status da ordem de serviço consultado com sucesso",
+            content = @Content(schema = @Schema(implementation = StatusOrdemServicoResponse.class))
+    )
+    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para consultar esta ordem de serviço")
+    @ApiResponse(responseCode = "404", description = "Ordem de serviço não encontrada")
+    @GetMapping("/{numeroOs}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO', 'CLIENTE')")
+    public StatusOrdemServicoResponse consultarStatus(
+            @PathVariable String numeroOs,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return StatusOrdemServicoResponse.from(
+                queryUseCases.consultarStatus().execute(numeroOs, userDetails.getUsername()));
     }
 
     @Operation(
