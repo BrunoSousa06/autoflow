@@ -1,10 +1,10 @@
 package com.autoflow.presentation.pecainsumo;
 
+import com.autoflow.application.dto.PageResult;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.usecases.pecainsumo.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapperImpl;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import com.autoflow.presentation.pecainsumo.request.PecaInsumoRequest;
@@ -14,8 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -43,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = PecaInsumoController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import({
-        PecaInsumoMapperImpl.class,
+        PecaInsumoControllerMapperImpl.class,
         PecaInsumoControllerTest.MethodSecurityTestConfig.class,
         PecaInsumoControllerTest.SecurityExceptionHandler.class
 })
@@ -151,10 +149,7 @@ class PecaInsumoControllerTest {
                 any(),
                 any(),
                 any()))
-                .thenReturn(new PageImpl<>(
-                        List.of(output),
-                        PageRequest.of(0, 10),
-                        1));
+                .thenReturn(new PageResult<>(List.of(output), 1, 0, 10));
 
         mockMvc.perform(get("/peca-insumo"))
                 .andExpect(status().isOk())

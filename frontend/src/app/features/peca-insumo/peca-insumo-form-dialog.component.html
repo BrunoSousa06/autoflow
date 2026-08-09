@@ -21,7 +21,7 @@
       <mat-icon matPrefix>category</mat-icon>
       <mat-select formControlName="tipo">
         @for (tipo of categorias; track tipo) {
-          <mat-option [value]="tipo">{{ tipo }}</mat-option>
+          <mat-option [value]="tipo">{{ tipoLabel(tipo) }}</mat-option>
         }
       </mat-select>
       @if (f.tipo.touched && f.tipo.hasError('required')) {

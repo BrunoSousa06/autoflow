@@ -1,7 +1,10 @@
 package com.autoflow.domain.orcamento;
 
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
 
 import java.math.BigDecimal;

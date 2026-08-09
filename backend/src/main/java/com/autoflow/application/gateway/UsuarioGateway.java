@@ -11,10 +11,13 @@ public interface UsuarioGateway {
     List<UsuarioEntity> findAll();
 
     List<UsuarioEntity> findByRole(RoleEnum roleEnum);
+
     Optional<UsuarioEntity> findById(Long mecanicoId);
 
     Optional<UsuarioEntity> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    UsuarioEntity save(UsuarioEntity usuario);
 
 }

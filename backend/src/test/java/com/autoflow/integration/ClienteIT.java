@@ -73,16 +73,29 @@ class ClienteIT extends AbstractIT {
     }
 
     @Test
-    @DisplayName("deve atualizar dados do cliente")
-    void deveAtualizarCliente() {
-        ResponseEntity<String> criado = post("/clientes", TestUtils.clienteRequest("Pedro", TestUtils.CPF_CLIENTE_2, "pedro@test.com"), adminToken);
-        Long clienteId = parseJson(criado.getBody()).get("id").asLong();
+    @DisplayName("deve atualizar cliente e sincronizar nome e email do usuario associado")
+    void deveAtualizarClienteESincronizarUsuarioAssociado() {
+        Long clienteId = parseJson(get("/clientes/me", clienteToken).getBody()).get("id").asLong();
+        var atualizacao = TestUtils.clienteRequest(
+                "Usuario Atualizado", TestUtils.CPF_CLIENTE, "usuario.atualizado@test.com");
 
-        var atualizacao = TestUtils.clienteRequest("Pedro Atualizado", TestUtils.CPF_CLIENTE_2, "pedro@test.com");
         ResponseEntity<String> response = patch("/clientes/" + clienteId + "/atualizacao", atualizacao, adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(parseJson(response.getBody()).get("nome").asText()).isEqualTo("Pedro Atualizado");
+        JsonNode clienteAtualizado = parseJson(response.getBody());
+        assertThat(clienteAtualizado.get("nome").asText()).isEqualTo("Usuario Atualizado");
+        assertThat(clienteAtualizado.get("email").asText()).isEqualTo("usuario.atualizado@test.com");
+
+        var usuario = jdbcTemplate.queryForMap("""
+                SELECT u.nome AS usuario_nome, u.email AS usuario_email
+                FROM usuarios u
+                JOIN clientes c ON c.usuario_id = u.id
+                WHERE c.id = ?
+                """, clienteId);
+
+        assertThat(usuario)
+                .containsEntry("usuario_nome", "Usuario Atualizado")
+                .containsEntry("usuario_email", "usuario.atualizado@test.com");
     }
 
     @Test
@@ -94,6 +107,7 @@ class ClienteIT extends AbstractIT {
         ResponseEntity<String> response = delete("/clientes/" + clienteId, adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo("cliente deletado com sucesso");
     }
 
     @Test

@@ -10,5 +10,7 @@ public interface ReparoAdicionalGateway {
 
     Optional<ReparoAdicionalEntity> findById(Long id);
 
+    Optional<ReparoAdicionalEntity> findByIdForUpdate(Long id);
+
     Optional<ReparoAdicionalEntity> findByOrcamentoId(Long orcamentoId);
 }

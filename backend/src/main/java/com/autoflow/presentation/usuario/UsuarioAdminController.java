@@ -4,11 +4,8 @@ import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.usecases.usuario.CadastrarStaffUseCase;
 import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.autoflow.presentation.usuario.response.UsuarioResponse;
-import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.service.usuario.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,8 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,7 +28,7 @@ public class UsuarioAdminController {
 
     private final ListarUsuariosUseCase listarUsuariosUseCase;
     private final CadastrarStaffUseCase cadastrarComoStaff;
-    private final UsuarioMapper usuarioMapper;
+    private final UsuarioControllerMapper usuarioMapper;
 
     @Operation(summary = "Listar todos os usuários", description = "Retorna a lista de todos os usuários cadastrados no sistema")
     @ApiResponse(responseCode = "200", description = "Usuários retornados com sucesso")
@@ -45,7 +40,7 @@ public class UsuarioAdminController {
 
         List<UsuarioOutput> todosUsuarios = listarUsuariosUseCase.execute();
 
-        return ResponseEntity.ok(usuarioMapper.mapToResponse(todosUsuarios));
+        return ResponseEntity.ok(usuarioMapper.toResponse(todosUsuarios));
     }
 
     @Operation(summary = "Cadastrar usuário pelo staff", description = "Cria um novo usuário respeitando as restrições de role do criador. ATENDENTE só pode criar ATENDENTE ou CLIENTE.")
@@ -56,14 +51,10 @@ public class UsuarioAdminController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','ATENDENTE')")
     public ResponseEntity<UsuarioResponse> cadastrarComoStaff(
-            @Valid @RequestBody RegistroRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        String roleName = userDetails.getAuthorities().iterator().next()
-                .getAuthority().replace("ROLE_", "");
-        RoleEnum callerRole = RoleEnum.valueOf(roleName);
-        RegistroInput input = usuarioMapper.mapToInput(request);
-        UsuarioOutput execute = cadastrarComoStaff.execute(input, callerRole);
+            @Valid @RequestBody RegistroRequest request) {
+        RegistroInput input = usuarioMapper.toInput(request);
+        UsuarioOutput execute = cadastrarComoStaff.execute(input);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(usuarioMapper.mapToResponse(execute));
+                .body(usuarioMapper.toResponse(execute));
     }
 }

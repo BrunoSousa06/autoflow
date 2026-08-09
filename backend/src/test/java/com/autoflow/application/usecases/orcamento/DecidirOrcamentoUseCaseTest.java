@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.orcamento;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
@@ -11,14 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,10 +58,23 @@ class DecidirOrcamentoUseCaseTest {
         when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
         when(usuarioGateway.findByEmail("outro@exemplo.com")).thenReturn(Optional.of(usuario("Outro", RoleEnum.CLIENTE)));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        ApplicationException exception = assertThrows(ApplicationException.class,
                 () -> useCase.aprovarComoUsuario(10L, "outro@exemplo.com"));
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
+    }
+
+    @Test
+    void deveNegarDecisaoDeMecanicoMesmoQuandoOrcamentoExiste() {
+        OrcamentoEntity orcamento = orcamento();
+        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
+        when(usuarioGateway.findByEmail("mecanico@exemplo.com"))
+                .thenReturn(Optional.of(usuario("Mecânico", RoleEnum.MECANICO)));
+
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.aprovarComoUsuario(10L, "mecanico@exemplo.com"));
+
+        assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
     }
 
     @Test

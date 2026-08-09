@@ -48,11 +48,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(
+                                "/auth/cadastro",
+                                "/auth/login"
+                        ).permitAll()
                         .requestMatchers("/public/**").permitAll()
 
                         .requestMatchers(
-                                 "/actuator/health",
+                                "/actuator/health",
                                 "/actuator/health/liveness",
                                 "/actuator/health/readiness",
                                 "/v3/api-docs",

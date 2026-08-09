@@ -2,45 +2,38 @@ package com.autoflow.application.usecases.veiculo;
 
 import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
-import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
-import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
+import com.autoflow.application.exception.ClienteNaoEncontradoException;
+import com.autoflow.application.exception.VeiculoDuplicadoException;
+import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.policy.PlacaPolicy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-@Service
+
 @RequiredArgsConstructor
 public class CadastrarVeiculoUseCase {
 
-    private final VeiculoRepository veiculoRepository;
-    private final ClienteRepository clienteRepository;
-    private final VeiculoMapper veiculoMapper;
+    private final VeiculoGateway veiculoGateway;
+    private final VeiculoClienteGateway clienteGateway;
 
     public VeiculoOutput execute(CadastrarVeiculoInput input) {
+        Long clienteId = clienteGateway.findIdByCpfCnpj(input.cpfCnpj())
+                .orElseThrow(() -> new ClienteNaoEncontradoException(
+                        "Cliente não encontrado com o CPF/CNPJ: " + input.cpfCnpj()));
 
-        ClienteEntity cliente = clienteRepository
-                .findByCpfCnpj(input.cpfCnpj())
-                .orElseThrow(() ->
-                        new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Cliente não encontrado com o CPF/CNPJ: " + input.cpfCnpj()));
-
-        if (veiculoRepository.existsByPlaca(input.placa())) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
+        String placa = PlacaPolicy.normalizar(input.placa());
+        if (veiculoGateway.existsByPlaca(placa)) {
+            throw new VeiculoDuplicadoException(
                     "Já existe um veículo cadastrado com a placa: " + input.placa());
         }
 
-        VeiculoEntity entity =
-                veiculoMapper.mapToEntity(input, cliente);
+        CadastrarVeiculoInput inputNormalizado = new CadastrarVeiculoInput(
+                input.cpfCnpj(),
+                placa,
+                input.marca(),
+                input.modelo(),
+                input.ano());
 
-        VeiculoEntity salvo =
-                veiculoRepository.save(entity);
-
-        return veiculoMapper.mapToOutput(salvo);
+        return veiculoGateway.save(inputNormalizado, clienteId);
     }
 }

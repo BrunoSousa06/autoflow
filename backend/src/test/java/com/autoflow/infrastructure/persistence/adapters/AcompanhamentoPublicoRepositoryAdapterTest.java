@@ -6,8 +6,8 @@ import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
-import com.autoflow.repository.ordemservico.OrdemServicoRepository;
+import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
+import com.autoflow.infrastructure.persistence.repository.OrdemServicoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,7 +37,7 @@ class AcompanhamentoPublicoRepositoryAdapterTest {
     @Test
     void deveSalvarAcessoNaOrdemServico() {
         var ordemServico = novaOrdemServico();
-        var criadoEm = LocalDateTime.of(2026, 8, 2, 10, 0);
+        var criadoEm = LocalDateTime.of(2026, Month.AUGUST, 2, 10, 0);
         var acesso = new AcessoAcompanhamento("hash-token", criadoEm, criadoEm.plusDays(1), null);
         when(ordemServicoRepository.findById(1L)).thenReturn(Optional.of(ordemServico));
 
@@ -107,7 +108,7 @@ class AcompanhamentoPublicoRepositoryAdapterTest {
     }
 
     private OrdemServicoEntity novaOrdemServico() {
-        var criadoEm = LocalDateTime.of(2026, 8, 2, 10, 0);
+        var criadoEm = LocalDateTime.of(2026, Month.AUGUST, 2, 10, 0);
         var ordemServico = new OrdemServicoEntity();
         ordemServico.setNumeroOs("OS-123");
         ordemServico.setStatus(StatusOrdemServico.EM_EXECUCAO);

@@ -3,9 +3,7 @@ package com.autoflow.application.usecases.ordemservico;
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.gateway.MetricsGateway;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
 public class CalcularTempoMedioOrdemServicoUseCase {
 

@@ -1,35 +1,58 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.application.dto.cliente.ClienteInput;
+import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.gateway.ClienteGateway;
+import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
+import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-
 
 @Component
 @RequiredArgsConstructor
 public class ClienteRepositoryAdapter implements ClienteGateway {
 
     private final ClienteRepository clienteRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final ClienteMapper clienteMapper;
 
     @Override
-    public ClienteEntity save(ClienteEntity cliente) {
-        return clienteRepository.save(cliente);
+    public ClienteOutput save(ClienteInput input) {
+        ClienteEntity cliente = clienteMapper.mapToEntity(input);
+        associarUsuario(input, cliente);
+        return clienteMapper.mapToOutput(clienteRepository.save(cliente));
     }
 
     @Override
-    public Optional<ClienteEntity> findById(Long id) {
-        return clienteRepository.findById(id);
+    @Transactional
+    public ClienteOutput update(Long id, ClienteInput input) {
+        ClienteEntity cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ClienteNaoEncontradoException("Cliente não encontrado com o ID: " + id));
+        clienteMapper.updateEntity(input, cliente);
+        if (cliente.getUsuario() != null) {
+            cliente.getUsuario().setNome(input.nome());
+            cliente.getUsuario().setEmail(input.email());
+            usuarioRepository.save(cliente.getUsuario());
+        }
+        return clienteMapper.mapToOutput(clienteRepository.save(cliente));
     }
 
     @Override
-    public Optional<ClienteEntity> findByCpfCnpj(String cpfCnpj) {
-        return clienteRepository.findByCpfCnpj(cpfCnpj);
+    public Optional<ClienteOutput> findById(Long id) {
+        return clienteRepository.findById(id).map(clienteMapper::mapToOutput);
+    }
 
+    @Override
+    public Optional<ClienteOutput> findByCpfCnpj(String cpfCnpj) {
+        return clienteRepository.findByCpfCnpj(cpfCnpj).map(clienteMapper::mapToOutput);
     }
 
     @Override
@@ -38,13 +61,18 @@ public class ClienteRepositoryAdapter implements ClienteGateway {
     }
 
     @Override
-    public Optional<ClienteEntity> findByUsuarioEmail(String usuarioEmail) {
-        return clienteRepository.findByUsuarioEmail(usuarioEmail);
+    public boolean existsByCpfCnpjAndIdNot(String cpfCnpj, Long id) {
+        return clienteRepository.existsByCpfCnpjAndIdNot(cpfCnpj, id);
     }
 
     @Override
-    public List<ClienteEntity> findAll() {
-        return clienteRepository.findAll();
+    public Optional<ClienteOutput> findByUsuarioEmail(String usuarioEmail) {
+        return clienteRepository.findByUsuarioEmail(usuarioEmail).map(clienteMapper::mapToOutput);
+    }
+
+    @Override
+    public List<ClienteOutput> findAll() {
+        return clienteMapper.mapToListOutput(clienteRepository.findAll());
     }
 
     @Override
@@ -55,5 +83,15 @@ public class ClienteRepositoryAdapter implements ClienteGateway {
     @Override
     public boolean existsById(Long id) {
         return clienteRepository.existsById(id);
+    }
+
+    private void associarUsuario(ClienteInput input, ClienteEntity cliente) {
+        if (input.usuarioId() == null) {
+            return;
+        }
+
+        UsuarioEntity usuario = usuarioRepository.findById(input.usuarioId())
+                .orElseThrow(() -> new IllegalStateException("Usuário não encontrado durante o cadastro do cliente"));
+        cliente.setUsuario(usuario);
     }
 }

@@ -1,29 +1,24 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.autoflow.application.dto.servico.PageInput;
+import com.autoflow.application.dto.servico.PageOutput;
+import com.autoflow.application.dto.servico.ServicoInput;
+import com.autoflow.application.dto.servico.ServicoOutput;
 
 import java.util.Optional;
 
-
 public interface ServicoGateway {
 
+    ServicoOutput save(ServicoInput input);
 
-    ServicoEntity save(ServicoEntity servico);
+    ServicoOutput update(Long id, ServicoInput input);
 
+    Optional<ServicoOutput> findById(Long id);
 
-    Optional<ServicoEntity> findById(Long id);
+    boolean existsByNomeIgnoreCase(String nome);
 
+    PageOutput<ServicoOutput> findAllByAtivoTrue(PageInput page);
 
-    Optional<ServicoEntity> findByNomeIgnoreCase(String nome);
-
-
-    Page<ServicoEntity> findAllByAtivoTrue(Pageable pageable);
-
-
-    boolean existsById(Long id);
-
-    void deleteById(Long id);
+    void inativar(Long id);
 
 }

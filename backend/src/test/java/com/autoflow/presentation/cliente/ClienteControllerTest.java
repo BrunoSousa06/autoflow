@@ -3,8 +3,8 @@ package com.autoflow.presentation.cliente;
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.usecases.cliente.*;
-import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
-import com.autoflow.infrastructure.persistence.mapper.ClienteMapperImpl;
+import com.autoflow.presentation.cliente.mapper.ClienteControllerMapper;
+import com.autoflow.presentation.cliente.mapper.ClienteControllerMapperImpl;
 import com.autoflow.presentation.cliente.request.ClienteRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +63,7 @@ class ClienteControllerTest {
     @Mock
     private ListarClienteUseCase listarClienteUseCase;
 
-    private ClienteMapper clienteMapper;
+    private ClienteControllerMapper clienteMapper;
 
     private ClienteController clienteController;
 
@@ -73,7 +73,7 @@ class ClienteControllerTest {
     @BeforeEach
     void setup() {
 
-        clienteMapper = new ClienteMapperImpl();
+        clienteMapper = new ClienteControllerMapperImpl();
 
         clienteController = new ClienteController(
                 criarClienteUseCase,

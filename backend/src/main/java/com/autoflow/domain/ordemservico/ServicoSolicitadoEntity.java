@@ -97,6 +97,15 @@ public class ServicoSolicitadoEntity {
     }
 
     public void iniciar(List<ItemNecessarioEntity> itensAtualizados) {
+        validarPodeIniciar();
+
+        this.itensNecessarios.clear();
+        this.itensNecessarios.addAll(itensAtualizados);
+        this.status = StatusServicoOs.EM_EXECUCAO;
+        this.iniciadoEm = LocalDateTime.now();
+    }
+
+    public void validarPodeIniciar() {
         if (this.status != StatusServicoOs.AGUARDANDO) {
             throw new IllegalStateException("O serviço só pode ser iniciado se estiver no status AGUARDANDO. Status atual: " + this.status);
         }
@@ -104,11 +113,6 @@ public class ServicoSolicitadoEntity {
         if (this.ordemServico != null && this.ordemServico.getStatus() != StatusOrdemServico.EM_EXECUCAO) {
             throw new IllegalStateException("Um serviço só pode ser iniciado se a Ordem de Serviço estiver em execução (após a aprovação do orçamento).");
         }
-
-        this.itensNecessarios.clear();
-        this.itensNecessarios.addAll(itensAtualizados);
-        this.status = StatusServicoOs.EM_EXECUCAO;
-        this.iniciadoEm = LocalDateTime.now();
     }
 
     public void finalizar() {

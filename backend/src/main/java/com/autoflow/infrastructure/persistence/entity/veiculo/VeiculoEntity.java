@@ -2,7 +2,8 @@ package com.autoflow.infrastructure.persistence.entity.veiculo;
 
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Getter

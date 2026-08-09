@@ -4,9 +4,9 @@ package com.autoflow.presentation.acompanhamento;
 import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcompanharOrdemServicoUseCase;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
-import com.autoflow.infrastructure.persistence.mapper.AcompanhamentoMapperImpl;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
+import com.autoflow.presentation.ordemservico.acompanhamento.AcompanhamentoControllerMapperImpl;
 import com.autoflow.presentation.ordemservico.acompanhamento.ClienteOrdemServicoController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         ClienteOrdemServicoControllerTest.MethodSecurityTestConfig.class,
         ClienteOrdemServicoControllerTest.SecurityExceptionHandler.class,
-        AcompanhamentoMapperImpl.class
+        AcompanhamentoControllerMapperImpl.class
 })
 class ClienteOrdemServicoControllerTest {
 

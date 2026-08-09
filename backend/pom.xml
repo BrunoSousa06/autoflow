@@ -199,7 +199,7 @@
 
 					<execution>
 						<id>report</id>
-						<phase>test</phase>
+						<phase>post-integration-test</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
@@ -229,6 +229,25 @@
 									</limits>
 								</rule>
 							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>**/*IT.java</include>
+							</includes>
+							<failIfNoTests>true</failIfNoTests>
 						</configuration>
 					</execution>
 				</executions>

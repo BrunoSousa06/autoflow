@@ -1,38 +1,36 @@
 package com.autoflow.application.security;
 
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
+import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
+import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
+import com.autoflow.application.gateway.CurrentUserGateway;
+import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ClienteAutenticadoService {
 
-    private final UsuarioAutenticadoService usuarioAutenticadoService;
-    private final ClienteRepository clienteRepository;
+    private final CurrentUserGateway currentUserGateway;
+    private final VeiculoClienteGateway clienteGateway;
 
-    public ClienteEntity getClienteLogado() {
+    public Optional<Long> getClienteId() {
+        CurrentUser currentUser = currentUserGateway.getCurrentUser()
+                .orElseThrow(() -> new UsuarioNaoAutenticadoException(
+                        "Usuário não autenticado"));
 
-        if (!usuarioAutenticadoService.isCliente()) {
-            return null;
+        if (!currentUser.hasRole(RoleEnum.CLIENTE)) {
+            return Optional.empty();
         }
 
-        return clienteRepository
-                .findByUsuarioEmail(usuarioAutenticadoService.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
+        Long clienteId = clienteGateway.findIdByUsuarioEmail(currentUser.email())
+                .orElseThrow(() -> new ClienteAutenticadoNaoEncontradoException(
                         "Cliente não encontrado para o usuário autenticado"));
-    }
 
-    public Long getClienteId() {
-
-        ClienteEntity cliente = getClienteLogado();
-
-        return cliente == null
-                ? null
-                : cliente.getId();
+        return Optional.of(clienteId);
     }
 }

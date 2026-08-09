@@ -1,12 +1,13 @@
 package com.autoflow.infrastructure.persistence.repository;
 
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.application.dto.veiculo.VeiculoFiltro;
+import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class VeiculoSpecifications {
 
-    private VeiculoSpecifications() {}
+    private VeiculoSpecifications() {
+    }
 
     public static Specification<VeiculoEntity> comFiltros(VeiculoFiltro filtro) {
         return Specification.allOf(

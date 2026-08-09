@@ -7,18 +7,15 @@ import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-
-
-import com.lowagie.text.pdf.PdfWriter;
-
-import java.io.ByteArrayOutputStream;
-import java.time.format.DateTimeFormatter;
 
 
 @Component

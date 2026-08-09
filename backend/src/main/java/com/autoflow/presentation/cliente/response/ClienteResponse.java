@@ -10,5 +10,5 @@ public record ClienteResponse(
         String cpfCnpj,
         String telefone,
         String email,
-        List<VeiculoClienteResponse> veiculos){
+        List<VeiculoClienteResponse> veiculos) {
 }

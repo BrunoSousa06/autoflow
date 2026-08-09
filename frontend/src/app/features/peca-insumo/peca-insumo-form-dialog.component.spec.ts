@@ -37,6 +37,13 @@ describe('PecaInsumoFormDialogComponent', () => {
   });
 
   describe('modo cadastro', () => {
+    it('tipoLabel deve traduzir os tipos para a interface', () => {
+      const component = criarComponente({ item: null });
+
+      expect(component.tipoLabel('PECA')).toBe('Peça');
+      expect(component.tipoLabel('INSUMO')).toBe('Insumo');
+    });
+
     it('deve iniciar com formulario vazio e tipo padrao PECA', () => {
       const component = criarComponente({ item: null });
 

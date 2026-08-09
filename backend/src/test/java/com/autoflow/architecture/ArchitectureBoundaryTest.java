@@ -3,7 +3,6 @@ package com.autoflow.architecture;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
-import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.freeze.FreezingArchRule;
 
@@ -11,19 +10,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.freeze.FreezingArchRule.freeze;
 
 /**
- * Testes de fronteira arquitetural.
- *
- * Regras com FreezingArchRule registram violacoes existentes na primeira execucao
- * e falham apenas para violacoes novas. Isso permite detectar regressoes sem
- * bloquear o pipeline por debito tecnico ja conhecido.
- *
- * Apos a primeira execucao bem-sucedida, commitar o diretorio
- * src/test/resources/archunit_store/ junto com este teste.
- *
- * Violacoes existentes conhecidas:
- * - OrdemServicoEntity importa org.springframework.http (dominio->Spring Web)
- * - Entidades de dominio importam jakarta.persistence (dominio->JPA)
- * - OrdemServicoService interface importa com.autoflow.controller (service->controller)
+ * Testes de fronteira arquitetural. Violações congeladas só representam os
+ * limites de JPA e Spring ainda isolados no modelo legado; o store não aceita
+ * novas ocorrências.
  */
 @AnalyzeClasses(
         packages = "com.autoflow",
@@ -32,12 +21,13 @@ import static com.tngtech.archunit.library.freeze.FreezingArchRule.freeze;
 class ArchitectureBoundaryTest {
 
     @ArchTest
-    static final ArchRule controllerNaoAcessaRepositorioDiretamente =
+    static final ArchRule presentationNaoAcessaRepositorioDiretamente =
         noClasses()
-            .that().resideInAPackage("..controller..")
+                .that().resideInAPackage("..presentation..")
             .should().dependOnClassesThat()
             .resideInAPackage("..repository..")
-            .because("controllers devem acessar dados somente via services");
+                .because("controllers devem acessar dados somente via casos de uso")
+                .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule repositorioNaoAcessaController =
@@ -46,15 +36,6 @@ class ArchitectureBoundaryTest {
             .should().dependOnClassesThat()
             .resideInAPackage("..controller..")
             .because("repositories nao devem depender de controllers");
-
-    @ArchTest
-    static final FreezingArchRule serviceNaoAcessaController =
-        freeze(noClasses()
-            .that().resideInAPackage("..service..")
-            .should().dependOnClassesThat()
-            .resideInAPackage("..controller..")
-            .because("services nao devem depender de controllers — violacao conhecida: "
-                + "OrdemServicoService usa tipos de request/response do pacote controller"));
 
     @ArchTest
     static final FreezingArchRule dominioNaoUsaSpring =
@@ -73,4 +54,23 @@ class ArchitectureBoundaryTest {
             .resideInAPackage("jakarta.persistence..")
             .because("dominio nao deve depender de JPA — violacoes conhecidas serao corrigidas "
                 + "incrementalmente por componente conforme ADR-001"));
+
+    @ArchTest
+    static final ArchRule applicationNaoAcessaContratosExternos =
+        noClasses()
+            .that().resideInAPackage("..application..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.controller..",
+                    "com.autoflow.service..",
+                    "com.autoflow.repository..")
+                .because("application deve depender de domain e portas internas; contratos externos ficam na presentation");
+
+    @ArchTest
+    static final FreezingArchRule infrastructureNaoAcessaPresentation =
+        freeze(noClasses()
+            .that().resideInAPackage("..infrastructure..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("..presentation..", "..controller..")
+            .because("infrastructure nao deve depender de contratos de entrada"));
 }

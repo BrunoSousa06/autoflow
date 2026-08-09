@@ -2,7 +2,7 @@ package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.repository.ordemservico.historico.HistoricoStatusOsRepository;
+import com.autoflow.infrastructure.persistence.repository.historico.HistoricoStatusOsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

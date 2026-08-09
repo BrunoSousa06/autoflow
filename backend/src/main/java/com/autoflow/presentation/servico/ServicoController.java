@@ -1,14 +1,11 @@
 package com.autoflow.presentation.servico;
 
 
-import com.autoflow.application.dto.servico.ServicoInput;
-import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
+import com.autoflow.application.dto.servico.*;
 import com.autoflow.application.usecases.servico.*;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
 import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
-import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -16,8 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +36,7 @@ public class ServicoController {
     private final AtualizarServicoUseCase atualizarServicoUseCase;
     private final InativarServicoUseCase inativarServicoUseCase;
     private final CalcularTempoMedioServicoUseCase calcularTempoMedioServicoUseCase;
-    private final ServicoMapper servicoMapper;
+    private final ServicoControllerMapper servicoMapper;
 
     @Operation(summary = "Cadastrar um serviço", description = "Retorna as informações do serviço cadastrado")
     @ApiResponse(responseCode = "201", description = "Serviço cadastrado com sucesso")
@@ -49,10 +46,10 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PostMapping
     @PreAuthorize("hasAnyRole('MECANICO', 'ADMIN')")
-    public ResponseEntity<ServicoResponse> cadastrar(@Valid @RequestBody ServicoRequest request ){
-        ServicoInput input = new ServicoInput(request.nome(), request.descricao(), request.valor());
+    public ResponseEntity<ServicoResponse> cadastrar(@Valid @RequestBody ServicoRequest request) {
+        ServicoInput input = servicoMapper.toInput(request);
         ServicoOutput output = criarServicoUseCase.execute(input);
-        ServicoResponse response = servicoMapper.mapToResponse(output);
+        ServicoResponse response = servicoMapper.toResponse(output);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -63,9 +60,9 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
-    public ResponseEntity<ServicoResponse> listar(@PathVariable Long id ){
+    public ResponseEntity<ServicoResponse> listar(@PathVariable Long id) {
         ServicoOutput output = buscarServicoPorIdUseCase.execute(id);
-        ServicoResponse response = servicoMapper.mapToResponse(output);
+        ServicoResponse response = servicoMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }
 
@@ -79,9 +76,11 @@ public class ServicoController {
     public ResponseEntity<Page<ServicoResponse>> listarTodosServicos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<ServicoOutput> outputs = listarServicosUseCase.execute(pageable);
-        Page<ServicoResponse> servicoResponsePage = outputs.map(servicoMapper::mapToResponse);
+        PageOutput<ServicoOutput> outputs = listarServicosUseCase.execute(new PageInput(page, size));
+        Page<ServicoResponse> servicoResponsePage = new PageImpl<>(
+                outputs.content().stream().map(servicoMapper::toResponse).toList(),
+                PageRequest.of(outputs.page(), outputs.size(), Sort.by("id").descending()),
+                outputs.totalElements());
         return ResponseEntity.ok(servicoResponsePage);
     }
 
@@ -92,10 +91,10 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @PatchMapping("/{id}/atualizacao")
     @PreAuthorize("hasAnyRole('MECANICO', 'ADMIN')")
-    public ResponseEntity<ServicoResponse> atualizar(@Valid @RequestBody ServicoRequest request, @PathVariable Long id){
-        ServicoInput input = new ServicoInput(request.nome(), request.descricao(), request.valor());
+    public ResponseEntity<ServicoResponse> atualizar(@Valid @RequestBody ServicoRequest request, @PathVariable Long id) {
+        ServicoInput input = servicoMapper.toInput(request);
         ServicoOutput output = atualizarServicoUseCase.execute(id, input);
-        ServicoResponse response = servicoMapper.mapToResponse(output);
+        ServicoResponse response = servicoMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }
 
@@ -106,7 +105,7 @@ public class ServicoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> inativar(@PathVariable Long id){
+    public ResponseEntity<String> inativar(@PathVariable Long id) {
         inativarServicoUseCase.execute(id);
         return ResponseEntity.ok().body("Serviço inativado com sucesso");
     }
@@ -122,7 +121,9 @@ public class ServicoController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<TempoMedioServicoResponse>> listarTempoMedioPorServico() {
         List<TempoMedioServicoMetricaOutput> metricasOutput = calcularTempoMedioServicoUseCase.execute();
-        List<TempoMedioServicoResponse> responses = servicoMapper.mapToMetricResponse(metricasOutput);
+        List<TempoMedioServicoResponse> responses = metricasOutput.stream()
+                .map(servicoMapper::toResponse)
+                .toList();
         return ResponseEntity.ok(responses);
     }
 }

@@ -5,14 +5,13 @@ import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.usecases.usuario.CadastrarStaffUseCase;
 import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapperImpl;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -26,7 +25,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -48,7 +46,7 @@ class UsuarioAdminControllerTest {
     @Mock
     private CadastrarStaffUseCase cadastrarStaffUseCase;
 
-    private UsuarioMapper usuarioMapper;
+    private UsuarioControllerMapper usuarioMapper;
 
     private UsuarioAdminController usuarioAdminController;
 
@@ -61,7 +59,7 @@ class UsuarioAdminControllerTest {
     @BeforeEach
     void setup() {
 
-        usuarioMapper = new UsuarioMapperImpl();
+        usuarioMapper = Mappers.getMapper(UsuarioControllerMapper.class);
 
         usuarioAdminController = new UsuarioAdminController(
                 listarUsuariosUseCase,
@@ -167,8 +165,7 @@ class UsuarioAdminControllerTest {
         autenticarComo("admin@autoflow.com", "ADMIN");
 
         when(cadastrarStaffUseCase.execute(
-                any(RegistroInput.class),
-                eq(RoleEnum.ADMIN)))
+                any(RegistroInput.class)))
                 .thenReturn(usuarioOutputAtendente);
 
         mockMvc.perform(post("/usuarios")
@@ -182,7 +179,7 @@ class UsuarioAdminControllerTest {
                         .value("ATENDENTE"));
 
         verify(cadastrarStaffUseCase)
-                .execute(any(RegistroInput.class), eq(RoleEnum.ADMIN));
+                .execute(any(RegistroInput.class));
     }
 
     @Test
@@ -198,8 +195,7 @@ class UsuarioAdminControllerTest {
                 .build();
 
         when(cadastrarStaffUseCase.execute(
-                any(RegistroInput.class),
-                eq(RoleEnum.ATENDENTE)))
+                any(RegistroInput.class)))
                 .thenReturn(clienteOutput);
 
         mockMvc.perform(post("/usuarios")
@@ -211,8 +207,7 @@ class UsuarioAdminControllerTest {
                         .value("CLIENTE"));
 
         verify(cadastrarStaffUseCase)
-                .execute(any(RegistroInput.class),
-                        eq(RoleEnum.ATENDENTE));
+                .execute(any(RegistroInput.class));
     }
 
     @Test
@@ -221,8 +216,7 @@ class UsuarioAdminControllerTest {
         autenticarComo("admin@autoflow.com", "ADMIN");
 
         when(cadastrarStaffUseCase.execute(
-                any(RegistroInput.class),
-                eq(RoleEnum.ADMIN)))
+                any(RegistroInput.class)))
                 .thenReturn(usuarioOutputAdmin);
 
         mockMvc.perform(post("/usuarios")
