@@ -3,8 +3,10 @@ import { check, sleep } from 'k6'
 
 export const options = {
     stages: [
-        { duration: '30s', target: 100 },
-        { duration: '1m', target: 2000 },  
+        { duration: '1m', target: 100 },
+        { duration: '2m', target: 250 }, 
+        { duration: '3m', target: 250 }, 
+        { duration: '1m', target: 0 },
     ],
 };
 
@@ -21,9 +23,9 @@ export default function () {
   };
 
 
-  let res = http.post('http://localhost:30080/auth/login', payload, params);
+  let res = http.post('http://127.0.0.1:53222/auth/login', payload, params);
 
   check(res, { 'success login': (r) => r.status === 200 });
 
-  sleep(0.3);
+  sleep(1);
 }

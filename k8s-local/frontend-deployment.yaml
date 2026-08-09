@@ -17,7 +17,7 @@ spec:
       containers:
         - name: autoflow-frontend-container
           image: brunosousa06/autoflow-frontend:latest
-          imagePullPolicy: IfNotPresent 
+          imagePullPolicy: Always 
           resources:
             requests:
               memory: "512Mi"
