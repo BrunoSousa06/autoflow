@@ -1,22 +1,16 @@
 package com.autoflow.application.usecases.servico;
 
+import com.autoflow.application.dto.servico.PageInput;
+import com.autoflow.application.dto.servico.PageOutput;
 import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.MetricsGateway;
 import com.autoflow.application.gateway.ServicoGateway;
-import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,10 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Comprehensive test suite for all Servico use cases.
- * Tests both success and failure paths for CRUD operations and metrics calculation.
- */
 @ExtendWith(MockitoExtension.class)
 class ServicoUseCasesTest {
 
@@ -37,263 +27,160 @@ class ServicoUseCasesTest {
     private ServicoGateway servicoGateway;
 
     @Mock
-    private ServicoMapper servicoMapper;
+    private MetricsGateway metricsGateway;
 
-    private ServicoEntity servicoEntity;
-    private ServicoOutput servicoOutput;
-    private ServicoInput servicoInput;
+    @Test
+    void deveCriarServicoSemExporEntidade() {
+        ServicoInput input = input("Revisão Completa");
+        ServicoOutput output = output(1L, true);
+        when(servicoGateway.existsByNomeIgnoreCase(input.nome())).thenReturn(false);
+        when(servicoGateway.save(input)).thenReturn(output);
 
-    @BeforeEach
-    void setup() {
-        servicoEntity = new ServicoEntity();
-        servicoEntity.setId(1L);
-        servicoEntity.setNome("Revisão Completa");
-        servicoEntity.setDescricao("Revisão completa do veículo");
-        servicoEntity.setValor(new BigDecimal("150.00"));
-        servicoEntity.setAtivo(true);
+        ServicoOutput resultado = new CriarServicoUseCase(servicoGateway).execute(input);
 
-        servicoOutput = ServicoOutput.builder()
-                .id(1L)
-                .nome("Revisão Completa")
-                .descricao("Revisão completa do veículo")
-                .valor(new BigDecimal("150.00"))
-                .ativo(true)
-                .build();
+        assertEquals(output, resultado);
+        verify(servicoGateway).save(input);
+    }
 
-        servicoInput = new ServicoInput(
-                "Revisão Completa",
-                "Revisão completa do veículo",
-                new BigDecimal("150.00")
+    @Test
+    void deveRejeitarNomeDuplicadoSemSalvar() {
+        ServicoInput input = input("Revisão Completa");
+        when(servicoGateway.existsByNomeIgnoreCase(input.nome())).thenReturn(true);
+        var useCase = new CriarServicoUseCase(servicoGateway);
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(input)
         );
+
+        assertEquals(ApplicationException.ErrorType.CONFLICT, exception.type());
+        assertEquals("Serviço já foi cadastrado", exception.getMessage());
+        verify(servicoGateway, never()).save(any());
     }
 
-    @Nested
-    class CriarServicoUseCaseTests {
+    @Test
+    void deveBuscarServicoPorId() {
+        ServicoOutput output = output(1L, true);
+        when(servicoGateway.findById(1L)).thenReturn(Optional.of(output));
 
-        private CriarServicoUseCase criarServicoUseCase;
+        ServicoOutput resultado = new BuscarServicoPorIdUseCase(servicoGateway).execute(1L);
 
-        @BeforeEach
-        void setup() {
-            criarServicoUseCase = new CriarServicoUseCase(servicoGateway, servicoMapper);
-        }
-
-        @Test
-        void deveCriarServicoComSucesso() {
-            when(servicoGateway.findByNomeIgnoreCase("Revisão Completa"))
-                    .thenReturn(Optional.empty());
-            when(servicoGateway.save(any(ServicoEntity.class)))
-                    .thenReturn(servicoEntity);
-            when(servicoMapper.mapToOutput(servicoEntity))
-                    .thenReturn(servicoOutput);
-
-            ServicoOutput resultado = criarServicoUseCase.execute(servicoInput);
-
-            assertNotNull(resultado);
-            assertEquals("Revisão Completa", resultado.getNome());
-            assertEquals(new BigDecimal("150.00"), resultado.getValor());
-            assertTrue(resultado.isAtivo());
-
-            verify(servicoGateway).findByNomeIgnoreCase("Revisão Completa");
-            verify(servicoGateway).save(any(ServicoEntity.class));
-            verify(servicoMapper).mapToOutput(servicoEntity);
-        }
-
-        @Test
-        void deveLancarConflictQuandoNomeJaExistir() {
-            when(servicoGateway.findByNomeIgnoreCase("Revisão Completa"))
-                    .thenReturn(Optional.of(servicoEntity));
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> criarServicoUseCase.execute(servicoInput)
-            );
-
-            assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-            assertEquals("Serviço já foi cadastrado", exception.getReason());
-
-            verify(servicoGateway).findByNomeIgnoreCase("Revisão Completa");
-            verify(servicoGateway, never()).save(any());
-        }
+        assertEquals(output, resultado);
     }
 
-    @Nested
-    class BuscarServicoPorIdUseCaseTests {
+    @Test
+    void deveRetornar404AoBuscarServicoInexistente() {
+        when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
+        var useCase = new BuscarServicoPorIdUseCase(servicoGateway);
 
-        private BuscarServicoPorIdUseCase buscarServicoPorIdUseCase;
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(1L)
+        );
 
-        @BeforeEach
-        void setup() {
-            buscarServicoPorIdUseCase = new BuscarServicoPorIdUseCase(servicoGateway, servicoMapper);
-        }
-
-        @Test
-        void deveBuscarServicoPorIdComSucesso() {
-            when(servicoGateway.findById(1L))
-                    .thenReturn(Optional.of(servicoEntity));
-            when(servicoMapper.mapToOutput(servicoEntity))
-                    .thenReturn(servicoOutput);
-
-            ServicoOutput resultado = buscarServicoPorIdUseCase.execute(1L);
-
-            assertNotNull(resultado);
-            assertEquals(servicoOutput, resultado);
-            verify(servicoGateway).findById(1L);
-            verify(servicoMapper).mapToOutput(servicoEntity);
-        }
-
-        @Test
-        void deveLancarNotFoundQuandoIdNaoExistir() {
-            when(servicoGateway.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> buscarServicoPorIdUseCase.execute(1L)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(servicoGateway).findById(1L);
-            verifyNoInteractions(servicoMapper);
-        }
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
     }
 
-    @Nested
-    class ListarServicosUseCaseTests {
+    @Test
+    void deveListarServicosAtivosComPaginacaoInterna() {
+        PageInput page = new PageInput(0, 20);
+        ServicoOutput output = output(1L, true);
+        when(servicoGateway.findAllByAtivoTrue(page))
+                .thenReturn(new PageOutput<>(List.of(output), 0, 20, 1));
 
-        private ListarServicosUseCase listarServicosUseCase;
+        PageOutput<ServicoOutput> resultado = new ListarServicosUseCase(servicoGateway).execute(page);
 
-        @BeforeEach
-        void setup() {
-            listarServicosUseCase = new ListarServicosUseCase(servicoGateway, servicoMapper);
-        }
-
-        @Test
-        void deveListarServicosComSucesso() {
-            Pageable pageable = PageRequest.of(0, 20);
-            Page<ServicoEntity> entityPage = new PageImpl<>(List.of(servicoEntity));
-
-            when(servicoGateway.findAllByAtivoTrue(pageable))
-                    .thenReturn(entityPage);
-            when(servicoMapper.mapToOutput(servicoEntity))
-                    .thenReturn(servicoOutput);
-
-            Page<ServicoOutput> resultado = listarServicosUseCase.execute(pageable);
-
-            assertNotNull(resultado);
-            assertEquals(1, resultado.getContent().size());
-            assertEquals(servicoOutput, resultado.getContent().get(0));
-
-            verify(servicoGateway).findAllByAtivoTrue(pageable);
-            verify(servicoMapper).mapToOutput(servicoEntity);
-        }
-
-        @Test
-        void deveRetornarPaginaVaziaQuandoNaoHaServicos() {
-            Pageable pageable = PageRequest.of(0, 20);
-            Page<ServicoEntity> emptyPage = new PageImpl<>(List.of());
-
-            when(servicoGateway.findAllByAtivoTrue(pageable))
-                    .thenReturn(emptyPage);
-
-            Page<ServicoOutput> resultado = listarServicosUseCase.execute(pageable);
-
-            assertNotNull(resultado);
-            assertEquals(0, resultado.getContent().size());
-
-            verify(servicoGateway).findAllByAtivoTrue(pageable);
-            verifyNoInteractions(servicoMapper);
-        }
+        assertEquals(List.of(output), resultado.content());
+        assertEquals(1, resultado.totalElements());
+        verify(servicoGateway).findAllByAtivoTrue(page);
     }
 
-    @Nested
-    class AtualizarServicoUseCaseTests {
+    @Test
+    void deveAtualizarServicoExistente() {
+        ServicoInput input = input("Revisão Premium");
+        ServicoOutput existente = output(1L, true);
+        ServicoOutput atualizado = output(1L, true);
+        when(servicoGateway.findById(1L)).thenReturn(Optional.of(existente));
+        when(servicoGateway.update(1L, input)).thenReturn(atualizado);
 
-        private AtualizarServicoUseCase atualizarServicoUseCase;
+        ServicoOutput resultado = new AtualizarServicoUseCase(servicoGateway).execute(1L, input);
 
-        @BeforeEach
-        void setup() {
-            atualizarServicoUseCase = new AtualizarServicoUseCase(servicoGateway, servicoMapper);
-        }
-
-        @Test
-        void deveAtualizarServicoComSucesso() {
-            ServicoInput novoInput = new ServicoInput(
-                    "Revisão Básica",
-                    "Revisão básica do veículo",
-                    new BigDecimal("100.00")
-            );
-
-            when(servicoGateway.findById(1L))
-                    .thenReturn(Optional.of(servicoEntity));
-            when(servicoGateway.save(any(ServicoEntity.class)))
-                    .thenReturn(servicoEntity);
-            when(servicoMapper.mapToOutput(servicoEntity))
-                    .thenReturn(servicoOutput);
-
-            ServicoOutput resultado = atualizarServicoUseCase.execute(1L, novoInput);
-
-            assertNotNull(resultado);
-            assertEquals(servicoOutput, resultado);
-
-            verify(servicoGateway).findById(1L);
-            verify(servicoGateway).save(servicoEntity);
-            verify(servicoMapper).mapToOutput(servicoEntity);
-        }
-
-        @Test
-        void deveLancarNotFoundAoAtualizarServicoInexistente() {
-            when(servicoGateway.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> atualizarServicoUseCase.execute(1L, servicoInput)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(servicoGateway).findById(1L);
-            verify(servicoGateway, never()).save(any());
-        }
+        assertEquals(atualizado, resultado);
+        verify(servicoGateway).update(1L, input);
     }
 
-    @Nested
-    class InativarServicoUseCaseTests {
+    @Test
+    void deveRetornar404AoAtualizarServicoInexistente() {
+        when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
+        ServicoInput input = input("Revisão Premium");
+        var useCase = new AtualizarServicoUseCase(servicoGateway);
 
-        private InativarServicoUseCase inativarServicoUseCase;
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(1L, input)
+        );
 
-        @BeforeEach
-        void setup() {
-            inativarServicoUseCase = new InativarServicoUseCase(servicoGateway);
-        }
-
-        @Test
-        void deveInativarServicoComSucesso() {
-            when(servicoGateway.findById(1L))
-                    .thenReturn(Optional.of(servicoEntity));
-            when(servicoGateway.save(any(ServicoEntity.class)))
-                    .thenReturn(servicoEntity);
-
-            inativarServicoUseCase.execute(1L);
-
-            assertTrue(!servicoEntity.isAtivo());
-            verify(servicoGateway).findById(1L);
-            verify(servicoGateway).save(servicoEntity);
-        }
-
-        @Test
-        void deveLancarNotFoundAoInativarServicoInexistente() {
-            when(servicoGateway.findById(1L))
-                    .thenReturn(Optional.empty());
-
-            ResponseStatusException exception = assertThrows(
-                    ResponseStatusException.class,
-                    () -> inativarServicoUseCase.execute(1L)
-            );
-
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-            verify(servicoGateway).findById(1L);
-            verify(servicoGateway, never()).save(any());
-        }
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
+        verify(servicoGateway, never()).update(any(), any());
     }
 
+    @Test
+    void deveInativarServicoSemRemoverRegistro() {
+        when(servicoGateway.findById(1L)).thenReturn(Optional.of(output(1L, true)));
+
+        new InativarServicoUseCase(servicoGateway).execute(1L);
+
+        verify(servicoGateway).inativar(1L);
+    }
+
+    @Test
+    void deveRetornar404AoInativarServicoInexistente() {
+        when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
+        var useCase = new InativarServicoUseCase(servicoGateway);
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> useCase.execute(1L)
+        );
+
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
+        verify(servicoGateway, never()).inativar(1L);
+    }
+
+    @Test
+    void deveCalcularTemposDerivadosDaMetrica() {
+        when(metricsGateway.calcularTempoMedioPorServico()).thenReturn(List.of(
+                new MetricsGateway.TempoMedioServicoData(1L, "Troca de óleo", 2L, 3600.0)
+        ));
+
+        var resultado = new CalcularTempoMedioServicoUseCase(metricsGateway).execute();
+
+        assertNotNull(resultado);
+        assertEquals(3600.0, resultado.getFirst().getTempoMedioSegundos());
+        assertEquals(60.0, resultado.getFirst().getTempoMedioMinutos());
+        assertEquals(1.0, resultado.getFirst().getTempoMedioHoras());
+    }
+
+    @Test
+    void deveRetornarListaVaziaQuandoNaoHaMetricas() {
+        when(metricsGateway.calcularTempoMedioPorServico()).thenReturn(List.of());
+
+        var resultado = new CalcularTempoMedioServicoUseCase(metricsGateway).execute();
+
+        assertTrue(resultado.isEmpty());
+    }
+
+    private static ServicoInput input(String nome) {
+        return new ServicoInput(nome, "Descrição do serviço", new BigDecimal("150.00"));
+    }
+
+    private static ServicoOutput output(Long id, boolean ativo) {
+        return ServicoOutput.builder()
+                .id(id)
+                .nome("Revisão Completa")
+                .descricao("Descrição do serviço")
+                .valor(new BigDecimal("150.00"))
+                .ativo(ativo)
+                .build();
+    }
 }

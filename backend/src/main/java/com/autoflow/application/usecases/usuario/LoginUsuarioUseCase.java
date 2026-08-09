@@ -1,38 +1,32 @@
 package com.autoflow.application.usecases.usuario;
 
-import com.autoflow.presentation.usuario.request.LoginRequest;
+import com.autoflow.application.dto.usuario.LoginInput;
+import com.autoflow.application.dto.usuario.LoginOutput;
+import com.autoflow.application.gateway.AuthenticationGateway;
+import com.autoflow.application.gateway.TokenGateway;
+import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.infrastructure.security.service.JwtService;
-import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class LoginUsuarioUseCase {
 
-    private final AuthenticationManager authenticationManager;
-    private final UsuarioRepository usuarioRepository;
-    private final JwtService jwtService;
+    private final AuthenticationGateway authenticationGateway;
+    private final UsuarioGateway usuarioGateway;
+    private final TokenGateway tokenGateway;
 
-    public String execute(LoginRequest request) {
+    public LoginOutput execute(LoginInput input) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.senha()
-                )
-        );
+        authenticationGateway.authenticate(input.email(), input.senha());
 
-        UsuarioEntity usuario = usuarioRepository
-                .findByEmail(request.email())
+        UsuarioEntity usuario = usuarioGateway
+                .findByEmail(input.email())
                 .orElseThrow();
 
-        return jwtService.gerarToken(
+        return new LoginOutput(tokenGateway.generateToken(
                 usuario.getEmail(),
                 usuario.getRole().name()
-        );
+        ));
     }
 }

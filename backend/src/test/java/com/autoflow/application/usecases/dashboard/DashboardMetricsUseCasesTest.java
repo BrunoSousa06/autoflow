@@ -60,7 +60,7 @@ class DashboardMetricsUseCasesTest {
     }
 
     @Test
-    void deveUsarZeroNasConversoesQuandoTempoDoServicoForNulo() {
+    void devePreservarNuloNasConversoesQuandoTempoDoServicoForNulo() {
         when(metricsGateway.calcularTempoMedioPorServico()).thenReturn(List.of(
                 new MetricsGateway.TempoMedioServicoData(1L, "Revisao", 0L, null)
         ));
@@ -68,8 +68,8 @@ class DashboardMetricsUseCasesTest {
         var resultado = new CalcularTempoMedioServicoUseCase(metricsGateway).execute().getFirst();
 
         assertNull(resultado.getTempoMedioSegundos());
-        assertEquals(0.0, resultado.getTempoMedioMinutos());
-        assertEquals(0.0, resultado.getTempoMedioHoras());
+        assertNull(resultado.getTempoMedioMinutos());
+        assertNull(resultado.getTempoMedioHoras());
         assertEquals(0L, resultado.getQuantidadeExecucoes());
     }
 }

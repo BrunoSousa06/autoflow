@@ -8,10 +8,12 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ClienteRepository extends JpaRepository<ClienteEntity, Long>{
+public interface ClienteRepository extends JpaRepository<ClienteEntity, Long> {
     Optional<ClienteEntity> findByCpfCnpj(String cpfCnpj);
 
     boolean existsByCpfCnpj(String cpfCnpj);
+
+    boolean existsByCpfCnpjAndIdNot(String cpfCnpj, Long id);
 
     Optional<ClienteEntity> findByUsuarioEmail(String usuarioEmail);
 }

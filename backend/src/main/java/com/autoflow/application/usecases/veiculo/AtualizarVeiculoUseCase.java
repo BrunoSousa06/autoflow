@@ -1,58 +1,44 @@
 package com.autoflow.application.usecases.veiculo;
 
-
 import com.autoflow.application.dto.veiculo.VeiculoInput;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.exception.VeiculoDuplicadoException;
+import com.autoflow.application.exception.VeiculoNaoEncontradoException;
+import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.policy.PlacaPolicy;
 import com.autoflow.application.security.AuthorizationService;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
-import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
 
-@Service
 @RequiredArgsConstructor
 public class AtualizarVeiculoUseCase {
 
-    private final VeiculoRepository veiculoRepository;
-    private final VeiculoMapper veiculoMapper;
+    private final VeiculoGateway veiculoGateway;
     private final AuthorizationService authorizationService;
 
     public VeiculoOutput execute(Long id, VeiculoInput input) {
-
-        VeiculoEntity veiculo = buscarPorId(id);
-
+        VeiculoOutput veiculo = buscarPorId(id);
         authorizationService.validarPermissao(veiculo);
 
-        Optional<VeiculoEntity> veiculoPlaca =
-                veiculoRepository.findByPlaca(input.placa());
+        String placa = PlacaPolicy.normalizar(input.placa());
+        veiculoGateway.findByPlaca(placa)
+                .filter(outroVeiculo -> !outroVeiculo.id().equals(id))
+                .ifPresent(outroVeiculo -> {
+                    throw new VeiculoDuplicadoException("Placa já cadastrada");
+                });
 
-        if (veiculoPlaca.isPresent()
-                && !veiculoPlaca.get().getId().equals(id)) {
+        VeiculoInput inputNormalizado = new VeiculoInput(
+                input.marca(),
+                input.ano(),
+                placa,
+                input.modelo());
 
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Placa já cadastrada");
-        }
-
-        veiculoMapper.updateEntity(input, veiculo);
-
-        VeiculoEntity atualizado =
-                veiculoRepository.save(veiculo);
-
-        return veiculoMapper.mapToOutput(atualizado);
+        return veiculoGateway.update(id, inputNormalizado);
     }
 
-    private VeiculoEntity buscarPorId(Long id) {
-
-        return veiculoRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Veículo não encontrado com o ID: " + id));
+    private VeiculoOutput buscarPorId(Long id) {
+        return veiculoGateway.findById(id)
+                .orElseThrow(() -> new VeiculoNaoEncontradoException(
+                        "Veículo não encontrado com o ID: " + id));
     }
 }

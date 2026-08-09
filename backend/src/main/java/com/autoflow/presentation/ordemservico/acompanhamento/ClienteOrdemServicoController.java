@@ -2,7 +2,6 @@ package com.autoflow.presentation.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcompanharOrdemServicoUseCase;
-import com.autoflow.infrastructure.persistence.mapper.AcompanhamentoMapper;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,7 +25,7 @@ import java.util.List;
 public class ClienteOrdemServicoController {
 
     private final AcompanharOrdemServicoUseCase acompanharOrdemServicoUseCase;
-    private final AcompanhamentoMapper acompanhamentoMapper;
+    private final AcompanhamentoControllerMapper acompanhamentoMapper;
 
     @Operation(summary = "Listar ordem de serviço do cliente", description = "Retorna as ordens de serviço do cliente autenticado")
     @ApiResponse(responseCode = "200", description = "Ordens de serviço encontradas com sucesso")
@@ -37,7 +36,7 @@ public class ClienteOrdemServicoController {
     @PreAuthorize("hasAnyRole('ADMIN','CLIENTE')")
     public List<AcompanhamentoOrdemServicoResponse> listarMinhasOS(
             @AuthenticationPrincipal UserDetails userDetails
-            ){
+    ) {
         List<AcompanhamentoOrdemServicoOutput> output =
                 acompanharOrdemServicoUseCase.execute(userDetails.getUsername());
         return acompanhamentoMapper.toResponse(output);

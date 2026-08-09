@@ -94,7 +94,7 @@ public class OrdemServicoEntity {
     ) {
         validarVeiculo(veiculo);
 
-        if(cliente == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
+        if (cliente == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
 
         OrdemServicoEntity ordemServico = new OrdemServicoEntity(
                 gerarNumeroOs(),
@@ -107,19 +107,40 @@ public class OrdemServicoEntity {
         return ordemServico;
     }
 
+    public static OrdemServicoEntity criar(
+            Long clienteId,
+            String clienteNome,
+            String clienteCpfCnpj,
+            String clienteEmail,
+            String clienteTelefone,
+            VeiculoEntity veiculo) {
+        validarVeiculo(veiculo);
+
+        OrdemServicoEntity ordemServico = new OrdemServicoEntity(
+                gerarNumeroOs(),
+                veiculo,
+                StatusOrdemServico.RECEBIDA,
+                agora());
+        ordemServico.cliente = ClienteOsEntity.fromFields(
+                clienteId, clienteNome, clienteCpfCnpj, clienteEmail, clienteTelefone);
+        ordemServico.atualizarUltimaAtualizacao();
+        return ordemServico;
+    }
+
     public void atualizarUltimaAtualizacao() {
         this.ultimaAtualizacao = agora();
     }
 
     public void registrarLaudo(
             String laudo
-    ){
-        if(this.status != StatusOrdemServico.EM_DIAGNOSTICO){
+    ) {
+        if (this.status != StatusOrdemServico.EM_DIAGNOSTICO) {
             throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
         }
         this.diagnostico.setLaudo(laudo);
         this.atualizarUltimaAtualizacao();
     }
+
     public void iniciarDiagnostico() {
         validarTransicao(StatusOrdemServico.RECEBIDA, StatusOrdemServico.EM_DIAGNOSTICO);
         if (this.diagnostico == null) {
@@ -131,20 +152,20 @@ public class OrdemServicoEntity {
         this.atualizarUltimaAtualizacao();
     }
 
-    public void finalizarDiagnostico(){
+    public void finalizarDiagnostico() {
         validaSePodeFinalizarDiagnostico();
         this.diagnostico.setConcluidoEm(agora());
         this.atualizarUltimaAtualizacao();
     }
 
     private void validaSePodeFinalizarDiagnostico() {
-        if(this.status != StatusOrdemServico.EM_DIAGNOSTICO){
+        if (this.status != StatusOrdemServico.EM_DIAGNOSTICO) {
             throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
         }
-        if(this.diagnostico == null){
+        if (this.diagnostico == null) {
             throw new IllegalArgumentException("OS deve ter um diagnostico para finalizar diagnostico.");
         }
-        if(this.diagnostico.getLaudo() == null){
+        if (this.diagnostico.getLaudo() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Diagnostico deve possuir um laudo para finalizar diagnostico.");
         }
     }
@@ -194,7 +215,7 @@ public class OrdemServicoEntity {
                 .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado na OS."));
     }
 
-    public void aguardarAprovacao(){
+    public void aguardarAprovacao() {
         validarTransicao(StatusOrdemServico.EM_DIAGNOSTICO, StatusOrdemServico.AGUARDANDO_APROVACAO);
         this.status = StatusOrdemServico.AGUARDANDO_APROVACAO;
         this.atualizarUltimaAtualizacao();
@@ -223,6 +244,10 @@ public class OrdemServicoEntity {
 
     public Long getVeiculoId() {
         return veiculo.getId();
+    }
+
+    public String getVeiculoPlaca() {
+        return veiculo.getPlaca();
     }
 
     @Override
@@ -263,8 +288,8 @@ public class OrdemServicoEntity {
         }
 
         boolean todosFinalizados = servicosSolicitados.stream()
-                .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO 
-                                  || servico.getStatus() == StatusServicoOs.CANCELADO);
+                .allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO
+                        || servico.getStatus() == StatusServicoOs.CANCELADO);
 
         if (servicosSolicitados.isEmpty()) {
             return;

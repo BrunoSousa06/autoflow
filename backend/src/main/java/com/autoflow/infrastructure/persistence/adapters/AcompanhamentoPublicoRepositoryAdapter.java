@@ -2,11 +2,11 @@ package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
+import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
-import com.autoflow.repository.ordemservico.OrdemServicoRepository;
-import com.autoflow.repository.orcamento.OrcamentoRepository;
-import com.autoflow.domain.orcamento.StatusOrcamento;
+import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
+import com.autoflow.infrastructure.persistence.repository.OrdemServicoRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

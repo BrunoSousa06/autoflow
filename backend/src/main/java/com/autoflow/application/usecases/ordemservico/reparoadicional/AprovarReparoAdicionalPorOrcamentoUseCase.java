@@ -1,17 +1,16 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
-import jakarta.transaction.Transactional;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+
 @RequiredArgsConstructor
 public class AprovarReparoAdicionalPorOrcamentoUseCase {
 
     private final ConsultarReparoAdicionalPorOrcamentoUseCase consultarPorOrcamentoUseCase;
     private final AprovarReparoAdicionalUseCase aprovarReparoAdicionalUseCase;
 
-    @Transactional
+    @TransactionalUseCase
     public boolean executeSeExistir(Long orcamentoId) {
         return consultarPorOrcamentoUseCase.execute(orcamentoId)
                 .map(reparo -> {
@@ -21,7 +20,7 @@ public class AprovarReparoAdicionalPorOrcamentoUseCase {
                 .orElse(false);
     }
 
-    @Transactional
+    @TransactionalUseCase
     public void executeObrigatorio(Long orcamentoId) {
         var reparo = consultarPorOrcamentoUseCase.execute(orcamentoId)
                 .orElseThrow(() -> new IllegalArgumentException("Reparo adicional não encontrado."));

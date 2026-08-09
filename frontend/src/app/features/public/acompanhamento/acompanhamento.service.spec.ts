@@ -22,4 +22,22 @@ describe('AcompanhamentoService', () => {
     expect(req.request.method).toBe('GET');
     req.flush({ numeroOs: 'OS-1', status: 'RECEBIDA', dataAbertura: '2026-08-01T10:00:00' });
   });
+
+  it('deve baixar o PDF do orçamento pelo token de acompanhamento', () => {
+    service.baixarOrcamento(10, 'abc').subscribe();
+
+    const req = http.expectOne(`${environment.apiUrl}/public/orcamentos/10/pdf/acompanhamento?token=abc`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(new Blob(['pdf'], { type: 'application/pdf' }));
+  });
+
+  it('deve aprovar o orçamento pelo token de acompanhamento', () => {
+    service.aprovarOrcamento(10, 'abc').subscribe();
+
+    const req = http.expectOne(`${environment.apiUrl}/public/orcamentos/10/aprovar/acompanhamento?token=abc`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({});
+  });
 });

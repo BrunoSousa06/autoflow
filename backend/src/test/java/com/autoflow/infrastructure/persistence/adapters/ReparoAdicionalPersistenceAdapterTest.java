@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
-import com.autoflow.repository.ordemservico.reparoadicional.ReparoAdicionalRepository;
+import com.autoflow.infrastructure.persistence.repository.reparoadicional.ReparoAdicionalRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

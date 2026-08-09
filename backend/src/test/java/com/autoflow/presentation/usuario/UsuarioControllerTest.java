@@ -1,21 +1,21 @@
 package com.autoflow.presentation.usuario;
 
+import com.autoflow.application.dto.usuario.LoginInput;
+import com.autoflow.application.dto.usuario.LoginOutput;
 import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.usecases.usuario.BuscarMecanicosUseCase;
-import com.autoflow.application.usecases.usuario.CadastrarUsuarioUseCase;
+import com.autoflow.application.usecases.usuario.CadastrarUsuarioPublicoUseCase;
 import com.autoflow.application.usecases.usuario.ListarUsuariosUseCase;
 import com.autoflow.application.usecases.usuario.LoginUsuarioUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapper;
-import com.autoflow.infrastructure.persistence.mapper.UsuarioMapperImpl;
-import com.autoflow.presentation.usuario.UsuarioController;
 import com.autoflow.presentation.usuario.request.LoginRequest;
 import com.autoflow.presentation.usuario.request.RegistroRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +32,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -51,7 +52,7 @@ class UsuarioControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock
-    private CadastrarUsuarioUseCase cadastrarUsuarioUseCase;
+    private CadastrarUsuarioPublicoUseCase cadastrarUsuarioPublicoUseCase;
 
     @Mock
     private LoginUsuarioUseCase loginUsuarioUseCase;
@@ -62,7 +63,7 @@ class UsuarioControllerTest {
     @Mock
     private BuscarMecanicosUseCase buscarMecanicosUseCase;
 
-    private UsuarioMapper usuarioMapper;
+    private UsuarioControllerMapper usuarioMapper;
 
     @InjectMocks
     private UsuarioController usuarioController;
@@ -70,10 +71,10 @@ class UsuarioControllerTest {
     @BeforeEach
     void setup() {
 
-        usuarioMapper = new UsuarioMapperImpl();
+        usuarioMapper = Mappers.getMapper(UsuarioControllerMapper.class);
 
         usuarioController = new UsuarioController(
-                cadastrarUsuarioUseCase,
+                cadastrarUsuarioPublicoUseCase,
                 loginUsuarioUseCase,
                 listarUsuariosUseCase,
                 buscarMecanicosUseCase,
@@ -107,7 +108,7 @@ class UsuarioControllerTest {
                 .role(RoleEnum.CLIENTE)
                 .build();
 
-        when(cadastrarUsuarioUseCase.execute(request))
+        when(cadastrarUsuarioPublicoUseCase.execute(request))
                 .thenReturn(output);
 
         mockMvc.perform(post("/auth/cadastro")
@@ -120,7 +121,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.email").value("usuario@email.com"))
                 .andExpect(jsonPath("$.role").value("CLIENTE"));
 
-        verify(cadastrarUsuarioUseCase).execute(request);
+        verify(cadastrarUsuarioPublicoUseCase).execute(request);
     }
 
     @Test
@@ -128,9 +129,10 @@ class UsuarioControllerTest {
 
         LoginRequest request =
                 new LoginRequest("usuario@email.com", "senha123");
+        LoginInput input = new LoginInput(request.email(), request.senha());
 
-        when(loginUsuarioUseCase.execute(request))
-                .thenReturn("token-jwt-mockado");
+        when(loginUsuarioUseCase.execute(input))
+                .thenReturn(new LoginOutput("token-jwt-mockado"));
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -139,7 +141,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.token")
                         .value("token-jwt-mockado"));
 
-        verify(loginUsuarioUseCase).execute(request);
+        verify(loginUsuarioUseCase).execute(input);
     }
 
     @Test
@@ -202,13 +204,18 @@ class UsuarioControllerTest {
                 RoleEnum.ADMIN
         );
 
+        when(cadastrarUsuarioPublicoUseCase.execute(any(RegistroInput.class)))
+                .thenThrow(new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "Cadastro público permite apenas a role CLIENTE"));
+
         mockMvc.perform(post("/auth/cadastro")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
 
-        verifyNoInteractions(cadastrarUsuarioUseCase);
+        verify(cadastrarUsuarioPublicoUseCase).execute(any(RegistroInput.class));
     }
 
     @TestConfiguration
@@ -227,6 +234,11 @@ class UsuarioControllerTest {
         @ExceptionHandler(AuthorizationDeniedException.class)
         ResponseEntity<Void> handleAuthorizationDenied() {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        @ExceptionHandler(ResponseStatusException.class)
+        ResponseEntity<Void> handleResponseStatusException(ResponseStatusException exception) {
+            return ResponseEntity.status(exception.getStatusCode()).build();
         }
     }
 }

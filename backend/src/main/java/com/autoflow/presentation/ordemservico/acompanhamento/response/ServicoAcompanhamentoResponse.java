@@ -9,4 +9,5 @@ public record ServicoAcompanhamentoResponse(
         String nome,
         BigDecimal valor,
         StatusServicoOs status
-) {}
+) {
+}

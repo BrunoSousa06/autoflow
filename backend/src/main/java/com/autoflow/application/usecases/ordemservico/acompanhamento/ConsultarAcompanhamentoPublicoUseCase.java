@@ -6,12 +6,10 @@ import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioExceptio
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 
-@Service
 @RequiredArgsConstructor
 public class ConsultarAcompanhamentoPublicoUseCase {
 

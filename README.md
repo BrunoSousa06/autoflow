@@ -185,7 +185,7 @@ cd autoflow
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 API disponível em **http://localhost:8081**

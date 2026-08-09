@@ -33,7 +33,9 @@ public class AutoflowApplication {
                     System.setProperty(key, value);
                 }
             });
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // The .env file is optional; startup must continue with the configured environment.
+        }
     }
 
 }

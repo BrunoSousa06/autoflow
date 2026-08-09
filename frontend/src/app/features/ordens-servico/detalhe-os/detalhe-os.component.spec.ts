@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { DetalheOsComponent } from './detalhe-os.component';
+import { DetalheOsFacade } from './detalhe-os.facade';
 import { OrdemServicoService } from '../ordem-servico.service';
 import { OrcamentoService } from '../../orcamentos/orcamento.service';
 import { ReparoAdicionalService } from '../../reparos-adicionais/reparo-adicional.service';
@@ -60,6 +61,7 @@ describe('DetalheOsComponent', () => {
 
     TestBed.configureTestingModule({
       providers: [
+        DetalheOsFacade,
         { provide: OrdemServicoService, useValue: mockOsService },
         { provide: OrcamentoService, useValue: mockOrcamentoService },
         { provide: ReparoAdicionalService, useValue: mockReparoService },
@@ -217,6 +219,38 @@ describe('DetalheOsComponent', () => {
       component.iniciarDiagnostico();
 
       expect(mockOsService.iniciarDiagnostico).not.toHaveBeenCalled();
+    });
+
+    it('confirmarFinalizarDiagnostico deve informar que a notificacao foi solicitada', () => {
+      mockOsService.buscarPorNumeroOs.and.returnValue(of(osFixture()));
+      const component = criarComponente('ADMIN');
+      component.ngOnInit();
+      mockDialog.open.and.returnValue({ afterClosed: () => of(true) } as any);
+      mockOsService.finalizarDiagnostico.and.returnValue(of({} as any));
+
+      component.confirmarFinalizarDiagnostico();
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
+        'Diagnóstico finalizado. Orçamento gerado; a notificação ao cliente foi solicitada.',
+        'Fechar',
+        { duration: 5000 },
+      );
+    });
+
+    it('criarReparoAdicional deve informar que a notificacao foi solicitada', () => {
+      mockOsService.buscarPorNumeroOs.and.returnValue(of(osFixture({ status: 'EM_EXECUCAO' })));
+      const component = criarComponente('ADMIN');
+      component.ngOnInit();
+      mockDialog.open.and.returnValue({ afterClosed: () => of({ servicos: [] }) } as any);
+      mockReparoService.criar.and.returnValue(of({ reparoAdicionalId: 1, orcamentoId: 10, publicUrl: 'url' }));
+
+      component.criarReparoAdicional();
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith(
+        'Reparo adicional criado. Orçamento #10 disponibilizado para aprovação; a notificação ao cliente foi solicitada.',
+        'Fechar',
+        { duration: 6000 },
+      );
     });
 
     it('aprovarOrcamento deve chamar orcamentoService.aprovar quando confirmado', () => {

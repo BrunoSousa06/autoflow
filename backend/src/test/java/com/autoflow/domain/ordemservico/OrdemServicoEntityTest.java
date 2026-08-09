@@ -124,7 +124,8 @@ class OrdemServicoEntityTest {
 
     @Test
     void testAdicionarServicosSolicitados_listaVazia_retornaSemErro() {
-        assertDoesNotThrow(() -> ordemServico.adicionarServicosSolicitados(List.of()));
+        List<ServicoSolicitadoEntity> servicos = List.of();
+        assertDoesNotThrow(() -> ordemServico.adicionarServicosSolicitados(servicos));
         assertTrue(ordemServico.getServicosSolicitados().isEmpty());
     }
 
@@ -132,28 +133,32 @@ class OrdemServicoEntityTest {
     void testAdicionarServicosSolicitados_statusFinalizada_lanca() {
         ordemServico.setStatus(StatusOrdemServico.FINALIZADA);
         ServicoSolicitadoEntity s = ServicoSolicitadoEntity.criar(1L, "Troca de oleo", BigDecimal.TEN);
-        assertThrows(IllegalStateException.class, () -> ordemServico.adicionarServicosSolicitados(List.of(s)));
+        List<ServicoSolicitadoEntity> servicos = List.of(s);
+        assertThrows(IllegalStateException.class, () -> ordemServico.adicionarServicosSolicitados(servicos));
     }
 
     @Test
     void testAdicionarServicosSolicitados_statusEntregue_lanca() {
         ordemServico.setStatus(StatusOrdemServico.ENTREGUE);
         ServicoSolicitadoEntity s = ServicoSolicitadoEntity.criar(1L, "Troca de oleo", BigDecimal.TEN);
-        assertThrows(IllegalStateException.class, () -> ordemServico.adicionarServicosSolicitados(List.of(s)));
+        List<ServicoSolicitadoEntity> servicos = List.of(s);
+        assertThrows(IllegalStateException.class, () -> ordemServico.adicionarServicosSolicitados(servicos));
     }
 
     @Test
     void testAdicionarServicosSolicitados_servicoSemId_lanca() {
         ServicoSolicitadoEntity s = new ServicoSolicitadoEntity();
         s.setNome("Sem ID");
-        assertThrows(IllegalArgumentException.class, () -> ordemServico.adicionarServicosSolicitados(List.of(s)));
+        List<ServicoSolicitadoEntity> servicos = List.of(s);
+        assertThrows(IllegalArgumentException.class, () -> ordemServico.adicionarServicosSolicitados(servicos));
     }
 
     @Test
     void testAdicionarServicosSolicitados_idDuplicadoNarequisição_lanca() {
         ServicoSolicitadoEntity s1 = ServicoSolicitadoEntity.criar(5L, "Servico A", BigDecimal.TEN);
         ServicoSolicitadoEntity s2 = ServicoSolicitadoEntity.criar(5L, "Servico A dup", BigDecimal.TEN);
-        assertThrows(IllegalArgumentException.class, () -> ordemServico.adicionarServicosSolicitados(List.of(s1, s2)));
+        List<ServicoSolicitadoEntity> servicos = List.of(s1, s2);
+        assertThrows(IllegalArgumentException.class, () -> ordemServico.adicionarServicosSolicitados(servicos));
     }
 
     @Test
@@ -162,7 +167,8 @@ class OrdemServicoEntityTest {
         ordemServico.adicionarServicosSolicitados(List.of(s1));
 
         ServicoSolicitadoEntity s2 = ServicoSolicitadoEntity.criar(7L, "Servico B novamente", BigDecimal.TEN);
-        assertThrows(IllegalArgumentException.class, () -> ordemServico.adicionarServicosSolicitados(List.of(s2)));
+        List<ServicoSolicitadoEntity> servicos = List.of(s2);
+        assertThrows(IllegalArgumentException.class, () -> ordemServico.adicionarServicosSolicitados(servicos));
     }
 
     @Test
@@ -358,6 +364,126 @@ class OrdemServicoEntityTest {
         assertSame(primeiro, ordemServico.getDiagnostico());
     }
 
+    @Test
+    void deveCriarOrdemServicoComDadosInternosDoCliente() {
+        OrdemServicoEntity resultado = OrdemServicoEntity.criar(
+                1L, "Joao Silva", "12345678901", "joao@example.com", null, veiculo);
+
+        assertEquals(1L, resultado.getCliente().getId());
+        assertEquals("Joao Silva", resultado.getCliente().getNome());
+    }
+
+    @Test
+    void deveRejeitarDadosInvalidosDoClienteInterno() {
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        null, "Joao Silva", "12345678901", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, null, "12345678901", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "", "12345678901", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", null, "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", "", "joao@example.com", null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", "12345678901", null, null, veiculo)),
+                () -> assertThrows(IllegalArgumentException.class, () -> OrdemServicoEntity.criar(
+                        1L, "Joao Silva", "12345678901", "", null, veiculo)));
+    }
+
+    @Test
+    void deveValidarDadosDoClienteAoCriarSnapshotDaOs() {
+        ClienteEntity semId = clienteValido();
+        semId.setId(null);
+        ClienteEntity nomeNulo = clienteValido();
+        nomeNulo.setNome(null);
+        ClienteEntity nomeEmBranco = clienteValido();
+        nomeEmBranco.setNome(" ");
+        ClienteEntity cpfNulo = clienteValido();
+        cpfNulo.setCpfCnpj(null);
+        ClienteEntity cpfEmBranco = clienteValido();
+        cpfEmBranco.setCpfCnpj(" ");
+        ClienteEntity emailNulo = clienteValido();
+        emailNulo.setEmail(null);
+        ClienteEntity emailEmBranco = clienteValido();
+        emailEmBranco.setEmail(" ");
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(null)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(semId)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(nomeNulo)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(nomeEmBranco)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(cpfNulo)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(cpfEmBranco)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(emailNulo)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ClienteOsEntity.fromCliente(emailEmBranco))
+        );
+    }
+
+    @Test
+    void testAcompanhamentoPublicoIndisponivelSemToken() {
+        assertFalse(ordemServico.acompanhamentoPublicoDisponivel(LocalDateTime.now()));
+    }
+
+    @Test
+    void testAcompanhamentoPublicoDisponivelComTokenSemExpiracao() {
+        LocalDateTime criadoEm = LocalDateTime.now().minusMinutes(1);
+        ordemServico.configurarAcompanhamentoPublico("hash-token", criadoEm, null);
+
+        assertTrue(ordemServico.acompanhamentoPublicoDisponivel(LocalDateTime.now()));
+    }
+
+    @Test
+    void deveValidarDadosAoConfigurarTokenDeAcompanhamento() {
+        LocalDateTime criadoEm = LocalDateTime.now();
+        LocalDateTime expiradaEm = criadoEm.minusSeconds(1);
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ordemServico.configurarAcompanhamentoPublico(null, criadoEm, null)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ordemServico.configurarAcompanhamentoPublico(" ", criadoEm, null)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ordemServico.configurarAcompanhamentoPublico("hash", null, null)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ordemServico.configurarAcompanhamentoPublico("hash", criadoEm, criadoEm)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> ordemServico.configurarAcompanhamentoPublico(
+                                "hash", criadoEm, expiradaEm))
+        );
+    }
+
+    @Test
+    void deveIndisponibilizarTokenRevogadoOuExpirado() {
+        LocalDateTime agora = LocalDateTime.now();
+        ordemServico.configurarAcompanhamentoPublico("hash", agora.minusMinutes(2), agora.plusMinutes(1));
+        assertTrue(ordemServico.acompanhamentoPublicoDisponivel(agora));
+        ordemServico.setAcompanhamentoTokenRevogadoEm(agora.minusMinutes(1));
+        assertFalse(ordemServico.acompanhamentoPublicoDisponivel(agora));
+
+        ordemServico.setAcompanhamentoTokenRevogadoEm(null);
+        ordemServico.configurarAcompanhamentoPublico("hash", agora.minusMinutes(2), agora.minusMinutes(1));
+        assertFalse(ordemServico.acompanhamentoPublicoDisponivel(agora));
+    }
+
+    private ClienteEntity clienteValido() {
+        ClienteEntity resultado = new ClienteEntity();
+        resultado.setId(1L);
+        resultado.setNome("Joao Silva");
+        resultado.setCpfCnpj("12345678901");
+        resultado.setEmail("joao@example.com");
+        return resultado;
+    }
+
     // --- equals e hashCode ---
 
     @Test
@@ -387,7 +513,7 @@ class OrdemServicoEntityTest {
         OrdemServicoEntity outro = new OrdemServicoEntity();
         ordemServico.setId(42L);
         outro.setId(42L);
-        assertEquals(ordemServico, outro);
+        assertEquals(outro, ordemServico);
     }
 
     @Test
@@ -395,7 +521,7 @@ class OrdemServicoEntityTest {
         OrdemServicoEntity outro = new OrdemServicoEntity();
         ordemServico.setId(1L);
         outro.setId(2L);
-        assertNotEquals(ordemServico, outro);
+        assertNotEquals(outro, ordemServico);
     }
 
     @Test

@@ -25,6 +25,16 @@ public class PecaInsumoEntity {
     private CategoriaPecaInsumo tipo;
 
     public void baixarDoEstoque(PecaInsumoEntity pecaInsumo) {
-        this.quantidade = this.quantidade - pecaInsumo.getQuantidade();
+        baixarQuantidade(pecaInsumo.getQuantidade());
+    }
+
+    public void baixarQuantidade(int quantidade) {
+        if (quantidade <= 0) {
+            throw new IllegalArgumentException("Quantidade da baixa deve ser maior que zero.");
+        }
+        if (this.quantidade < quantidade) {
+            throw new IllegalStateException("Estoque insuficiente para realizar a baixa.");
+        }
+        this.quantidade -= quantidade;
     }
 }

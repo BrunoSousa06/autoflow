@@ -2,30 +2,29 @@ package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+
 @RequiredArgsConstructor
 public class AprovarReparoAdicionalUseCase {
 
     private final ReparoAdicionalGateway reparoAdicionalGateway;
     private final OrdemServicoGateway ordemServicoGateway;
 
-    @Transactional
+    @TransactionalUseCase
     public OrdemServicoEntity execute(Long reparoAdicionalId) {
-        ReparoAdicionalEntity reparo = reparoAdicionalGateway.findById(reparoAdicionalId)
+        ReparoAdicionalEntity reparo = reparoAdicionalGateway.findByIdForUpdate(reparoAdicionalId)
                 .orElseThrow(() -> new IllegalArgumentException("Reparo adicional não encontrado."));
 
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(reparo.getNumeroOs())
+        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(reparo.getNumeroOs())
                 .orElseThrow(() -> new IllegalArgumentException("Ordem de serviço não encontrada."));
 
         reparo.aprovar();

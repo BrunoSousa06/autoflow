@@ -1,23 +1,19 @@
 package com.autoflow.application.usecases.servico;
 
+import com.autoflow.application.dto.servico.PageInput;
+import com.autoflow.application.dto.servico.PageOutput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.ServicoGateway;
-import com.autoflow.infrastructure.persistence.mapper.ServicoMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
 
-@Component
+
 @RequiredArgsConstructor
 public class ListarServicosUseCase {
 
     private final ServicoGateway servicoGateway;
-    private final ServicoMapper servicoMapper;
 
-    public Page<ServicoOutput> execute(Pageable pageable) {
-        return servicoGateway.findAllByAtivoTrue(pageable)
-                .map(servicoMapper::mapToOutput);
+    public PageOutput<ServicoOutput> execute(PageInput page) {
+        return servicoGateway.findAllByAtivoTrue(page);
     }
 
 }

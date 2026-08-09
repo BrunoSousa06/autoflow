@@ -5,7 +5,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
@@ -34,7 +36,7 @@ public class ItemNecessarioEntity {
     @Column(name = "valor_total", nullable = false)
     private BigDecimal valorTotal;
 
-    @Column(name ="status")
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private StatusItemNecessario status;
 

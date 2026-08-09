@@ -1,27 +1,26 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.autoflow.application.dto.veiculo.*;
 
 import java.util.Optional;
 
-
 public interface VeiculoGateway {
 
+    VeiculoOutput save(CadastrarVeiculoInput input, Long clienteId);
 
-    VeiculoEntity save(VeiculoEntity veiculo);
+    VeiculoOutput save(VeiculoOrdemServicoInput input, Long clienteId);
 
-    Optional<VeiculoEntity> findById(Long id);
+    VeiculoOutput update(Long id, VeiculoInput input);
 
-    Optional<VeiculoEntity> findByPlaca(String placa);
+    Optional<VeiculoOutput> findById(Long id);
+
+    Optional<VeiculoOutput> findByPlaca(String placa);
 
     boolean existsByPlaca(String placa);
 
+    PageOutput<VeiculoOutput> findAll(VeiculoFiltro filtro, PageInput page);
+
     boolean existsById(Long id);
 
-    Page<VeiculoEntity> findAllByClienteId(Long clienteId, Pageable pageable);
-
     void deleteById(Long id);
-
 }

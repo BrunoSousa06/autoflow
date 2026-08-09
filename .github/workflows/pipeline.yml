@@ -26,6 +26,9 @@ jobs:
           java-version: "21"
           cache: maven
 
+      - name: Verify Docker for Testcontainers
+        run: docker info
+
       - name: Cache SonarQube packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
@@ -45,6 +48,22 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
+
+      - name: Upload Backend Coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/target/site/jacoco
+          if-no-files-found: ignore
+
+      - name: Upload Backend Integration Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-integration-reports
+          path: backend/target/failsafe-reports
+          if-no-files-found: ignore
 
   backend-build:
     name: Backend Build

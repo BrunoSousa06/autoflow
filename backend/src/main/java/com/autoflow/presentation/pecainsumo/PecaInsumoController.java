@@ -1,12 +1,12 @@
 package com.autoflow.presentation.pecainsumo;
 
+import com.autoflow.application.dto.PageQuery;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.usecases.pecainsumo.*;
-import com.autoflow.infrastructure.persistence.mapper.PecaInsumoMapper;
+import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.presentation.pecainsumo.request.PecaInsumoRequest;
 import com.autoflow.presentation.pecainsumo.response.PecaInsumoResponse;
-import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class PecaInsumoController {
     private final ListarPecaInsumoPaginadoUseCase listarPecaInsumoPaginadoUseCase;
     private final AtualizarPecaInsumoUseCase atualizarPecaInsumoUseCase;
     private final DeletarPecaInsumoUseCase deletarPecaInsumoUseCase;
-    private final PecaInsumoMapper pecaInsumoMapper;
+    private final PecaInsumoControllerMapper pecaInsumoMapper;
 
 
     @Operation(summary = "Cadastrar uma peça ou insumo", description = "Retorna as informações da peça ou insumo cadastrado")
@@ -44,7 +45,7 @@ public class PecaInsumoController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
     public ResponseEntity<PecaInsumoResponse> cadastrar(@Valid @RequestBody PecaInsumoRequest request) {
-        PecaInsumoInput input = pecaInsumoMapper.mapToInput(request);
+        PecaInsumoInput input = pecaInsumoMapper.toInput(request);
         PecaInsumoOutput pecaInsumo = cadastrarPecaInsumoUseCase.execute(input);
         return ResponseEntity.status(HttpStatus.CREATED).body(pecaInsumoMapper.toResponse(pecaInsumo));
 
@@ -74,9 +75,10 @@ public class PecaInsumoController {
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) CategoriaPecaInsumo tipo) {
         var pageable = PageRequest.of(page, size, Sort.by("nome").ascending());
-        Page<PecaInsumoOutput> todasPecas = listarPecaInsumoPaginadoUseCase.execute(pageable, nome, tipo);
+        var todasPecas = listarPecaInsumoPaginadoUseCase.execute(new PageQuery(page, size), nome, tipo);
 
-        return ResponseEntity.ok(todasPecas.map(pecaInsumoMapper::toResponse));
+        return ResponseEntity.ok(new PageImpl<>(todasPecas.content().stream()
+                .map(pecaInsumoMapper::toResponse).toList(), pageable, todasPecas.totalElements()));
     }
 
     @Operation(summary = "Atualizar uma peça ou insumo", description = "Atualiza as informações de uma peça ou insumo")
@@ -87,7 +89,7 @@ public class PecaInsumoController {
     @PatchMapping("/{id}/atualizacao")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
     public ResponseEntity<PecaInsumoResponse> atualizar(@Valid @RequestBody PecaInsumoRequest request, @PathVariable Long id) {
-        PecaInsumoInput input = pecaInsumoMapper.mapToInput(request);
+        PecaInsumoInput input = pecaInsumoMapper.toInput(request);
         PecaInsumoOutput pecaInsumoAtualizado = atualizarPecaInsumoUseCase.execute(id, input);
         return ResponseEntity.ok(pecaInsumoMapper.toResponse(pecaInsumoAtualizado));
 
@@ -100,7 +102,7 @@ public class PecaInsumoController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public ResponseEntity<String> deletar(@PathVariable Long id){
+    public ResponseEntity<String> deletar(@PathVariable Long id) {
         deletarPecaInsumoUseCase.execute(id);
         return ResponseEntity.ok().body("peca/insumo deletado com sucesso");
 

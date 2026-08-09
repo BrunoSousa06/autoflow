@@ -1,127 +1,77 @@
 package com.autoflow.application.security;
 
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import org.junit.jupiter.api.BeforeEach;
+import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
+import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
+import com.autoflow.application.gateway.CurrentUserGateway;
+import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.domain.usuario.RoleEnum;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
-
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ClienteAutenticadoServiceTest {
 
     @Mock
-    private UsuarioAutenticadoService usuarioAutenticadoService;
-
+    private CurrentUserGateway currentUserGateway;
     @Mock
-    private ClienteRepository clienteRepository;
-
+    private VeiculoClienteGateway clienteGateway;
     @InjectMocks
-    private ClienteAutenticadoService clienteAutenticadoService;
+    private ClienteAutenticadoService service;
 
-    private ClienteEntity cliente;
+    @Test
+    void deveRetornarVazioParaUsuarioQueNaoEhCliente() {
+        when(currentUserGateway.getCurrentUser())
+                .thenReturn(Optional.of(new CurrentUser("admin@test.com", RoleEnum.ADMIN)));
 
-    @BeforeEach
-    void setUp() {
-        cliente = new ClienteEntity();
-        cliente.setId(1L);
-        cliente.setNome("Bruno");
-        cliente.setCpfCnpj("12345678901");
-        cliente.setEmail("bruno@email.com");
-        cliente.setTelefone("11999999999");
+        assertEquals(Optional.empty(), service.getClienteId());
+        verifyNoInteractions(clienteGateway);
     }
 
     @Test
-    void deveRetornarNullQuandoUsuarioNaoEhCliente() {
+    void deveRetornarIdDoClienteAutenticado() {
+        when(currentUserGateway.getCurrentUser())
+                .thenReturn(Optional.of(new CurrentUser("cliente@test.com", RoleEnum.CLIENTE)));
+        when(clienteGateway.findIdByUsuarioEmail("cliente@test.com"))
+                .thenReturn(Optional.of(10L));
 
-        when(usuarioAutenticadoService.isCliente()).thenReturn(false);
-
-        ClienteEntity resultado = clienteAutenticadoService.getClienteLogado();
-
-        assertNull(resultado);
-
-        verify(usuarioAutenticadoService).isCliente();
-        verifyNoInteractions(clienteRepository);
+        assertEquals(Optional.of(10L), service.getClienteId());
+        verify(clienteGateway).findIdByUsuarioEmail("cliente@test.com");
     }
 
     @Test
-    void deveRetornarClienteLogado() {
-
-        when(usuarioAutenticadoService.isCliente()).thenReturn(true);
-        when(usuarioAutenticadoService.getEmail()).thenReturn(cliente.getEmail());
-        when(clienteRepository.findByUsuarioEmail(cliente.getEmail()))
-                .thenReturn(Optional.of(cliente));
-
-        ClienteEntity resultado = clienteAutenticadoService.getClienteLogado();
-
-        assertNotNull(resultado);
-        assertEquals(cliente.getId(), resultado.getId());
-        assertEquals(cliente.getEmail(), resultado.getEmail());
-
-        verify(usuarioAutenticadoService).isCliente();
-        verify(usuarioAutenticadoService).getEmail();
-        verify(clienteRepository).findByUsuarioEmail(cliente.getEmail());
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoClienteNaoEncontrado() {
-
-        when(usuarioAutenticadoService.isCliente()).thenReturn(true);
-        when(usuarioAutenticadoService.getEmail()).thenReturn("bruno@email.com");
-        when(clienteRepository.findByUsuarioEmail("bruno@email.com"))
+    void deveRetornar403QuandoClienteNaoEstiverVinculado() {
+        when(currentUserGateway.getCurrentUser())
+                .thenReturn(Optional.of(new CurrentUser("cliente@test.com", RoleEnum.CLIENTE)));
+        when(clienteGateway.findIdByUsuarioEmail("cliente@test.com"))
                 .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> clienteAutenticadoService.getClienteLogado());
+        ClienteAutenticadoNaoEncontradoException exception = assertThrows(
+                ClienteAutenticadoNaoEncontradoException.class,
+                () -> service.getClienteId());
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
-        assertEquals(
-                "Cliente não encontrado para o usuário autenticado",
-                exception.getReason());
-
-        verify(usuarioAutenticadoService).isCliente();
-        verify(usuarioAutenticadoService).getEmail();
-        verify(clienteRepository).findByUsuarioEmail("bruno@email.com");
+        assertEquals("Cliente não encontrado para o usuário autenticado", exception.getMessage());
     }
 
     @Test
-    void deveRetornarClienteId() {
+    void deveRetornar401QuandoNaoHouverUsuarioAtual() {
+        when(currentUserGateway.getCurrentUser()).thenReturn(Optional.empty());
 
-        when(usuarioAutenticadoService.isCliente()).thenReturn(true);
-        when(usuarioAutenticadoService.getEmail()).thenReturn(cliente.getEmail());
-        when(clienteRepository.findByUsuarioEmail(cliente.getEmail()))
-                .thenReturn(Optional.of(cliente));
+        UsuarioNaoAutenticadoException exception = assertThrows(
+                UsuarioNaoAutenticadoException.class,
+                () -> service.getClienteId());
 
-        Long id = clienteAutenticadoService.getClienteId();
-
-        assertEquals(cliente.getId(), id);
-
-        verify(usuarioAutenticadoService).isCliente();
-        verify(usuarioAutenticadoService).getEmail();
-        verify(clienteRepository).findByUsuarioEmail(cliente.getEmail());
-    }
-
-    @Test
-    void deveRetornarNullQuandoGetClienteIdEUsuarioNaoEhCliente() {
-
-        when(usuarioAutenticadoService.isCliente()).thenReturn(false);
-
-        Long id = clienteAutenticadoService.getClienteId();
-
-        assertNull(id);
-
-        verify(usuarioAutenticadoService).isCliente();
-        verifyNoInteractions(clienteRepository);
+        assertEquals("Usuário não autenticado", exception.getMessage());
     }
 }

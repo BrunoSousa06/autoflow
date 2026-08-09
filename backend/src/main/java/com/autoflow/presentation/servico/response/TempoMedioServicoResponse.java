@@ -7,4 +7,5 @@ public record TempoMedioServicoResponse(
         Double tempoMedioSegundos,
         Double tempoMedioMinutos,
         Double tempoMedioHoras
-) {}
+) {
+}

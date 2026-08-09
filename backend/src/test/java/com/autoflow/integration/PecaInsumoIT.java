@@ -120,7 +120,7 @@ class PecaInsumoIT extends AbstractIT {
         ResponseEntity<String> response = post("/peca-insumo",
                 TestUtils.pecaRequest("Amortecedor Dianteiro", 5, 380.00, "PECA"), adminToken);
 
-        // PecaInsumoService lança ResponseStatusException(BAD_REQUEST) para nomes duplicados
+        // O caso de uso de cadastro rejeita nomes duplicados com BAD_REQUEST.
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
@@ -138,6 +138,16 @@ class PecaInsumoIT extends AbstractIT {
     void deveRetornar400SemTipo() {
         // PecaInsumoRequest tem @NotNull no campo tipo - sem tipo a validação falha
         var body = java.util.Map.of("nome", "Peca Sem Tipo", "quantidade", 5, "valor", 50.00);
+
+        ResponseEntity<String> response = post("/peca-insumo", body, adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("deve retornar 400 ao cadastrar quantidade negativa")
+    void deveRetornar400QuantidadeNegativa() {
+        var body = TestUtils.pecaRequest("Peca com Quantidade Negativa", -1, 50.00, "PECA");
 
         ResponseEntity<String> response = post("/peca-insumo", body, adminToken);
 

@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.orcamento;
 
+import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
@@ -54,6 +55,33 @@ class RecusarOrcamentoUseCaseTest {
         useCase.execute(orcamento, "Motivo", "Maria");
 
         verifyNoInteractions(ordemServicoGateway);
+    }
+
+    @Test
+    void deveAceitarRecusaSemMotivo() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+        OrdemServicoEntity os = osAguardandoAprovacao();
+        when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(reparoUseCase.executeSeExistir(10L, null)).thenReturn(false);
+        when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
+
+        useCase.execute(orcamento, null, "Maria");
+
+        assertNull(orcamento.getRecusaMotivo());
+        assertEquals(StatusOrdemServico.FINALIZADA, os.getStatus());
+    }
+
+    @Test
+    void deveRejeitarMotivoMaiorQueLimiteDaColuna() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+        String motivo = "x".repeat(501);
+
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute(orcamento, motivo, "Maria"));
+
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
+
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
     }
 
     private OrcamentoEntity orcamentoDisponivel() {

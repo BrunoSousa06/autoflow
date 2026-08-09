@@ -1,36 +1,29 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
+import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Mock
-    private PecaInsumoGateway gateway;
+    private EstoqueGateway gateway;
 
     @Test
     void deveMarcarItemComoDisponivelSemBaixarEstoque() {
@@ -45,7 +38,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
                 () -> assertEquals(StatusItemNecessario.DISPONIVEL, resultado.getFirst().getStatus()),
                 () -> assertNull(resultado.getFirst().getMotivoPendencia()),
                 () -> assertEquals(5, resultado.getFirst().getQuantidadeDisponivel()),
-                () -> assertEquals(5, estoque.getQuantidade()));
+                 () -> assertEquals(5, estoque.quantidade()));
         verificarQueNaoHouvePersistencia();
     }
 
@@ -62,7 +55,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
                 () -> assertEquals(StatusItemNecessario.DISPONIVEL, resultado.getFirst().getStatus()),
                 () -> assertNull(resultado.getFirst().getMotivoPendencia()),
                 () -> assertEquals(5, resultado.getFirst().getQuantidadeDisponivel()),
-                () -> assertEquals(5, estoque.getQuantidade()));
+                 () -> assertEquals(5, estoque.quantidade()));
         verificarQueNaoHouvePersistencia();
     }
 
@@ -80,23 +73,21 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
                 () -> assertEquals(MotivoPendenciaItem.ESTOQUE_INSUFICIENTE,
                         resultado.getFirst().getMotivoPendencia()),
                 () -> assertEquals(5, resultado.getFirst().getQuantidadeDisponivel()),
-                () -> assertEquals(5, estoque.getQuantidade()));
+                 () -> assertEquals(5, estoque.quantidade()));
         verificarQueNaoHouvePersistencia();
     }
 
     @Test
-    void deveBuscarIdsDistintosEmUmaUnicaConsulta() {
+    void deveRejeitarPecaDuplicadaAntesDeConsultarEstoque() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
         var primeiro = itemSolicitado(1L, 2);
         var segundo = itemSolicitado(1L, 3);
-        var estoque = itemEstoque(1L, 5);
-        when(gateway.findAllById(List.of(1L))).thenReturn(List.of(estoque));
+        var itensDuplicados = List.of(primeiro, segundo);
 
-        var resultado = useCase.execute(List.of(primeiro, segundo));
+        assertThrows(IllegalArgumentException.class,
+                () -> useCase.execute(itensDuplicados));
 
-        assertEquals(2, resultado.size());
-        verify(gateway).findAllById(List.of(1L));
-        assertEquals(5, estoque.getQuantidade());
+        verify(gateway, never()).findAllById(any());
         verificarQueNaoHouvePersistencia();
     }
 
@@ -115,17 +106,62 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
     void deveInformarItemInexistenteSemPersistirAlteracoes() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
         when(gateway.findAllById(List.of(9L))).thenReturn(List.of());
+        var itens = List.of(itemSolicitado(9L, 1));
 
-        var erro = assertThrows(
-                ResponseStatusException.class,
-                () -> useCase.execute(List.of(itemSolicitado(9L, 1))));
+        assertThrows(
+                EstoqueItemNaoEncontradoException.class,
+                () -> useCase.execute(itens));
 
-        assertEquals(HttpStatus.NOT_FOUND, erro.getStatusCode());
         verificarQueNaoHouvePersistencia();
     }
 
+    @Test
+    void deveRejeitarQuantidadeNaoPositiva() {
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        when(gateway.findAllById(List.of(1L))).thenReturn(List.of(itemEstoque(1L, 5)));
+        var itens = List.of(itemSolicitado(1L, 0));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> useCase.execute(itens));
+        verificarQueNaoHouvePersistencia();
+    }
+
+    @Test
+    void deveRejeitarItemNuloAntesDeConsultarEstoque() {
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var itens = java.util.Collections.singletonList((ItemNecessarioEntity) null);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> useCase.execute(itens));
+
+        verify(gateway, never()).findAllById(any());
+    }
+
+    @Test
+    void deveRejeitarItemSemPecaAntesDeConsultarEstoque() {
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var itens = List.of(itemSolicitado(null, 1));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> useCase.execute(itens));
+
+        verify(gateway, never()).findAllById(any());
+    }
+
+    @Test
+    void deveRejeitarItemSemQuantidadeAntesDeConsultarEstoque() {
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var item = new ItemNecessarioEntity();
+        item.setPecaInsumoId(1L);
+        var itens = List.of(item);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> useCase.execute(itens));
+
+        verify(gateway, never()).findAllById(any());
+    }
+
     private void verificarQueNaoHouvePersistencia() {
-        verify(gateway, never()).save(any());
         verify(gateway, never()).saveAll(any());
     }
 
@@ -139,13 +175,13 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
                 null);
     }
 
-    private PecaInsumoEntity itemEstoque(Long id, int quantidade) {
-        var estoque = new PecaInsumoEntity();
-        estoque.setId(id);
-        estoque.setNome("Item " + id);
-        estoque.setTipo(CategoriaPecaInsumo.PECA);
-        estoque.setValor(new BigDecimal("10.00"));
-        estoque.setQuantidade(quantidade);
-        return estoque;
+    private EstoqueItemOutput itemEstoque(Long id, int quantidade) {
+        return new EstoqueItemOutput(
+                id,
+                "Item " + id,
+                CategoriaPecaInsumo.PECA,
+                new BigDecimal("10.00"),
+                quantidade
+        );
     }
 }
