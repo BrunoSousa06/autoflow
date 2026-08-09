@@ -5,6 +5,7 @@ import com.autoflow.application.dto.PageResult;
 import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.dto.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.usecases.ordemservico.*;
@@ -29,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -75,6 +77,9 @@ class OrdemServicoControllerTest {
 
     @MockitoBean
     private DetalharOrdemServicoUseCase detalharOrdemServicoUseCase;
+
+    @MockitoBean
+    private ConsultarStatusOrdemServicoUseCase consultarStatusOrdemServicoUseCase;
 
     @MockitoBean
     private IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase;
@@ -413,6 +418,43 @@ class OrdemServicoControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void deveConsultarStatusComoAdmin() throws Exception {
+        consultarStatus("EM_EXECUCAO");
+        verify(consultarStatusOrdemServicoUseCase).execute("OS-123", "user");
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveConsultarStatusComoAtendente() throws Exception {
+        consultarStatus("EM_DIAGNOSTICO");
+        verify(consultarStatusOrdemServicoUseCase).execute("OS-123", "user");
+    }
+
+    @Test
+    @WithMockUser(roles = "MECANICO")
+    void deveConsultarStatusComoMecanico() throws Exception {
+        consultarStatus("FINALIZADA");
+        verify(consultarStatusOrdemServicoUseCase).execute("OS-123", "user");
+    }
+
+    @Test
+    @WithMockUser(username = "cliente@autoflow.com", roles = "CLIENTE")
+    void devePermitirClienteAlcancarConsultaDeStatus() throws Exception {
+        consultarStatus("EM_EXECUCAO");
+        verify(consultarStatusOrdemServicoUseCase).execute("OS-123", "cliente@autoflow.com");
+    }
+
+    @Test
+    @WithAnonymousUser
+    void deveRetornarForbiddenParaUsuarioNaoAutenticado() throws Exception {
+        mockMvc.perform(get("/ordens-servico/{numeroOs}/status", "OS-123"))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(consultarStatusOrdemServicoUseCase);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void deveCalcularTempoMedioFinalizacaoComoAdmin() throws Exception {
         TempoMedioOrdemServicoOutput output = new TempoMedioOrdemServicoOutput(
                 3L,
@@ -668,6 +710,26 @@ class OrdemServicoControllerTest {
         orcamento.setTotalItens(BigDecimal.ZERO);
         orcamento.setTotalGeral(new BigDecimal("100.00"));
         return orcamento;
+    }
+
+    private void consultarStatus(String status) throws Exception {
+        when(consultarStatusOrdemServicoUseCase.execute(eq("OS-123"), anyString()))
+                .thenReturn(new StatusOrdemServicoOutput(
+                        "OS-123",
+                        StatusOrdemServico.valueOf(status),
+                        LocalDateTime.of(2026, Month.MAY, 30, 12, 0)));
+
+        mockMvc.perform(get("/ordens-servico/{numeroOs}/status", "OS-123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.numeroOs").value("OS-123"))
+                .andExpect(jsonPath("$.status").value(status))
+                .andExpect(jsonPath("$.ultimaAtualizacao").value("2026-05-30T12:00:00"))
+                .andExpect(jsonPath("$.id").doesNotExist())
+                .andExpect(jsonPath("$.cliente").doesNotExist())
+                .andExpect(jsonPath("$.veiculo").doesNotExist())
+                .andExpect(jsonPath("$.servicos").doesNotExist())
+                .andExpect(jsonPath("$.orcamentoAtual").doesNotExist())
+                .andExpect(jsonPath("$.diagnostico").doesNotExist());
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
