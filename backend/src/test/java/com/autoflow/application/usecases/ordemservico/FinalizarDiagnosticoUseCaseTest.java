@@ -1,12 +1,7 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
-import com.autoflow.application.gateway.OrcamentoGateway;
-import com.autoflow.application.gateway.OrcamentoNotificacaoGateway;
-import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
-import com.autoflow.application.gateway.OrcamentoVersioningGateway;
-import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.gateway.*;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
@@ -28,9 +23,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FinalizarDiagnosticoUseCaseTest {
@@ -86,7 +79,8 @@ class FinalizarDiagnosticoUseCaseTest {
         when(orcamentoFactory.criarPrincipalDisponivel(eq(os), eq(1), any(LocalDateTime.class)))
                 .thenReturn(orcamento);
         when(orcamentoGateway.save(orcamento)).thenReturn(orcamento);
-        when(publicacaoGateway.publicar(10L)).thenReturn("https://autoflow.test/orcamento");
+        when(publicacaoGateway.publicarComLinks(10L))
+                .thenReturn(new OrcamentoPublicacao("https://autoflow.test/orcamento", "https://autoflow.test/decisao"));
         when(ordemServicoGateway.save(os)).thenReturn(os);
     }
 

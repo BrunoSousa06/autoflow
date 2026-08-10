@@ -39,11 +39,11 @@ src/
 │   │   ├── orcamentos/         # Visualização e aprovação de orçamentos
 │   │   ├── reparos-adicionais/ # Reparos solicitados durante execução
 │   │   ├── minha-conta/        # Área do cliente (perfil, OS próprias)
-│   │   └── public/             # Telas sem autenticação
+│   │   └── public/             # Telas sem autenticação (OS e orçamento)
 │   ├── app.config.ts           # Providers globais (HTTP, roteamento, locale)
 │   └── app.routes.ts           # Rotas da aplicação
 └── environments/
-    ├── environment.ts           # Desenvolvimento (localhost:8080)
+    ├── environment.ts           # Desenvolvimento (API em localhost:8081 via proxy)
     └── environment.prod.ts      # Produção (configurar apiUrl)
 ```
 
@@ -60,7 +60,7 @@ npm start
 
 Acesse: **http://localhost:4200**
 
-O backend deve estar rodando em **http://localhost:8080**.
+O backend deve estar rodando em **http://localhost:8081**.
 
 ---
 
@@ -85,7 +85,7 @@ Acesse: **http://localhost:4200**
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080'
+  apiUrl: 'http://localhost:8081'
 };
 ```
 
@@ -94,7 +94,7 @@ export const environment = {
 ```typescript
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8080'
+  apiUrl: 'http://localhost:8081'
 };
 ```
 
@@ -118,24 +118,25 @@ Todos os usuários abaixo são criados pelo seed do banco (senha padrão: `Senha
 
 ## Principais rotas
 
-| Rota                                    | Roles permitidas            | Descrição                          |
-|-----------------------------------------|-----------------------------|------------------------------------|
-| `/login`                                | Público                     | Autenticação                       |
-| `/dashboard`                            | ADMIN, ATENDENTE, MECANICO  | Métricas e indicadores             |
-| `/clientes`                             | ADMIN, ATENDENTE            | Lista e cadastro de clientes       |
-| `/usuarios`                             | ADMIN, ATENDENTE            | Cadastro de mecânicos/atendentes   |
-| `/veiculos`                             | ADMIN, ATENDENTE, CLIENTE   | Lista de veículos                  |
-| `/ordens-servico`                       | ADMIN, ATENDENTE, MECANICO  | Lista de ordens de serviço         |
-| `/ordens-servico/:numeroOs`             | ADMIN, ATENDENTE, MECANICO  | Detalhe e ações da OS              |
-| `/orcamentos`                           | ADMIN, ATENDENTE            | Lista de orçamentos                |
-| `/orcamentos/:id`                       | ADMIN, ATENDENTE, CLIENTE   | Detalhe do orçamento + PDF         |
-| `/reparos-adicionais`                   | ADMIN, ATENDENTE            | Lista de orçamentos adicionais     |
-| `/servicos`                             | ADMIN, ATENDENTE, MECANICO  | Catálogo de serviços               |
-| `/peca-insumo`                          | ADMIN, ATENDENTE, MECANICO  | Catálogo de peças e insumos        |
-| `/minha-conta`                          | CLIENTE                     | Perfil do cliente                  |
-| `/minha-conta/minhas-ordens`            | CLIENTE                     | OS do cliente logado               |
-| `/minha-conta/minhas-ordens/:numeroOs`  | CLIENTE                     | Detalhe da OS + aprovar orçamento  |
-| `/public/acompanhamento`                | Público                     | Informa que login é necessário     |
+| Rota                                   | Roles permitidas           | Descrição                          |
+|----------------------------------------|----------------------------|------------------------------------|
+| `/login`                               | Público                    | Autenticação                       |
+| `/dashboard`                           | ADMIN, ATENDENTE, MECANICO | Métricas e indicadores             |
+| `/clientes`                            | ADMIN, ATENDENTE           | Lista e cadastro de clientes       |
+| `/usuarios`                            | ADMIN, ATENDENTE           | Cadastro de mecânicos/atendentes   |
+| `/veiculos`                            | ADMIN, ATENDENTE, CLIENTE  | Lista de veículos                  |
+| `/ordens-servico`                      | ADMIN, ATENDENTE, MECANICO | Lista de ordens de serviço         |
+| `/ordens-servico/:numeroOs`            | ADMIN, ATENDENTE, MECANICO | Detalhe e ações da OS              |
+| `/orcamentos`                          | ADMIN, ATENDENTE           | Lista de orçamentos                |
+| `/orcamentos/:id`                      | ADMIN, ATENDENTE, CLIENTE  | Detalhe do orçamento + PDF         |
+| `/reparos-adicionais`                  | ADMIN, ATENDENTE           | Lista de orçamentos adicionais     |
+| `/servicos`                            | ADMIN, ATENDENTE, MECANICO | Catálogo de serviços               |
+| `/peca-insumo`                         | ADMIN, ATENDENTE, MECANICO | Catálogo de peças e insumos        |
+| `/minha-conta`                         | CLIENTE                    | Perfil do cliente                  |
+| `/minha-conta/minhas-ordens`           | CLIENTE                    | OS do cliente logado               |
+| `/minha-conta/minhas-ordens/:numeroOs` | CLIENTE                    | Detalhe da OS + aprovar orçamento  |
+| `/public/acompanhamento`               | Público                    | Acompanhamento da OS por token     |
+| `/public/orcamentos/:id?token=...`     | Público                    | Consulta, PDF, aprovação ou recusa |
 
 ---
 
@@ -163,3 +164,15 @@ Todos os usuários abaixo são criados pelo seed do banco (senha padrão: `Senha
 4. O backend gera um orçamento do tipo ADICIONAL e envia e-mail ao cliente
 5. Login como **cliente** → acesse "Minhas Ordens" → OS → aprove ou recuse o orçamento adicional
 6. Login como **ADMIN ou ATENDENTE** → `/reparos-adicionais` lista todos os orçamentos adicionais com filtro por status
+
+### Aprovação externa do orçamento
+
+1. O cliente abre o link de orçamento recebido por e-mail, sem login.
+2. Acesse `/public/orcamentos/:id?token=...` para consultar o resumo e baixar o PDF.
+3. Informe nome e, se necessário, motivo da recusa.
+4. Clique em **Aprovar orçamento** ou **Recusar**.
+5. A página envia `POST` para a API e apresenta o resultado da decisão.
+
+O token é temporário. Links inválidos ou expirados não alteram o orçamento nem
+a ordem de serviço. A documentação técnica do fluxo está em
+[`docs/fluxo-orcamento-publico.md`](../docs/fluxo-orcamento-publico.md).

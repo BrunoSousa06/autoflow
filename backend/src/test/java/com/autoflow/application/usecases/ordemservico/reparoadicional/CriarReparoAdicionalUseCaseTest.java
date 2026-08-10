@@ -1,6 +1,7 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
+import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
@@ -95,7 +96,8 @@ class CriarReparoAdicionalUseCaseTest {
                 any(),
                 any()
         )).thenReturn(orcamento);
-        when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
+        when(orcamentoPublicacaoGateway.publicarComLinks(30L))
+                .thenReturn(new OrcamentoPublicacao("https://publicacao/orcamento/30", "https://publicacao/decisao/30"));
 
         var output = useCase.execute(command(5L, 7L, 2));
 
@@ -130,7 +132,7 @@ class CriarReparoAdicionalUseCaseTest {
         );
         ordem.verify(reparoAdicionalGateway).save(any());
         ordem.verify(orcamentoComplementarGateway).criarESalvar(any(), any(), any());
-        ordem.verify(orcamentoPublicacaoGateway).publicar(30L);
+        ordem.verify(orcamentoPublicacaoGateway).publicarComLinks(30L);
         ordem.verify(orcamentoNotificacaoGateway)
                 .notificar(any(OrcamentoNotificacao.class));
         ordem.verify(reparoAdicionalGateway).save(any());
@@ -296,7 +298,8 @@ class CriarReparoAdicionalUseCaseTest {
             return reparo;
         });
         when(orcamentoComplementarGateway.criarESalvar(any(), any(), any())).thenReturn(orcamento);
-        when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
+        when(orcamentoPublicacaoGateway.publicarComLinks(30L))
+                .thenReturn(new OrcamentoPublicacao("https://publicacao/orcamento/30", "https://publicacao/decisao/30"));
 
         assertEquals(30L, useCase.execute(command(5L, 7L, 2)).orcamentoId());
     }
@@ -492,7 +495,8 @@ class CriarReparoAdicionalUseCaseTest {
             return reparo;
         });
         when(orcamentoComplementarGateway.criarESalvar(any(), any(), any())).thenReturn(orcamento);
-        when(orcamentoPublicacaoGateway.publicar(30L)).thenReturn("https://publicacao/orcamento/30");
+        when(orcamentoPublicacaoGateway.publicarComLinks(30L))
+                .thenReturn(new OrcamentoPublicacao("https://publicacao/orcamento/30", "https://publicacao/decisao/30"));
         doThrow(new RuntimeException("smtp indisponivel"))
                 .when(orcamentoNotificacaoGateway)
                 .notificar(any(OrcamentoNotificacao.class));

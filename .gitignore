@@ -34,7 +34,11 @@ build/
 ### VS Code ###
 .vscode/
 /.claude
-/docs
+/docs/*
+!/docs/fluxo-orcamento-publico.md
+!/docs/diagramas-sequencia/
+/docs/diagramas-sequencia/*
+!/docs/diagramas-sequencia/aprovacao_recusa_orcamento_publico.mermaid
 backend/.m2
 
 ###Terraform###

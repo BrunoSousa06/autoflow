@@ -60,6 +60,15 @@ Este documento descreve os requisitos nao funcionais do sistema Autoflow, inclui
 | Descricao | O sistema deve validar dados sensiveis e campos criticos, como CPF, CNPJ e placa de veiculo. |
 | Criterios de aceite | CPF e CNPJ invalidos devem ser rejeitados; placas invalidas devem ser rejeitadas; mensagens de erro devem indicar o campo invalido sem expor dados sensiveis desnecessarios. |
 
+### RNF013 - Seguranca de Links Publicos de Orcamento
+
+| Campo               | Descricao                                                                                                                                                                                               |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Categoria           | Seguranca                                                                                                                                                                                               |
+| Prioridade          | Obrigatoria                                                                                                                                                                                             |
+| Descricao           | Links publicos de orcamento devem usar token nao previsivel, hash persistido e expiracao configuravel.                                                                                                  |
+| Criterios de aceite | O valor bruto do token nao deve ser armazenado; token invalido, divergente ou expirado deve retornar erro sem alterar o orcamento ou a OS; a API publica nao deve exigir JWT nem expor dados sensiveis. |
+
 ### RNF007 - Testes Unitarios e de Integracao
 
 | Campo | Descricao |

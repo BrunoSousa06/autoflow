@@ -30,6 +30,11 @@ public class OrcamentoRepositoryAdapter implements OrcamentoGateway {
     }
 
     @Override
+    public Optional<OrcamentoEntity> findByIdForUpdate(Long id) {
+        return repository.findByIdForUpdate(id);
+    }
+
+    @Override
     public Optional<OrcamentoEntity> findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(
             Long ordemServicoId,
             TipoOrcamento tipoOrcamento) {

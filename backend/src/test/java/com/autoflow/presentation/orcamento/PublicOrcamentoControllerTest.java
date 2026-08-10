@@ -2,6 +2,7 @@ package com.autoflow.presentation.orcamento;
 
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
 import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoPorTokenUseCase;
+import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
 import com.autoflow.domain.orcamento.*;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
@@ -23,8 +24,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = PublicOrcamentoController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -38,6 +38,9 @@ class PublicOrcamentoControllerTest {
 
     @MockitoBean
     private ConsultarOrcamentoPorTokenUseCase consultarOrcamentoPorTokenUseCase;
+
+    @MockitoBean
+    private DecidirOrcamentoUseCase decidirOrcamentoUseCase;
 
     @MockitoBean
     private AcessarOrcamentoAcompanhamentoUseCase acessarOrcamentoAcompanhamentoUseCase;
@@ -64,6 +67,64 @@ class PublicOrcamentoControllerTest {
 
         verify(consultarOrcamentoPorTokenUseCase).execute(10L, "tok");
         verify(orcamentoDocumentoGateway).gerarPdf(orcamento);
+    }
+
+    @Test
+    void deveConsultarOrcamentoPelaPaginaPublica() throws Exception {
+        when(consultarOrcamentoPorTokenUseCase.execute(10L, "tok")).thenReturn(baseOrcamento());
+
+        mockMvc.perform(get("/public/orcamentos/{id}", 10L).param("token", "tok"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10L));
+
+        verify(consultarOrcamentoPorTokenUseCase).execute(10L, "tok");
+    }
+
+    @Test
+    void deveAprovarOrcamentoComTokenPublico() throws Exception {
+        OrcamentoEntity orcamento = baseOrcamento();
+        orcamento.setStatus(StatusOrcamento.APROVADO);
+        when(decidirOrcamentoUseCase.aprovarComoToken(10L, "tok", "Maria")).thenReturn(orcamento);
+
+        mockMvc.perform(post("/public/orcamentos/{id}/aprovar", 10L)
+                        .param("token", "tok")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"Maria\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APROVADO"));
+
+        verify(decidirOrcamentoUseCase).aprovarComoToken(10L, "tok", "Maria");
+    }
+
+    @Test
+    void deveRecusarOrcamentoComTokenPublicoEMotivo() throws Exception {
+        OrcamentoEntity orcamento = baseOrcamento();
+        orcamento.setStatus(StatusOrcamento.REPROVADO);
+        when(decidirOrcamentoUseCase.recusarComoToken(10L, "tok", "Muito caro", "Maria"))
+                .thenReturn(orcamento);
+
+        mockMvc.perform(post("/public/orcamentos/{id}/recusar", 10L)
+                        .param("token", "tok")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"motivo\":\"Muito caro\",\"nome\":\"Maria\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REPROVADO"));
+
+        verify(decidirOrcamentoUseCase).recusarComoToken(10L, "tok", "Muito caro", "Maria");
+    }
+
+    @Test
+    void deveRecusarOrcamentoComTokenPublicoSemBody() throws Exception {
+        OrcamentoEntity orcamento = baseOrcamento();
+        orcamento.setStatus(StatusOrcamento.REPROVADO);
+        when(decidirOrcamentoUseCase.recusarComoToken(10L, "tok", null, null)).thenReturn(orcamento);
+
+        mockMvc.perform(post("/public/orcamentos/{id}/recusar", 10L)
+                        .param("token", "tok"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REPROVADO"));
+
+        verify(decidirOrcamentoUseCase).recusarComoToken(10L, "tok", null, null);
     }
 
     @Test

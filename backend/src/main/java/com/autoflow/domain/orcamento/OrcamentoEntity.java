@@ -56,6 +56,8 @@ public class OrcamentoEntity {
     @Column(name = "public_token_hash", nullable = true)
     private String publicTokenHash;
 
+    private LocalDateTime publicTokenExpiraEm;
+
     @Column(name = "aprovado_em")
     private LocalDateTime aprovadoEm;
 

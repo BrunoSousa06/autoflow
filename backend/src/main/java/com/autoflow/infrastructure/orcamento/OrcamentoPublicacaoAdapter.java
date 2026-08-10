@@ -1,5 +1,6 @@
 package com.autoflow.infrastructure.orcamento;
 
+import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -15,23 +16,35 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 
 @Component
 @RequiredArgsConstructor
 public class OrcamentoPublicacaoAdapter implements OrcamentoPublicacaoGateway {
 
-    @Value("${app.public-base-url:http://localhost:8080}")
-    private String publicBaseUrl;
+    private final Clock clock;
     @Value("${app.public-token-secret:CHANGE_ME}")
     private String tokenSecret;
+    @Value("${app.public-base-url:http://localhost:8081}")
+    private String publicBaseUrl;
+    @Value("${app.public-token-expiration-days:7}")
+    private long tokenExpirationDays = 7;
     private final SecureRandom secureRandom = new SecureRandom();
 
     private final OrcamentoGateway orcamentoGateway;
+    @Value("${app.frontend-public-base-url:http://localhost:4200}")
+    private String frontendPublicBaseUrl;
 
     @Override
     public String publicar(Long orcamentoId) {
+        return publicarComLinks(orcamentoId).urlPdf();
+    }
+
+    @Override
+    public OrcamentoPublicacao publicarComLinks(Long orcamentoId) {
         OrcamentoEntity orcamento = orcamentoGateway.findById(orcamentoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado."));
 
@@ -44,18 +57,26 @@ public class OrcamentoPublicacaoAdapter implements OrcamentoPublicacaoGateway {
 
         orcamento.setPublicTokenHash(hash);
 
-        if (orcamento.getDisponibilizadoEm() == null) orcamento.setDisponibilizadoEm(LocalDateTime.now());
+        LocalDateTime agora = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+        orcamento.setPublicTokenExpiraEm(agora.plusDays(tokenExpirationDays));
+        if (orcamento.getDisponibilizadoEm() == null) orcamento.setDisponibilizadoEm(agora);
 
         orcamentoGateway.save(orcamento);
 
         String urlPdf = publicBaseUrl + "/public/orcamentos/" + orcamento.getId() + "/pdf?token=" + token;
+        String urlDecisao = frontendPublicBaseUrl + "/public/orcamentos/" + orcamento.getId() + "?token=" + token;
 
-        return urlPdf;
+        return new OrcamentoPublicacao(urlPdf, urlDecisao);
     }
 
     @Override
     public boolean validarToken(OrcamentoEntity orcamento, String token) {
-        if (token == null || orcamento.getPublicTokenHash() == null) return false;
+        if (token == null || orcamento.getPublicTokenHash() == null
+                || orcamento.getPublicTokenExpiraEm() == null) return false;
+
+        LocalDateTime agora = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+        if (!orcamento.getPublicTokenExpiraEm().isAfter(agora)) return false;
+
         String hash = sha256Hex(token + ":" + tokenSecret);
         return MessageDigest.isEqual(
                 hash.getBytes(StandardCharsets.UTF_8),

@@ -155,6 +155,14 @@ Durante o desenvolvimento foram adotadas práticas visando qualidade, segurança
 * Controle de status
 * Consulta detalhada
 
+### Orçamentos
+
+* Geração automática ao finalizar o diagnóstico
+* Aprovação e recusa por usuário autenticado
+* Consulta e download de PDF por token público
+* Aprovação e recusa externa por página pública, sem JWT
+* Expiração, hash e auditoria do token de publicação
+
 ---
 
 ## Segurança
@@ -167,6 +175,8 @@ Funcionalidades implementadas:
 * Controle de autorização por perfil
 * Endpoints públicos e privados
 * Senhas armazenadas de forma criptografada
+* Tokens públicos de orçamento aleatórios, persistidos somente como hash
+* Expiração configurável dos tokens públicos de orçamento
 
 ## Métricas do dashboard
 
@@ -205,6 +215,8 @@ A documentação funcional e técnica de apoio está organizada na pasta [`docs`
 * [Requisitos funcionais](../docs/requisitos-funcionais.md): descreve os fluxos esperados do sistema, atores, critérios de aceite e regras de negócio.
 * [Requisitos não funcionais](../docs/requisitos-nao-funcionais.md): consolida requisitos de arquitetura, segurança, qualidade, infraestrutura e operação local.
 * [Diagramas de sequência](../docs/diagramas-sequencia/diagrama-sequencia.md): centraliza os principais fluxos de interação da aplicação e aponta para os arquivos Mermaid separados por cenário.
+* [Fluxo de orçamento público](../docs/fluxo-orcamento-publico.md): documenta endpoints, token, expiração, efeitos na
+  OS, auditoria e erros do fluxo externo.
 
 Os diagramas foram separados em arquivos `.mermaid` para facilitar manutenção, versionamento e visualização individual dos fluxos.
 
@@ -216,11 +228,25 @@ Após iniciar a aplicação:
 
 Swagger UI:
 
-http://localhost:8080/swagger-ui.html
+http://localhost:8081/swagger-ui.html
 
 OpenAPI:
 
-http://localhost:8080/v3/api-docs
+http://localhost:8081/v3/api-docs
+
+### Endpoints públicos de orçamento
+
+Os endpoints abaixo não exigem JWT, mas exigem o token na query string:
+
+| Método | Rota                                        | Finalidade                           |
+|--------|---------------------------------------------|--------------------------------------|
+| `GET`  | `/public/orcamentos/{id}?token=...`         | Consulta pública sem dados sensíveis |
+| `GET`  | `/public/orcamentos/{id}/pdf?token=...`     | Download do PDF                      |
+| `POST` | `/public/orcamentos/{id}/aprovar?token=...` | Aprovação externa                    |
+| `POST` | `/public/orcamentos/{id}/recusar?token=...` | Recusa externa com motivo opcional   |
+
+O fluxo completo está documentado em
+[`docs/fluxo-orcamento-publico.md`](../docs/fluxo-orcamento-publico.md).
 
 ---
 
@@ -236,8 +262,17 @@ http://localhost:8080/v3/api-docs
 ### Variáveis de ambiente
 
 Defina `FRONTEND_PUBLIC_BASE_URL` com a URL pública do frontend usada nos links
-de acompanhamento enviados aos clientes. Quando não informada, o backend usa
+de acompanhamento e de decisão de orçamento enviados aos clientes. Quando não informada, o backend usa
 `http://localhost:4200` para desenvolvimento local.
+
+Para publicação de orçamento, configure também:
+
+* `APP_PUBLIC_BASE_URL`: URL pública da API usada no link direto do PDF;
+* `APP_PUBLIC_TOKEN_SECRET`: segredo utilizado junto ao hash do token público;
+* `APP_PUBLIC_TOKEN_EXPIRATION_DAYS`: validade do token em dias; padrão `7`.
+
+Em produção, `APP_PUBLIC_TOKEN_SECRET` deve ser longo, aleatório e diferente do
+valor de desenvolvimento.
 
 ### Clonar o projeto
 

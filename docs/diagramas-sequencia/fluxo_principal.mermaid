@@ -66,9 +66,9 @@ sequenceDiagram
     OrcamentoFactory-->>OSService: OrcamentoEntity DISPONIVEL
     OSService->>DB: Salva orcamento
     OSService->>Publicacao: publicar(orcamentoId)
-    Publicacao->>DB: Salva hash do token publico
-    Publicacao-->>OSService: URL publica do PDF
-    OSService->>Notificacao: enviarLinkOrcamentoParaCliente(orcamento, OS, URL)
+    Publicacao ->> DB: Salva hash e expiracao do token publico
+    Publicacao -->> OSService: URL do PDF e pagina de decisao
+    OSService ->> Notificacao: enviar links do PDF e da decisao ao cliente
     Notificacao->>Email: enviar(mensagem)
     Email-->>Notificacao: E-mail enviado ou erro tratado em log
     OSService->>DB: Atualiza OS para AGUARDANDO_APROVACAO e registra historico

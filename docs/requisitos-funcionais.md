@@ -64,6 +64,15 @@ O sistema deve permitir a criacao, acompanhamento e gestao administrativa de ord
 | Atores | Usuario administrativo, cliente |
 | Criterios de aceite | O orcamento deve ficar disponivel para aprovacao do cliente; a ordem de servico deve refletir o status adequado enquanto aguarda aprovacao. |
 
+### RF016 - Aprovar ou Recusar Orcamento por Link Publico
+
+| Campo               | Descricao                                                                                                                                                                                                                                                                                                                    |
+|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Prioridade          | Obrigatoria                                                                                                                                                                                                                                                                                                                  |
+| Descricao           | O sistema deve permitir que o cliente consulte, aprove ou recuse um orcamento por uma pagina publica protegida por token, sem autenticacao.                                                                                                                                                                                  |
+| Atores              | Cliente, sistema                                                                                                                                                                                                                                                                                                             |
+| Criterios de aceite | O link deve usar token aleatorio com hash persistido e expiracao; tokens invalidos ou expirados devem ser rejeitados sem alterar estados; a mesma decisao deve ser idempotente; decisoes conflitantes devem ser bloqueadas; a decisao deve registrar data, assinatura quando disponivel e motivo de recusa quando informado. |
+
 ### RF007 - Controlar Status da Ordem de Servico
 
 | Campo | Descricao |
@@ -147,10 +156,12 @@ O sistema deve permitir a criacao, acompanhamento e gestao administrativa de ord
 
 ## 4. Regras de Negocio Relacionadas
 
-| Codigo | Regra |
-| --- | --- |
-| RN001 | Uma ordem de servico deve estar vinculada a um cliente e a um veiculo. |
-| RN002 | Uma ordem de servico deve possuir pelo menos um servico solicitado. |
-| RN003 | O orcamento deve ser calculado a partir da soma dos servicos, pecas e insumos vinculados. |
-| RN004 | Pecas e insumos devem respeitar a disponibilidade de estoque. |
-| RN005 | O cliente deve conseguir acompanhar apenas informacoes permitidas sobre suas ordens de servico. |
+| Codigo | Regra                                                                                                                                              |
+|--------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| RN001  | Uma ordem de servico deve estar vinculada a um cliente e a um veiculo.                                                                             |
+| RN002  | Uma ordem de servico deve possuir pelo menos um servico solicitado.                                                                                |
+| RN003  | O orcamento deve ser calculado a partir da soma dos servicos, pecas e insumos vinculados.                                                          |
+| RN004  | Pecas e insumos devem respeitar a disponibilidade de estoque.                                                                                      |
+| RN005  | O cliente deve conseguir acompanhar apenas informacoes permitidas sobre suas ordens de servico.                                                    |
+| RN006  | O link publico de orcamento deve validar token hash e expiracao antes de permitir consulta, download ou decisao.                                   |
+| RN007  | A aprovacao ou recusa publica deve reutilizar as regras de negocio das decisoes autenticadas e nao depender somente do ID previsivel do orcamento. |
