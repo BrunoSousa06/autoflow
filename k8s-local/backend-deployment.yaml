@@ -17,7 +17,7 @@ spec:
       containers:
         - name: autoflow-backend-container
           image: brunosousa06/autoflow-backend:latest
-          imagePullPolicy: IfNotPresent 
+          imagePullPolicy: Always 
           resources:
             requests:
               cpu: "250m"   
