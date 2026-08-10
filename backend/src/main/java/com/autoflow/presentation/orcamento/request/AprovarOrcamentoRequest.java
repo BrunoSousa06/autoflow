@@ -1,4 +1,9 @@
 package com.autoflow.presentation.orcamento.request;
 
-public record AprovarOrcamentoRequest(String nome) {
+import jakarta.validation.constraints.Size;
+
+public record AprovarOrcamentoRequest(
+        @Size(max = 120, message = "Nome da assinatura deve ter no máximo 120 caracteres")
+        String nome
+) {
 }

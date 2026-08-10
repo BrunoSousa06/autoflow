@@ -18,12 +18,13 @@ autoflow/
 
 Este repositório possui três arquivos README, cada um com um objetivo específico:
 
-| Arquivo | Finalidade |
-|---------|------------|
-| `README.md` | Documentação principal do projeto AutoFlow, com visão geral, arquitetura, execução completa, fluxos principais e aderência ao Tech Challenge. |
-| `backend/README.md` | Documentação técnica da API Spring Boot, incluindo execução local, variáveis de ambiente, testes, Swagger, Flyway e Docker. |
-| `frontend/README.md` | Documentação técnica do frontend Angular, incluindo execução local, estrutura, environments, build e Docker/Nginx. |
-| `backend/docs/diagrama-sequencia.md` | Diagramas de sequência dos principais fluxos do sistema: OS, orçamento e reparo adicional. |
+| Arquivo                                          | Finalidade                                                                                                                                    |
+|--------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `README.md`                                      | Documentação principal do projeto AutoFlow, com visão geral, arquitetura, execução completa, fluxos principais e aderência ao Tech Challenge. |
+| `backend/README.md`                              | Documentação técnica da API Spring Boot, incluindo execução local, variáveis de ambiente, testes, Swagger, Flyway e Docker.                   |
+| `frontend/README.md`                             | Documentação técnica do frontend Angular, incluindo execução local, estrutura, environments, build e Docker/Nginx.                            |
+| `docs/diagramas-sequencia/diagrama-sequencia.md` | Índice dos diagramas de sequência dos principais fluxos do sistema.                                                                           |
+| `docs/fluxo-orcamento-publico.md`                | Fluxo técnico de consulta, download, aprovação e recusa de orçamento por link público.                                                        |
 
 Para uma visão geral da solução, comece por este arquivo. Para detalhes técnicos de cada aplicação, consulte o README correspondente.
 
@@ -84,17 +85,17 @@ Boas práticas adotadas: SOLID, injeção de dependências, tratamento centraliz
 
 ## Funcionalidades
 
-| Módulo              | Detalhe                                                                 |
-|---------------------|-------------------------------------------------------------------------|
-| Usuários            | Cadastro, autenticação, perfis de acesso, e-mail único                  |
-| Clientes            | CRUD, exclusão lógica, validação CPF/CNPJ                               |
-| Veículos            | Cadastro e associação com clientes                                      |
-| Serviços            | Catálogo de serviços com exclusão lógica                                |
-| Peças e Insumos     | Catálogo de peças e insumos utilizados nas OS                           |
-| Ordens de Serviço   | Abertura, diagnóstico, inclusão de itens, controle de status            |
-| Orçamentos          | Geração automática, aprovação/recusa, download em PDF                   |
-| Reparos Adicionais  | Solicitação durante execução, orçamento adicional com e-mail ao cliente |
-| Minha Conta         | Área do cliente: perfil, OS próprias, aprovação de orçamentos           |
+| Módulo             | Detalhe                                                                      |
+|--------------------|------------------------------------------------------------------------------|
+| Usuários           | Cadastro, autenticação, perfis de acesso, e-mail único                       |
+| Clientes           | CRUD, exclusão lógica, validação CPF/CNPJ                                    |
+| Veículos           | Cadastro e associação com clientes                                           |
+| Serviços           | Catálogo de serviços com exclusão lógica                                     |
+| Peças e Insumos    | Catálogo de peças e insumos utilizados nas OS                                |
+| Ordens de Serviço  | Abertura, diagnóstico, inclusão de itens, controle de status                 |
+| Orçamentos         | Geração automática, aprovação/recusa autenticada ou externa, download em PDF |
+| Reparos Adicionais | Solicitação durante execução, orçamento adicional com e-mail ao cliente      |
+| Minha Conta        | Área do cliente: perfil, OS próprias, aprovação de orçamentos                |
 
 ---
 
@@ -128,6 +129,17 @@ Usuários criados pelo seed do banco (senha padrão: `Senha@1234`):
 2. Acesse `/orcamentos/:id` ou o detalhe da OS
 3. Clique em **Baixar PDF** — o arquivo é gerado pelo backend e baixado no navegador
 
+### Aprovação externa do orçamento
+
+1. Ao publicar um orçamento, o backend gera um token aleatório com validade configurável.
+2. O cliente recebe por e-mail um link público para `/public/orcamentos/:id?token=...`.
+3. A página pública permite consultar os valores, baixar o PDF e aprovar ou recusar sem login.
+4. A aprovação do orçamento principal coloca a OS em `EM_EXECUCAO`; a recusa segue a regra vigente de finalização.
+5. Tokens inválidos, divergentes ou expirados não alteram o orçamento nem a OS.
+
+Detalhes de endpoints, segurança, configuração e auditoria estão em
+[`docs/fluxo-orcamento-publico.md`](docs/fluxo-orcamento-publico.md).
+
 ### Reparo adicional
 
 1. **Mecânico** → abre uma OS em status `EM_EXECUCAO` → clica em **"Identificar reparo adicional"**
@@ -140,24 +152,25 @@ Usuários criados pelo seed do banco (senha padrão: `Senha@1234`):
 
 ## Rotas do Frontend
 
-| Rota                                   | Roles permitidas           | Descrição                         |
-|----------------------------------------|----------------------------|------------------------------------|
-| `/login`                               | Público                    | Autenticação                       |
-| `/dashboard`                           | ADMIN, ATENDENTE, MECANICO | Métricas e indicadores             |
-| `/clientes`                            | ADMIN, ATENDENTE           | Lista e cadastro de clientes       |
-| `/usuarios`                            | ADMIN, ATENDENTE           | Cadastro de mecânicos/atendentes   |
-| `/veiculos`                            | ADMIN, ATENDENTE, CLIENTE  | Lista de veículos                  |
-| `/ordens-servico`                      | ADMIN, ATENDENTE, MECANICO | Lista de ordens de serviço         |
-| `/ordens-servico/:numeroOs`            | ADMIN, ATENDENTE, MECANICO | Detalhe e ações da OS              |
-| `/orcamentos`                          | ADMIN, ATENDENTE           | Lista de orçamentos                |
-| `/orcamentos/:id`                      | ADMIN, ATENDENTE, CLIENTE  | Detalhe do orçamento + PDF         |
-| `/reparos-adicionais`                  | ADMIN, ATENDENTE           | Lista de reparos adicionais        |
-| `/servicos`                            | ADMIN, ATENDENTE, MECANICO | Catálogo de serviços               |
-| `/peca-insumo`                         | ADMIN, ATENDENTE, MECANICO | Catálogo de peças e insumos        |
-| `/minha-conta`                         | CLIENTE                    | Perfil do cliente                  |
-| `/minha-conta/minhas-ordens`           | CLIENTE                    | OS do cliente logado               |
-| `/minha-conta/minhas-ordens/:numeroOs` | CLIENTE                    | Detalhe da OS + aprovar orçamento  |
-| `/public/acompanhamento?token=...`     | Público                    | Acompanha o progresso da OS por link seguro |
+| Rota                                   | Roles permitidas           | Descrição                                       |
+|----------------------------------------|----------------------------|-------------------------------------------------|
+| `/login`                               | Público                    | Autenticação                                    |
+| `/dashboard`                           | ADMIN, ATENDENTE, MECANICO | Métricas e indicadores                          |
+| `/clientes`                            | ADMIN, ATENDENTE           | Lista e cadastro de clientes                    |
+| `/usuarios`                            | ADMIN, ATENDENTE           | Cadastro de mecânicos/atendentes                |
+| `/veiculos`                            | ADMIN, ATENDENTE, CLIENTE  | Lista de veículos                               |
+| `/ordens-servico`                      | ADMIN, ATENDENTE, MECANICO | Lista de ordens de serviço                      |
+| `/ordens-servico/:numeroOs`            | ADMIN, ATENDENTE, MECANICO | Detalhe e ações da OS                           |
+| `/orcamentos`                          | ADMIN, ATENDENTE           | Lista de orçamentos                             |
+| `/orcamentos/:id`                      | ADMIN, ATENDENTE, CLIENTE  | Detalhe do orçamento + PDF                      |
+| `/reparos-adicionais`                  | ADMIN, ATENDENTE           | Lista de reparos adicionais                     |
+| `/servicos`                            | ADMIN, ATENDENTE, MECANICO | Catálogo de serviços                            |
+| `/peca-insumo`                         | ADMIN, ATENDENTE, MECANICO | Catálogo de peças e insumos                     |
+| `/minha-conta`                         | CLIENTE                    | Perfil do cliente                               |
+| `/minha-conta/minhas-ordens`           | CLIENTE                    | OS do cliente logado                            |
+| `/minha-conta/minhas-ordens/:numeroOs` | CLIENTE                    | Detalhe da OS + aprovar orçamento               |
+| `/public/acompanhamento?token=...`     | Público                    | Acompanha o progresso da OS por link seguro     |
+| `/public/orcamentos/:id?token=...`     | Público                    | Consulta, PDF, aprovação ou recusa do orçamento |
 
 ---
 
@@ -269,10 +282,10 @@ terraform apply
 
 Com o backend rodando:
 
-| Interface  | URL                                    |
-|------------|----------------------------------------|
-| Swagger UI | http://localhost:8080/swagger-ui.html  |
-| OpenAPI    | http://localhost:8080/v3/api-docs      |
+| Interface  | URL                                   |
+|------------|---------------------------------------|
+| Swagger UI | http://localhost:8081/swagger-ui.html |
+| OpenAPI    | http://localhost:8081/v3/api-docs     |
 
 ---
 
@@ -282,6 +295,7 @@ Com o backend rodando:
 - Controle de autorização por perfil (ADMIN, ATENDENTE, MECANICO, CLIENTE)
 - Senhas armazenadas com hash
 - Endpoints públicos e privados segregados
+- Tokens públicos de orçamento armazenados como hash e protegidos por expiração
 - Validações: CPF, CNPJ, e-mail único, campos obrigatórios, formatos específicos
 
 ---

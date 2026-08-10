@@ -72,6 +72,28 @@ class RecusarOrcamentoUseCaseTest {
     }
 
     @Test
+    void deveSerIdempotenteQuandoOrcamentoJaEstiverRecusado() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+        orcamento.setStatus(StatusOrcamento.REPROVADO);
+
+        assertSame(orcamento, useCase.execute(orcamento, "Novo motivo", "Maria"));
+
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
+    }
+
+    @Test
+    void deveBloquearRecusaConflitanteDepoisDaAprovacao() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+        orcamento.setStatus(StatusOrcamento.APROVADO);
+
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute(orcamento, null, "Maria"));
+
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
+    }
+
+    @Test
     void deveRejeitarMotivoMaiorQueLimiteDaColuna() {
         OrcamentoEntity orcamento = orcamentoDisponivel();
         String motivo = "x".repeat(501);

@@ -38,12 +38,13 @@ public class OrcamentoNotificacaoAdapter implements OrcamentoNotificacaoGateway 
                 
                 Para baixar o PDF do orçamento, acesse o link abaixo:
                 
-                %s
+                %s%s
                 
                 Atenciosamente,
                 AutoFlow
                 """.formatted(
-                notificacao.clienteNome(), notificacao.orcamentoId(), notificacao.numeroOs(), notificacao.urlPublica());
+                notificacao.clienteNome(), notificacao.orcamentoId(), notificacao.numeroOs(),
+                notificacao.urlPublica(), trechoLinkDecisao(notificacao, "Para aprovar ou recusar o orçamento, acesse:"));
     }
 
     private String mensagemComplementar(OrcamentoNotificacao notificacao) {
@@ -56,13 +57,22 @@ public class OrcamentoNotificacaoAdapter implements OrcamentoNotificacaoGateway 
                 
                 Para baixar o PDF do orçamento complementar, acesse o link abaixo:
                 
-                %s
+                %s%s
                 
                 Importante: este orçamento é complementar ao orçamento principal já aprovado.
                 
                 Atenciosamente,
                 AutoFlow
                 """.formatted(
-                notificacao.clienteNome(), notificacao.numeroOs(), notificacao.orcamentoId(), notificacao.urlPublica());
+                notificacao.clienteNome(), notificacao.numeroOs(), notificacao.orcamentoId(),
+                notificacao.urlPublica(), trechoLinkDecisao(
+                        notificacao,
+                        "Para aprovar ou recusar o orçamento complementar, acesse:"));
+    }
+
+    private String trechoLinkDecisao(OrcamentoNotificacao notificacao, String label) {
+        return StringUtils.hasText(notificacao.urlDecisao())
+                ? "\n\n" + label + "\n\n" + notificacao.urlDecisao() + "\n"
+                : "";
     }
 }

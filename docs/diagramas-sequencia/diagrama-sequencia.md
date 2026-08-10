@@ -6,11 +6,12 @@ Os diagramas foram separados em arquivos `.mermaid` para facilitar leitura, manu
 
 ## Indice dos diagramas
 
-| Fluxo | Arquivo | Objetivo |
-| --- | --- | --- |
-| Ciclo principal da ordem de servico | [fluxo_principal.mermaid](fluxo_principal.mermaid) | Descrever a abertura da OS, diagnostico, geracao de orcamento e notificacao do cliente. |
-| Aprovacao ou recusa do orcamento | [aprovacao_recusa_orcamento.mermaid](aprovacao_recusa_orcamento.mermaid) | Mostrar a decisao do cliente e as transicoes de status decorrentes. |
-| Execucao da OS e reparo adicional | [execucao_os_reparo_adicional.mermaid](execucao_os_reparo_adicional.mermaid) | Apresentar uma visao resumida da execucao dos servicos, baixa de estoque, reparo adicional e transicao da OS para Finalizada. |
+| Fluxo                                | Arquivo                                                                                  | Objetivo                                                                                                                      |
+|--------------------------------------|------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| Ciclo principal da ordem de servico  | [fluxo_principal.mermaid](fluxo_principal.mermaid)                                       | Descrever a abertura da OS, diagnostico, geracao de orcamento e notificacao do cliente.                                       |
+| Aprovacao ou recusa do orcamento     | [aprovacao_recusa_orcamento.mermaid](aprovacao_recusa_orcamento.mermaid)                 | Mostrar a decisao do cliente e as transicoes de status decorrentes.                                                           |
+| Aprovacao ou recusa por link publico | [aprovacao_recusa_orcamento_publico.mermaid](aprovacao_recusa_orcamento_publico.mermaid) | Mostrar a validacao do token, a pagina publica e os efeitos da decisao externa.                                               |
+| Execucao da OS e reparo adicional    | [execucao_os_reparo_adicional.mermaid](execucao_os_reparo_adicional.mermaid)             | Apresentar uma visao resumida da execucao dos servicos, baixa de estoque, reparo adicional e transicao da OS para Finalizada. |
 
 ## 1. Ciclo principal da ordem de servico
 
@@ -38,6 +39,21 @@ Principais pontos representados:
 - Atualizacao do status conforme a decisao tomada.
 
 Arquivo: [aprovacao_recusa_orcamento.mermaid](aprovacao_recusa_orcamento.mermaid)
+
+## 2.1 Aprovacao ou recusa por link publico
+
+Este fluxo mostra a decisao sem autenticacao JWT. O cliente acessa uma pagina
+publica protegida por token, e a alteracao de estado somente ocorre nos
+endpoints `POST` de aprovacao ou recusa.
+
+Principais pontos representados:
+
+- Hash e expiracao do token validados antes da consulta e da decisao.
+- Consulta publica sem exposicao de dados sensiveis.
+- Idempotencia da mesma decisao e bloqueio de decisoes conflitantes.
+- Atualizacao da OS principal ou do reparo adicional vinculado.
+
+Arquivo: [aprovacao_recusa_orcamento_publico.mermaid](aprovacao_recusa_orcamento_publico.mermaid)
 
 ## 3. Execucao da OS e reparo adicional
 

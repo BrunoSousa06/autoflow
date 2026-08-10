@@ -68,6 +68,28 @@ class AprovarOrcamentoUseCaseTest {
         verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
     }
 
+    @Test
+    void deveSerIdempotenteQuandoOrcamentoJaEstiverAprovado() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+        orcamento.setStatus(StatusOrcamento.APROVADO);
+
+        assertSame(orcamento, useCase.execute(orcamento, "Maria"));
+
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
+    }
+
+    @Test
+    void deveBloquearAprovacaoConflitanteDepoisDaRecusa() {
+        OrcamentoEntity orcamento = orcamentoDisponivel();
+        orcamento.setStatus(StatusOrcamento.REPROVADO);
+
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute(orcamento, "Maria"));
+
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
+    }
+
     private OrcamentoEntity orcamentoDisponivel() {
         OrcamentoEntity orcamento = new OrcamentoEntity();
         orcamento.setId(10L); orcamento.setOrdemServicoId(1L); orcamento.setStatus(StatusOrcamento.DISPONIVEL);

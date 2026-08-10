@@ -1,6 +1,7 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
+import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
@@ -80,9 +81,10 @@ public class CriarReparoAdicionalUseCase {
         );
 
         reparoSalvo.setOrcamentoId(orcamento.getId());
-        String urlPublica = orcamentoPublicacaoGateway.publicar(orcamento.getId());
+        OrcamentoPublicacao publicacao = orcamentoPublicacaoGateway.publicarComLinks(orcamento.getId());
+        String urlPublica = publicacao.urlPdf();
 
-        tentarNotificar(orcamento, urlPublica);
+        tentarNotificar(orcamento, publicacao);
         reparoAdicionalGateway.save(reparoSalvo);
 
         return new CriarReparoAdicionalOutput(
@@ -216,13 +218,13 @@ public class CriarReparoAdicionalUseCase {
 
     private void tentarNotificar(
             OrcamentoEntity orcamento,
-            String urlPublica
+            OrcamentoPublicacao publicacao
     ) {
         try {
             var cliente = orcamento.getCliente();
             orcamentoNotificacaoGateway.notificar(new OrcamentoNotificacao(
                     orcamento.getId(), orcamento.getTipo(), orcamento.getNumeroOs(),
-                    cliente.getNome(), cliente.getEmail(), urlPublica));
+                    cliente.getNome(), cliente.getEmail(), publicacao.urlPdf(), publicacao.urlDecisao()));
         } catch (Exception exception) {
             log.error(
                     "Falha ao notificar cliente sobre orçamento complementar. orcamentoId={}",

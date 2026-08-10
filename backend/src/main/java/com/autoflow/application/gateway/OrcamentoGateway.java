@@ -14,6 +14,10 @@ public interface OrcamentoGateway {
 
     Optional<OrcamentoEntity> findById(Long id);
 
+    default Optional<OrcamentoEntity> findByIdForUpdate(Long id) {
+        return findById(id);
+    }
+
     Optional<OrcamentoEntity> findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(
             Long ordemServicoId,
             TipoOrcamento tipoOrcamento);

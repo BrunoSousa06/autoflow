@@ -24,8 +24,12 @@ public class AprovarOrcamentoUseCase {
     @TransactionalUseCase
     public OrcamentoEntity execute(OrcamentoEntity orcamento, String assinaturaNome
     ) {
-        if (orcamento.getStatus() == StatusOrcamento.APROVADO || orcamento.getStatus() == StatusOrcamento.REPROVADO) {
+        if (orcamento.getStatus() == StatusOrcamento.APROVADO) {
             return orcamento;
+        }
+        if (orcamento.getStatus() == StatusOrcamento.REPROVADO) {
+            throw ApplicationException.badRequest(
+                    "Orçamento já recusado, não é possível aprovar");
         }
         if (orcamento.getStatus() != StatusOrcamento.DISPONIVEL) {
             throw ApplicationException.badRequest("Orçamento nao esta disponível");

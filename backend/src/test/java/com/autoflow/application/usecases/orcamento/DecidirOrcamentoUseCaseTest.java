@@ -2,6 +2,7 @@ package com.autoflow.application.usecases.orcamento;
 
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
+import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -16,13 +17,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DecidirOrcamentoUseCaseTest {
 
     @Mock private OrcamentoGateway orcamentoGateway;
+    @Mock
+    private OrcamentoPublicacaoGateway publicacaoGateway;
     @Mock private UsuarioGateway usuarioGateway;
     @Mock private AprovarOrcamentoUseCase aprovarOrcamentoUseCase;
     @Mock private RecusarOrcamentoUseCase recusarOrcamentoUseCase;
@@ -31,7 +33,7 @@ class DecidirOrcamentoUseCaseTest {
     @Test
     void deveAprovarAposAutorizarUsuario() {
         OrcamentoEntity orcamento = orcamento();
-        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
         when(usuarioGateway.findByEmail("cliente@exemplo.com")).thenReturn(Optional.of(usuario("Maria", RoleEnum.CLIENTE)));
         when(aprovarOrcamentoUseCase.execute(orcamento, "Maria")).thenReturn(orcamento);
 
@@ -43,7 +45,7 @@ class DecidirOrcamentoUseCaseTest {
     @Test
     void deveRecusarAposAutorizarUsuario() {
         OrcamentoEntity orcamento = orcamento();
-        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
         when(usuarioGateway.findByEmail("cliente@exemplo.com")).thenReturn(Optional.of(usuario("Maria", RoleEnum.CLIENTE)));
         when(recusarOrcamentoUseCase.execute(orcamento, "Não quero", "Maria")).thenReturn(orcamento);
 
@@ -55,7 +57,7 @@ class DecidirOrcamentoUseCaseTest {
     @Test
     void deveNegarDecisaoDeClienteSobreOrcamentoDeOutroCliente() {
         OrcamentoEntity orcamento = orcamento();
-        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
         when(usuarioGateway.findByEmail("outro@exemplo.com")).thenReturn(Optional.of(usuario("Outro", RoleEnum.CLIENTE)));
 
         ApplicationException exception = assertThrows(ApplicationException.class,
@@ -67,7 +69,7 @@ class DecidirOrcamentoUseCaseTest {
     @Test
     void deveNegarDecisaoDeMecanicoMesmoQuandoOrcamentoExiste() {
         OrcamentoEntity orcamento = orcamento();
-        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
         when(usuarioGateway.findByEmail("mecanico@exemplo.com"))
                 .thenReturn(Optional.of(usuario("Mecânico", RoleEnum.MECANICO)));
 
@@ -80,12 +82,49 @@ class DecidirOrcamentoUseCaseTest {
     @Test
     void deveAprovarPorAcompanhamentoComNomeDoCliente() {
         OrcamentoEntity orcamento = orcamento();
-        when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orcamento));
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
         when(aprovarOrcamentoUseCase.execute(orcamento, "Cliente")).thenReturn(orcamento);
 
         assertSame(orcamento, useCase.aprovarDaOrdem(10L, "OS-123"));
 
         verify(aprovarOrcamentoUseCase).execute(orcamento, "Cliente");
+    }
+
+    @Test
+    void deveAprovarComTokenPublicoERegistrarNomeInformado() {
+        OrcamentoEntity orcamento = orcamento();
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
+        when(publicacaoGateway.validarToken(orcamento, "token-valido")).thenReturn(true);
+        when(aprovarOrcamentoUseCase.execute(orcamento, "Maria")).thenReturn(orcamento);
+
+        assertSame(orcamento, useCase.aprovarComoToken(10L, "token-valido", "Maria"));
+
+        verify(aprovarOrcamentoUseCase).execute(orcamento, "Maria");
+    }
+
+    @Test
+    void deveRecusarComTokenPublicoSemNomeUsandoNomeDoCliente() {
+        OrcamentoEntity orcamento = orcamento();
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
+        when(publicacaoGateway.validarToken(orcamento, "token-valido")).thenReturn(true);
+        when(recusarOrcamentoUseCase.execute(orcamento, "Muito caro", "Cliente")).thenReturn(orcamento);
+
+        assertSame(orcamento, useCase.recusarComoToken(10L, "token-valido", "Muito caro", null));
+
+        verify(recusarOrcamentoUseCase).execute(orcamento, "Muito caro", "Cliente");
+    }
+
+    @Test
+    void deveRejeitarDecisaoPublicaQuandoTokenForInvalido() {
+        OrcamentoEntity orcamento = orcamento();
+        when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
+        when(publicacaoGateway.validarToken(orcamento, "token-invalido")).thenReturn(false);
+
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.aprovarComoToken(10L, "token-invalido", null));
+
+        assertEquals(ApplicationException.ErrorType.UNAUTHORIZED, exception.type());
+        verifyNoInteractions(aprovarOrcamentoUseCase, recusarOrcamentoUseCase);
     }
 
     private OrcamentoEntity orcamento() {

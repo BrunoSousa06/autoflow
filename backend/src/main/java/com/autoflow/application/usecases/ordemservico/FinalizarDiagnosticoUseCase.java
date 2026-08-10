@@ -1,5 +1,6 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
@@ -46,12 +47,13 @@ public class FinalizarDiagnosticoUseCase {
         OrcamentoEntity orcamento = orcamentoFactory.criarPrincipalDisponivel(os, versao, agora);
         os.aguardarAprovacao();
         OrcamentoEntity salvo = orcamentoGateway.save(orcamento);
-        String publicUrl = publicacaoGateway.publicar(salvo.getId());
+        OrcamentoPublicacao publicacao = publicacaoGateway.publicarComLinks(salvo.getId());
+        String publicUrl = publicacao.urlPdf();
         try {
             var cliente = salvo.getCliente();
             notificacaoGateway.notificar(new com.autoflow.application.dto.notificacao.OrcamentoNotificacao(
                     salvo.getId(), salvo.getTipo(), salvo.getNumeroOs(),
-                    cliente.getNome(), cliente.getEmail(), publicUrl));
+                    cliente.getNome(), cliente.getEmail(), publicUrl, publicacao.urlDecisao()));
         } catch (Exception exception) {
             log.error("Falha ao notificar cliente sobre orçamento da OS {}. orcamentoId={}", numeroOs, salvo.getId(), exception);
         }

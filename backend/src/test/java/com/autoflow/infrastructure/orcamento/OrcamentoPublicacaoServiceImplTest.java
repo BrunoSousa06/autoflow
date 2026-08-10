@@ -1,5 +1,6 @@
 package com.autoflow.infrastructure.orcamento;
 
+import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -12,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Month;
+import java.time.*;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,6 +26,9 @@ class OrcamentoPublicacaoServiceImplTest {
 
     @Mock
     OrcamentoGateway orcamentoGateway;
+
+    @Mock
+    Clock clock;
 
     @InjectMocks
     OrcamentoPublicacaoAdapter service;
@@ -41,12 +45,17 @@ class OrcamentoPublicacaoServiceImplTest {
 
         ReflectionTestUtils.setField(service, "publicBaseUrl", "http://localhost:8080");
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
+        ReflectionTestUtils.setField(service, "frontendPublicBaseUrl", "http://localhost:4200");
+        when(clock.instant()).thenReturn(Instant.parse("2026-06-04T12:00:00Z"));
 
-        String result = service.publicar(10L);
+        OrcamentoPublicacao result = service.publicarComLinks(10L);
 
         assertNotNull(orc.getPublicTokenHash());
+        assertEquals(LocalDateTime.ofInstant(Instant.parse("2026-06-11T12:00:00Z"), ZoneOffset.UTC),
+                orc.getPublicTokenExpiraEm());
         assertNotNull(orc.getDisponibilizadoEm());
-        assertTrue(result.startsWith("http://localhost:8080/public/orcamentos/10/pdf?token="));
+        assertTrue(result.urlPdf().startsWith("http://localhost:8080/public/orcamentos/10/pdf?token="));
+        assertTrue(result.urlDecisao().startsWith("http://localhost:4200/public/orcamentos/10?token="));
         verify(orcamentoGateway).save(orc);
     }
 
@@ -63,6 +72,7 @@ class OrcamentoPublicacaoServiceImplTest {
 
         ReflectionTestUtils.setField(service, "publicBaseUrl", "http://localhost:8080");
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
+        when(clock.instant()).thenReturn(Instant.parse("2026-06-04T12:00:00Z"));
 
         service.publicar(10L);
 
@@ -103,13 +113,29 @@ class OrcamentoPublicacaoServiceImplTest {
     @Test
     void validarToken_deveValidarHashComSecret() {
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
+        when(clock.instant()).thenReturn(Instant.parse("2026-06-04T12:00:00Z"));
 
         OrcamentoEntity orc = new OrcamentoEntity();
         String token = "abc";
         String hash = ReflectionTestUtils.invokeMethod(service, "sha256Hex", token + ":" + "local-secret");
         orc.setPublicTokenHash(hash);
+        orc.setPublicTokenExpiraEm(LocalDateTime.of(2026, Month.JUNE, 5, 12, 0));
 
         assertTrue(service.validarToken(orc, token));
         assertFalse(service.validarToken(orc, "token-invalido"));
+    }
+
+    @Test
+    void validarToken_deveRetornarFalseQuandoExpirado() {
+        ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
+        when(clock.instant()).thenReturn(Instant.parse("2026-06-05T12:00:00Z"));
+
+        OrcamentoEntity orc = new OrcamentoEntity();
+        String token = "abc";
+        orc.setPublicTokenHash(ReflectionTestUtils.invokeMethod(
+                service, "sha256Hex", token + ":local-secret"));
+        orc.setPublicTokenExpiraEm(LocalDateTime.of(2026, Month.JUNE, 5, 12, 0));
+
+        assertFalse(service.validarToken(orc, token));
     }
 }

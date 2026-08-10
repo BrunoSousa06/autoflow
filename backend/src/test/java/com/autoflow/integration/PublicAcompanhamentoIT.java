@@ -1,5 +1,6 @@
 package com.autoflow.integration;
 
+import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import com.autoflow.integration.config.AbstractIT;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,9 @@ class PublicAcompanhamentoIT extends AbstractIT {
 
     @Autowired
     private TokenAcompanhamentoGateway tokenGateway;
+
+    @Autowired
+    private OrcamentoPublicacaoGateway orcamentoPublicacaoGateway;
 
     @BeforeEach
     void configurar() {
@@ -88,6 +92,62 @@ class PublicAcompanhamentoIT extends AbstractIT {
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT status FROM ordem_servico WHERE id = ?", String.class, ordemServicoId))
                 .isEqualTo("EM_EXECUCAO");
+    }
+
+    @Test
+    @DisplayName("deve aprovar orçamento pelo token público do orçamento")
+    void deveAprovarOrcamentoComTokenDoOrcamento() {
+        Long ordemServicoId = inserirOrdemServicoParaAprovacao(
+                TOKEN, LocalDateTime.now().plusDays(1));
+        Long orcamentoId = inserirOrcamentoDisponivel(ordemServicoId);
+        String urlPublica = orcamentoPublicacaoGateway.publicar(orcamentoId);
+        String token = urlPublica.substring(urlPublica.indexOf("token=") + 6);
+
+        var pdfResponse = restTemplate.getForEntity(
+                "/public/orcamentos/" + orcamentoId + "/pdf?token=" + token,
+                byte[].class
+        );
+        assertThat(pdfResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        var response = restTemplate.postForEntity(
+                "/public/orcamentos/" + orcamentoId + "/aprovar?token=" + token,
+                null,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parseJson(response.getBody()).get("status").asText()).isEqualTo("APROVADO");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT status FROM ordem_servico WHERE id = ?", String.class, ordemServicoId))
+                .isEqualTo("EM_EXECUCAO");
+    }
+
+    @Test
+    @DisplayName("deve rejeitar decisão quando o token do orçamento estiver expirado")
+    void deveRejeitarDecisaoComTokenDoOrcamentoExpirado() {
+        Long ordemServicoId = inserirOrdemServicoParaAprovacao(
+                TOKEN, LocalDateTime.now().plusDays(1));
+        Long orcamentoId = inserirOrcamentoDisponivel(ordemServicoId);
+        String urlPublica = orcamentoPublicacaoGateway.publicar(orcamentoId);
+        String token = urlPublica.substring(urlPublica.indexOf("token=") + 6);
+        jdbcTemplate.update(
+                "UPDATE orcamento SET public_token_expira_em = NOW() - INTERVAL '1 minute' WHERE id = ?",
+                orcamentoId
+        );
+
+        var response = restTemplate.postForEntity(
+                "/public/orcamentos/" + orcamentoId + "/recusar?token=" + token,
+                jsonEntity(java.util.Map.of("motivo", "Prazo expirado")),
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT status FROM orcamento WHERE id = ?", String.class, orcamentoId))
+                .isEqualTo("DISPONIVEL");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT status FROM ordem_servico WHERE id = ?", String.class, ordemServicoId))
+                .isEqualTo("AGUARDANDO_APROVACAO");
     }
 
     @Test
