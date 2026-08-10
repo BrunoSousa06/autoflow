@@ -33,7 +33,9 @@ build/
 
 ### VS Code ###
 .vscode/
-
+/.claude
+/docs
+backend/.m2
 
 ###Terraform###
 *.terraform
