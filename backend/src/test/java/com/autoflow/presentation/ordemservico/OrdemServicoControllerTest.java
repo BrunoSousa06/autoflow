@@ -368,6 +368,24 @@ class OrdemServicoControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ATENDENTE")
+    void deveAceitarFiltroDeStatusFinalizadaParaConsultaOperacional() throws Exception {
+        when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(PageQuery.class), anyString()))
+                .thenReturn(new PageResult<>(List.of(), 0, 0, 10));
+
+        mockMvc.perform(get("/ordens-servico").param("status", "FINALIZADA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.page.totalElements").value(0));
+
+        verify(listarOrdensServicoUseCase).execute(
+                argThat(f -> StatusOrdemServico.FINALIZADA.equals(f.status())),
+                any(PageQuery.class),
+                anyString()
+        );
+    }
+
+    @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveListarOrdensServicoComoMecanicoPassandoSeuEmail() throws Exception {
         OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");

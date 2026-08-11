@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -285,7 +284,7 @@ public class OrdemServicoController {
 
     @Operation(
             summary = "Listar ordens de serviço",
-            description = "Lista as ordens de serviço com suporte a paginação e filtragem por cliente (nome/CPF/CNPJ), número da OS e status. Ordenação padrão por data de abertura decrescente."
+            description = "Lista a fila operacional paginada de ordens de serviço, filtrando por cliente (nome/CPF/CNPJ), número da OS e status. Retorna somente OS EM_EXECUCAO, AGUARDANDO_APROVACAO, EM_DIAGNOSTICO e RECEBIDA, nesta prioridade e com as mais antigas primeiro dentro de cada status. OS FINALIZADA e ENTREGUE permanecem persistidas, mas não aparecem nesta consulta."
     )
     @ApiResponse(responseCode = "200", description = "Ordens de serviço listadas com sucesso")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
@@ -301,7 +300,7 @@ public class OrdemServicoController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         OrdemServicoFiltroInput filtro = new OrdemServicoFiltroInput(cliente, numeroOs, status);
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataAbertura"));
+        PageRequest pageable = PageRequest.of(page, size);
         var resultado = queryUseCases.listar().execute(
                 filtro, new PageQuery(page, size), userDetails.getUsername());
         return new PageImpl<>(resultado.content().stream()

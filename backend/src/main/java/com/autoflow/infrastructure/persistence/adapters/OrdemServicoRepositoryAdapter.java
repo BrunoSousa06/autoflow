@@ -10,7 +10,6 @@ import com.autoflow.infrastructure.persistence.repository.OrdemServicoSpecificat
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -62,8 +61,7 @@ public class OrdemServicoRepositoryAdapter implements OrdemServicoGateway {
                 OrdemServicoSpecifications.comFiltros(filtro, emailMecanico);
         Page<OrdemServicoEntity> page = repository.findAll(
                 specification,
-                PageRequest.of(pageQuery.page(), pageQuery.size(),
-                        Sort.by(Sort.Direction.DESC, "dataAbertura")));
+                PageRequest.of(pageQuery.page(), pageQuery.size()));
         return new PageResult<>(page.getContent(), page.getTotalElements(),
                 pageQuery.page(), pageQuery.size());
     }
