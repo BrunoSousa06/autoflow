@@ -177,6 +177,11 @@ class RepositoryAdaptersTest {
         assertEquals(List.of(ordem), adapter.findAllByOrderByDataAberturaDesc());
         assertEquals(List.of(ordem), adapter.findAll(
                 new OrdemServicoFiltroInput(null, null, null), null, new PageQuery(0, 10)).content());
+
+        var pageableCaptor = org.mockito.ArgumentCaptor.forClass(Pageable.class);
+        verify(ordemRepository).findAll(any(Specification.class), pageableCaptor.capture());
+        Pageable pageable = pageableCaptor.getValue();
+        assertTrue(pageable.getSort().isUnsorted());
     }
 
     @Test

@@ -257,7 +257,7 @@ class OrdemServicoFluxoIT extends AbstractIT {
 
     @Test
     @Order(12)
-    @DisplayName("12 - deve listar OS e encontrar a OS criada")
+    @DisplayName("12 - deve listar somente OS operacionais e manter a OS entregue persistida")
     void deveListarOrdens() {
         ResponseEntity<String> response = get("/ordens-servico", adminToken);
 
@@ -265,14 +265,14 @@ class OrdemServicoFluxoIT extends AbstractIT {
         JsonNode json = parseJson(response.getBody());
         JsonNode content = json.get("content");
         assertThat(content.isArray()).isTrue();
-        boolean encontrou = false;
-        for (JsonNode os : content) {
-            if (os.get("numeroOs").asText().equals(numeroOs)) {
-                encontrou = true;
-                break;
-            }
-        }
-        assertThat(encontrou).as("OS '%s' deve estar na listagem", numeroOs).isTrue();
+        assertThat(content).allSatisfy(os -> assertThat(os.get("status").asText())
+                .isIn("EM_EXECUCAO", "AGUARDANDO_APROVACAO", "EM_DIAGNOSTICO", "RECEBIDA"));
+        assertThat(content.findValuesAsText("numeroOs")).doesNotContain(numeroOs);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM ordem_servico WHERE numero_os = ? AND status = 'ENTREGUE'",
+                Integer.class,
+                numeroOs
+        )).isEqualTo(1);
     }
 
     @Test

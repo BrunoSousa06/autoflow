@@ -10,7 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -27,6 +30,8 @@ class OrdemServicoSpecificationsTest {
     @Mock private Path<String> nomePath;
     @Mock private Path<String> cpfCnpjPath;
     @Mock private Path<String> numeroOsPath;
+    @Mock private Path<LocalDateTime> dataAberturaPath;
+    @Mock private Path<Long> idPath;
     @Mock private Path<Object> diagnosticoPath;
     @Mock private Path<Object> mecanicoPath;
     @Mock private Path<String> mecanicoEmailPath;
@@ -37,6 +42,8 @@ class OrdemServicoSpecificationsTest {
 
     @Mock private Predicate predicado;
     @Mock private Predicate predicadoOr;
+    @Mock private Predicate statusOperacionalPredicado;
+    @Mock private CriteriaBuilder.SimpleCase<StatusOrdemServico, Integer> prioridadeStatus;
 
     @BeforeEach
     void configurarMocks() {
@@ -45,6 +52,8 @@ class OrdemServicoSpecificationsTest {
         lenient().doReturn(nomePath).when(clientePath).get("nome");
         lenient().doReturn(cpfCnpjPath).when(clientePath).get("cpfCnpj");
         lenient().doReturn(numeroOsPath).when(root).get("numeroOs");
+        lenient().doReturn(dataAberturaPath).when(root).get("dataAbertura");
+        lenient().doReturn(idPath).when(root).get("id");
         lenient().when(root.get("diagnostico")).thenReturn(diagnosticoPath);
         lenient().when(diagnosticoPath.get("mecanico")).thenReturn(mecanicoPath);
         lenient().doReturn(mecanicoEmailPath).when(mecanicoPath).get("email");
@@ -56,6 +65,10 @@ class OrdemServicoSpecificationsTest {
         lenient().when(cb.equal(any(), any())).thenReturn(predicado);
         lenient().when(cb.like(any(Expression.class), any(String.class))).thenReturn(predicado);
         lenient().when(cb.or(any(Predicate.class), any(Predicate.class))).thenReturn(predicadoOr);
+        lenient().when(statusPath.in(anyCollection())).thenReturn(statusOperacionalPredicado);
+        lenient().when(cb.selectCase(any(Expression.class))).thenReturn(prioridadeStatus);
+        lenient().when(prioridadeStatus.when(any(StatusOrdemServico.class), anyInt())).thenReturn(prioridadeStatus);
+        lenient().when(prioridadeStatus.otherwise(anyInt())).thenReturn(prioridadeStatus);
     }
 
     private void aplicarSpec(OrdemServicoFiltroInput filtro) {
@@ -69,11 +82,18 @@ class OrdemServicoSpecificationsTest {
     // --- filtro vazio ---
 
     @Test
-    void comFiltros_filtroVazio_naoGeraPredicados() {
+    void comFiltros_filtroVazio_naoGeraPredicadosDeFiltrosExplicitos() {
         aplicarSpec(new OrdemServicoFiltroInput(null, null, null));
 
         verify(cb, never()).equal(any(), any());
         verify(cb, never()).like(any(Expression.class), any(String.class));
+    }
+
+    @Test
+    void comFiltros_filtroVazio_restringeAosStatusOperacionais() {
+        aplicarSpec(new OrdemServicoFiltroInput(null, null, null));
+
+        verify(statusPath).in(OrdemServicoSpecifications.STATUS_OPERACIONAIS);
     }
 
     // --- status ---
@@ -90,6 +110,39 @@ class OrdemServicoSpecificationsTest {
         aplicarSpec(new OrdemServicoFiltroInput(null, null, null));
 
         verify(cb, never()).equal(eq(statusPath), any());
+    }
+
+    @Test
+    void comFiltros_comStatusFinalizada_mantemExclusaoDosStatusOperacionais() {
+        aplicarSpec(new OrdemServicoFiltroInput(null, null, StatusOrdemServico.FINALIZADA));
+
+        verify(statusPath).in(OrdemServicoSpecifications.STATUS_OPERACIONAIS);
+        verify(cb).equal(statusPath, StatusOrdemServico.FINALIZADA);
+    }
+
+    @Test
+    void comFiltros_consultaDeDados_ordenaPorPrioridadeDataAscendenteEId() {
+        doReturn(OrdemServicoEntity.class).when(query).getResultType();
+
+        aplicarSpec(new OrdemServicoFiltroInput(null, null, null));
+
+        verify(prioridadeStatus).when(StatusOrdemServico.EM_EXECUCAO, 1);
+        verify(prioridadeStatus).when(StatusOrdemServico.AGUARDANDO_APROVACAO, 2);
+        verify(prioridadeStatus).when(StatusOrdemServico.EM_DIAGNOSTICO, 3);
+        verify(prioridadeStatus).when(StatusOrdemServico.RECEBIDA, 4);
+        verify(prioridadeStatus).otherwise(5);
+        verify(cb).asc(prioridadeStatus);
+        verify(cb).asc(dataAberturaPath);
+        verify(cb).asc(idPath);
+    }
+
+    @Test
+    void comFiltros_consultaDeContagem_naoAplicaOrdenacao() {
+        doReturn(Long.class).when(query).getResultType();
+
+        aplicarSpec(new OrdemServicoFiltroInput(null, null, null));
+
+        verify(query, never()).orderBy(any(Order[].class));
     }
 
     // --- numeroOs ---
