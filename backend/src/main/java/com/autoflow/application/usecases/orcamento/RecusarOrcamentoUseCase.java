@@ -43,12 +43,14 @@ public class RecusarOrcamentoUseCase {
                 throw ApplicationException.badRequest(
                         "Motivo da recusa deve ter no máximo 500 caracteres");
             }
-            orcamento.setRecusaMotivo(motivoNormalizado);
+            orcamento.setRecusaMotivo(
+                    motivoNormalizado.isBlank() ? null : motivoNormalizado);
         }
 
         OrcamentoEntity orcamentoSalvo = orcamentoGateway.save(orcamento);
 
-        if (recusarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(orcamento.getId(), motivo)) {
+        if (recusarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(
+                orcamento.getId(), orcamento.getRecusaMotivo())) {
             return orcamentoSalvo;
         }
 

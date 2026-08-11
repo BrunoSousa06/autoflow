@@ -2,12 +2,16 @@ package com.autoflow.presentation.orcamento;
 
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
 import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoPorTokenUseCase;
+import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.presentation.orcamento.request.AprovarOrcamentoRequest;
+import com.autoflow.presentation.orcamento.request.RecusarOrcamentoRequest;
 import com.autoflow.presentation.orcamento.response.OrcamentoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,11 +27,25 @@ public class PublicOrcamentoController {
 
     private final OrcamentoDocumentoGateway orcamentoDocumentoGateway;
     private final ConsultarOrcamentoPorTokenUseCase consultarOrcamentoPorTokenUseCase;
+    private final DecidirOrcamentoUseCase decidirOrcamentoUseCase;
     private final AcessarOrcamentoAcompanhamentoUseCase acessarOrcamentoAcompanhamentoUseCase;
+
+    @Operation(summary = "Consultar orçamento pelo link público", description = "Retorna os dados não sensíveis do orçamento usando o token público")
+    @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
+    @ApiResponse(responseCode = "401", description = "Token inválido ou expirado")
+    @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
+    @GetMapping("/{orcamentoId}")
+    public OrcamentoResponse consultar(
+            @PathVariable Long orcamentoId,
+            @RequestParam(required = false) String token
+    ) {
+        return OrcamentoResponse.from(consultarOrcamentoPorTokenUseCase.execute(orcamentoId, token));
+    }
 
     @Operation(summary = "Baixar o pdf com orçamento do cliente", description = "Retorna o pdf com as informações do orçamento do cliente")
     @ApiResponse(responseCode = "200", description = "Orçamento encontrado com sucesso")
     @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
+    @ApiResponse(responseCode = "401", description = "Token inválido ou expirado")
     @GetMapping(value = "/{orcamentoId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> baixarPdf(
             @PathVariable Long orcamentoId,
@@ -44,6 +62,39 @@ public class PublicOrcamentoController {
                         "attachment; filename=\"orcamento-" + orcamentoId + ".pdf\""
                 )
                 .body(pdf);
+    }
+
+    @Operation(summary = "Aprovar orçamento pelo link público", description = "Registra a aprovação usando o token público, sem autenticação")
+    @ApiResponse(responseCode = "200", description = "Orçamento aprovado ou aprovação já registrada")
+    @ApiResponse(responseCode = "400", description = "Orçamento não está disponível ou decisão conflitante")
+    @ApiResponse(responseCode = "401", description = "Token inválido ou expirado")
+    @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
+    @PostMapping("/{orcamentoId}/aprovar")
+    public OrcamentoResponse aprovar(
+            @PathVariable Long orcamentoId,
+            @RequestParam(required = false) String token,
+            @RequestBody(required = false) @Valid AprovarOrcamentoRequest req
+    ) {
+        String nome = req == null ? null : req.nome();
+        return OrcamentoResponse.from(
+                decidirOrcamentoUseCase.aprovarComoToken(orcamentoId, token, nome));
+    }
+
+    @Operation(summary = "Recusar orçamento pelo link público", description = "Registra a recusa usando o token público, sem autenticação")
+    @ApiResponse(responseCode = "200", description = "Orçamento recusado ou recusa já registrada")
+    @ApiResponse(responseCode = "400", description = "Orçamento não está disponível ou decisão conflitante")
+    @ApiResponse(responseCode = "401", description = "Token inválido ou expirado")
+    @ApiResponse(responseCode = "404", description = "Orçamento não encontrado")
+    @PostMapping("/{orcamentoId}/recusar")
+    public OrcamentoResponse recusar(
+            @PathVariable Long orcamentoId,
+            @RequestParam(required = false) String token,
+            @RequestBody(required = false) @Valid RecusarOrcamentoRequest req
+    ) {
+        String motivo = req == null ? null : req.motivo();
+        String nome = req == null ? null : req.nome();
+        return OrcamentoResponse.from(
+                decidirOrcamentoUseCase.recusarComoToken(orcamentoId, token, motivo, nome));
     }
 
     @GetMapping(value = "/{orcamentoId}/pdf/acompanhamento", produces = MediaType.APPLICATION_PDF_VALUE)

@@ -11,6 +11,17 @@ public record OrcamentoNotificacao(
         String numeroOs,
         String clienteNome,
         String clienteEmail,
-        String urlPublica
+        String urlPublica,
+        String urlDecisao
 ) {
+    public OrcamentoNotificacao(
+            Long orcamentoId,
+            TipoOrcamento tipo,
+            String numeroOs,
+            String clienteNome,
+            String clienteEmail,
+            String urlPublica
+    ) {
+        this(orcamentoId, tipo, numeroOs, clienteNome, clienteEmail, urlPublica, null);
+    }
 }
