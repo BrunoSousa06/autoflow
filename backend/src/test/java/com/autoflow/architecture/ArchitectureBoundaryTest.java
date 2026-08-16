@@ -139,6 +139,36 @@ class ArchitectureBoundaryTest {
             .because("o controller de cliente deve acessar persistencia somente por casos de uso");
 
     @ArchTest
+    static final ArchRule applicationVeiculoNaoAcessaInfraestrutura =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.application.usecases.veiculo..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.infrastructure..",
+                    "com.autoflow.presentation..",
+                    "com.autoflow.controller..",
+                    "com.autoflow.repository..",
+                    "org.springframework.security.core.context..",
+                    "jakarta.persistence..")
+            .because("os casos de uso de veiculo devem usar gateways e policies internas");
+
+    @ArchTest
+    static final ArchRule presentationVeiculoNaoAcessaPersistencia =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.presentation.veiculo..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("com.autoflow.infrastructure.persistence..", "..repository..")
+            .because("o controller de veiculo deve delegar persistencia aos casos de uso");
+
+    @ArchTest
+    static final ArchRule contextoDeSegurancaFicaNaInfraestrutura =
+        noClasses()
+            .that().resideOutsideOfPackages("com.autoflow.infrastructure.security..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("org.springframework.security.core.context..")
+            .because("SecurityContextHolder deve ser acessado somente pelo adapter de infraestrutura");
+
+    @ArchTest
     static final ArchRule infrastructureNaoAcessaPresentation =
         noClasses()
             .that().resideInAPackage("..infrastructure..")
