@@ -309,9 +309,81 @@ Com o backend rodando:
 | Snyk           | Vulnerabilidades de dependências    |
 | GitHub Actions | Pipeline CI/CD automatizado         |
 
-Pipeline CI:
-1. Build da aplicação
-2. Execução dos testes
-3. Geração de cobertura (Jacoco)
-4. Análise SonarQube
-5. Verificação de segurança com Snyk
+
+## Fluxo do CI/CD
+
+O pipeline é executado automaticamente em dois cenários:
+
+Pull Request direcionado para develop ou main;
+Push nas branches develop ou main.
+
+Entretanto, algumas etapas são condicionadas especificamente a um push na branch develop.
+
+O fluxo pode ser representado da seguinte forma:
+
+                         ┌─────────────────────┐
+                         │     Pull Request    │
+                         │  develop / main     │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                    ┌──────────────────────────────┐
+                    │ Backend Tests + SonarQube    │
+                    │ - Maven                      │
+                    │ - Testcontainers              │
+                    │ - JaCoCo                     │
+                    │ - SonarQube Quality Gate     │
+                    └──────────────┬───────────────┘
+                                   │
+                  ┌────────────────┴────────────────┐
+                  ▼                                 ▼
+        ┌──────────────────┐              ┌──────────────────┐
+        │  Backend Build   │              │ Frontend Tests   │
+        │  mvn package     │              │ npm test         │
+        └────────┬─────────┘              └────────┬─────────┘
+                 │                                  │
+                 │                                  ▼
+                 │                         ┌──────────────────┐
+                 │                         │ Frontend Build   │
+                 │                         │ npm run build    │
+                 │                         └────────┬─────────┘
+                 │                                  │
+                 └────────────────┬─────────────────┘
+                                  │
+                                  ▼
+                    ┌──────────────────────────────┐
+                    │      Push na develop?        │
+                    └──────────────┬───────────────┘
+                                   │ Sim
+                                   ▼
+                    ┌──────────────────────────────┐
+                    │       Snyk Security Scan     │
+                    │ - Open Source dependencies   │
+                    │ - Docker image               │
+                    └──────────────┬───────────────┘
+                                   │
+                                   ▼
+                    ┌──────────────────────────────┐
+                    │      Docker Build & Push     │
+                    │                              │
+                    │  Backend → Docker Hub        │
+                    │  Frontend → Docker Hub       │
+                    └──────────────┬───────────────┘
+                                   │
+                                   ▼
+                    ┌──────────────────────────────┐
+                    │       Terraform Deploy       │
+                    │                              │
+                    │  Terraform Init              │
+                    │  Terraform Validate         │
+                    │  Terraform Plan              │
+                    │  Terraform Apply             │
+                    └──────────────┬───────────────┘
+                                   │
+                                   ▼
+                         ┌────────────────────┐
+                         │    AWS / EKS       │
+                         │                    │
+                         │ Infrastructure +   │
+                         │ Kubernetes         │
+                         └────────────────────┘
