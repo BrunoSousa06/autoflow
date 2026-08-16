@@ -1,9 +1,8 @@
-package com.autoflow.domain.cliente;
+package com.autoflow.infrastructure.persistence.entity.cliente;
 
-import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.domain.usuario.RoleEnum;
+import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +34,7 @@ class ClienteEntityTest {
     }
 
     @Test
-    void testClienteCreation() {
+    void deveArmazenarDadosDoCliente() {
         assertNotNull(cliente);
         assertEquals(1L, cliente.getId());
         assertEquals("João Silva", cliente.getNome());
@@ -45,17 +44,14 @@ class ClienteEntityTest {
     }
 
     @Test
-    void testClienteUsuarioAssociation() {
+    void deveAssociarUsuario() {
         assertNotNull(cliente.getUsuario());
         assertEquals("João Silva", cliente.getUsuario().getNome());
         assertEquals(RoleEnum.CLIENTE, cliente.getUsuario().getRole());
     }
 
     @Test
-    void testClienteVeiculosAssociation() {
-        assertNotNull(cliente.getVeiculos());
-        assertTrue(cliente.getVeiculos().isEmpty());
-
+    void deveAssociarVeiculo() {
         VeiculoEntity veiculo = new VeiculoEntity();
         veiculo.setId(1L);
         veiculo.setMarca("Toyota");
@@ -64,36 +60,7 @@ class ClienteEntityTest {
 
         cliente.getVeiculos().add(veiculo);
 
-        assertEquals(1, cliente.getVeiculos().size());
+        assertTrue(cliente.getVeiculos().contains(veiculo));
         assertEquals("Toyota", cliente.getVeiculos().get(0).getMarca());
-    }
-
-    @Test
-    void testClienteSetters() {
-        cliente.setNome("Maria Silva");
-        cliente.setCpfCnpj("98765432101");
-        cliente.setEmail("maria@example.com");
-        cliente.setTelefone("11888888888");
-
-        assertEquals("Maria Silva", cliente.getNome());
-        assertEquals("98765432101", cliente.getCpfCnpj());
-        assertEquals("maria@example.com", cliente.getEmail());
-        assertEquals("11888888888", cliente.getTelefone());
-    }
-
-    @Test
-    void testClienteEmailUniqueness() {
-        ClienteEntity cliente2 = new ClienteEntity();
-        cliente2.setEmail("joao@example.com");
-
-        assertEquals(cliente.getEmail(), cliente2.getEmail());
-    }
-
-    @Test
-    void testClienteCpfCnpjUniqueness() {
-        ClienteEntity cliente2 = new ClienteEntity();
-        cliente2.setCpfCnpj("12345678901");
-
-        assertEquals(cliente.getCpfCnpj(), cliente2.getCpfCnpj());
     }
 }

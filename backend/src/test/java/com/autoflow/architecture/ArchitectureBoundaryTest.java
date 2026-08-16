@@ -189,6 +189,19 @@ class ArchitectureBoundaryTest {
             .resideInAnyPackage("jakarta.persistence..", "org.hibernate..", "com.autoflow.infrastructure..");
 
     @ArchTest
+    static final ArchRule dominioDeClienteNaoUsaBordas =
+            noClasses()
+                    .that().resideInAPackage("com.autoflow.domain.cliente..")
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "com.autoflow.infrastructure..",
+                            "com.autoflow.presentation..",
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "org.hibernate..")
+                    .because("o modelo de cliente deve ser independente das bordas");
+
+    @ArchTest
     static final ArchRule casosDeEstoqueNaoAcessamInfraestrutura =
         noClasses()
             .that().resideInAPackage("com.autoflow.application.usecases.pecainsumo..")

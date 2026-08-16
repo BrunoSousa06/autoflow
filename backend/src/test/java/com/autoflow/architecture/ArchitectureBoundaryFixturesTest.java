@@ -1,18 +1,19 @@
 package com.autoflow.architecture;
 
 import com.autoflow.application.gateway.fixture.IllegalGatewayPersistenceDependency;
-import com.autoflow.application.usecases.servico.fixture.IllegalApplicationInfrastructureDependency;
 import com.autoflow.application.usecases.cliente.fixture.IllegalClienteApplicationInfrastructureDependency;
+import com.autoflow.application.usecases.pecainsumo.fixture.IllegalEstoqueApplicationInfrastructureDependency;
+import com.autoflow.application.usecases.servico.fixture.IllegalApplicationInfrastructureDependency;
 import com.autoflow.application.usecases.veiculo.fixture.IllegalVeiculoApplicationInfrastructureDependency;
 import com.autoflow.application.usecases.veiculo.fixture.IllegalVeiculoApplicationSecurityDependency;
-import com.autoflow.application.usecases.pecainsumo.fixture.IllegalEstoqueApplicationInfrastructureDependency;
+import com.autoflow.domain.cliente.fixture.IllegalClienteDomainInfrastructureDependency;
 import com.autoflow.domain.servico.fixture.IllegalDomainInfrastructureDependency;
 import com.autoflow.domain.servico.fixture.IllegalDomainSpringDependency;
 import com.autoflow.infrastructure.persistence.adapters.fixture.IllegalInfrastructurePresentationDependency;
 import com.autoflow.presentation.cliente.fixture.IllegalClientePresentationRepositoryDependency;
-import com.autoflow.presentation.veiculo.fixture.IllegalVeiculoPresentationRepositoryDependency;
 import com.autoflow.presentation.pecainsumo.fixture.IllegalEstoquePresentationRepositoryDependency;
 import com.autoflow.presentation.servico.fixture.IllegalPresentationRepositoryDependency;
+import com.autoflow.presentation.veiculo.fixture.IllegalVeiculoPresentationRepositoryDependency;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,15 @@ class ArchitectureBoundaryFixturesTest {
                 .should().dependOnClassesThat().resideInAnyPackage("..infrastructure..");
 
         assertThrows(AssertionError.class, () -> rule.check(importFixtures(IllegalDomainInfrastructureDependency.class)));
+    }
+
+    @Test
+    void dominioDeClienteNaoPodeDependerDeInfraestrutura() {
+        ArchRule rule = noClasses().that().resideInAPackage("..domain.cliente.fixture..")
+                .should().dependOnClassesThat().resideInAnyPackage("..infrastructure..", "jakarta.persistence..");
+
+        assertThrows(AssertionError.class,
+                () -> rule.check(importFixtures(IllegalClienteDomainInfrastructureDependency.class)));
     }
 
     @Test
