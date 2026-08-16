@@ -46,13 +46,12 @@ class ArchitectureBoundaryTest {
             .because("repositories nao devem depender de controllers");
 
     @ArchTest
-    static final FreezingArchRule dominioNaoUsaSpring =
-        freeze(noClasses()
+    static final ArchRule dominioNaoUsaSpring =
+        noClasses()
             .that().resideInAPackage("..domain..")
             .should().dependOnClassesThat()
             .resideInAPackage("org.springframework..")
-            .because("dominio nao deve depender do Spring — violacao conhecida: "
-                + "OrdemServicoEntity usa ResponseStatusException"));
+            .because("dominio nao deve depender do Spring");
 
     @ArchTest
     static final FreezingArchRule dominioNaoUsaJpa =

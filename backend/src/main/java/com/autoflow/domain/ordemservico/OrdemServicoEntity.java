@@ -7,10 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.proxy.HibernateProxy;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -53,7 +49,6 @@ public class OrdemServicoEntity {
     private DiagnosticoEntity diagnostico;
 
     @OneToMany(mappedBy = "ordemServico", cascade = CascadeType.ALL, orphanRemoval = true)
-    @BatchSize(size = 50)
     private List<ServicoSolicitadoEntity> servicosSolicitados = new ArrayList<>();
 
     @Column(name = "execucao_iniciada_em")
@@ -166,7 +161,7 @@ public class OrdemServicoEntity {
             throw new IllegalArgumentException("OS deve ter um diagnostico para finalizar diagnostico.");
         }
         if (this.diagnostico.getLaudo() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Diagnostico deve possuir um laudo para finalizar diagnostico.");
+            throw new IllegalArgumentException("Diagnostico deve possuir um laudo para finalizar diagnostico.");
         }
     }
 
@@ -254,8 +249,8 @@ public class OrdemServicoEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        Class<?> oEffectiveClass = o.getClass();
+        Class<?> thisEffectiveClass = this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         OrdemServicoEntity that = (OrdemServicoEntity) o;
         return getId() != null && Objects.equals(getId(), that.getId());
@@ -263,7 +258,7 @@ public class OrdemServicoEntity {
 
     @Override
     public int hashCode() {
-        return this instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+        return getClass().hashCode();
     }
 
     public void finalizarPorOrcamentoRecusado() {
