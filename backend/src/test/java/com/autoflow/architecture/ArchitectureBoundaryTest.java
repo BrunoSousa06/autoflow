@@ -30,6 +30,14 @@ class ArchitectureBoundaryTest {
                 .allowEmptyShould(true);
 
     @ArchTest
+    static final ArchRule presentationDoServicoNaoAcessaDetalhesExternos =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.presentation.servico..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("com.autoflow.infrastructure..", "..repository..")
+            .because("a borda REST do piloto deve delegar aos casos de uso");
+
+    @ArchTest
     static final ArchRule repositorioNaoAcessaController =
         noClasses()
             .that().resideInAPackage("..repository..")
@@ -56,6 +64,19 @@ class ArchitectureBoundaryTest {
                 + "incrementalmente por componente conforme ADR-001"));
 
     @ArchTest
+    static final ArchRule dominioDoPilotoNaoUsaBordas =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.domain.servico..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.infrastructure..",
+                    "com.autoflow.presentation..",
+                    "org.springframework..",
+                    "jakarta.persistence..",
+                    "org.hibernate..")
+            .because("o modelo de dominio do piloto deve ser independente das bordas");
+
+    @ArchTest
     static final ArchRule applicationNaoAcessaContratosExternos =
         noClasses()
             .that().resideInAPackage("..application..")
@@ -67,10 +88,39 @@ class ArchitectureBoundaryTest {
                 .because("application deve depender de domain e portas internas; contratos externos ficam na presentation");
 
     @ArchTest
-    static final FreezingArchRule infrastructureNaoAcessaPresentation =
-        freeze(noClasses()
+    static final ArchRule applicationDoPilotoNaoAcessaInfraestrutura =
+        noClasses()
+            .that().resideInAnyPackage(
+                    "com.autoflow.application.usecases.servico..",
+                    "com.autoflow.application.mapper..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("com.autoflow.infrastructure..", "com.autoflow.presentation..")
+            .because("a aplicacao do piloto deve depender apenas de dominio e portas");
+
+    @ArchTest
+    static final ArchRule gatewaysNaoExponhamDetalhesExternos =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.application.gateway..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.infrastructure.persistence..",
+                    "com.autoflow.presentation..",
+                    "jakarta.persistence..",
+                    "org.springframework.data..")
+            .because("gateways sao portas internas e nao podem expor persistencia ou REST");
+
+    @ArchTest
+    static final ArchRule applicationDoPilotoNaoAcessaEntidadeJpa =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.application.usecases.servico..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("..infrastructure.persistence.entity..", "..repository..");
+
+    @ArchTest
+    static final ArchRule infrastructureNaoAcessaPresentation =
+        noClasses()
             .that().resideInAPackage("..infrastructure..")
             .should().dependOnClassesThat()
             .resideInAnyPackage("..presentation..", "..controller..")
-            .because("infrastructure nao deve depender de contratos de entrada"));
+            .because("infrastructure nao deve depender de contratos de entrada");
 }

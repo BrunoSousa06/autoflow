@@ -5,7 +5,7 @@ import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.domain.servico.Servico;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
@@ -531,13 +531,8 @@ class CriarReparoAdicionalUseCaseTest {
         return ordemServico;
     }
 
-    private ServicoOutput servicoCatalogo(Long id) {
-        return ServicoOutput.builder()
-                .id(id)
-                .nome("Troca de pastilha")
-                .valor(new BigDecimal("120.00"))
-                .ativo(true)
-                .build();
+    private Servico servicoCatalogo(Long id) {
+        return Servico.reconstituir(id, "Troca de pastilha", "Descricao", new BigDecimal("120.00"), true);
     }
 
     private ItemNecessarioEntity itemEnriquecido(Long id, int quantidade) {

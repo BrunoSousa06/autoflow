@@ -1,7 +1,6 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
-import com.autoflow.application.dto.servico.ServicoInput;
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.domain.servico.Servico;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,11 +10,12 @@ import org.mapstruct.MappingTarget;
 public interface ServicoPersistenceMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "ativo", ignore = true)
-    ServicoEntity mapToEntity(ServicoInput input);
+    ServicoEntity mapToEntity(Servico servico);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "ativo", ignore = true)
-    void updateEntity(ServicoInput input, @MappingTarget ServicoEntity entity);
+    void updateEntity(Servico servico, @MappingTarget ServicoEntity entity);
 
-    ServicoOutput mapToOutput(ServicoEntity entity);
+    @Mapping(target = "id", source = "id")
+    Servico mapToDomain(ServicoEntity entity);
 }

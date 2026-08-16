@@ -2,9 +2,8 @@ package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.dto.servico.PageInput;
 import com.autoflow.application.dto.servico.PageOutput;
-import com.autoflow.application.dto.servico.ServicoInput;
-import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.domain.servico.Servico;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.infrastructure.persistence.mapper.ServicoPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.ServicoRepository;
@@ -24,21 +23,21 @@ public class ServicoRepositoryAdapter implements ServicoGateway {
     private final ServicoPersistenceMapper servicoMapper;
 
     @Override
-    public ServicoOutput save(ServicoInput input) {
-        ServicoEntity entity = servicoMapper.mapToEntity(input);
-        return servicoMapper.mapToOutput(servicoRepository.save(entity));
+    public Servico save(Servico servico) {
+        ServicoEntity entity = servicoMapper.mapToEntity(servico);
+        return servicoMapper.mapToDomain(servicoRepository.save(entity));
     }
 
     @Override
-    public ServicoOutput update(Long id, ServicoInput input) {
-        ServicoEntity entity = servicoRepository.findById(id).orElseThrow();
-        servicoMapper.updateEntity(input, entity);
-        return servicoMapper.mapToOutput(servicoRepository.save(entity));
+    public Servico update(Servico servico) {
+        ServicoEntity entity = servicoRepository.findById(servico.id()).orElseThrow();
+        servicoMapper.updateEntity(servico, entity);
+        return servicoMapper.mapToDomain(servicoRepository.save(entity));
     }
 
     @Override
-    public Optional<ServicoOutput> findById(Long id) {
-        return servicoRepository.findById(id).map(servicoMapper::mapToOutput);
+    public Optional<Servico> findById(Long id) {
+        return servicoRepository.findById(id).map(servicoMapper::mapToDomain);
     }
 
     @Override
@@ -47,10 +46,10 @@ public class ServicoRepositoryAdapter implements ServicoGateway {
     }
 
     @Override
-    public PageOutput<ServicoOutput> findAllByAtivoTrue(PageInput page) {
+    public PageOutput<Servico> findAllByAtivoTrue(PageInput page) {
         PageRequest pageable = PageRequest.of(page.page(), page.size(), Sort.by("id").descending());
-        Page<ServicoOutput> result = servicoRepository.findAllByAtivoTrue(pageable)
-                .map(servicoMapper::mapToOutput);
+        Page<Servico> result = servicoRepository.findAllByAtivoTrue(pageable)
+                .map(servicoMapper::mapToDomain);
         return new PageOutput<>(result.getContent(), result.getNumber(), result.getSize(), result.getTotalElements());
     }
 

@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.domain.servico.Servico;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
@@ -40,7 +40,7 @@ class IncluirServicosUseCaseTest {
     @Test
     void deveIncluirServicoParaAdminDuranteDiagnostico() {
         OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
-        ServicoOutput catalogo = servico(5L);
+        Servico catalogo = servico(5L);
         UsuarioEntity admin = usuario(RoleEnum.ADMIN, 1L);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findByEmail("admin@autoflow.com"))
@@ -62,7 +62,7 @@ class IncluirServicosUseCaseTest {
         OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
         ordem.setDiagnostico(new DiagnosticoEntity());
         UsuarioEntity mecanico = usuario(RoleEnum.MECANICO, 2L);
-        ServicoOutput catalogo = servico(6L);
+        Servico catalogo = servico(6L);
         when(ordemServicoGateway.findByNumeroOs("OS-2")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com"))
                 .thenReturn(Optional.of(mecanico));
@@ -100,13 +100,8 @@ class IncluirServicosUseCaseTest {
         return ordem;
     }
 
-    private static ServicoOutput servico(Long id) {
-        return ServicoOutput.builder()
-                .id(id)
-                .nome("Troca de oleo")
-                .valor(new BigDecimal("100.00"))
-                .ativo(true)
-                .build();
+    private static Servico servico(Long id) {
+        return Servico.reconstituir(id, "Troca de oleo", "Descricao", new BigDecimal("100.00"), true);
     }
 
     private static UsuarioEntity usuario(RoleEnum role, Long id) {

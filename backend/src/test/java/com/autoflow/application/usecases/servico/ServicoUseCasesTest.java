@@ -7,6 +7,7 @@ import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.MetricsGateway;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.domain.servico.Servico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -34,12 +35,12 @@ class ServicoUseCasesTest {
         ServicoInput input = input("Revisão Completa");
         ServicoOutput output = output(1L, true);
         when(servicoGateway.existsByNomeIgnoreCase(input.nome())).thenReturn(false);
-        when(servicoGateway.save(input)).thenReturn(output);
+        when(servicoGateway.save(any(Servico.class))).thenReturn(toDomain(output));
 
         ServicoOutput resultado = new CriarServicoUseCase(servicoGateway).execute(input);
 
         assertEquals(output, resultado);
-        verify(servicoGateway).save(input);
+        verify(servicoGateway).save(any(Servico.class));
     }
 
     @Test
@@ -61,7 +62,7 @@ class ServicoUseCasesTest {
     @Test
     void deveBuscarServicoPorId() {
         ServicoOutput output = output(1L, true);
-        when(servicoGateway.findById(1L)).thenReturn(Optional.of(output));
+        when(servicoGateway.findById(1L)).thenReturn(Optional.of(toDomain(output)));
 
         ServicoOutput resultado = new BuscarServicoPorIdUseCase(servicoGateway).execute(1L);
 
@@ -86,7 +87,7 @@ class ServicoUseCasesTest {
         PageInput page = new PageInput(0, 20);
         ServicoOutput output = output(1L, true);
         when(servicoGateway.findAllByAtivoTrue(page))
-                .thenReturn(new PageOutput<>(List.of(output), 0, 20, 1));
+                .thenReturn(new PageOutput<>(List.of(toDomain(output)), 0, 20, 1));
 
         PageOutput<ServicoOutput> resultado = new ListarServicosUseCase(servicoGateway).execute(page);
 
@@ -100,13 +101,13 @@ class ServicoUseCasesTest {
         ServicoInput input = input("Revisão Premium");
         ServicoOutput existente = output(1L, true);
         ServicoOutput atualizado = output(1L, true);
-        when(servicoGateway.findById(1L)).thenReturn(Optional.of(existente));
-        when(servicoGateway.update(1L, input)).thenReturn(atualizado);
+        when(servicoGateway.findById(1L)).thenReturn(Optional.of(toDomain(existente)));
+        when(servicoGateway.update(any(Servico.class))).thenReturn(toDomain(atualizado));
 
         ServicoOutput resultado = new AtualizarServicoUseCase(servicoGateway).execute(1L, input);
 
         assertEquals(atualizado, resultado);
-        verify(servicoGateway).update(1L, input);
+        verify(servicoGateway).update(any(Servico.class));
     }
 
     @Test
@@ -121,12 +122,12 @@ class ServicoUseCasesTest {
         );
 
         assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
-        verify(servicoGateway, never()).update(any(), any());
+        verify(servicoGateway, never()).update(any(Servico.class));
     }
 
     @Test
     void deveInativarServicoSemRemoverRegistro() {
-        when(servicoGateway.findById(1L)).thenReturn(Optional.of(output(1L, true)));
+        when(servicoGateway.findById(1L)).thenReturn(Optional.of(toDomain(output(1L, true))));
 
         new InativarServicoUseCase(servicoGateway).execute(1L);
 
@@ -182,5 +183,10 @@ class ServicoUseCasesTest {
                 .valor(new BigDecimal("150.00"))
                 .ativo(ativo)
                 .build();
+    }
+
+    private static Servico toDomain(ServicoOutput output) {
+        return Servico.reconstituir(output.getId(), output.getNome(), output.getDescricao(),
+                output.getValor(), output.isAtivo());
     }
 }

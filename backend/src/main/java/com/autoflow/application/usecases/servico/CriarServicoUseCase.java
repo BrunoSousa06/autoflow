@@ -4,6 +4,7 @@ import com.autoflow.application.dto.servico.ServicoInput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.mapper.ServicoApplicationMapper;
 import lombok.RequiredArgsConstructor;
 
 
@@ -17,7 +18,8 @@ public class CriarServicoUseCase {
             throw ApplicationException.conflict("Serviço já foi cadastrado");
         }
 
-        return servicoGateway.save(input);
+        return ServicoApplicationMapper.toOutput(
+                servicoGateway.save(ServicoApplicationMapper.toDomain(input)));
     }
 
 }

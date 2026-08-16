@@ -9,6 +9,7 @@ import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAd
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
+import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -183,6 +184,7 @@ public class CriarReparoAdicionalUseCase {
         }
 
         ServicoOutput servicoCatalogo = servicoGateway.findById(command.servicoId())
+                .map(ServicoApplicationMapper::toOutput)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Serviço não encontrado com o ID: " + command.servicoId()
                 ));

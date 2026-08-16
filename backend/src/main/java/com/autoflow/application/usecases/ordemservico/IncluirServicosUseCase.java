@@ -5,6 +5,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
@@ -39,6 +40,7 @@ public class IncluirServicosUseCase {
         }
         List<ServicoSolicitadoEntity> preenchidos = servicos.stream().map(servico -> {
             ServicoOutput catalogo = servicoGateway.findById(servico.getServicoId())
+                    .map(ServicoApplicationMapper::toOutput)
                     .orElseThrow(() -> ApplicationException.notFound(
                             "Serviço não encontrado com o ID: " + servico.getServicoId()));
             ServicoSolicitadoEntity resultado = new ServicoSolicitadoEntity();

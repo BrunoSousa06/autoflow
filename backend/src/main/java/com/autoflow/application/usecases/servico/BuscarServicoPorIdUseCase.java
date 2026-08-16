@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.servico;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.mapper.ServicoApplicationMapper;
 import lombok.RequiredArgsConstructor;
 
 
@@ -13,6 +14,7 @@ public class BuscarServicoPorIdUseCase {
 
     public ServicoOutput execute(Long id) {
         return servicoGateway.findById(id)
+                .map(ServicoApplicationMapper::toOutput)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Serviço não encontrado com o ID: " + id));
     }

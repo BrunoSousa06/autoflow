@@ -9,6 +9,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
@@ -66,6 +67,7 @@ public class CriarOrdemServicoUseCase {
             OrdemServicoEntity os,
             ServicoSolicitadoEntity solicitado) {
         ServicoOutput servico = servicoGateway.findById(solicitado.getServicoId())
+                .map(ServicoApplicationMapper::toOutput)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Serviço não encontrado com o ID: " + solicitado.getServicoId()));
         ServicoSolicitadoEntity resultado = new ServicoSolicitadoEntity();
