@@ -216,6 +216,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker-build
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    env:
+      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
+      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
 
     steps:
       - name: Checkout code
