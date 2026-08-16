@@ -10,6 +10,8 @@ O AutoFlow é um sistema para gerenciamento de oficinas automotivas.
 - Flyway
 - Docker
 - Angular
+- Terraform
+- Kubernetes
 
 ## Estrutura
 
