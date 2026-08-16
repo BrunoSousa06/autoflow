@@ -33,4 +33,15 @@ class EstoquePolicyTest {
         assertThrows(IllegalStateException.class,
                 () -> EstoquePolicy.classificar(-1, 1));
     }
+
+    @Test
+    void deveCalcularQuantidadeRestanteAposBaixa() {
+        assertEquals(40, EstoquePolicy.calcularQuantidadeRestante(50, 10));
+    }
+
+    @Test
+    void deveRejeitarBaixaMaiorQueEstoque() {
+        assertThrows(IllegalStateException.class,
+                () -> EstoquePolicy.calcularQuantidadeRestante(5, 6));
+    }
 }

@@ -4,7 +4,8 @@ package com.autoflow.application.gateway;
 import com.autoflow.application.dto.PageQuery;
 import com.autoflow.application.dto.PageResult;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoFiltro;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,16 +13,18 @@ import java.util.Optional;
 public interface PecaInsumoGateway {
 
 
-    Optional<PecaInsumoEntity> findById(Long id);
+    Optional<PecaInsumoOutput> findById(Long id);
 
 
-    Optional<PecaInsumoEntity> findByNomeIgnoreCase(String nome);
+    Optional<PecaInsumoOutput> findByNomeIgnoreCase(String nome);
 
-    PecaInsumoEntity save(PecaInsumoEntity pecaInsumoEntity);
+    PecaInsumoOutput save(PecaInsumoInput input);
 
-    List<PecaInsumoEntity> findAll();
+    PecaInsumoOutput update(Long id, PecaInsumoInput input);
 
-    PageResult<PecaInsumoEntity> findAll(PecaInsumoFiltro filtro, PageQuery pageQuery);
+    List<PecaInsumoOutput> findAll();
+
+    PageResult<PecaInsumoOutput> findAll(PecaInsumoFiltro filtro, PageQuery pageQuery);
 
     boolean existsById(Long id);
 

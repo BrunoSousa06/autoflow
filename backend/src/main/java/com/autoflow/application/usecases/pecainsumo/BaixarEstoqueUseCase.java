@@ -47,7 +47,8 @@ public class BaixarEstoqueUseCase {
                         "Estoque insuficiente para iniciar o serviço. Peça/Insumo: " + id
                 );
             }
-            quantidadesRestantes.put(id, peca.quantidade() - quantidade);
+            quantidadesRestantes.put(id,
+                    EstoquePolicy.calcularQuantidadeRestante(peca.quantidade(), quantidade));
         });
 
         List<ItemNecessarioEntity> atualizados = new ArrayList<>();

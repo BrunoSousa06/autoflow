@@ -21,4 +21,11 @@ public final class EstoquePolicy {
                 quantidadeDisponivel
         );
     }
+
+    public static int calcularQuantidadeRestante(int quantidadeDisponivel, int quantidadeNecessaria) {
+        if (!classificar(quantidadeDisponivel, quantidadeNecessaria).disponivel()) {
+            throw new IllegalStateException("Estoque insuficiente para realizar a baixa.");
+        }
+        return quantidadeDisponivel - quantidadeNecessaria;
+    }
 }

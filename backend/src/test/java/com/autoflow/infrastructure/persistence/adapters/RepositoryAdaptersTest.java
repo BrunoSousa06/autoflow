@@ -4,13 +4,16 @@ import com.autoflow.application.dto.PageQuery;
 import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoFiltro;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.mapper.PecaInsumoPersistenceMapper;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.repository.*;
@@ -41,15 +44,17 @@ class RepositoryAdaptersTest {
 
     @Test
     void pecaAdapterDeveDelegarTodasOperacoes() {
-        var adapter = new PecaInsumoAdapter(pecaRepository);
+         var adapter = new PecaInsumoAdapter(pecaRepository, new PecaInsumoPersistenceMapper());
         var entity = new PecaInsumoEntity();
         entity.setId(1L);
         entity.setTipo(CategoriaPecaInsumo.PECA);
+        var input = new PecaInsumoInput("Filtro", null, 0, CategoriaPecaInsumo.PECA);
+        var output = new PecaInsumoOutput(1L, null, null, 0, CategoriaPecaInsumo.PECA);
 
 
         when(pecaRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(pecaRepository.findByNomeIgnoreCase("Filtro")).thenReturn(Optional.of(entity));
-        when(pecaRepository.save(entity)).thenReturn(entity);
+        when(pecaRepository.save(any(PecaInsumoEntity.class))).thenReturn(entity);
         when(pecaRepository.findAll()).thenReturn(List.of(entity));
         when(pecaRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(entity)));
@@ -58,11 +63,11 @@ class RepositoryAdaptersTest {
         when(pecaRepository.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(entity));
         var estoque = new EstoqueItemOutput(1L, null, CategoriaPecaInsumo.PECA, null, 0);
 
-        assertEquals(Optional.of(entity), adapter.findById(1L));
-        assertEquals(Optional.of(entity), adapter.findByNomeIgnoreCase("Filtro"));
-        assertSame(entity, adapter.save(entity));
-        assertEquals(List.of(entity), adapter.findAll());
-        assertEquals(List.of(entity), adapter.findAll(new PecaInsumoFiltro(null, null), new PageQuery(0, 10)).content());
+         assertEquals(Optional.of(output), adapter.findById(1L));
+         assertEquals(Optional.of(output), adapter.findByNomeIgnoreCase("Filtro"));
+         assertEquals(output, adapter.save(input));
+         assertEquals(List.of(output), adapter.findAll());
+         assertEquals(List.of(output), adapter.findAll(new PecaInsumoFiltro(null, null), new PageQuery(0, 10)).content());
         assertTrue(adapter.existsById(1L));
         assertEquals(List.of(estoque), adapter.findAllById(List.of(1L)));
         assertEquals(List.of(estoque), adapter.findAllByIdForUpdate(List.of(1L)));
@@ -75,7 +80,7 @@ class RepositoryAdaptersTest {
 
     @Test
     void pecaAdapterNaoDevePersistirListaDeEstoqueVazia() {
-        var adapter = new PecaInsumoAdapter(pecaRepository);
+         var adapter = new PecaInsumoAdapter(pecaRepository, new PecaInsumoPersistenceMapper());
 
         adapter.saveAll(List.of());
 
@@ -84,7 +89,7 @@ class RepositoryAdaptersTest {
 
     @Test
     void pecaAdapterDeveFalharQuandoEstoqueNaoExistir() {
-        var adapter = new PecaInsumoAdapter(pecaRepository);
+         var adapter = new PecaInsumoAdapter(pecaRepository, new PecaInsumoPersistenceMapper());
         var estoque = new EstoqueItemOutput(9L, "Item", CategoriaPecaInsumo.PECA, null, 1);
         when(pecaRepository.findAllById(List.of(9L))).thenReturn(List.of());
         var itens = List.of(estoque);

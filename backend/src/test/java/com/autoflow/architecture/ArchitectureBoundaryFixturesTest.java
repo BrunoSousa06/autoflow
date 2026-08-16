@@ -5,11 +5,13 @@ import com.autoflow.application.usecases.servico.fixture.IllegalApplicationInfra
 import com.autoflow.application.usecases.cliente.fixture.IllegalClienteApplicationInfrastructureDependency;
 import com.autoflow.application.usecases.veiculo.fixture.IllegalVeiculoApplicationInfrastructureDependency;
 import com.autoflow.application.usecases.veiculo.fixture.IllegalVeiculoApplicationSecurityDependency;
+import com.autoflow.application.usecases.pecainsumo.fixture.IllegalEstoqueApplicationInfrastructureDependency;
 import com.autoflow.domain.servico.fixture.IllegalDomainInfrastructureDependency;
 import com.autoflow.domain.servico.fixture.IllegalDomainSpringDependency;
 import com.autoflow.infrastructure.persistence.adapters.fixture.IllegalInfrastructurePresentationDependency;
 import com.autoflow.presentation.cliente.fixture.IllegalClientePresentationRepositoryDependency;
 import com.autoflow.presentation.veiculo.fixture.IllegalVeiculoPresentationRepositoryDependency;
+import com.autoflow.presentation.pecainsumo.fixture.IllegalEstoquePresentationRepositoryDependency;
 import com.autoflow.presentation.servico.fixture.IllegalPresentationRepositoryDependency;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
@@ -112,6 +114,24 @@ class ArchitectureBoundaryFixturesTest {
 
         assertThrows(AssertionError.class,
                 () -> rule.check(importFixtures(IllegalVeiculoPresentationRepositoryDependency.class)));
+    }
+
+    @Test
+    void applicationDeEstoqueNaoPodeDependerDeInfraestrutura() {
+        ArchRule rule = noClasses().that().resideInAPackage("..application.usecases.pecainsumo.fixture..")
+                .should().dependOnClassesThat().resideInAnyPackage("..infrastructure..", "..repository..");
+
+        assertThrows(AssertionError.class,
+                () -> rule.check(importFixtures(IllegalEstoqueApplicationInfrastructureDependency.class)));
+    }
+
+    @Test
+    void presentationDeEstoqueNaoPodeDependerDeRepository() {
+        ArchRule rule = noClasses().that().resideInAPackage("..presentation.pecainsumo.fixture..")
+                .should().dependOnClassesThat().resideInAnyPackage("..repository..", "..infrastructure..");
+
+        assertThrows(AssertionError.class,
+                () -> rule.check(importFixtures(IllegalEstoquePresentationRepositoryDependency.class)));
     }
 
     private static com.tngtech.archunit.core.domain.JavaClasses importFixtures(Class<?> fixture) {

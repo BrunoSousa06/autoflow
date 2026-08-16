@@ -169,6 +169,63 @@ class ArchitectureBoundaryTest {
             .because("SecurityContextHolder deve ser acessado somente pelo adapter de infraestrutura");
 
     @ArchTest
+    static final ArchRule policyDeEstoqueNaoUsaFrameworks =
+        noClasses()
+            .that().haveSimpleName("EstoquePolicy")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.infrastructure..",
+                    "com.autoflow.presentation..",
+                    "org.springframework..",
+                    "jakarta.persistence..",
+                    "org.hibernate..")
+            .because("a classificacao de estoque deve ser uma regra pura de dominio");
+
+    @ArchTest
+    static final ArchRule dominioDePecaInsumoNaoUsaJpa =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.domain.pecainsumo..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("jakarta.persistence..", "org.hibernate..", "com.autoflow.infrastructure..");
+
+    @ArchTest
+    static final ArchRule casosDeEstoqueNaoAcessamInfraestrutura =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.application.usecases.pecainsumo..")
+            .and().haveSimpleName("ConsultarDisponibilidadeEstoqueUseCase")
+            .or().haveSimpleName("BaixarEstoqueUseCase")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.infrastructure..",
+                    "com.autoflow.presentation..",
+                    "com.autoflow.controller..",
+                    "com.autoflow.repository..",
+                    "org.springframework.data..",
+                    "jakarta.persistence..")
+            .because("a aplicacao de estoque deve depender do gateway e da policy");
+
+    @ArchTest
+    static final ArchRule applicationPecaInsumoNaoAcessaPersistencia =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.application.usecases.pecainsumo..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.infrastructure.persistence..",
+                    "com.autoflow.presentation..",
+                    "com.autoflow.repository..",
+                    "jakarta.persistence..",
+                    "org.springframework.data..")
+            .because("casos de uso de pecas e insumos nao devem expor JPA ou Spring Data");
+
+    @ArchTest
+    static final ArchRule presentationPecaInsumoNaoAcessaPersistencia =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.presentation.pecainsumo..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("com.autoflow.infrastructure.persistence..", "..repository..")
+            .because("a Presentation de pecas e insumos deve delegar aos casos de uso");
+
+    @ArchTest
     static final ArchRule infrastructureNaoAcessaPresentation =
         noClasses()
             .that().resideInAPackage("..infrastructure..")

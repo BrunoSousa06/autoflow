@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.pecainsumo;
 
 import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.gateway.PecaInsumoGateway;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
 import lombok.RequiredArgsConstructor;
 
 
@@ -12,7 +12,7 @@ public class BuscarEAtualizarPecaInsumoPorIdUseCase {
 
     private final PecaInsumoGateway pecaInsumoGateway;
 
-    public PecaInsumoEntity execute(Long id) {
+    public PecaInsumoOutput execute(Long id) {
 
         return pecaInsumoGateway.findById(id).orElseThrow(() ->
                 ApplicationException.notFound(
