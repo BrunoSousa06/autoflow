@@ -117,6 +117,28 @@ class ArchitectureBoundaryTest {
             .resideInAnyPackage("..infrastructure.persistence.entity..", "..repository..");
 
     @ArchTest
+    static final ArchRule applicationClienteNaoAcessaInfraestrutura =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.application.usecases.cliente..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.autoflow.infrastructure..",
+                    "com.autoflow.presentation..",
+                    "com.autoflow.controller..",
+                    "com.autoflow.repository..",
+                    "org.springframework.data..",
+                    "jakarta.persistence..")
+            .because("os casos de uso de cliente devem depender somente de DTOs internos e gateways");
+
+    @ArchTest
+    static final ArchRule presentationClienteNaoAcessaPersistencia =
+        noClasses()
+            .that().resideInAPackage("com.autoflow.presentation.cliente..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("com.autoflow.infrastructure.persistence..", "..repository..")
+            .because("o controller de cliente deve acessar persistencia somente por casos de uso");
+
+    @ArchTest
     static final ArchRule infrastructureNaoAcessaPresentation =
         noClasses()
             .that().resideInAPackage("..infrastructure..")
