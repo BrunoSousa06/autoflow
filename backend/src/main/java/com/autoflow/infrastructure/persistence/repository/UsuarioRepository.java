@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.repository;
 
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -7,7 +7,7 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -19,14 +19,14 @@ public class AtribuirMecanicoUseCase {
     public OrdemServicoEntity execute(String numeroOs, Long mecanicoId, String mecanicoEmail) {
         OrdemServicoEntity os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
-        UsuarioEntity mecanico = buscarMecanico(mecanicoId, mecanicoEmail);
+        Usuario mecanico = buscarMecanico(mecanicoId, mecanicoEmail);
         if (os.getDiagnostico() == null) os.setDiagnostico(new DiagnosticoEntity());
         os.getDiagnostico().setMecanico(mecanico);
         return ordemServicoGateway.save(os);
     }
 
-    private UsuarioEntity buscarMecanico(Long id, String email) {
-        UsuarioEntity usuario;
+    private Usuario buscarMecanico(Long id, String email) {
+        Usuario usuario;
         if (id != null) {
             usuario = usuarioGateway.findById(id).orElseThrow(() -> ApplicationException.notFound(
                     "Mecânico não encontrado."));

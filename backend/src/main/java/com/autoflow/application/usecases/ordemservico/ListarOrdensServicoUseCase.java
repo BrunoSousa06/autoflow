@@ -8,7 +8,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
@@ -23,7 +23,7 @@ public class ListarOrdensServicoUseCase {
             PageQuery pageQuery,
             String emailUsuarioLogado
     ) {
-        UsuarioEntity usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
         String emailMecanico = RoleEnum.MECANICO.equals(usuario.getRole())
                 ? emailUsuarioLogado

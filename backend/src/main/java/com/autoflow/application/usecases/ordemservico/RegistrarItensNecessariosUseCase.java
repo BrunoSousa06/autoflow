@@ -11,7 +11,7 @@ import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -29,7 +29,7 @@ public class RegistrarItensNecessariosUseCase {
                                       List<ItemNecessarioEntity> itensNecessarios) {
         OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
-        UsuarioEntity usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
             accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);

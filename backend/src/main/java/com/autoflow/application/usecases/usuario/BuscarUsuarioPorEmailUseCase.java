@@ -2,7 +2,7 @@ package com.autoflow.application.usecases.usuario;
 
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.UsuarioGateway;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
@@ -11,7 +11,7 @@ public class BuscarUsuarioPorEmailUseCase {
 
     private final UsuarioGateway usuarioGateway;
 
-    public UsuarioEntity execute(String email) {
+    public Usuario execute(String email) {
 
         return usuarioGateway.findByEmail(email)
                 .orElseThrow(() -> ApplicationException.notFound(

@@ -8,7 +8,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.mapper.UsuarioApplicationMapper;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,13 +33,13 @@ class UsuarioUseCasesTest {
     @Mock AuthenticationGateway authenticationGateway;
     @Mock TokenGateway tokenGateway;
 
-    private UsuarioEntity usuario;
+    private Usuario usuario;
     private RegistroInput input;
     private UsuarioOutput output;
 
     @BeforeEach
     void setUp() {
-        usuario = new UsuarioEntity();
+        usuario = new Usuario();
         usuario.setId(1L);
         usuario.setNome("Maria");
         usuario.setEmail("maria@autoflow.com");
@@ -100,8 +100,8 @@ class UsuarioUseCasesTest {
         var cadastrarCliente = mock(CadastrarClienteUseCase.class);
         var useCase = new CadastrarUsuarioUseCase(gateway, passwordGateway, cadastrarCliente);
         when(passwordGateway.encode(input.senha())).thenReturn("senha-hash");
-        when(gateway.save(any(UsuarioEntity.class))).thenAnswer(invocation -> {
-            UsuarioEntity saved = invocation.getArgument(0);
+        when(gateway.save(any(Usuario.class))).thenAnswer(invocation -> {
+            Usuario saved = invocation.getArgument(0);
             saved.setId(1L);
             return saved;
         });
@@ -116,7 +116,7 @@ class UsuarioUseCasesTest {
                 RoleEnum.CLIENTE
         );
         assertEquals(clienteOutput, useCase.execute(clienteInput));
-        verify(cadastrarCliente).execute(eq(clienteInput), any(UsuarioEntity.class));
+        verify(cadastrarCliente).execute(eq(clienteInput), any(Usuario.class));
 
         when(gateway.existsByEmail(input.email())).thenReturn(true);
         assertEquals(ApplicationException.ErrorType.CONFLICT,

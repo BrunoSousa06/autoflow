@@ -7,7 +7,7 @@ import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -17,9 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IniciarDiagnosticoUseCaseTest {
@@ -64,7 +62,7 @@ class IniciarDiagnosticoUseCaseTest {
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
 
-    private void configurarBusca(OrdemServicoEntity os, UsuarioEntity usuario) {
+    private void configurarBusca(OrdemServicoEntity os, Usuario usuario) {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(ordemServicoGateway.save(os)).thenReturn(os);
@@ -78,8 +76,8 @@ class IniciarDiagnosticoUseCaseTest {
         return os;
     }
 
-    private UsuarioEntity usuario(RoleEnum role) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role) {
+        var usuario = new Usuario();
         usuario.setEmail(role == RoleEnum.ADMIN ? "admin@autoflow.com" : "mecanico@autoflow.com");
         usuario.setRole(role);
         return usuario;

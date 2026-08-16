@@ -12,14 +12,16 @@ import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
-import com.autoflow.infrastructure.persistence.mapper.PecaInsumoPersistenceMapper;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.mapper.PecaInsumoPersistenceMapper;
+import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.*;
 import com.autoflow.infrastructure.persistence.repository.historico.HistoricoStatusOsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
@@ -101,7 +103,8 @@ class RepositoryAdaptersTest {
 
     @Test
     void usuarioAdapterDeveDelegarConsultas() {
-        var adapter = new UsuarioRepositoryAdapter(usuarioRepository);
+        var mapper = Mappers.getMapper(UsuarioPersistenceMapper.class);
+        var adapter = new UsuarioRepositoryAdapter(usuarioRepository, mapper);
         var usuario = new UsuarioEntity();
         usuario.setRole(RoleEnum.MECANICO);
         when(usuarioRepository.findAll()).thenReturn(List.of(usuario));
@@ -110,10 +113,10 @@ class RepositoryAdaptersTest {
         when(usuarioRepository.findByEmail("mecanico@email.com")).thenReturn(Optional.of(usuario));
         when(usuarioRepository.existsByEmail("mecanico@email.com")).thenReturn(true);
 
-        assertEquals(List.of(usuario), adapter.findAll());
-        assertEquals(List.of(usuario), adapter.findByRole(RoleEnum.MECANICO));
-        assertEquals(Optional.of(usuario), adapter.findById(1L));
-        assertEquals(Optional.of(usuario), adapter.findByEmail("mecanico@email.com"));
+        assertEquals(RoleEnum.MECANICO, adapter.findAll().getFirst().getRole());
+        assertEquals(RoleEnum.MECANICO, adapter.findByRole(RoleEnum.MECANICO).getFirst().getRole());
+        assertTrue(adapter.findById(1L).isPresent());
+        assertTrue(adapter.findByEmail("mecanico@email.com").isPresent());
         assertTrue(adapter.existsByEmail("mecanico@email.com"));
     }
 

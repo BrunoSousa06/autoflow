@@ -1,6 +1,5 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.domain.servico.Servico;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
@@ -10,8 +9,9 @@ import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.domain.servico.Servico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -37,11 +37,33 @@ class IncluirServicosUseCaseTest {
     @Mock
     private OrdemServicoAccessPolicy accessPolicy;
 
+    private static Usuario usuario(RoleEnum role, Long id) {
+        var usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setRole(role);
+        return usuario;
+    }
+
+    private static void assertType(ApplicationException.ErrorType type,
+                                   org.junit.jupiter.api.function.Executable executable) {
+        assertEquals(type, assertThrows(ApplicationException.class, executable).type());
+    }
+
+    private static OrdemServicoEntity ordem(StatusOrdemServico status) {
+        var ordem = new OrdemServicoEntity();
+        ordem.setStatus(status);
+        return ordem;
+    }
+
+    private static Servico servico(Long id) {
+        return Servico.reconstituir(id, "Troca de oleo", "Descricao", new BigDecimal("100.00"), true);
+    }
+
     @Test
     void deveIncluirServicoParaAdminDuranteDiagnostico() {
         OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
         Servico catalogo = servico(5L);
-        UsuarioEntity admin = usuario(RoleEnum.ADMIN, 1L);
+        Usuario admin = usuario(RoleEnum.ADMIN, 1L);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findByEmail("admin@autoflow.com"))
                 .thenReturn(Optional.of(admin));
@@ -57,11 +79,17 @@ class IncluirServicosUseCaseTest {
         verify(accessPolicy, never()).validarPodeAlterarDiagnostico(ordem, admin);
     }
 
+    private OrdemServicoEntity incluir(String numeroOs, List<ServicoSolicitadoEntity> servicos,
+                                       String email) {
+        return new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
+                usuarioGateway, accessPolicy).execute(numeroOs, servicos, email);
+    }
+
     @Test
     void deveValidarMecanicoEIncluirServicoForaDoDiagnostico() {
         OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
         ordem.setDiagnostico(new DiagnosticoEntity());
-        UsuarioEntity mecanico = usuario(RoleEnum.MECANICO, 2L);
+        Usuario mecanico = usuario(RoleEnum.MECANICO, 2L);
         Servico catalogo = servico(6L);
         when(ordemServicoGateway.findByNumeroOs("OS-2")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com"))
@@ -81,34 +109,6 @@ class IncluirServicosUseCaseTest {
                 usuarioGateway, accessPolicy).execute("OS-2",
                 List.of(new ServicoSolicitadoEntity(7L)), "nao-consulta@autoflow.com");
         verify(usuarioGateway, never()).findByEmail("nao-consulta@autoflow.com");
-    }
-
-    private static void assertType(ApplicationException.ErrorType type,
-                                   org.junit.jupiter.api.function.Executable executable) {
-        assertEquals(type, assertThrows(ApplicationException.class, executable).type());
-    }
-
-    private OrdemServicoEntity incluir(String numeroOs, List<ServicoSolicitadoEntity> servicos,
-                                       String email) {
-        return new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
-                usuarioGateway, accessPolicy).execute(numeroOs, servicos, email);
-    }
-
-    private static OrdemServicoEntity ordem(StatusOrdemServico status) {
-        var ordem = new OrdemServicoEntity();
-        ordem.setStatus(status);
-        return ordem;
-    }
-
-    private static Servico servico(Long id) {
-        return Servico.reconstituir(id, "Troca de oleo", "Descricao", new BigDecimal("100.00"), true);
-    }
-
-    private static UsuarioEntity usuario(RoleEnum role, Long id) {
-        var usuario = new UsuarioEntity();
-        usuario.setId(id);
-        usuario.setRole(role);
-        return usuario;
     }
 
     @Test

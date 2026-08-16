@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.security.service;
 
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -6,7 +6,7 @@ import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,10 +25,22 @@ class AtribuirMecanicoUseCaseTest {
     @Mock
     private UsuarioGateway usuarioGateway;
 
+    private static Usuario usuario(Long id, RoleEnum role) {
+        var usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setRole(role);
+        usuario.setEmail("usuario" + id + "@autoflow.com");
+        return usuario;
+    }
+
+    private static void assertType(ApplicationException.ErrorType type, Executable executable) {
+        assertEquals(type, assertThrows(ApplicationException.class, executable).type());
+    }
+
     @Test
     void deveAtribuirMecanicoPorIdCriandoDiagnostico() {
         OrdemServicoEntity ordem = new OrdemServicoEntity();
-        UsuarioEntity mecanico = usuario(10L, RoleEnum.MECANICO);
+        Usuario mecanico = usuario(10L, RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findById(10L)).thenReturn(Optional.of(mecanico));
         when(ordemServicoGateway.save(ordem)).thenReturn(ordem);
@@ -44,7 +56,7 @@ class AtribuirMecanicoUseCaseTest {
         OrdemServicoEntity ordem = new OrdemServicoEntity();
         DiagnosticoEntity diagnostico = new DiagnosticoEntity();
         ordem.setDiagnostico(diagnostico);
-        UsuarioEntity mecanico = usuario(11L, RoleEnum.MECANICO);
+        Usuario mecanico = usuario(11L, RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOs("OS-2")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findByEmail("mecanico@autoflow.com"))
                 .thenReturn(Optional.of(mecanico));
@@ -55,18 +67,6 @@ class AtribuirMecanicoUseCaseTest {
 
         assertSame(diagnostico, ordem.getDiagnostico());
         assertSame(mecanico, diagnostico.getMecanico());
-    }
-
-    private static void assertType(ApplicationException.ErrorType type, Executable executable) {
-        assertEquals(type, assertThrows(ApplicationException.class, executable).type());
-    }
-
-    private static UsuarioEntity usuario(Long id, RoleEnum role) {
-        var usuario = new UsuarioEntity();
-        usuario.setId(id);
-        usuario.setRole(role);
-        usuario.setEmail("usuario" + id + "@autoflow.com");
-        return usuario;
     }
 
     @Test
@@ -89,7 +89,7 @@ class AtribuirMecanicoUseCaseTest {
         assertType(ApplicationException.ErrorType.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
                 ordemServicoGateway, usuarioGateway).execute("OS-3", null, "  "));
 
-        UsuarioEntity atendente = usuario(13L, RoleEnum.ATENDENTE);
+        Usuario atendente = usuario(13L, RoleEnum.ATENDENTE);
         when(usuarioGateway.findById(13L)).thenReturn(Optional.of(atendente));
         assertType(ApplicationException.ErrorType.BAD_REQUEST, () -> new AtribuirMecanicoUseCase(
                 ordemServicoGateway, usuarioGateway).execute("OS-3", 13L, null));

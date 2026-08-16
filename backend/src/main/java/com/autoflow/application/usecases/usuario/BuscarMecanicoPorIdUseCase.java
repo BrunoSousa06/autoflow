@@ -3,7 +3,7 @@ package com.autoflow.application.usecases.usuario;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
@@ -12,9 +12,9 @@ public class BuscarMecanicoPorIdUseCase {
 
     private final UsuarioGateway usuarioGateway;
 
-    public UsuarioEntity execute(Long mecanicoId) {
+    public Usuario execute(Long mecanicoId) {
 
-        UsuarioEntity usuario = usuarioGateway.findById(mecanicoId)
+        Usuario usuario = usuarioGateway.findById(mecanicoId)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Mecânico não encontrado."));
 

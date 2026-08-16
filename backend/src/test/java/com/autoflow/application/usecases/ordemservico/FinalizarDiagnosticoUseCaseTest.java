@@ -11,7 +11,7 @@ import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -69,7 +69,7 @@ class FinalizarDiagnosticoUseCaseTest {
         );
     }
 
-    private void configurarFluxo(OrdemServicoEntity os, UsuarioEntity usuario) {
+    private void configurarFluxo(OrdemServicoEntity os, Usuario usuario) {
         var orcamento = new OrcamentoEntity();
         orcamento.setId(10L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
@@ -95,8 +95,8 @@ class FinalizarDiagnosticoUseCaseTest {
         return os;
     }
 
-    private UsuarioEntity usuario(RoleEnum role) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role) {
+        var usuario = new Usuario();
         usuario.setEmail(role == RoleEnum.ADMIN ? "admin@autoflow.com" : "mecanico@autoflow.com");
         usuario.setRole(role);
         return usuario;

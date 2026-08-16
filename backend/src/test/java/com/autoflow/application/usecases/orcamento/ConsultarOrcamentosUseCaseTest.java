@@ -5,7 +5,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,7 +26,7 @@ class ConsultarOrcamentosUseCaseTest {
 
     @Test
     void deveForcarEmailDoClienteNoFiltro() {
-        UsuarioEntity usuario = usuario("cliente@exemplo.com", RoleEnum.CLIENTE);
+        Usuario usuario = usuario("cliente@exemplo.com", RoleEnum.CLIENTE);
         OrcamentoFiltro esperado = new OrcamentoFiltro(null, null, null, "cliente@exemplo.com", null, null);
         when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(orcamentoGateway.findAll(esperado)).thenReturn(List.of());
@@ -37,7 +37,7 @@ class ConsultarOrcamentosUseCaseTest {
 
     @Test
     void deveNegarFiltroDeOutroCliente() {
-        UsuarioEntity usuario = usuario("cliente@exemplo.com", RoleEnum.CLIENTE);
+        Usuario usuario = usuario("cliente@exemplo.com", RoleEnum.CLIENTE);
         var email = usuario.getEmail();
         when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
         OrcamentoFiltro filtro = new OrcamentoFiltro(null, null, null, "outro@exemplo.com", null, null);
@@ -48,8 +48,8 @@ class ConsultarOrcamentosUseCaseTest {
         verifyNoInteractions(orcamentoGateway);
     }
 
-    private UsuarioEntity usuario(String email, RoleEnum role) {
-        UsuarioEntity usuario = new UsuarioEntity();
+    private Usuario usuario(String email, RoleEnum role) {
+        Usuario usuario = new Usuario();
         usuario.setEmail(email); usuario.setRole(role); return usuario;
     }
 }

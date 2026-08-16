@@ -4,12 +4,12 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.domain.ordemservico.DiagnosticoEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.springframework.stereotype.Component;
 
 @Component
 public class OrdemServicoAccessPolicy {
-    public void validarPodeAlterarDiagnostico(OrdemServicoEntity ordemServico, UsuarioEntity usuario) {
+    public void validarPodeAlterarDiagnostico(OrdemServicoEntity ordemServico, Usuario usuario) {
         if (RoleEnum.ADMIN.equals(usuario.getRole())) return;
         DiagnosticoEntity diagnostico = ordemServico.getDiagnostico();
         if (diagnostico == null || diagnostico.getMecanico() == null) {

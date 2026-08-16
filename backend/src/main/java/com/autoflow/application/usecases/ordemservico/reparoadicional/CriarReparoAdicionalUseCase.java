@@ -16,7 +16,7 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -117,7 +117,7 @@ public class CriarReparoAdicionalUseCase {
         }
     }
 
-    private void validarAutorizacao(OrdemServicoEntity ordemServico, UsuarioEntity usuario) {
+    private void validarAutorizacao(OrdemServicoEntity ordemServico, Usuario usuario) {
         if (RoleEnum.ADMIN.equals(usuario.getRole())) {
             return;
         }

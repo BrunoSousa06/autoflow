@@ -5,7 +5,6 @@ import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
 import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
-import com.autoflow.domain.servico.Servico;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
@@ -14,8 +13,9 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
+import com.autoflow.domain.servico.Servico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,7 +73,7 @@ class CriarReparoAdicionalUseCaseTest {
     @Test
     void deveCriarReparoComplementarPublicarNotificarEVincularOrcamento() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         var servicoCatalogo = servicoCatalogo(5L);
@@ -260,7 +260,7 @@ class CriarReparoAdicionalUseCaseTest {
     @Test
     void deveRejeitarMecanicoNaoAtribuido() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(21L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
@@ -281,7 +281,7 @@ class CriarReparoAdicionalUseCaseTest {
     void devePermitirAdministradorSemMecanicoAtribuido() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         ordemServico.setDiagnostico(null);
-        var admin = new UsuarioEntity();
+        var admin = new Usuario();
         admin.setId(1L);
         admin.setRole(RoleEnum.ADMIN);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
@@ -307,7 +307,7 @@ class CriarReparoAdicionalUseCaseTest {
     @Test
     void deveRejeitarUsuarioQueNaoPossuiPapelPermitido() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        var usuario = new UsuarioEntity();
+        var usuario = new Usuario();
         usuario.setId(30L);
         usuario.setRole(RoleEnum.ATENDENTE);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
@@ -325,7 +325,7 @@ class CriarReparoAdicionalUseCaseTest {
     void deveRejeitarMecanicoQuandoOsNaoPossuirAtribuicao() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         ordemServico.setDiagnostico(null);
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
@@ -343,7 +343,7 @@ class CriarReparoAdicionalUseCaseTest {
     void deveRejeitarMecanicoQuandoDiagnosticoNaoPossuirMecanico() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         ordemServico.setDiagnostico(new DiagnosticoEntity());
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
@@ -379,7 +379,7 @@ class CriarReparoAdicionalUseCaseTest {
     void deveRejeitarServicoSemItens() {
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
@@ -399,7 +399,7 @@ class CriarReparoAdicionalUseCaseTest {
     void deveRejeitarQuantidadeDeItemNaoPositiva() {
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico(StatusOrdemServico.EM_EXECUCAO)));
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
@@ -418,7 +418,7 @@ class CriarReparoAdicionalUseCaseTest {
     @Test
     void deveRejeitarItensNulosOuIncompletos() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
@@ -467,7 +467,7 @@ class CriarReparoAdicionalUseCaseTest {
         var erroUsuario = assertThrows(ApplicationException.class, () -> useCase.execute(command));
         assertEquals(ApplicationException.ErrorType.NOT_FOUND, erroUsuario.type());
 
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
@@ -479,7 +479,7 @@ class CriarReparoAdicionalUseCaseTest {
     @Test
     void falhaDeNotificacaoNaoDeveDesfazerCriacao() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        var mecanico = new UsuarioEntity();
+        var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         var orcamento = new OrcamentoEntity();
@@ -524,7 +524,7 @@ class CriarReparoAdicionalUseCaseTest {
         ordemServico.setNumeroOs("OS-123");
         ordemServico.setStatus(status);
         var diagnostico = new DiagnosticoEntity();
-        var mecanicoAtribuido = new UsuarioEntity();
+        var mecanicoAtribuido = new Usuario();
         mecanicoAtribuido.setId(20L);
         diagnostico.setMecanico(mecanicoAtribuido);
         ordemServico.setDiagnostico(diagnostico);

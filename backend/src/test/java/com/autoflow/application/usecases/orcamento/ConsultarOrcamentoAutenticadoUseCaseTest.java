@@ -6,7 +6,7 @@ import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -80,8 +80,8 @@ class ConsultarOrcamentoAutenticadoUseCaseTest {
         return orcamento;
     }
 
-    private UsuarioEntity usuario(RoleEnum role, String email) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role, String email) {
+        var usuario = new Usuario();
         usuario.setRole(role);
         usuario.setEmail(email);
         return usuario;

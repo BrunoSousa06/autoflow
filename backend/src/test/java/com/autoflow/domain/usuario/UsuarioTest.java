@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UsuarioEntityTest {
+class UsuarioTest {
 
-    private UsuarioEntity usuario;
+    private Usuario usuario;
 
     @BeforeEach
     void setUp() {
-        usuario = new UsuarioEntity();
+        usuario = new Usuario();
         usuario.setId(1L);
         usuario.setNome("João Silva");
         usuario.setEmail("joao@example.com");
@@ -44,7 +44,7 @@ class UsuarioEntityTest {
 
     @Test
     void testUsuarioEmailUniqueness() {
-        UsuarioEntity usuario2 = new UsuarioEntity();
+        Usuario usuario2 = new Usuario();
         usuario2.setEmail("joao@example.com");
 
         assertEquals(usuario.getEmail(), usuario2.getEmail());
@@ -60,7 +60,7 @@ class UsuarioEntityTest {
 
     @Test
     void testUsuarioNullableFields() {
-        UsuarioEntity novoUsuario = new UsuarioEntity();
+        Usuario novoUsuario = new Usuario();
         assertNull(novoUsuario.getNome());
         assertNull(novoUsuario.getEmail());
         assertNull(novoUsuario.getSenha());

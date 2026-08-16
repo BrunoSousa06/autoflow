@@ -7,7 +7,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,7 +33,7 @@ class ListarOrdensServicoUseCaseTest {
 
     @Test
     void deveListarOrdensDoMecanicoUsandoEmailComoRestricao() {
-        UsuarioEntity mecanico = new UsuarioEntity();
+        Usuario mecanico = new Usuario();
         mecanico.setRole(RoleEnum.MECANICO);
         PageQuery pageQuery = new PageQuery(0, 10);
         PageResult<OrdemServicoEntity> esperado = new PageResult<>(List.of(), 0, 0, 10);

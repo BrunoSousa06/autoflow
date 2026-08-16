@@ -2,8 +2,8 @@ package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.domain.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
+import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.mapper.ClienteMapper;
 import com.autoflow.infrastructure.persistence.repository.ClienteRepository;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;

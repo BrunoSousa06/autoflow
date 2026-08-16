@@ -7,7 +7,7 @@ import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -135,8 +135,8 @@ class DecidirOrcamentoUseCaseTest {
         return orcamento;
     }
 
-    private UsuarioEntity usuario(String nome, RoleEnum role) {
-        UsuarioEntity usuario = new UsuarioEntity();
+    private Usuario usuario(String nome, RoleEnum role) {
+        Usuario usuario = new Usuario();
         usuario.setNome(nome);
         usuario.setRole(role);
         return usuario;

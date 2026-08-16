@@ -5,7 +5,7 @@ import com.autoflow.application.dto.usuario.LoginOutput;
 import com.autoflow.application.gateway.AuthenticationGateway;
 import com.autoflow.application.gateway.TokenGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
@@ -20,7 +20,7 @@ public class LoginUsuarioUseCase {
 
         authenticationGateway.authenticate(input.email(), input.senha());
 
-        UsuarioEntity usuario = usuarioGateway
+        Usuario usuario = usuarioGateway
                 .findByEmail(input.email())
                 .orElseThrow();
 

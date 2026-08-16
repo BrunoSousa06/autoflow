@@ -1,5 +1,6 @@
-package com.autoflow.domain.usuario;
+package com.autoflow.infrastructure.persistence.entity.usuario;
 
+import com.autoflow.domain.usuario.RoleEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

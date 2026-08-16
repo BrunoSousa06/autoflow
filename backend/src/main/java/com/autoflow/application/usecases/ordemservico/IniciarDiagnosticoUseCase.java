@@ -9,7 +9,7 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
@@ -23,7 +23,7 @@ public class IniciarDiagnosticoUseCase {
     @TransactionalUseCase
     public OrdemServicoEntity execute(String numeroOs, String emailUsuarioLogado) {
         OrdemServicoEntity ordemServico = buscar(numeroOs);
-        UsuarioEntity usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
             accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);

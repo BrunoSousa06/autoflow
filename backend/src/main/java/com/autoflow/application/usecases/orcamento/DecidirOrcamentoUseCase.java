@@ -7,7 +7,7 @@ import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -27,14 +27,14 @@ public class DecidirOrcamentoUseCase {
     @TransactionalUseCase
     public OrcamentoEntity aprovarComoUsuario(Long orcamentoId, String emailUsuario) {
         OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
-        UsuarioEntity usuario = validarAcesso(orcamento, emailUsuario);
+        Usuario usuario = validarAcesso(orcamento, emailUsuario);
         return aprovarOrcamentoUseCase.execute(orcamento, usuario.getNome());
     }
 
     @TransactionalUseCase
     public OrcamentoEntity recusarComoUsuario(Long orcamentoId, String motivo, String emailUsuario) {
         OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
-        UsuarioEntity usuario = validarAcesso(orcamento, emailUsuario);
+        Usuario usuario = validarAcesso(orcamento, emailUsuario);
         return recusarOrcamentoUseCase.execute(orcamento, motivo, usuario.getNome());
     }
 
@@ -88,8 +88,8 @@ public class DecidirOrcamentoUseCase {
         return assinatura;
     }
 
-    private UsuarioEntity validarAcesso(OrcamentoEntity orcamento, String emailUsuario) {
-        UsuarioEntity usuario = usuarioGateway.findByEmail(emailUsuario)
+    private Usuario validarAcesso(OrcamentoEntity orcamento, String emailUsuario) {
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuario)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Usuário autenticado não encontrado"));
         if (!RoleEnum.ADMIN.equals(usuario.getRole()) && !RoleEnum.CLIENTE.equals(usuario.getRole())) {

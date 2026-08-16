@@ -10,7 +10,7 @@ import com.autoflow.domain.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -111,8 +111,8 @@ class RegistrarItensNecessariosUseCaseTest {
         return item;
     }
 
-    private UsuarioEntity usuario(RoleEnum role, String email) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role, String email) {
+        var usuario = new Usuario();
         usuario.setRole(role);
         usuario.setEmail(email);
         return usuario;

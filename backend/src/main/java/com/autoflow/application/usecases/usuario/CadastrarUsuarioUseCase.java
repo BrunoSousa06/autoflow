@@ -7,7 +7,7 @@ import com.autoflow.application.gateway.PasswordGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
@@ -25,7 +25,7 @@ public class CadastrarUsuarioUseCase {
             throw ApplicationException.conflict("Email já cadastrado");
         }
 
-        UsuarioEntity usuario = new UsuarioEntity();
+        Usuario usuario = new Usuario();
         usuario.setNome(request.nome());
         usuario.setEmail(request.email());
         usuario.setSenha(passwordGateway.encode(request.senha()));

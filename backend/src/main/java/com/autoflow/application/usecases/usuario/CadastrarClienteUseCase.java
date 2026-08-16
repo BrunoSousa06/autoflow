@@ -6,7 +6,7 @@ import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ClienteGateway;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
@@ -18,7 +18,7 @@ public class CadastrarClienteUseCase {
     @TransactionalUseCase
     public ClienteOutput execute(
             RegistroInput request,
-            UsuarioEntity usuario) {
+            Usuario usuario) {
 
         if (clienteGateway.existsByCpfCnpj(request.cpfCnpj())) {
             throw ApplicationException.conflict("CPF/CNPJ já cadastrado");
