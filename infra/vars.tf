@@ -20,13 +20,10 @@ variable "instance_type" {
 variable "database_password" {
   description = "Senha do banco de dados RDS"
   type        = string
-  sensitive   = false
-  default     = "postgres"
-
+  sensitive   = true
 }
 
 variable "database_username" {
   description = "Usuário do banco de dados"
   type        = string
-  default     = "postgres"
 }
