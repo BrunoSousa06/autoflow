@@ -7,6 +7,7 @@ import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.mapper.UsuarioApplicationMapper;
+import com.autoflow.application.port.in.usuario.*;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,7 +51,7 @@ class UsuarioUseCasesTest {
 
     @Test
     void deveBuscarMecanicoEValidarIdERole() {
-        var useCase = new BuscarMecanicoPorIdUseCase(gateway);
+        var useCase = new BuscarMecanicoPorIdUseCaseImpl(gateway);
         when(gateway.findById(1L)).thenReturn(Optional.of(usuario));
         assertSame(usuario, useCase.execute(1L));
 
@@ -66,7 +67,7 @@ class UsuarioUseCasesTest {
 
     @Test
     void deveBuscarUsuarioPorEmail() {
-        var useCase = new BuscarUsuarioPorEmailUseCase(gateway);
+        var useCase = new BuscarUsuarioPorEmailUseCaseImpl(gateway);
         when(gateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         assertSame(usuario, useCase.execute(usuario.getEmail()));
         when(gateway.findByEmail("ausente@email.com")).thenReturn(Optional.empty());
@@ -80,13 +81,13 @@ class UsuarioUseCasesTest {
         when(gateway.findAll()).thenReturn(List.of(usuario));
         when(gateway.findByRole(RoleEnum.MECANICO)).thenReturn(List.of(usuario));
         when(mapper.toOutput(List.of(usuario))).thenReturn(List.of(output));
-        assertEquals(List.of(output), new ListarUsuariosUseCase(gateway, mapper).execute());
-        assertEquals(List.of(output), new BuscarMecanicosUseCase(gateway, mapper).execute());
+        assertEquals(List.of(output), new ListarUsuariosUseCaseImpl(gateway, mapper).execute());
+        assertEquals(List.of(output), new BuscarMecanicosUseCaseImpl(gateway, mapper).execute());
     }
 
     @Test
     void deveCadastrarClienteEImpedirDocumentoDuplicado() {
-        var useCase = new CadastrarClienteUseCase(clienteGateway);
+        var useCase = new CadastrarClienteUseCaseImpl(clienteGateway);
         when(clienteGateway.save(any())).thenReturn(null);
         assertNull(useCase.execute(input, usuario));
 
@@ -98,7 +99,7 @@ class UsuarioUseCasesTest {
     @Test
     void deveCadastrarUsuarioEClienteQuandoAplicavel() {
         var cadastrarCliente = mock(CadastrarClienteUseCase.class);
-        var useCase = new CadastrarUsuarioUseCase(gateway, passwordGateway, cadastrarCliente);
+        var useCase = new CadastrarUsuarioUseCaseImpl(gateway, passwordGateway, cadastrarCliente);
         when(passwordGateway.encode(input.senha())).thenReturn("senha-hash");
         when(gateway.save(any(Usuario.class))).thenAnswer(invocation -> {
             Usuario saved = invocation.getArgument(0);
@@ -127,7 +128,7 @@ class UsuarioUseCasesTest {
     void deveAplicarPermissoesAoCadastrarStaff() {
         var cadastrar = mock(CadastrarUsuarioUseCase.class);
         var currentUserGateway = mock(CurrentUserGateway.class);
-        var useCase = new CadastrarStaffUseCase(cadastrar, currentUserGateway);
+        var useCase = new CadastrarStaffUseCaseImpl(cadastrar, currentUserGateway);
         when(currentUserGateway.getCurrentUser()).thenReturn(java.util.Optional.of(
                 new CurrentUser("admin@email.com", RoleEnum.ADMIN)));
         when(cadastrar.execute(input)).thenReturn(output);
@@ -143,7 +144,7 @@ class UsuarioUseCasesTest {
     @Test
     void devePermitirCadastroPublicoSomenteParaCliente() {
         var cadastrar = mock(CadastrarUsuarioUseCase.class);
-        var useCase = new CadastrarUsuarioPublicoUseCase(cadastrar);
+        var useCase = new CadastrarUsuarioPublicoUseCaseImpl(cadastrar);
         var clienteInput = new RegistroInput(
                 "Cliente",
                 "cliente@email.com",
@@ -164,7 +165,7 @@ class UsuarioUseCasesTest {
     @Test
     void deveAutenticarEGerarToken() {
         var loginInput = new LoginInput(usuario.getEmail(), "senha");
-        var useCase = new LoginUsuarioUseCase(authenticationGateway, gateway, tokenGateway);
+        var useCase = new LoginUsuarioUseCaseImpl(authenticationGateway, gateway, tokenGateway);
         when(gateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(tokenGateway.generateToken(usuario.getEmail(), RoleEnum.MECANICO.name())).thenReturn("token");
         assertEquals("token", useCase.execute(loginInput).token());

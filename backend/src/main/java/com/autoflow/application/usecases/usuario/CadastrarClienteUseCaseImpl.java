@@ -5,17 +5,19 @@ import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.dto.usuario.RegistroInput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ClienteGateway;
+import com.autoflow.application.port.in.usuario.CadastrarClienteUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class CadastrarClienteUseCase {
+public class CadastrarClienteUseCaseImpl implements CadastrarClienteUseCase {
 
     private final ClienteGateway clienteGateway;
 
     @TransactionalUseCase
+    @Override
     public ClienteOutput execute(
             RegistroInput request,
             Usuario usuario) {

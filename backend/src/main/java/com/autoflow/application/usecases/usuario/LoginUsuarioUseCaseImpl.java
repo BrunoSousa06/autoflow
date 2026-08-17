@@ -5,17 +5,19 @@ import com.autoflow.application.dto.usuario.LoginOutput;
 import com.autoflow.application.gateway.AuthenticationGateway;
 import com.autoflow.application.gateway.TokenGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.usuario.LoginUsuarioUseCase;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class LoginUsuarioUseCase {
+public class LoginUsuarioUseCaseImpl implements LoginUsuarioUseCase {
 
     private final AuthenticationGateway authenticationGateway;
     private final UsuarioGateway usuarioGateway;
     private final TokenGateway tokenGateway;
 
+    @Override
     public LoginOutput execute(LoginInput input) {
 
         authenticationGateway.authenticate(input.email(), input.senha());

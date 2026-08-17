@@ -5,6 +5,8 @@ import com.autoflow.application.dto.usuario.UsuarioOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.PasswordGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.usuario.CadastrarClienteUseCase;
+import com.autoflow.application.port.in.usuario.CadastrarUsuarioUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
@@ -12,13 +14,14 @@ import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class CadastrarUsuarioUseCase {
+public class CadastrarUsuarioUseCaseImpl implements CadastrarUsuarioUseCase {
 
     private final UsuarioGateway usuarioGateway;
     private final PasswordGateway passwordGateway;
     private final CadastrarClienteUseCase cadastrarClienteUseCase;
 
     @TransactionalUseCase
+    @Override
     public UsuarioOutput execute(RegistroInput request) {
 
         if (usuarioGateway.existsByEmail(request.email())) {
