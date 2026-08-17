@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.pecainsumo;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.application.gateway.EstoqueGateway;
+import com.autoflow.application.port.in.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
@@ -16,10 +17,11 @@ import java.util.stream.Collectors;
 
 
 @RequiredArgsConstructor
-public class BaixarEstoqueUseCase {
+public class BaixarEstoqueUseCaseImpl implements BaixarEstoqueUseCase {
     private final EstoqueGateway estoqueGateway;
 
     @TransactionalUseCase
+    @Override
     public List<ItemNecessario> execute(List<ItemNecessario> itens) {
         if (itens == null || itens.isEmpty()) return Collections.emptyList();
 

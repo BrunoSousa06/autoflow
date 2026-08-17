@@ -3,7 +3,7 @@ package com.autoflow.presentation.pecainsumo;
 import com.autoflow.application.dto.PageResult;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
-import com.autoflow.application.usecases.pecainsumo.*;
+import com.autoflow.application.port.in.pecainsumo.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;

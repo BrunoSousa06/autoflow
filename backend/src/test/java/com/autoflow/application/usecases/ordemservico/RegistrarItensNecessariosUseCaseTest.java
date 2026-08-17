@@ -4,7 +4,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
-import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
+import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;

@@ -2,7 +2,7 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
+import com.autoflow.application.port.in.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;

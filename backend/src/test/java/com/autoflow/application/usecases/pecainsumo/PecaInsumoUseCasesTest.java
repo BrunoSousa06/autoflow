@@ -35,7 +35,7 @@ class PecaInsumoUseCasesTest {
 
     @Test
     void deveCadastrarEImpedirNomeDuplicado() {
-        var useCase = new CadastrarPecaInsumoUseCase(gateway);
+        var useCase = new CadastrarPecaInsumoUseCaseImpl(gateway);
         when(gateway.findByNomeIgnoreCase("Filtro")).thenReturn(Optional.empty());
         when(gateway.save(input)).thenReturn(output);
 
@@ -47,7 +47,7 @@ class PecaInsumoUseCasesTest {
 
     @Test
     void deveBuscarPorIdEInformarAusencia() {
-        var useCase = new BuscarPecaInsumoPorIdUseCase(gateway);
+        var useCase = new BuscarPecaInsumoPorIdUseCaseImpl(gateway);
         when(gateway.findById(1L)).thenReturn(Optional.of(output));
         assertEquals(output, useCase.execute(1L));
 
@@ -57,7 +57,7 @@ class PecaInsumoUseCasesTest {
 
     @Test
     void deveAtualizarItemExistente() {
-        var useCase = new AtualizarPecaInsumoUseCase(gateway);
+        var useCase = new AtualizarPecaInsumoUseCaseImpl(gateway);
         when(gateway.findById(1L)).thenReturn(Optional.of(output));
         when(gateway.update(1L, input)).thenReturn(output);
 
@@ -71,18 +71,18 @@ class PecaInsumoUseCasesTest {
     @Test
     void deveListarEListarPaginado() {
         when(gateway.findAll()).thenReturn(List.of(output));
-        assertEquals(List.of(output), new ListarPecaInsumoUseCase(gateway).execute());
+        assertEquals(List.of(output), new ListarPecaInsumoUseCaseImpl(gateway).execute());
 
         var pageQuery = new PageQuery(0, 10);
         when(gateway.findAll(any(), eq(pageQuery)))
                 .thenReturn(new PageResult<>(List.of(output), 1, 0, 10));
-        assertEquals(List.of(output), new ListarPecaInsumoPaginadoUseCase(gateway)
+        assertEquals(List.of(output), new ListarPecaInsumoPaginadoUseCaseImpl(gateway)
                 .execute(pageQuery, "Fil", CategoriaPecaInsumo.PECA).content());
     }
 
     @Test
     void deveDeletarSomenteItemExistente() {
-        var useCase = new DeletarPecaInsumoUseCase(gateway);
+        var useCase = new DeletarPecaInsumoUseCaseImpl(gateway);
         when(gateway.existsById(1L)).thenReturn(true);
         useCase.execute(1L);
         verify(gateway).deleteById(1L);

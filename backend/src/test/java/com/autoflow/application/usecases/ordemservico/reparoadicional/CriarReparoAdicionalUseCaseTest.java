@@ -7,7 +7,7 @@ import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdici
 import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
-import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
+import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;

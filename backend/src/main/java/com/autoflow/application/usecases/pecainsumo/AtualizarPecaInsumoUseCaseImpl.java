@@ -1,20 +1,26 @@
 package com.autoflow.application.usecases.pecainsumo;
 
+import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.port.in.pecainsumo.AtualizarPecaInsumoUseCase;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class BuscarPecaInsumoPorIdUseCase {
+public class AtualizarPecaInsumoUseCaseImpl implements AtualizarPecaInsumoUseCase {
 
     private final PecaInsumoGateway pecaInsumoGateway;
 
-    public PecaInsumoOutput execute(Long id) {
-        return pecaInsumoGateway.findById(id).orElseThrow(() ->
+    @Override
+    public PecaInsumoOutput execute(
+            Long id,
+            PecaInsumoInput request) {
+
+        pecaInsumoGateway.findById(id).orElseThrow(() ->
                 ApplicationException.notFound(
                         "Peça/Insumo não encontrado com o ID: " + id));
-
+        return pecaInsumoGateway.update(id, request);
     }
 }
