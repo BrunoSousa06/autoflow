@@ -7,6 +7,7 @@ import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
+import com.autoflow.application.port.in.ordemservico.IncluirServicosUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
@@ -20,13 +21,14 @@ import java.util.List;
 
 
 @RequiredArgsConstructor
-public class IncluirServicosUseCase {
+public class IncluirServicosUseCaseImpl implements IncluirServicosUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final ServicoGateway servicoGateway;
     private final UsuarioGateway usuarioGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
 
     @TransactionalUseCase
+    @Override
     public OrdemServico execute(String numeroOs, List<ServicoSolicitado> servicos,
                                       String emailUsuarioLogado) {
         OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)

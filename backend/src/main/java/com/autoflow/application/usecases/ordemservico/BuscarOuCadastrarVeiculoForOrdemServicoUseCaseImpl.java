@@ -6,13 +6,15 @@ import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.policy.PlacaPolicy;
+import com.autoflow.application.port.in.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class BuscarOuCadastrarVeiculoForOrdemServicoUseCase {
+public class BuscarOuCadastrarVeiculoForOrdemServicoUseCaseImpl implements BuscarOuCadastrarVeiculoForOrdemServicoUseCase {
 
     private final VeiculoGateway veiculoGateway;
 
+    @Override
     public VeiculoOutput execute(ClienteOutput cliente, VeiculoOrdemServicoInput input) {
         String placa = PlacaPolicy.normalizar(input.placa());
         var existente = veiculoGateway.findByPlaca(placa);

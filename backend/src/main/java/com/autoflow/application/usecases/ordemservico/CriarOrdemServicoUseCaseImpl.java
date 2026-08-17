@@ -11,6 +11,8 @@ import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
+import com.autoflow.application.port.in.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.CriarOrdemServicoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
@@ -29,7 +31,7 @@ import java.util.List;
 @Slf4j
 
 @RequiredArgsConstructor
-public class CriarOrdemServicoUseCase {
+public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
 
     private final BuscarClientePorCpfCnpjUseCase buscarCliente;
     private final BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculo;
@@ -40,6 +42,7 @@ public class CriarOrdemServicoUseCase {
     private final EnviarLinkAcompanhamentoUseCase enviarLink;
 
     @TransactionalUseCase
+    @Override
     public OrdemServicoCriadaOutput execute(
             String cpfCnpj,
             VeiculoOrdemServicoInput veiculoRequest,

@@ -6,6 +6,7 @@ import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
+import com.autoflow.application.port.in.ordemservico.FinalizarDiagnosticoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -23,7 +24,7 @@ import java.time.ZoneId;
 @Slf4j
 
 @RequiredArgsConstructor
-public class FinalizarDiagnosticoUseCase {
+public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
@@ -35,6 +36,7 @@ public class FinalizarDiagnosticoUseCase {
     private final HistoricoStatusOsGateway historicoGateway;
 
     @TransactionalUseCase
+    @Override
     public FinalizarDiagnosticoOutput execute(String numeroOs, String emailUsuarioLogado) {
         OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));

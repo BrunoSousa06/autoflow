@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.ordemservico;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.ordemservico.AtribuirMecanicoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.Diagnostico;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -11,11 +12,12 @@ import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AtribuirMecanicoUseCase {
+public class AtribuirMecanicoUseCaseImpl implements AtribuirMecanicoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
 
     @TransactionalUseCase
+    @Override
     public OrdemServico execute(String numeroOs, Long mecanicoId, String mecanicoEmail) {
         OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));

@@ -35,7 +35,7 @@ class FinalizarServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new FinalizarServicoUseCase(ordemServicoGateway, historicoStatusOsGateway)
+        var resultado = new FinalizarServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
                 .execute("OS-1", 1L);
 
         assertEquals(StatusOrdemServico.FINALIZADA, resultado.getStatus());
@@ -48,7 +48,7 @@ class FinalizarServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        new FinalizarServicoUseCase(ordemServicoGateway, historicoStatusOsGateway)
+        new FinalizarServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
                 .execute("OS-1", 1L);
 
         assertEquals(StatusOrdemServico.EM_EXECUCAO, os.getStatus());

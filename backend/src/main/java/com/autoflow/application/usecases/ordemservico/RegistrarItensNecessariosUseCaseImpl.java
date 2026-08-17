@@ -5,6 +5,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.transaction.TransactionalUseCase;
+import com.autoflow.application.port.in.ordemservico.RegistrarItensNecessariosUseCase;
 import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -18,13 +19,14 @@ import java.util.List;
 
 
 @RequiredArgsConstructor
-public class RegistrarItensNecessariosUseCase {
+public class RegistrarItensNecessariosUseCaseImpl implements RegistrarItensNecessariosUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
     private final ConsultarDisponibilidadeEstoqueUseCase disponibilidadeEstoque;
 
     @TransactionalUseCase
+    @Override
     public OrdemServico execute(String numeroOs, Long servicoId, String emailUsuarioLogado,
                                 List<ItemNecessario> itensNecessarios) {
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)

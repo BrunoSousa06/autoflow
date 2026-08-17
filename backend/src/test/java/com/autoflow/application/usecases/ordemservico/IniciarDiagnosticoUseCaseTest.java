@@ -40,7 +40,7 @@ class IniciarDiagnosticoUseCaseTest {
         var admin = usuario(RoleEnum.ADMIN);
         configurarBusca(os, admin);
 
-        var resultado = new IniciarDiagnosticoUseCase(
+        var resultado = new IniciarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
         ).execute("OS-1", "admin@autoflow.com");
 
@@ -55,7 +55,7 @@ class IniciarDiagnosticoUseCaseTest {
         var mecanico = usuario(RoleEnum.MECANICO);
         configurarBusca(os, mecanico);
 
-        new IniciarDiagnosticoUseCase(
+        new IniciarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
         ).execute("OS-1", "mecanico@autoflow.com");
 

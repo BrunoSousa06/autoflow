@@ -41,7 +41,7 @@ class ListarOrdensServicoUseCaseTest {
         when(ordemServicoGateway.findAll(any(), eq("mecanico@autoflow.com"), eq(pageQuery)))
                 .thenReturn(esperado);
 
-        PageResult<OrdemServico> resultado = new ListarOrdensServicoUseCase(ordemServicoGateway, usuarioGateway)
+        PageResult<OrdemServico> resultado = new ListarOrdensServicoUseCaseImpl(ordemServicoGateway, usuarioGateway)
                 .execute(new OrdemServicoFiltroInput(null, null, null), pageQuery, "mecanico@autoflow.com");
 
         assertSame(esperado, resultado);
@@ -50,7 +50,7 @@ class ListarOrdensServicoUseCaseTest {
 
     @Test
     void deveRejeitarUsuarioAutenticadoInexistente() {
-        var useCase = new ListarOrdensServicoUseCase(ordemServicoGateway, usuarioGateway);
+        var useCase = new ListarOrdensServicoUseCaseImpl(ordemServicoGateway, usuarioGateway);
         var filtro = new OrdemServicoFiltroInput(null, null, null);
         var pageQuery = new PageQuery(0, 10);
         var email = "ausente@autoflow.com";

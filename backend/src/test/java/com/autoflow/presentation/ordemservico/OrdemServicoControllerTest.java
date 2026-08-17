@@ -9,7 +9,7 @@ import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.dto.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
-import com.autoflow.application.usecases.ordemservico.*;
+import com.autoflow.application.port.in.ordemservico.*;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;

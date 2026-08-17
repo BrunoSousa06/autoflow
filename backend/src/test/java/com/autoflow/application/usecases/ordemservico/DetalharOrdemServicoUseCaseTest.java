@@ -33,7 +33,7 @@ class DetalharOrdemServicoUseCaseTest {
         when(orcamentoGateway.findByNumeroOsAndStatus("OS-123", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.of(orcamento));
 
-        var resultado = new DetalharOrdemServicoUseCase(ordemServicoGateway, orcamentoGateway).execute("OS-123");
+        var resultado = new DetalharOrdemServicoUseCaseImpl(ordemServicoGateway, orcamentoGateway).execute("OS-123");
 
         assertSame(ordemServico, resultado.ordemServico());
         assertSame(orcamento, resultado.orcamentoAtual());
@@ -49,7 +49,7 @@ class DetalharOrdemServicoUseCaseTest {
         when(orcamentoGateway.findTopByNumeroOsOrderByVersaoDesc("OS-123"))
                 .thenReturn(Optional.of(orcamento));
 
-        var resultado = new DetalharOrdemServicoUseCase(ordemServicoGateway, orcamentoGateway).execute("OS-123");
+        var resultado = new DetalharOrdemServicoUseCaseImpl(ordemServicoGateway, orcamentoGateway).execute("OS-123");
 
         assertSame(orcamento, resultado.orcamentoAtual());
         verify(orcamentoGateway).findTopByNumeroOsOrderByVersaoDesc("OS-123");
@@ -59,7 +59,7 @@ class DetalharOrdemServicoUseCaseTest {
     void deveFalharQuandoOsNaoExistir() {
         when(ordemServicoGateway.findByNumeroOs("OS-404")).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> new DetalharOrdemServicoUseCase(ordemServicoGateway, orcamentoGateway)
+        assertThrows(RuntimeException.class, () -> new DetalharOrdemServicoUseCaseImpl(ordemServicoGateway, orcamentoGateway)
                 .execute("OS-404"));
     }
 }

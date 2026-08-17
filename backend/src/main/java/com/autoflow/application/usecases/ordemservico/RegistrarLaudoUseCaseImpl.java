@@ -4,6 +4,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
+import com.autoflow.application.port.in.ordemservico.RegistrarLaudoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.Usuario;
@@ -11,12 +12,13 @@ import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class RegistrarLaudoUseCase {
+public class RegistrarLaudoUseCaseImpl implements RegistrarLaudoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
 
     @TransactionalUseCase
+    @Override
     public OrdemServico execute(String numeroOs, String emailUsuarioLogado, String laudo) {
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));

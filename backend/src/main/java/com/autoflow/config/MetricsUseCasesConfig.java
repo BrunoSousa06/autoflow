@@ -1,8 +1,9 @@
 package com.autoflow.config;
 
 import com.autoflow.application.gateway.MetricsGateway;
+import com.autoflow.application.port.in.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
 import com.autoflow.application.port.in.servico.CalcularTempoMedioServicoUseCase;
-import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCaseImpl;
 import com.autoflow.application.usecases.servico.CalcularTempoMedioServicoUseCaseImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +14,7 @@ public class MetricsUseCasesConfig {
     @Bean
     public CalcularTempoMedioOrdemServicoUseCase calcularTempoMedioOrdemServicoUseCase(
             MetricsGateway metricsGateway) {
-        return new CalcularTempoMedioOrdemServicoUseCase(metricsGateway);
+        return new CalcularTempoMedioOrdemServicoUseCaseImpl(metricsGateway);
     }
 
     @Bean

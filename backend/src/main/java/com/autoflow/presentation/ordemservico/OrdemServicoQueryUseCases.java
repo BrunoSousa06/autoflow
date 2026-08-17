@@ -1,9 +1,9 @@
 package com.autoflow.presentation.ordemservico;
 
-import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
-import com.autoflow.application.usecases.ordemservico.ConsultarStatusOrdemServicoUseCase;
-import com.autoflow.application.usecases.ordemservico.DetalharOrdemServicoUseCase;
-import com.autoflow.application.usecases.ordemservico.ListarOrdensServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.ConsultarStatusOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.DetalharOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.ListarOrdensServicoUseCase;
 import org.springframework.stereotype.Component;
 
 @Component

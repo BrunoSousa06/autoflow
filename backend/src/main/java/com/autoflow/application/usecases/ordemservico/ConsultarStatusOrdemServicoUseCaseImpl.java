@@ -5,17 +5,19 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.port.in.ordemservico.ConsultarStatusOrdemServicoUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class ConsultarStatusOrdemServicoUseCase {
+public class ConsultarStatusOrdemServicoUseCaseImpl implements ConsultarStatusOrdemServicoUseCase {
 
     private final OrdemServicoGateway ordemServicoGateway;
     private final CurrentUserGateway currentUserGateway;
     private final VeiculoClienteGateway clienteGateway;
 
+    @Override
     public StatusOrdemServicoOutput execute(String numeroOs, String emailUsuarioAutenticado) {
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound(

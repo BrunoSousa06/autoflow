@@ -1,8 +1,8 @@
 package com.autoflow.presentation.ordemservico;
 
-import com.autoflow.application.usecases.ordemservico.AtribuirMecanicoUseCase;
-import com.autoflow.application.usecases.ordemservico.CriarOrdemServicoUseCase;
-import com.autoflow.application.usecases.ordemservico.IncluirServicosUseCase;
+import com.autoflow.application.port.in.ordemservico.AtribuirMecanicoUseCase;
+import com.autoflow.application.port.in.ordemservico.CriarOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.IncluirServicosUseCase;
 import org.springframework.stereotype.Component;
 
 @Component

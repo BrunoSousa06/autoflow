@@ -49,7 +49,7 @@ class RegistrarItensNecessariosUseCaseTest {
         when(disponibilidadeEstoque.execute(itens)).thenReturn(itens);
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new RegistrarItensNecessariosUseCase(
+        var resultado = new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque)
                 .execute("OS-1", 10L, usuario.getEmail(), itens);
 
@@ -68,7 +68,7 @@ class RegistrarItensNecessariosUseCaseTest {
         when(disponibilidadeEstoque.execute(itens)).thenReturn(itens);
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        new RegistrarItensNecessariosUseCase(
+        new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque)
                 .execute("OS-1", 10L, usuario.getEmail(), itens);
 
@@ -84,7 +84,7 @@ class RegistrarItensNecessariosUseCaseTest {
         var email = usuario.getEmail();
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
-        var useCase = new RegistrarItensNecessariosUseCase(
+        var useCase = new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque);
 
         var exception = assertThrows(ApplicationException.class,

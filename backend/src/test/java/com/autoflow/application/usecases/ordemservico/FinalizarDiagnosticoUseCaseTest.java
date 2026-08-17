@@ -61,8 +61,8 @@ class FinalizarDiagnosticoUseCaseTest {
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
 
-    private FinalizarDiagnosticoUseCase novoCasoDeUso() {
-        return new FinalizarDiagnosticoUseCase(
+    private FinalizarDiagnosticoUseCaseImpl novoCasoDeUso() {
+        return new FinalizarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, versioningGateway,
                 orcamentoFactory, orcamentoGateway, publicacaoGateway,
                 notificacaoGateway, historicoGateway

@@ -70,7 +70,7 @@ class IncluirServicosUseCaseTest {
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(catalogo));
         when(ordemServicoGateway.save(ordem)).thenReturn(ordem);
 
-        var resultado = new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
+        var resultado = new IncluirServicosUseCaseImpl(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-1",
                 List.of(new ServicoSolicitado(5L)), "admin@autoflow.com");
 
@@ -81,7 +81,7 @@ class IncluirServicosUseCaseTest {
 
     private OrdemServico incluir(String numeroOs, List<ServicoSolicitado> servicos,
                                        String email) {
-        return new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
+        return new IncluirServicosUseCaseImpl(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute(numeroOs, servicos, email);
     }
 
@@ -98,14 +98,14 @@ class IncluirServicosUseCaseTest {
         when(servicoGateway.findById(7L)).thenReturn(Optional.of(servico(7L)));
         when(ordemServicoGateway.save(ordem)).thenReturn(ordem);
 
-        new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
+        new IncluirServicosUseCaseImpl(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-2",
                 List.of(new ServicoSolicitado(6L)), "mecanico@autoflow.com");
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(ordem, mecanico);
 
         ordem.setStatus(StatusOrdemServico.RECEBIDA);
-        new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
+        new IncluirServicosUseCaseImpl(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-2",
                 List.of(new ServicoSolicitado(7L)), "nao-consulta@autoflow.com");
         verify(usuarioGateway, never()).findByEmail("nao-consulta@autoflow.com");

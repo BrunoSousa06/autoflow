@@ -6,7 +6,7 @@ import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.security.AuthorizationService;
 import com.autoflow.application.security.ClienteAutenticadoService;
-import com.autoflow.application.usecases.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCaseImpl;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
 import com.autoflow.application.dto.cliente.ClienteOutput;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class VeiculoUseCasesTest {
     @InjectMocks
     private BuscarOuCadastrarVeiculoUseCaseImpl buscarOuCadastrarVeiculoUseCase;
     @InjectMocks
-    private BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoService;
+    private BuscarOuCadastrarVeiculoForOrdemServicoUseCaseImpl buscarOuCadastrarVeiculoService;
 
     @Mock
     private VeiculoGateway veiculoGateway;

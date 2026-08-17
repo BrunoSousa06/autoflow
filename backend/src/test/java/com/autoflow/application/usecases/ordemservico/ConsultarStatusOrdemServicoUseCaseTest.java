@@ -104,8 +104,8 @@ class ConsultarStatusOrdemServicoUseCaseTest {
         verifyNoInteractions(currentUserGateway, clienteGateway);
     }
 
-    private ConsultarStatusOrdemServicoUseCase novoUseCase() {
-        return new ConsultarStatusOrdemServicoUseCase(
+    private ConsultarStatusOrdemServicoUseCaseImpl novoUseCase() {
+        return new ConsultarStatusOrdemServicoUseCaseImpl(
                 ordemServicoGateway,
                 currentUserGateway,
                 clienteGateway);

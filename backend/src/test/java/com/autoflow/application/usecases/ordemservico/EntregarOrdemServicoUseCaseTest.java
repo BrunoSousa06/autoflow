@@ -34,7 +34,7 @@ class EntregarOrdemServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new EntregarOrdemServicoUseCase(ordemServicoGateway, historicoStatusOsGateway)
+        var resultado = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
                 .execute("OS-1");
 
         assertEquals(StatusOrdemServico.ENTREGUE, resultado.getStatus());
@@ -48,7 +48,7 @@ class EntregarOrdemServicoUseCaseTest {
     @Test
     void deveRetornar404QuandoOsNaoExiste() {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.empty());
-        var useCase = new EntregarOrdemServicoUseCase(ordemServicoGateway, historicoStatusOsGateway);
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway);
 
         var exception = assertThrows(ApplicationException.class,
                 () -> useCase.execute("OS-1"));
@@ -61,7 +61,7 @@ class EntregarOrdemServicoUseCaseTest {
         var os = ordemFinalizada();
         os.setStatus(StatusOrdemServico.EM_EXECUCAO);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        var useCase = new EntregarOrdemServicoUseCase(ordemServicoGateway, historicoStatusOsGateway);
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway);
 
         assertThrows(IllegalStateException.class,
                 () -> useCase.execute("OS-1"));

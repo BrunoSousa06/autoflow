@@ -5,6 +5,7 @@ import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
+import com.autoflow.application.port.in.ordemservico.IniciarDiagnosticoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -14,13 +15,14 @@ import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class IniciarDiagnosticoUseCase {
+public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
     private final HistoricoStatusOsGateway historicoStatusOsGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
 
     @TransactionalUseCase
+    @Override
     public OrdemServico execute(String numeroOs, String emailUsuarioLogado) {
         OrdemServico ordemServico = buscar(numeroOs);
         Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
