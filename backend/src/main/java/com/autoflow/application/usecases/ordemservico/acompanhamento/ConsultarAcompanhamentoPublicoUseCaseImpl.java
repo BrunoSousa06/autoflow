@@ -5,18 +5,20 @@ import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoExce
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
+import com.autoflow.application.port.in.ordemservico.acompanhamento.ConsultarAcompanhamentoPublicoUseCase;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
-public class ConsultarAcompanhamentoPublicoUseCase {
+public class ConsultarAcompanhamentoPublicoUseCaseImpl implements ConsultarAcompanhamentoPublicoUseCase {
 
     private final AcompanhamentoPublicoGateway acompanhamentoGateway;
     private final TokenAcompanhamentoGateway tokenGateway;
     private final Clock clock;
 
+    @Override
     public AcompanhamentoPublicoOutput execute(String token) {
         validarToken(token);
 

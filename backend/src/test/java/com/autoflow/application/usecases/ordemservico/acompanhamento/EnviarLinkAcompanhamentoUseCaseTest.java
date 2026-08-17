@@ -2,6 +2,7 @@ package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCaseImpl;
 import com.autoflow.domain.ordemservico.ClienteOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,11 +21,11 @@ class EnviarLinkAcompanhamentoUseCaseTest {
     @Mock
     private NotificacaoGateway notificacaoGateway;
 
-    private EnviarLinkAcompanhamentoUseCase useCase;
+    private EnviarLinkAcompanhamentoUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new EnviarLinkAcompanhamentoUseCase(notificacaoGateway, "http://localhost:4200");
+        useCase = new EnviarLinkAcompanhamentoUseCaseImpl(notificacaoGateway, "http://localhost:4200");
     }
 
     @Test

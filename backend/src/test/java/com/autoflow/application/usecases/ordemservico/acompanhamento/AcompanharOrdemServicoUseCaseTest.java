@@ -5,6 +5,7 @@ import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.AcompanharOrdemServicoUseCaseImpl;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
@@ -37,7 +38,7 @@ class AcompanharOrdemServicoUseCaseTest {
     @Mock
     private HistoricoStatusOsGateway historicoStatusOsGateway;
     @InjectMocks
-    private AcompanharOrdemServicoUseCase useCase;
+    private AcompanharOrdemServicoUseCaseImpl useCase;
 
     @Test
     void deveRetornarListaDeAcompanhamentos() {

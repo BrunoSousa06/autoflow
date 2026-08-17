@@ -2,15 +2,17 @@ package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
+import com.autoflow.application.port.in.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class EnviarLinkAcompanhamentoUseCase {
+public class EnviarLinkAcompanhamentoUseCaseImpl implements EnviarLinkAcompanhamentoUseCase {
 
     private final NotificacaoGateway notificacaoGateway;
     private final String frontendPublicBaseUrl;
 
+    @Override
     public void execute(OrdemServico ordemServico, String token) {
         String emailCliente = ordemServico.getCliente().getEmail();
         if (emailCliente == null || emailCliente.isBlank()) {

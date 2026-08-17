@@ -10,8 +10,9 @@ import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
-import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
-public class CriarReparoAdicionalUseCase {
+public class CriarReparoAdicionalUseCaseImpl implements CriarReparoAdicionalUseCase {
 
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
@@ -45,6 +46,7 @@ public class CriarReparoAdicionalUseCase {
     private final Clock clock;
 
     @TransactionalUseCase
+    @Override
     public CriarReparoAdicionalOutput execute(CriarReparoAdicionalCommand command) {
         validarCommand(command);
 

@@ -2,6 +2,7 @@ package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -14,12 +15,13 @@ import java.util.List;
 
 
 @RequiredArgsConstructor
-public class AprovarReparoAdicionalUseCase {
+public class AprovarReparoAdicionalUseCaseImpl implements AprovarReparoAdicionalUseCase {
 
     private final ReparoAdicionalGateway reparoAdicionalGateway;
     private final OrdemServicoGateway ordemServicoGateway;
 
     @TransactionalUseCase
+    @Override
     public OrdemServico execute(Long reparoAdicionalId) {
         ReparoAdicional reparo = reparoAdicionalGateway.findByIdForUpdate(reparoAdicionalId)
                 .orElseThrow(() -> new IllegalArgumentException("Reparo adicional não encontrado."));

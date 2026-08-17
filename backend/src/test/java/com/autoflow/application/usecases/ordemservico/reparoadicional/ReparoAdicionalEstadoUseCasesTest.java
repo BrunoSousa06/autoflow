@@ -2,6 +2,15 @@ package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalUseCase;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.ConsultarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.RecusarReparoAdicionalUseCase;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCaseImpl;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalUseCaseImpl;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.ConsultarReparoAdicionalPorOrcamentoUseCaseImpl;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCaseImpl;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalUseCaseImpl;
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -54,7 +63,7 @@ class ReparoAdicionalEstadoUseCasesTest {
         when(reparoAdicionalGateway.save(reparo)).thenReturn(reparo);
         when(ordemServicoGateway.save(ordemServico)).thenReturn(ordemServico);
 
-        var resultado = new AprovarReparoAdicionalUseCase(
+        var resultado = new AprovarReparoAdicionalUseCaseImpl(
                 reparoAdicionalGateway,
                 ordemServicoGateway
         ).execute(40L);
@@ -88,7 +97,7 @@ class ReparoAdicionalEstadoUseCasesTest {
         when(reparoAdicionalGateway.save(reparo)).thenReturn(reparo);
         when(ordemServicoGateway.save(ordemServico)).thenThrow(new RuntimeException("banco indisponível"));
 
-        var useCase = new AprovarReparoAdicionalUseCase(
+        var useCase = new AprovarReparoAdicionalUseCaseImpl(
                 reparoAdicionalGateway,
                 ordemServicoGateway
         );
@@ -105,7 +114,7 @@ class ReparoAdicionalEstadoUseCasesTest {
         when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico()));
 
-        var useCase = new AprovarReparoAdicionalUseCase(
+        var useCase = new AprovarReparoAdicionalUseCaseImpl(
                 reparoAdicionalGateway,
                 ordemServicoGateway
         );
@@ -121,7 +130,7 @@ class ReparoAdicionalEstadoUseCasesTest {
         when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
         when(reparoAdicionalGateway.save(reparo)).thenReturn(reparo);
 
-        var resultado = new RecusarReparoAdicionalUseCase(reparoAdicionalGateway)
+        var resultado = new RecusarReparoAdicionalUseCaseImpl(reparoAdicionalGateway)
                 .execute(40L, "Cliente recusou o orçamento complementar");
 
         assertSame(reparo, resultado);
@@ -138,7 +147,7 @@ class ReparoAdicionalEstadoUseCasesTest {
         reparo.recusar("primeira recusa");
         when(reparoAdicionalGateway.findByIdForUpdate(40L)).thenReturn(Optional.of(reparo));
 
-        var useCase = new RecusarReparoAdicionalUseCase(reparoAdicionalGateway);
+        var useCase = new RecusarReparoAdicionalUseCaseImpl(reparoAdicionalGateway);
 
         assertThrows(IllegalStateException.class, () -> useCase.execute(40L, "nova recusa"));
         verify(reparoAdicionalGateway, never()).save(reparo);
@@ -150,12 +159,12 @@ class ReparoAdicionalEstadoUseCasesTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AprovarReparoAdicionalUseCase(reparoAdicionalGateway, ordemServicoGateway)
+                () -> new AprovarReparoAdicionalUseCaseImpl(reparoAdicionalGateway, ordemServicoGateway)
                         .execute(99L)
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new RecusarReparoAdicionalUseCase(reparoAdicionalGateway)
+                () -> new RecusarReparoAdicionalUseCaseImpl(reparoAdicionalGateway)
                         .execute(99L, "motivo")
         );
         verifyNoInteractions(ordemServicoGateway);
@@ -164,7 +173,7 @@ class ReparoAdicionalEstadoUseCasesTest {
     @Test
     void deveConsultarReparoPorOrcamentoComoResultadoOpcional() {
         var reparo = reparoPendente();
-        var useCase = new ConsultarReparoAdicionalPorOrcamentoUseCase(reparoAdicionalGateway);
+        var useCase = new ConsultarReparoAdicionalPorOrcamentoUseCaseImpl(reparoAdicionalGateway);
         when(reparoAdicionalGateway.findByOrcamentoId(30L)).thenReturn(Optional.of(reparo));
         when(reparoAdicionalGateway.findByOrcamentoId(31L)).thenReturn(Optional.empty());
 
@@ -175,7 +184,7 @@ class ReparoAdicionalEstadoUseCasesTest {
     @Test
     void deveAprovarPorOrcamentoQuandoExistirEIgnorarQuandoAusente() {
         var reparo = reparoPendente();
-        var useCase = new AprovarReparoAdicionalPorOrcamentoUseCase(
+        var useCase = new AprovarReparoAdicionalPorOrcamentoUseCaseImpl(
                 consultarPorOrcamentoUseCase,
                 aprovarReparoAdicionalUseCase
         );
@@ -190,7 +199,7 @@ class ReparoAdicionalEstadoUseCasesTest {
 
     @Test
     void aprovacaoObrigatoriaPorOrcamentoDeveFalharQuandoAusente() {
-        var useCase = new AprovarReparoAdicionalPorOrcamentoUseCase(
+        var useCase = new AprovarReparoAdicionalPorOrcamentoUseCaseImpl(
                 consultarPorOrcamentoUseCase,
                 aprovarReparoAdicionalUseCase
         );
@@ -203,7 +212,7 @@ class ReparoAdicionalEstadoUseCasesTest {
     @Test
     void deveRecusarPorOrcamentoQuandoExistirEIgnorarQuandoAusente() {
         var reparo = reparoPendente();
-        var useCase = new RecusarReparoAdicionalPorOrcamentoUseCase(
+        var useCase = new RecusarReparoAdicionalPorOrcamentoUseCaseImpl(
                 consultarPorOrcamentoUseCase,
                 recusarReparoAdicionalUseCase
         );

@@ -8,6 +8,7 @@ import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAd
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
+import com.autoflow.application.usecases.ordemservico.reparoadicional.CriarReparoAdicionalUseCaseImpl;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
@@ -53,11 +54,11 @@ class CriarReparoAdicionalUseCaseTest {
     @Mock OrcamentoPublicacaoGateway orcamentoPublicacaoGateway;
     @Mock OrcamentoNotificacaoGateway orcamentoNotificacaoGateway;
 
-    private CriarReparoAdicionalUseCase useCase;
+    private CriarReparoAdicionalUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new CriarReparoAdicionalUseCase(
+        useCase = new CriarReparoAdicionalUseCaseImpl(
                 ordemServicoGateway,
                 usuarioGateway,
                 servicoGateway,

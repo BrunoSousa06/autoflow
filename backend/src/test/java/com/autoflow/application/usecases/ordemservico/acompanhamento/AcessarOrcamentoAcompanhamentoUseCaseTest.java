@@ -6,6 +6,7 @@ import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoDaOsUseCase;
 import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCaseImpl;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
@@ -36,12 +37,12 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
     @Mock private DecidirOrcamentoUseCase decidirOrcamentoUseCase;
     @Mock private OrcamentoEntity orcamento;
 
-    private AcessarOrcamentoAcompanhamentoUseCase useCase;
+    private AcessarOrcamentoAcompanhamentoUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
         var clock = Clock.fixed(Instant.parse("2026-08-01T12:00:00Z"), ZoneOffset.UTC);
-        useCase = new AcessarOrcamentoAcompanhamentoUseCase(
+        useCase = new AcessarOrcamentoAcompanhamentoUseCaseImpl(
                 acompanhamentoGateway, tokenGateway, consultarOrcamentoDaOsUseCase, decidirOrcamentoUseCase, clock);
     }
 

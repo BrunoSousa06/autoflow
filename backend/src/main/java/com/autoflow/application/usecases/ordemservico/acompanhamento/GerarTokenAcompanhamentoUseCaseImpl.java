@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.ordemservico.acompanhamento;
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
+import com.autoflow.application.port.in.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import lombok.RequiredArgsConstructor;
 
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 
 
 @RequiredArgsConstructor
-public class GerarTokenAcompanhamentoUseCase {
+public class GerarTokenAcompanhamentoUseCaseImpl implements GerarTokenAcompanhamentoUseCase {
 
     private static final long VALIDADE_TOKEN_EM_DIAS = 30;
 
@@ -19,6 +20,7 @@ public class GerarTokenAcompanhamentoUseCase {
     private final AcompanhamentoPublicoGateway acompanhamentoGateway;
     private final Clock clock;
 
+    @Override
     public TokenAcompanhamentoOutput execute(
             Long ordemServicoId
     ) {

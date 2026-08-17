@@ -9,6 +9,7 @@ import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.port.in.ordemservico.acompanhamento.AcompanharOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.StatusOrdemServicoMensagemPolicy;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -20,13 +21,14 @@ import java.util.List;
 
 
 @RequiredArgsConstructor
-public class AcompanharOrdemServicoUseCase {
+public class AcompanharOrdemServicoUseCaseImpl implements AcompanharOrdemServicoUseCase {
 
     private final VeiculoClienteGateway clienteGateway;
     private final OrdemServicoGateway ordemServicoGateway;
     private final OrcamentoGateway orcamentoGateway;
     private final HistoricoStatusOsGateway historicoStatusOsGateway;
 
+    @Override
     public List<AcompanhamentoOrdemServicoOutput> execute(String emailCliente) {
         Long clienteId = clienteGateway.findIdByUsuarioEmail(emailCliente)
                 .orElseThrow(() -> ApplicationException.notFound(

@@ -1,7 +1,8 @@
 package com.autoflow.config;
 
 import com.autoflow.application.gateway.NotificacaoGateway;
-import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
+import com.autoflow.application.port.in.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCaseImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -18,7 +19,7 @@ import org.springframework.context.annotation.FilterType;
         ),
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
-                classes = EnviarLinkAcompanhamentoUseCase.class
+                classes = EnviarLinkAcompanhamentoUseCaseImpl.class
         )
 )
 public class ApplicationComponentConfig {
@@ -26,6 +27,6 @@ public class ApplicationComponentConfig {
     public EnviarLinkAcompanhamentoUseCase enviarLinkAcompanhamentoUseCase(
             NotificacaoGateway notificacaoGateway,
             @Value("${app.frontend-public-base-url}") String frontendPublicBaseUrl) {
-        return new EnviarLinkAcompanhamentoUseCase(notificacaoGateway, frontendPublicBaseUrl);
+        return new EnviarLinkAcompanhamentoUseCaseImpl(notificacaoGateway, frontendPublicBaseUrl);
     }
 }
