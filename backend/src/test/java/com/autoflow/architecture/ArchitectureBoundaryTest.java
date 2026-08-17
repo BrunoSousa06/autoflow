@@ -65,7 +65,8 @@ class ArchitectureBoundaryTest {
                     .resideInAnyPackage(
                             "org.springframework..",
                             "jakarta..",
-                            "org.hibernate..")
+                            "org.hibernate..",
+                            "lombok..")
                     .because("o dominio deve ser Java puro e independente de frameworks");
 
     @ArchTest

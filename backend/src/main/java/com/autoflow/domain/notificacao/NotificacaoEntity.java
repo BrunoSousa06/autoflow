@@ -1,14 +1,7 @@
 package com.autoflow.domain.notificacao;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
 public class NotificacaoEntity {
 
     private Long id;
@@ -28,6 +21,9 @@ public class NotificacaoEntity {
     private String mensagemErro;
 
     private LocalDateTime criadaEm;
+
+    public NotificacaoEntity() {
+    }
 
     public static NotificacaoEntity pendente(
             Long orcamentoId,
@@ -53,5 +49,77 @@ public class NotificacaoEntity {
     public void marcarComoFalha(String mensagemErro) {
         this.status = StatusNotificacao.FALHA;
         this.mensagemErro = mensagemErro;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getOrcamentoId() {
+        return orcamentoId;
+    }
+
+    public void setOrcamentoId(Long orcamentoId) {
+        this.orcamentoId = orcamentoId;
+    }
+
+    public Long getClienteId() {
+        return clienteId;
+    }
+
+    public void setClienteId(Long clienteId) {
+        this.clienteId = clienteId;
+    }
+
+    public CanalNotificacao getCanal() {
+        return canal;
+    }
+
+    public void setCanal(CanalNotificacao canal) {
+        this.canal = canal;
+    }
+
+    public String getDestinatario() {
+        return destinatario;
+    }
+
+    public void setDestinatario(String destinatario) {
+        this.destinatario = destinatario;
+    }
+
+    public StatusNotificacao getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusNotificacao status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getEnviadaEm() {
+        return enviadaEm;
+    }
+
+    public void setEnviadaEm(LocalDateTime enviadaEm) {
+        this.enviadaEm = enviadaEm;
+    }
+
+    public String getMensagemErro() {
+        return mensagemErro;
+    }
+
+    public void setMensagemErro(String mensagemErro) {
+        this.mensagemErro = mensagemErro;
+    }
+
+    public LocalDateTime getCriadaEm() {
+        return criadaEm;
+    }
+
+    public void setCriadaEm(LocalDateTime criadaEm) {
+        this.criadaEm = criadaEm;
     }
 }
