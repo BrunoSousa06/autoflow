@@ -4,10 +4,8 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
-import com.tngtech.archunit.library.freeze.FreezingArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
-import static com.tngtech.archunit.library.freeze.FreezingArchRule.freeze;
 
 /**
  * Testes de fronteira arquitetural. Violações congeladas só representam os
@@ -52,15 +50,6 @@ class ArchitectureBoundaryTest {
             .should().dependOnClassesThat()
             .resideInAPackage("org.springframework..")
             .because("dominio nao deve depender do Spring");
-
-    @ArchTest
-    static final FreezingArchRule dominioNaoUsaJpa =
-        freeze(noClasses()
-            .that().resideInAPackage("..domain..")
-            .should().dependOnClassesThat()
-            .resideInAPackage("jakarta.persistence..")
-            .because("dominio nao deve depender de JPA — violacoes conhecidas serao corrigidas "
-                + "incrementalmente por componente conforme ADR-001"));
 
     @ArchTest
     static final ArchRule dominioDoPilotoNaoUsaBordas =

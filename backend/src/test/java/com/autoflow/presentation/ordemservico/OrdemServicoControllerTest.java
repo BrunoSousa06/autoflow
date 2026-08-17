@@ -4,6 +4,7 @@ import com.autoflow.application.dto.PageQuery;
 import com.autoflow.application.dto.PageResult;
 import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.application.dto.ordemservico.OrdemServicoDetalheOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.dto.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
@@ -407,7 +408,7 @@ class OrdemServicoControllerTest {
         OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getNumeroOs());
 
         when(detalharOrdemServicoUseCase.execute("OS-123"))
-                .thenReturn(new com.autoflow.application.dto.ordemservico.OrdemServicoDetalheOutput(ordemServico, orcamento));
+                .thenReturn(new OrdemServicoDetalheOutput(ordemServico, orcamento));
 
         mockMvc.perform(get("/ordens-servico/{numeroOs}", "OS-123"))
                 .andExpect(status().isOk())

@@ -11,6 +11,7 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,7 @@ public class IncluirServicosUseCase {
             resultado.setServicoId(catalogo.getId());
             resultado.setNome(catalogo.getNome());
             resultado.setValor(catalogo.getValor());
-            resultado.setStatus(com.autoflow.domain.ordemservico.StatusServicoOs.AGUARDANDO);
+            resultado.setStatus(StatusServicoOs.AGUARDANDO);
             resultado.setOrdemServico(os);
             return resultado;
         }).toList();

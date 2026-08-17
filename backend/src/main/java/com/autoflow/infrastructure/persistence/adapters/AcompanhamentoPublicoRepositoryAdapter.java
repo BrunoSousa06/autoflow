@@ -5,6 +5,7 @@ import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import com.autoflow.infrastructure.persistence.mapper.ordemservico.OrdemServicoPersistenceMapper;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
@@ -77,7 +78,7 @@ public class AcompanhamentoPublicoRepositoryAdapter
                 ordemServico.getEntregueEm(),
                 orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc(ordemServico.getNumeroOs())
                         .filter(orcamento -> orcamento.getStatus() == StatusOrcamento.DISPONIVEL)
-                        .map(com.autoflow.domain.orcamento.OrcamentoEntity::getId)
+                        .map(OrcamentoPersistenceEntity::getId)
                         .orElse(null),
                 acesso
         );

@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.repository;
 
 import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class OrcamentoSpecifications {
@@ -9,7 +9,7 @@ public final class OrcamentoSpecifications {
     }
 
 
-    public static Specification<OrcamentoEntity> comFiltros(OrcamentoFiltro filtro) {
+    public static Specification<OrcamentoPersistenceEntity> comFiltros(OrcamentoFiltro filtro) {
         return Specification.allOf(
                 status(filtro.status()),
                 numeroOs(filtro.numeroOs()),
@@ -20,32 +20,32 @@ public final class OrcamentoSpecifications {
         );
     }
 
-    private static Specification<OrcamentoEntity> status(Object status) {
+    private static Specification<OrcamentoPersistenceEntity> status(Object status) {
         return (root, query, cb) ->
                 status == null ? null : cb.equal(root.get("status"), status);
     }
 
-    private static Specification<OrcamentoEntity> numeroOs(String numeroOs) {
+    private static Specification<OrcamentoPersistenceEntity> numeroOs(String numeroOs) {
         return (root, query, cb) ->
                 isBlank(numeroOs) ? null : cb.equal(cb.lower(root.get("numeroOs")), numeroOs.toLowerCase());
     }
 
-    private static Specification<OrcamentoEntity> placa(String placa) {
+    private static Specification<OrcamentoPersistenceEntity> placa(String placa) {
         return (root, query, cb) ->
                 isBlank(placa) ? null : cb.equal(cb.lower(root.get("veiculo").get("placa")), placa.toLowerCase());
     }
 
-    private static Specification<OrcamentoEntity> clienteEmail(String email) {
+    private static Specification<OrcamentoPersistenceEntity> clienteEmail(String email) {
         return (root, query, cb) ->
                 isBlank(email) ? null : cb.equal(cb.lower(root.get("cliente").get("email")), email.toLowerCase());
     }
 
-    private static Specification<OrcamentoEntity> clienteDocumento(String documento) {
+    private static Specification<OrcamentoPersistenceEntity> clienteDocumento(String documento) {
         return (root, query, cb) ->
                 isBlank(documento) ? null : cb.equal(root.get("cliente").get("cpfCnpj"), documento);
     }
 
-    private static Specification<OrcamentoEntity> tipo(Object tipo) {
+    private static Specification<OrcamentoPersistenceEntity> tipo(Object tipo) {
         return (root, query, cb) ->
                 tipo == null ? null : cb.equal(root.get("tipo"), tipo);
     }

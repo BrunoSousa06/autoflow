@@ -1,6 +1,7 @@
 package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
 import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
@@ -51,7 +52,7 @@ public class FinalizarDiagnosticoUseCase {
         String publicUrl = publicacao.urlPdf();
         try {
             var cliente = salvo.getCliente();
-            notificacaoGateway.notificar(new com.autoflow.application.dto.notificacao.OrcamentoNotificacao(
+            notificacaoGateway.notificar(new OrcamentoNotificacao(
                     salvo.getId(), salvo.getTipo(), salvo.getNumeroOs(),
                     cliente.getNome(), cliente.getEmail(), publicUrl, publicacao.urlDecisao()));
         } catch (Exception exception) {

@@ -9,6 +9,8 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.domain.ordemservico.Veiculo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -121,8 +123,8 @@ class AcompanharOrdemServicoUseCaseTest {
     private OrdemServico ordemServico(String numeroOs) {
         OrdemServico ordemServico = new OrdemServico();
         ordemServico.setNumeroOs(numeroOs);
-        ordemServico.setVeiculo(new com.autoflow.domain.ordemservico.Veiculo(1L, "ABC1D23", null, null, null));
-        ordemServico.setStatus(com.autoflow.domain.ordemservico.StatusOrdemServico.RECEBIDA);
+        ordemServico.setVeiculo(new Veiculo(1L, "ABC1D23", null, null, null));
+        ordemServico.setStatus(StatusOrdemServico.RECEBIDA);
         ordemServico.setServicosSolicitados(Collections.emptyList());
         return ordemServico;
     }

@@ -19,6 +19,7 @@ import com.autoflow.domain.cliente.Cliente;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
+import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.ordemservico.Veiculo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +78,7 @@ public class CriarOrdemServicoUseCase {
         resultado.setServicoId(servico.getId());
         resultado.setNome(servico.getNome());
         resultado.setValor(servico.getValor());
-        resultado.setStatus(com.autoflow.domain.ordemservico.StatusServicoOs.AGUARDANDO);
+        resultado.setStatus(StatusServicoOs.AGUARDANDO);
         resultado.setOrdemServico(os);
         return resultado;
     }

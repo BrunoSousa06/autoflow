@@ -1,12 +1,12 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.ClienteOsEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
 import com.autoflow.infrastructure.persistence.mapper.ordemservico.OrdemServicoPersistenceMapper;
@@ -73,7 +73,7 @@ class AcompanhamentoPublicoRepositoryAdapterTest {
     @Test
     void deveBuscarDadosComIdDoOrcamentoDisponivel() {
         var ordemServico = novaOrdemServico();
-        var orcamento = new OrcamentoEntity();
+         var orcamento = new OrcamentoPersistenceEntity();
         orcamento.setId(10L);
         orcamento.setStatus(StatusOrcamento.DISPONIVEL);
         when(ordemServicoRepository.findByAcompanhamentoTokenHash("hash-token"))
@@ -92,7 +92,7 @@ class AcompanhamentoPublicoRepositoryAdapterTest {
     @Test
     void deveOmitirOrcamentoQuandoUltimoNaoEstiverDisponivel() {
         var ordemServico = novaOrdemServico();
-        var orcamento = new OrcamentoEntity();
+         var orcamento = new OrcamentoPersistenceEntity();
         orcamento.setId(10L);
         orcamento.setStatus(StatusOrcamento.APROVADO);
         when(ordemServicoRepository.findByAcompanhamentoTokenHash("hash-token"))

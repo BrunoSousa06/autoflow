@@ -14,8 +14,10 @@ import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.mapper.PecaInsumoPersistenceMapper;
+import com.autoflow.infrastructure.persistence.mapper.OrcamentoPersistenceMapper;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.HistoricoStatusOsEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
@@ -49,6 +51,7 @@ class RepositoryAdaptersTest {
     @Mock ServicoSolicitadoRepository servicoSolicitadoRepository;
     @Mock HistoricoStatusOsPersistenceMapper historicoMapper;
     @Mock OrdemServicoPersistenceMapper ordemMapper;
+    @Mock OrcamentoPersistenceMapper orcamentoMapper;
 
     @Test
     void pecaAdapterDeveDelegarTodasOperacoes() {
@@ -146,20 +149,24 @@ class RepositoryAdaptersTest {
 
     @Test
     void orcamentoAdapterDeveDelegarTodasConsultas() {
-        var adapter = new OrcamentoRepositoryAdapter(orcamentoRepository);
-        var orcamento = new OrcamentoEntity();
-        var esperado = Optional.of(orcamento);
-        when(orcamentoRepository.save(orcamento)).thenReturn(orcamento);
-        when(orcamentoRepository.findById(1L)).thenReturn(esperado);
+         var adapter = new OrcamentoRepositoryAdapter(orcamentoRepository, orcamentoMapper);
+         var orcamento = new OrcamentoEntity();
+         var orcamentoEntity = new OrcamentoPersistenceEntity();
+         var esperado = Optional.of(orcamento);
+         when(orcamentoMapper.toEntity(orcamento)).thenReturn(orcamentoEntity);
+         when(orcamentoMapper.toDomain(orcamentoEntity)).thenReturn(orcamento);
+         when(orcamentoRepository.save(orcamentoEntity)).thenReturn(orcamentoEntity);
+         when(orcamentoRepository.findById(1L)).thenReturn(Optional.of(orcamentoEntity));
         when(orcamentoRepository.findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(1L, TipoOrcamento.PRINCIPAL))
-                .thenReturn(esperado);
+                 .thenReturn(Optional.of(orcamentoEntity));
         when(orcamentoRepository.findTopByNumeroOsAndTipoOrderByVersaoDesc("OS-1", TipoOrcamento.PRINCIPAL))
-                .thenReturn(esperado);
+                 .thenReturn(Optional.of(orcamentoEntity));
         when(orcamentoRepository.findByOrdemServicoIdAndStatus(1L, StatusOrcamento.APROVADO))
-                .thenReturn(esperado);
+                 .thenReturn(Optional.of(orcamentoEntity));
         when(orcamentoRepository.findByNumeroOsAndStatus("OS-1", StatusOrcamento.APROVADO))
-                .thenReturn(esperado);
-        when(orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc("OS-1")).thenReturn(esperado);
+                 .thenReturn(Optional.of(orcamentoEntity));
+         when(orcamentoRepository.findTopByNumeroOsOrderByVersaoDesc("OS-1"))
+                 .thenReturn(Optional.of(orcamentoEntity));
 
         assertSame(orcamento, adapter.save(orcamento));
         assertEquals(esperado, adapter.findById(1L));
