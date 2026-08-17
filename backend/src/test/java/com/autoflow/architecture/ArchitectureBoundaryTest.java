@@ -39,6 +39,8 @@ class ArchitectureBoundaryTest {
     private static final String CONFIGURATION = "com.autoflow.config..";
     private static final String PERSISTENCE = "com.autoflow.infrastructure.persistence..";
     private static final String PORTS = "com.autoflow.application.gateway..";
+    private static final String INPUT_PORTS = "com.autoflow.application.port.in..";
+    private static final String USE_CASES = "com.autoflow.application.usecases..";
     private static final String[] TECHNICAL = {INFRASTRUCTURE, CONFIGURATION};
     private static final DescribedPredicate<? super JavaClass> JPA_TYPE =
             annotatedWith(Entity.class)
@@ -131,6 +133,22 @@ class ArchitectureBoundaryTest {
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(PRESENTATION)
                     .because("adapters tecnicos nao conhecem contratos de entrada HTTP");
+
+    @ArchTest
+    static final ArchRule portasDeEntradaSaoInterfaces =
+            classes()
+                    .that().resideInAnyPackage(INPUT_PORTS)
+                    .and().haveSimpleNameEndingWith("UseCase")
+                    .should().beInterfaces()
+                    .because("portas de entrada sao contratos internos da aplicacao");
+
+    @ArchTest
+    static final ArchRule implementacoesDeCasosDeUsoImplementamPortas =
+            classes()
+                    .that().resideInAnyPackage(USE_CASES)
+                    .and().haveSimpleNameEndingWith("UseCaseImpl")
+                    .should().implement(resideInAnyPackage(INPUT_PORTS))
+                    .because("implementacoes de casos de uso devem realizar portas de entrada");
 
     @ArchTest
     static final ArchRule portasDeSaidaSaoDefinidasNaAplicacao =
