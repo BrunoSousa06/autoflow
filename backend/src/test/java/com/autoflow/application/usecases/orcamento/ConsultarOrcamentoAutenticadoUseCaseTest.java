@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoAutenticadoUseCase;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -28,7 +29,7 @@ class ConsultarOrcamentoAutenticadoUseCaseTest {
     private UsuarioGateway usuarioGateway;
 
     @InjectMocks
-    private ConsultarOrcamentoAutenticadoUseCase useCase;
+    private ConsultarOrcamentoAutenticadoUseCaseImpl useCase;
 
     @Test
     void devePermitirClienteConsultarSeuProprioOrcamento() {

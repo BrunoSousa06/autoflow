@@ -4,8 +4,8 @@ import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoExce
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoDaOsUseCase;
-import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoDaOsUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import lombok.RequiredArgsConstructor;
 

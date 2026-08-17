@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.port.in.orcamento.RecusarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -15,13 +16,14 @@ import java.time.ZoneId;
 
 
 @RequiredArgsConstructor
-public class RecusarOrcamentoUseCase {
+public class RecusarOrcamentoUseCaseImpl implements RecusarOrcamentoUseCase {
 
     private final RecusarReparoAdicionalPorOrcamentoUseCase recusarReparoAdicionalPorOrcamentoUseCase;
     private final OrcamentoGateway orcamentoGateway;
     private final OrdemServicoGateway ordemServicoGateway;
 
     @TransactionalUseCase
+    @Override
     public OrcamentoEntity execute(OrcamentoEntity orcamento, String motivo, String assinaturaNome) {
         if (orcamento.getStatus() == StatusOrcamento.APROVADO) {
             throw ApplicationException.badRequest("Orçamento já aprovado, não é possivel recusar");

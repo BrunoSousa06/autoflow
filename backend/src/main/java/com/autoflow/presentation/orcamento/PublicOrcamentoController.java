@@ -1,8 +1,8 @@
 package com.autoflow.presentation.orcamento;
 
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoPorTokenUseCase;
-import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoPorTokenUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.presentation.orcamento.request.AprovarOrcamentoRequest;

@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoPorTokenUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.when;
 class ConsultarOrcamentoPorTokenUseCaseTest {
     @Mock OrcamentoGateway orcamentoGateway;
     @Mock OrcamentoPublicacaoGateway publicacaoGateway;
-    @InjectMocks ConsultarOrcamentoPorTokenUseCase useCase;
+    @InjectMocks ConsultarOrcamentoPorTokenUseCaseImpl useCase;
 
     @Test
     void deveNegarTokenInvalido() {

@@ -3,16 +3,18 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoAutenticadoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class ConsultarOrcamentoAutenticadoUseCase {
+public class ConsultarOrcamentoAutenticadoUseCaseImpl implements ConsultarOrcamentoAutenticadoUseCase {
     private final OrcamentoGateway orcamentoGateway;
     private final UsuarioGateway usuarioGateway;
 
+    @Override
     public OrcamentoEntity execute(Long id, String email) {
         OrcamentoEntity orcamento = orcamentoGateway.findById(id)
                 .orElseThrow(() -> ApplicationException.notFound("Orçamento não encontrado"));

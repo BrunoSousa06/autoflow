@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
@@ -15,13 +16,14 @@ import java.time.ZoneId;
 
 
 @RequiredArgsConstructor
-public class AprovarOrcamentoUseCase {
+public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
 
     private final AprovarReparoAdicionalPorOrcamentoUseCase aprovarReparoAdicionalPorOrcamentoUseCase;
     private final OrdemServicoGateway ordemServicoGateway;
     private final OrcamentoGateway orcamentoGateway;
 
     @TransactionalUseCase
+    @Override
     public OrcamentoEntity execute(OrcamentoEntity orcamento, String assinaturaNome
     ) {
         if (orcamento.getStatus() == StatusOrcamento.APROVADO) {

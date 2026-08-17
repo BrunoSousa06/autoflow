@@ -4,6 +4,7 @@ import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentosUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.*;
 class ConsultarOrcamentosUseCaseTest {
     @Mock OrcamentoGateway orcamentoGateway;
     @Mock UsuarioGateway usuarioGateway;
-    @InjectMocks ConsultarOrcamentosUseCase useCase;
+    @InjectMocks ConsultarOrcamentosUseCaseImpl useCase;
 
     @Test
     void deveForcarEmailDoClienteNoFiltro() {

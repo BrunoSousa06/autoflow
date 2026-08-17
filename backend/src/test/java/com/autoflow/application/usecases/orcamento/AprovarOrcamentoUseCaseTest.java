@@ -3,6 +3,7 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
@@ -25,7 +26,7 @@ class AprovarOrcamentoUseCaseTest {
     @Mock OrcamentoGateway orcamentoGateway;
     @Mock OrdemServicoGateway ordemServicoGateway;
     @Mock AprovarReparoAdicionalPorOrcamentoUseCase reparoUseCase;
-    @InjectMocks AprovarOrcamentoUseCase useCase;
+    @InjectMocks AprovarOrcamentoUseCaseImpl useCase;
 
     @Test
     void deveAprovarEIniciarOsQuandoNaoHaReparoAdicional() {

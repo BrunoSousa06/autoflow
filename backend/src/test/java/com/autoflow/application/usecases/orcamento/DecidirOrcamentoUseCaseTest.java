@@ -4,6 +4,9 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.RecusarOrcamentoUseCase;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -28,7 +31,7 @@ class DecidirOrcamentoUseCaseTest {
     @Mock private UsuarioGateway usuarioGateway;
     @Mock private AprovarOrcamentoUseCase aprovarOrcamentoUseCase;
     @Mock private RecusarOrcamentoUseCase recusarOrcamentoUseCase;
-    @InjectMocks private DecidirOrcamentoUseCase useCase;
+    @InjectMocks private DecidirOrcamentoUseCaseImpl useCase;
 
     @Test
     void deveAprovarAposAutorizarUsuario() {

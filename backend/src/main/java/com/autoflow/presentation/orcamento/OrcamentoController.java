@@ -2,9 +2,9 @@ package com.autoflow.presentation.orcamento;
 
 import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoAutenticadoUseCase;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentosUseCase;
-import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoAutenticadoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentosUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;

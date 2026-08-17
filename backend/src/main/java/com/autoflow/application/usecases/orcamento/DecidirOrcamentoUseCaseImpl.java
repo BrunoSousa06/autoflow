@@ -4,6 +4,9 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.RecusarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -16,7 +19,7 @@ import lombok.RequiredArgsConstructor;
  */
 
 @RequiredArgsConstructor
-public class DecidirOrcamentoUseCase {
+public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
 
     private final OrcamentoGateway orcamentoGateway;
     private final OrcamentoPublicacaoGateway publicacaoGateway;
@@ -25,6 +28,7 @@ public class DecidirOrcamentoUseCase {
     private final RecusarOrcamentoUseCase recusarOrcamentoUseCase;
 
     @TransactionalUseCase
+    @Override
     public OrcamentoEntity aprovarComoUsuario(Long orcamentoId, String emailUsuario) {
         OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
         Usuario usuario = validarAcesso(orcamento, emailUsuario);
@@ -32,6 +36,7 @@ public class DecidirOrcamentoUseCase {
     }
 
     @TransactionalUseCase
+    @Override
     public OrcamentoEntity recusarComoUsuario(Long orcamentoId, String motivo, String emailUsuario) {
         OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
         Usuario usuario = validarAcesso(orcamento, emailUsuario);
@@ -39,6 +44,7 @@ public class DecidirOrcamentoUseCase {
     }
 
     @TransactionalUseCase
+    @Override
     public OrcamentoEntity aprovarComoToken(Long orcamentoId, String token, String nome) {
         OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
         validarToken(orcamento, token);
@@ -46,6 +52,7 @@ public class DecidirOrcamentoUseCase {
     }
 
     @TransactionalUseCase
+    @Override
     public OrcamentoEntity recusarComoToken(Long orcamentoId, String token, String motivo, String nome) {
         OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
         validarToken(orcamento, token);
@@ -57,6 +64,7 @@ public class DecidirOrcamentoUseCase {
     }
 
     @TransactionalUseCase
+    @Override
     public OrcamentoEntity aprovarDaOrdem(Long orcamentoId, String numeroOs) {
         OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
         if (!orcamento.getNumeroOs().equals(numeroOs)) {
