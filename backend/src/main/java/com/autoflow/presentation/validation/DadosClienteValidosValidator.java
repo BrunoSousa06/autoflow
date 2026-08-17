@@ -1,4 +1,4 @@
-package com.autoflow.config.validator;
+package com.autoflow.presentation.validation;
 
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.presentation.usuario.request.RegistroRequest;

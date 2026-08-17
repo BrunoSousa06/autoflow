@@ -1,4 +1,4 @@
-package com.autoflow.config.validator;
+package com.autoflow.presentation.validation;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,6 @@
 package com.autoflow.presentation.veiculo.request;
 
-import com.autoflow.config.validator.CpfCnpj;
+import com.autoflow.presentation.validation.CpfCnpj;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

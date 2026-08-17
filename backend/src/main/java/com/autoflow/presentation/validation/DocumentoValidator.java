@@ -1,4 +1,4 @@
-package com.autoflow.config.validator;
+package com.autoflow.presentation.validation;
 
 public final class DocumentoValidator {
 

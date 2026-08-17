@@ -1,4 +1,4 @@
-package com.autoflow.config.validator;
+package com.autoflow.presentation.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

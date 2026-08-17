@@ -1,6 +1,6 @@
 package com.autoflow.presentation.usuario.request;
 
-import com.autoflow.config.validator.DadosClienteValidos;
+import com.autoflow.presentation.validation.DadosClienteValidos;
 import com.autoflow.domain.usuario.RoleEnum;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

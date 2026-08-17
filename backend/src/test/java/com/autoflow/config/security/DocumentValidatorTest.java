@@ -1,6 +1,6 @@
 package com.autoflow.config.security;
 
-import com.autoflow.config.validator.DocumentoValidator;
+import com.autoflow.presentation.validation.DocumentoValidator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
