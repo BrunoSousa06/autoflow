@@ -1,7 +1,8 @@
 package com.autoflow.presentation.veiculo;
 
 
-import com.autoflow.application.dto.veiculo.*;
+import com.autoflow.application.input.veiculo.*;
+import com.autoflow.application.output.veiculo.*;
 import com.autoflow.application.port.in.veiculo.AtualizarVeiculoUseCase;
 import com.autoflow.application.port.in.veiculo.BuscarVeiculoUseCase;
 import com.autoflow.application.port.in.veiculo.CadastrarVeiculoUseCase;

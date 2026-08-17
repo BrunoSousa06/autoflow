@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 

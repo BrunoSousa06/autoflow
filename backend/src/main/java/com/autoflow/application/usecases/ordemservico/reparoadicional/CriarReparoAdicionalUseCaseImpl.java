@@ -1,12 +1,12 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
-import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
-import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
-import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
-import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
-import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.input.notificacao.OrcamentoNotificacao;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.input.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
+import com.autoflow.application.output.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
+import com.autoflow.application.input.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
+import com.autoflow.application.input.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
+import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.mapper.ServicoApplicationMapper;

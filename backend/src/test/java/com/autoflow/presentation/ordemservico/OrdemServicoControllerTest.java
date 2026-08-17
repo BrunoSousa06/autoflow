@@ -1,14 +1,14 @@
 package com.autoflow.presentation.ordemservico;
 
-import com.autoflow.application.dto.PageQuery;
-import com.autoflow.application.dto.PageResult;
-import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
-import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
-import com.autoflow.application.dto.ordemservico.OrdemServicoDetalheOutput;
-import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
-import com.autoflow.application.dto.ordemservico.StatusOrdemServicoOutput;
-import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
-import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.output.PageResult;
+import com.autoflow.application.output.ordemservico.FinalizarDiagnosticoOutput;
+import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.application.output.ordemservico.OrdemServicoDetalheOutput;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
+import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
+import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.port.in.ordemservico.*;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;

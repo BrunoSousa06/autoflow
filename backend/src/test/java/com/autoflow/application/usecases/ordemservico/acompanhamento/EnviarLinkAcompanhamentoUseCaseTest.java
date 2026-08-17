@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.notificacao.MensagemNotificacao;
+import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCaseImpl;
 import com.autoflow.domain.ordemservico.ClienteOs;

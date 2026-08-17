@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.servico;
 
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;

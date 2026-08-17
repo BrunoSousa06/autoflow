@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.dto.ordemservico.StatusOrdemServicoOutput;
+import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;

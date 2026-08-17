@@ -1,8 +1,8 @@
 package com.autoflow.application.port.in.ordemservico;
 
-import com.autoflow.application.dto.PageQuery;
-import com.autoflow.application.dto.PageResult;
-import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.output.PageResult;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.domain.ordemservico.OrdemServico;
 
 public interface ListarOrdensServicoUseCase {

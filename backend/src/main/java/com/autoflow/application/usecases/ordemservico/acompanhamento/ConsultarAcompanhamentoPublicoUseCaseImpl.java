@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoPublicoOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.AcompanhamentoPublicoOutput;
 import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoException;
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;

@@ -1,6 +1,6 @@
 package com.autoflow.application.port.in.orcamento;
 
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 
 import java.util.List;

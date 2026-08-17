@@ -1,6 +1,7 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.dto.veiculo.*;
+import com.autoflow.application.input.veiculo.*;
+import com.autoflow.application.output.veiculo.*;
 import com.autoflow.application.exception.*;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.gateway.VeiculoGateway;
@@ -8,7 +9,7 @@ import com.autoflow.application.security.AuthorizationService;
 import com.autoflow.application.security.ClienteAutenticadoService;
 import com.autoflow.application.usecases.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCaseImpl;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
-import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.application.output.cliente.ClienteOutput;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

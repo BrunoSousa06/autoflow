@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.security;
 
-import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.infrastructure.security.service.JwtService;
 import org.junit.jupiter.api.AfterEach;

@@ -1,8 +1,8 @@
 package com.autoflow.presentation.cliente.mapper;
 
-import com.autoflow.application.dto.cliente.ClienteInput;
-import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.application.dto.cliente.ClienteVeiculoOutput;
+import com.autoflow.application.input.cliente.ClienteInput;
+import com.autoflow.application.output.cliente.ClienteOutput;
+import com.autoflow.application.output.cliente.ClienteVeiculoOutput;
 import com.autoflow.presentation.cliente.request.ClienteRequest;
 import com.autoflow.presentation.cliente.response.ClienteResponse;
 import com.autoflow.presentation.veiculo.response.VeiculoClienteResponse;

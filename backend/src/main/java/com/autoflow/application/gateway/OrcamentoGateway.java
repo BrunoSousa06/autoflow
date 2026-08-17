@@ -1,6 +1,6 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;

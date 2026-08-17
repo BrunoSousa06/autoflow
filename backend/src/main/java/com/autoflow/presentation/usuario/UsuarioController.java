@@ -1,9 +1,9 @@
 package com.autoflow.presentation.usuario;
 
-import com.autoflow.application.dto.usuario.LoginInput;
-import com.autoflow.application.dto.usuario.LoginOutput;
-import com.autoflow.application.dto.usuario.RegistroInput;
-import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.input.usuario.LoginInput;
+import com.autoflow.application.output.usuario.LoginOutput;
+import com.autoflow.application.input.usuario.RegistroInput;
+import com.autoflow.application.output.usuario.UsuarioOutput;
 import com.autoflow.application.port.in.usuario.BuscarMecanicosUseCase;
 import com.autoflow.application.port.in.usuario.CadastrarUsuarioPublicoUseCase;
 import com.autoflow.application.port.in.usuario.ListarUsuariosUseCase;

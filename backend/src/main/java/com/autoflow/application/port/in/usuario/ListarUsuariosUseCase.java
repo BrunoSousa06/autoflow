@@ -1,6 +1,6 @@
 package com.autoflow.application.port.in.usuario;
 
-import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.output.usuario.UsuarioOutput;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
-import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
-import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.input.notificacao.OrcamentoNotificacao;
+import com.autoflow.application.output.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;

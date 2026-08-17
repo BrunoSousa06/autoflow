@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoNaoEncontradoException;
 import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.port.in.veiculo.BuscarVeiculoUseCase;

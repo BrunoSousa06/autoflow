@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCaseImpl;

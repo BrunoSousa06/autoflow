@@ -1,9 +1,9 @@
 package com.autoflow.presentation.ordemservico.reparoadicional;
 
-import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
-import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
-import com.autoflow.application.dto.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
-import com.autoflow.application.dto.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
+import com.autoflow.application.input.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
+import com.autoflow.application.output.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
+import com.autoflow.application.input.ordemservico.reparoadicional.ItemReparoAdicionalCommand;
+import com.autoflow.application.input.ordemservico.reparoadicional.ServicoReparoAdicionalCommand;
 import com.autoflow.presentation.ordemservico.reparoadicional.request.CriarReparoAdicionalRequest;
 import com.autoflow.presentation.ordemservico.reparoadicional.request.ServicoReparoAdicionalRequest;
 import com.autoflow.presentation.ordemservico.reparoadicional.response.CriarReparoAdicionalResponse;

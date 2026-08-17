@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;

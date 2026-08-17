@@ -1,11 +1,11 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.PageQuery;
-import com.autoflow.application.dto.PageResult;
-import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
-import com.autoflow.application.dto.pecainsumo.PecaInsumoFiltro;
-import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
-import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.output.PageResult;
+import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.input.pecainsumo.PecaInsumoFiltro;
+import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.gateway.PecaInsumoGateway;
 import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;

@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
-import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
-import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
+import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
 import org.springframework.stereotype.Component;
 

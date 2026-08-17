@@ -1,7 +1,7 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.dto.veiculo.VeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.exception.VeiculoNaoEncontradoException;
 import com.autoflow.application.gateway.VeiculoGateway;

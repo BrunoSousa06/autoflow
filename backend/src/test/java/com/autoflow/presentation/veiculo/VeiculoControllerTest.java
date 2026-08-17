@@ -1,10 +1,10 @@
 package com.autoflow.presentation.veiculo;
 
-import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.dto.veiculo.PageInput;
-import com.autoflow.application.dto.veiculo.PageOutput;
-import com.autoflow.application.dto.veiculo.VeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.input.veiculo.PageInput;
+import com.autoflow.application.output.veiculo.PageOutput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.port.in.veiculo.AtualizarVeiculoUseCase;
 import com.autoflow.application.port.in.veiculo.BuscarVeiculoUseCase;
 import com.autoflow.application.port.in.veiculo.CadastrarVeiculoUseCase;

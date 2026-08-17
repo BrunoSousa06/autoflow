@@ -1,6 +1,6 @@
 package com.autoflow.application.security;
 
-import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
 import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
 import com.autoflow.application.gateway.CurrentUserGateway;

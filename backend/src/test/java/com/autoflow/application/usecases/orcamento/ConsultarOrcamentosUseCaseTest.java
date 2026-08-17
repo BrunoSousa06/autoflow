@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.orcamento;
 
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;

@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.usuario;
 
-import com.autoflow.application.dto.cliente.ClienteInput;
-import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.application.dto.usuario.RegistroInput;
+import com.autoflow.application.input.cliente.ClienteInput;
+import com.autoflow.application.output.cliente.ClienteOutput;
+import com.autoflow.application.input.usuario.RegistroInput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ClienteGateway;
 import com.autoflow.application.port.in.usuario.CadastrarClienteUseCase;

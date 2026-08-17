@@ -1,6 +1,6 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
+import com.autoflow.application.input.notificacao.OrcamentoNotificacao;
 
 public interface OrcamentoNotificacaoGateway {
 

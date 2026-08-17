@@ -1,7 +1,7 @@
 package com.autoflow.application.mapper;
 
-import com.autoflow.application.dto.servico.ServicoInput;
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.input.servico.ServicoInput;
+import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.domain.servico.Servico;
 
 public final class ServicoApplicationMapper {

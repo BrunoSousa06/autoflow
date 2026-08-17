@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;

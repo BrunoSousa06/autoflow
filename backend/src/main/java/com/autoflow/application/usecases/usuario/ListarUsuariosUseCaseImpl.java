@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.usuario;
 
-import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.output.usuario.UsuarioOutput;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.mapper.UsuarioApplicationMapper;
 import com.autoflow.application.port.in.usuario.ListarUsuariosUseCase;

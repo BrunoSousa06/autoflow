@@ -1,7 +1,7 @@
 package com.autoflow.presentation.usuario;
 
-import com.autoflow.application.dto.usuario.RegistroInput;
-import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.input.usuario.RegistroInput;
+import com.autoflow.application.output.usuario.UsuarioOutput;
 import com.autoflow.application.port.in.usuario.CadastrarStaffUseCase;
 import com.autoflow.application.port.in.usuario.ListarUsuariosUseCase;
 import com.autoflow.domain.usuario.RoleEnum;

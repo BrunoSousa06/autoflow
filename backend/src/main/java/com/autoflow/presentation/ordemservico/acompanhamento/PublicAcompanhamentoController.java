@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoPublicoOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.AcompanhamentoPublicoOutput;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.ConsultarAcompanhamentoPublicoUseCase;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoPublicoResponse;
 import io.swagger.v3.oas.annotations.Operation;

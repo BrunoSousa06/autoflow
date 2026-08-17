@@ -1,9 +1,9 @@
 package com.autoflow.presentation.veiculo;
 
-import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoClienteOutput;
-import com.autoflow.application.dto.veiculo.VeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoClienteOutput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.presentation.cliente.response.ClienteVeiculoResponse;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;

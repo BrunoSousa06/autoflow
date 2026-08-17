@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.servico.PageInput;
+import com.autoflow.application.input.servico.PageInput;
 import com.autoflow.domain.servico.Servico;
 import com.autoflow.infrastructure.persistence.entity.servico.ServicoEntity;
 import com.autoflow.infrastructure.persistence.mapper.ServicoPersistenceMapper;

@@ -1,8 +1,8 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
 
-import com.autoflow.application.dto.cliente.ClienteInput;
-import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.application.input.cliente.ClienteInput;
+import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

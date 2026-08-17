@@ -1,8 +1,8 @@
 package com.autoflow.presentation.cliente;
 
 
-import com.autoflow.application.dto.cliente.ClienteInput;
-import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.application.input.cliente.ClienteInput;
+import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.application.port.in.cliente.AtualizarClienteUseCase;
 import com.autoflow.application.port.in.cliente.BuscarClientePorEmailUseCase;
 import com.autoflow.application.port.in.cliente.CriarClienteUseCase;

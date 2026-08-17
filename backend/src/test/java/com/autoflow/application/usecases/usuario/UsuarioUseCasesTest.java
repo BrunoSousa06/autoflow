@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.usuario;
 
-import com.autoflow.application.dto.security.CurrentUser;
-import com.autoflow.application.dto.usuario.LoginInput;
-import com.autoflow.application.dto.usuario.RegistroInput;
-import com.autoflow.application.dto.usuario.UsuarioOutput;
+import com.autoflow.application.output.security.CurrentUser;
+import com.autoflow.application.input.usuario.LoginInput;
+import com.autoflow.application.input.usuario.RegistroInput;
+import com.autoflow.application.output.usuario.UsuarioOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.mapper.UsuarioApplicationMapper;

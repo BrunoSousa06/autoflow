@@ -1,8 +1,8 @@
 package com.autoflow.presentation.servico;
 
-import com.autoflow.application.dto.servico.ServicoInput;
-import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
+import com.autoflow.application.input.servico.ServicoInput;
+import com.autoflow.application.output.servico.ServicoOutput;
+import com.autoflow.application.output.servico.TempoMedioServicoMetricaOutput;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
 import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;

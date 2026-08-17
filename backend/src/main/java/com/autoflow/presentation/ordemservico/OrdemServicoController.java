@@ -1,10 +1,10 @@
 package com.autoflow.presentation.ordemservico;
 
-import com.autoflow.application.dto.PageQuery;
-import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
-import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
-import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
-import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
+import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.presentation.ordemservico.request.*;

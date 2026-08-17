@@ -1,6 +1,6 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 
 public interface OrcamentoPublicacaoGateway {

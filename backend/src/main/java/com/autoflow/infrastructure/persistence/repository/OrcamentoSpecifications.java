@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.repository;
 
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import org.springframework.data.jpa.domain.Specification;
 

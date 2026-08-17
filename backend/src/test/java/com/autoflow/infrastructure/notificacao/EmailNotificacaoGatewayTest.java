@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.notificacao;
 
-import com.autoflow.application.dto.notificacao.MensagemNotificacao;
+import com.autoflow.application.input.notificacao.MensagemNotificacao;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

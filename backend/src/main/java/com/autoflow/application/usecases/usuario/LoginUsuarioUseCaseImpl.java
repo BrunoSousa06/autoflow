@@ -1,7 +1,7 @@
 package com.autoflow.application.usecases.usuario;
 
-import com.autoflow.application.dto.usuario.LoginInput;
-import com.autoflow.application.dto.usuario.LoginOutput;
+import com.autoflow.application.input.usuario.LoginInput;
+import com.autoflow.application.output.usuario.LoginOutput;
 import com.autoflow.application.gateway.AuthenticationGateway;
 import com.autoflow.application.gateway.TokenGateway;
 import com.autoflow.application.gateway.UsuarioGateway;

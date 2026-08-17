@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.orcamento;
 
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;

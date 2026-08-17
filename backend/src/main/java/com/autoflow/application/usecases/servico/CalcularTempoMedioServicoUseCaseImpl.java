@@ -1,6 +1,6 @@
 package com.autoflow.application.usecases.servico;
 
-import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
+import com.autoflow.application.output.servico.TempoMedioServicoMetricaOutput;
 import com.autoflow.application.gateway.MetricsGateway;
 import com.autoflow.application.port.in.servico.CalcularTempoMedioServicoUseCase;
 import lombok.RequiredArgsConstructor;

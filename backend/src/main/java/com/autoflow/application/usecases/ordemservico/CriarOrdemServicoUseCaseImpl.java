@@ -1,11 +1,11 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
-import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
-import com.autoflow.application.dto.servico.ServicoOutput;
-import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.output.cliente.ClienteOutput;
+import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
+import com.autoflow.application.output.servico.ServicoOutput;
+import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;

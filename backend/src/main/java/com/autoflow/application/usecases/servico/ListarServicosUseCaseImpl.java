@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.servico;
 
-import com.autoflow.application.dto.servico.PageInput;
-import com.autoflow.application.dto.servico.PageOutput;
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.input.servico.PageInput;
+import com.autoflow.application.output.servico.PageOutput;
+import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.port.in.servico.ListarServicosUseCase;

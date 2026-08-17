@@ -1,7 +1,7 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.cliente.ClienteInput;
-import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.application.input.cliente.ClienteInput;
+import com.autoflow.application.output.cliente.ClienteOutput;
 
 import java.util.List;
 import java.util.Optional;
