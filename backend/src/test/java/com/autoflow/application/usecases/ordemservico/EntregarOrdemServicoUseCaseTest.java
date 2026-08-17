@@ -3,8 +3,8 @@ package com.autoflow.application.usecases.ordemservico;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +38,7 @@ class EntregarOrdemServicoUseCaseTest {
                 .execute("OS-1");
 
         assertEquals(StatusOrdemServico.ENTREGUE, resultado.getStatus());
-        var captor = ArgumentCaptor.forClass(HistoricoStatusOsEntity.class);
+        var captor = ArgumentCaptor.forClass(HistoricoStatusOs.class);
         verify(historicoStatusOsGateway).save(captor.capture());
         assertEquals(1L, captor.getValue().getOrdemServicoId());
         assertEquals("OS-1", captor.getValue().getNumeroOs());
@@ -67,8 +67,8 @@ class EntregarOrdemServicoUseCaseTest {
                 () -> useCase.execute("OS-1"));
     }
 
-    private OrdemServicoEntity ordemFinalizada() {
-        var os = new OrdemServicoEntity();
+    private OrdemServico ordemFinalizada() {
+        var os = new OrdemServico();
         os.setId(1L);
         os.setNumeroOs("OS-1");
         os.setStatus(StatusOrdemServico.FINALIZADA);

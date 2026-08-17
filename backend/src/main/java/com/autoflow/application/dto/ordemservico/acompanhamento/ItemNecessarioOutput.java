@@ -1,6 +1,6 @@
 package com.autoflow.application.dto.ordemservico.acompanhamento;
 
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -19,7 +19,7 @@ public record ItemNecessarioOutput(
         Integer quantidadeDisponivel,
         String mensagemStatus
 ) {
-    public static ItemNecessarioOutput from(ItemNecessarioEntity item) {
+    public static ItemNecessarioOutput from(ItemNecessario item) {
         return new ItemNecessarioOutput(
                 item.getPecaInsumoId(), item.getNome(), item.getTipo(), item.getValorUnitario(),
                 item.getQuantidade(), item.getValorTotal(), item.getStatus(), item.getMotivoPendencia(),

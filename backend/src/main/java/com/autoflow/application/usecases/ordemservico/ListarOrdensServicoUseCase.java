@@ -6,7 +6,7 @@ import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.exception.UsuarioNaoEncontradoException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class ListarOrdensServicoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
 
-    public PageResult<OrdemServicoEntity> execute(
+    public PageResult<OrdemServico> execute(
             OrdemServicoFiltroInput filtro,
             PageQuery pageQuery,
             String emailUsuarioLogado

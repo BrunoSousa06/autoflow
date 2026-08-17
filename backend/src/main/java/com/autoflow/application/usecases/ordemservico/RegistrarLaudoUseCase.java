@@ -5,7 +5,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
@@ -17,8 +17,8 @@ public class RegistrarLaudoUseCase {
     private final OrdemServicoAccessPolicy accessPolicy;
 
     @TransactionalUseCase
-    public OrdemServicoEntity execute(String numeroOs, String emailUsuarioLogado, String laudo) {
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
+    public OrdemServico execute(String numeroOs, String emailUsuarioLogado, String laudo) {
+        OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
         Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));

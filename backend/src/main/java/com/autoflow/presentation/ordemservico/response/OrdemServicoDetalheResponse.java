@@ -1,7 +1,7 @@
 package com.autoflow.presentation.ordemservico.response;
 
 import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.OrcamentoResumoResponse;
 
@@ -24,7 +24,7 @@ public record OrdemServicoDetalheResponse(
         DiagnosticoDetalheResponse diagnostico
 ) {
     public static OrdemServicoDetalheResponse fromDomain(
-            OrdemServicoEntity os,
+            OrdemServico os,
             OrcamentoEntity orcamentoAtual
     ) {
         return new OrdemServicoDetalheResponse(

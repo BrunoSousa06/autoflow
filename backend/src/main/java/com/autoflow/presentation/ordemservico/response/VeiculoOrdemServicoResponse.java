@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 
 public record VeiculoOrdemServicoResponse(
         Long id,
@@ -9,13 +9,13 @@ public record VeiculoOrdemServicoResponse(
         String modelo,
         int ano
 ) {
-    public static VeiculoOrdemServicoResponse fromDomain(OrdemServicoEntity os) {
+    public static VeiculoOrdemServicoResponse fromDomain(OrdemServico os) {
         return new VeiculoOrdemServicoResponse(
-                os.getVeiculo().getId(),
-                os.getVeiculo().getPlaca(),
-                os.getVeiculo().getMarca(),
-                os.getVeiculo().getModelo(),
-                os.getVeiculo().getAno()
+                os.getVeiculo().id(),
+                os.getVeiculo().placa(),
+                os.getVeiculo().marca(),
+                os.getVeiculo().modelo(),
+                os.getVeiculo().ano()
         );
     }
 }

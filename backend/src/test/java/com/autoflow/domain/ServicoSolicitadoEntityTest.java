@@ -1,7 +1,7 @@
 package com.autoflow.domain;
 
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -13,13 +13,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ServicoSolicitadoEntityTest {
+class ServicoSolicitadoTest {
 
     @Test
     void deveCriarServicoSolicitado() {
         Long servicoId = 1L;
 
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(servicoId, "Alinhamento");
+        ServicoSolicitado servico = new ServicoSolicitado(servicoId, "Alinhamento");
 
         assertEquals(servicoId, servico.getServicoId());
         assertEquals("Alinhamento", servico.getNome());
@@ -28,16 +28,16 @@ class ServicoSolicitadoEntityTest {
     @Test
     void deveValidarCamposObrigatorios() {
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitadoEntity(null, "Alinhamento")),
-                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitadoEntity(1L, null)),
-                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitadoEntity(1L, " ")),
-                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitadoEntity(1L, "Alinhamento", null))
+                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitado(null, "Alinhamento")),
+                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitado(1L, null)),
+                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitado(1L, " ")),
+                () -> assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitado(1L, "Alinhamento", null))
         );
     }
 
     @Test
     void deveCriarServicoComValorEStatusAguardando() {
-        ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(
+        ServicoSolicitado servico = ServicoSolicitado.criar(
                 1L,
                 "Alinhamento",
                 new BigDecimal("120.00")
@@ -51,9 +51,9 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void deveRegistrarItensNecessariosSubstituindoListaAtual() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Alinhamento", new BigDecimal("120.00"));
-        ItemNecessarioEntity itemInicial = item(1L, "Peca 1", 1);
-        ItemNecessarioEntity itemNovo = item(2L, "Peca 2", 2);
+        ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
+        ItemNecessario itemInicial = item(1L, "Peca 1", 1);
+        ItemNecessario itemNovo = item(2L, "Peca 2", 2);
 
         servico.registrarItensNecessarios(List.of(itemInicial));
         servico.registrarItensNecessarios(List.of(itemNovo));
@@ -65,8 +65,8 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void deveIniciarServicoAtualizandoStatusItensEData() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Alinhamento", new BigDecimal("120.00"));
-        ItemNecessarioEntity itemAtualizado = item(1L, "Peca 1", 1);
+        ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
+        ItemNecessario itemAtualizado = item(1L, "Peca 1", 1);
 
         servico.iniciar(List.of(itemAtualizado));
 
@@ -77,17 +77,17 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void naoDeveIniciarServicoFinalizado() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Alinhamento", new BigDecimal("120.00"));
+        ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
         servico.iniciar(List.of(item(1L, "Peca 1", 1)));
         servico.finalizar();
-        List<ItemNecessarioEntity> itensAtualizados = List.of(item(2L, "Peca 2", 1));
+        List<ItemNecessario> itensAtualizados = List.of(item(2L, "Peca 2", 1));
 
         assertThrows(IllegalStateException.class, () -> servico.iniciar(itensAtualizados));
     }
 
     @Test
     void deveFinalizarServicoEmExecucao() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Alinhamento", new BigDecimal("120.00"));
+        ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
         servico.iniciar(List.of(item(1L, "Peca 1", 1)));
 
         servico.finalizar();
@@ -98,13 +98,13 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void naoDeveFinalizarServicoQueNaoEstaEmExecucao() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Alinhamento", new BigDecimal("120.00"));
+        ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
 
         assertThrows(IllegalStateException.class, servico::finalizar);
     }
 
-    private ItemNecessarioEntity item(Long id, String nome, int quantidade) {
-        return ItemNecessarioEntity.criar(
+    private ItemNecessario item(Long id, String nome, int quantidade) {
+        return ItemNecessario.criar(
                 id,
                 nome,
                 CategoriaPecaInsumo.PECA,

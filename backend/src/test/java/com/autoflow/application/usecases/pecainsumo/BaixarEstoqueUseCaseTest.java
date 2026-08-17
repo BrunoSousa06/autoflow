@@ -3,7 +3,7 @@ package com.autoflow.application.usecases.pecainsumo;
 import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
@@ -119,7 +119,7 @@ class BaixarEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarItemSemQuantidadeAntesDeConsultarEstoque() {
-        var item = new ItemNecessarioEntity();
+        var item = new ItemNecessario();
         item.setPecaInsumoId(1L);
 
         assertThrows(IllegalArgumentException.class,
@@ -137,8 +137,8 @@ class BaixarEstoqueUseCaseTest {
         verify(gateway, never()).saveAll(any());
     }
 
-    private static ItemNecessarioEntity item(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(id, "Item", CategoriaPecaInsumo.PECA,
+    private static ItemNecessario item(Long id, int quantidade) {
+        return ItemNecessario.criar(id, "Item", CategoriaPecaInsumo.PECA,
                 BigDecimal.ONE, quantidade, null);
     }
 

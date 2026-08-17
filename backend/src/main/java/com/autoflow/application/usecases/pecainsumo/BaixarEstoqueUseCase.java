@@ -4,7 +4,7 @@ import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.EstoquePolicy;
@@ -20,18 +20,18 @@ public class BaixarEstoqueUseCase {
     private final EstoqueGateway estoqueGateway;
 
     @TransactionalUseCase
-    public List<ItemNecessarioEntity> execute(List<ItemNecessarioEntity> itens) {
+    public List<ItemNecessario> execute(List<ItemNecessario> itens) {
         if (itens == null || itens.isEmpty()) return Collections.emptyList();
 
         validarItens(itens);
-        List<Long> ids = itens.stream().map(ItemNecessarioEntity::getPecaInsumoId).distinct().toList();
+        List<Long> ids = itens.stream().map(ItemNecessario::getPecaInsumoId).distinct().toList();
         Map<Long, EstoqueItemOutput> estoque = estoqueGateway.findAllByIdForUpdate(ids).stream()
                 .collect(Collectors.toMap(EstoqueItemOutput::id, Function.identity()));
         Map<Long, Integer> quantidadesRestantes = new HashMap<>();
         Map<Long, Integer> quantidadesSolicitadas = itens.stream()
                 .collect(Collectors.toMap(
-                        ItemNecessarioEntity::getPecaInsumoId,
-                        ItemNecessarioEntity::getQuantidade,
+                        ItemNecessario::getPecaInsumoId,
+                        ItemNecessario::getQuantidade,
                         Integer::sum
                 ));
         estoque.forEach((id, item) -> quantidadesRestantes.put(id, item.quantidade()));
@@ -51,11 +51,11 @@ public class BaixarEstoqueUseCase {
                     EstoquePolicy.calcularQuantidadeRestante(peca.quantidade(), quantidade));
         });
 
-        List<ItemNecessarioEntity> atualizados = new ArrayList<>();
-        for (ItemNecessarioEntity item : itens) {
+        List<ItemNecessario> atualizados = new ArrayList<>();
+        for (ItemNecessario item : itens) {
             EstoqueItemOutput peca = estoque.get(item.getPecaInsumoId());
 
-            atualizados.add(ItemNecessarioEntity.criar(
+            atualizados.add(ItemNecessario.criar(
                     peca.id(),
                     peca.nome(),
                     peca.tipo(),
@@ -86,7 +86,7 @@ public class BaixarEstoqueUseCase {
         return atualizados;
     }
 
-    private void validarItens(List<ItemNecessarioEntity> itens) {
+    private void validarItens(List<ItemNecessario> itens) {
         Set<Long> ids = new HashSet<>();
         itens.forEach(item -> {
             if (item == null || item.getPecaInsumoId() == null || item.getQuantidade() == null) {

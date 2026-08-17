@@ -7,8 +7,8 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,10 +39,10 @@ class AcompanharOrdemServicoUseCaseTest {
 
     @Test
     void deveRetornarListaDeAcompanhamentos() {
-        OrdemServicoEntity ordemServico = ordemServico("OS001");
+        OrdemServico ordemServico = ordemServico("OS001");
         OrcamentoEntity orcamento = new OrcamentoEntity();
         orcamento.setStatus(StatusOrcamento.DISPONIVEL);
-        HistoricoStatusOsEntity historico = new HistoricoStatusOsEntity();
+        HistoricoStatusOs historico = new HistoricoStatusOs();
         configurarClienteComOs(ordemServico);
         when(orcamentoGateway.findByNumeroOsAndStatus("OS001", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.of(orcamento));
@@ -58,7 +58,7 @@ class AcompanharOrdemServicoUseCaseTest {
 
     @Test
     void deveUtilizarUltimaVersaoQuandoNaoExistirOrcamentoDisponivel() {
-        OrdemServicoEntity ordemServico = ordemServico("OS001");
+        OrdemServico ordemServico = ordemServico("OS001");
         OrcamentoEntity ultimaVersao = new OrcamentoEntity();
         ultimaVersao.setStatus(StatusOrcamento.DISPONIVEL);
         configurarClienteComOs(ordemServico);
@@ -76,7 +76,7 @@ class AcompanharOrdemServicoUseCaseTest {
 
     @Test
     void deveRetornarOrcamentoNuloQuandoNaoExistirOrcamento() {
-        OrdemServicoEntity ordemServico = ordemServico("OS001");
+        OrdemServico ordemServico = ordemServico("OS001");
         configurarClienteComOs(ordemServico);
         when(orcamentoGateway.findByNumeroOsAndStatus("OS001", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.empty());
@@ -112,17 +112,16 @@ class AcompanharOrdemServicoUseCaseTest {
         verifyNoInteractions(orcamentoGateway, historicoStatusOsGateway);
     }
 
-    private void configurarClienteComOs(OrdemServicoEntity ordemServico) {
+    private void configurarClienteComOs(OrdemServico ordemServico) {
         when(clienteGateway.findIdByUsuarioEmail("cliente@email.com")).thenReturn(Optional.of(1L));
         when(ordemServicoGateway.findByClienteIdOrderByDataAberturaDesc(1L))
                 .thenReturn(List.of(ordemServico));
     }
 
-    private OrdemServicoEntity ordemServico(String numeroOs) {
-        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+    private OrdemServico ordemServico(String numeroOs) {
+        OrdemServico ordemServico = new OrdemServico();
         ordemServico.setNumeroOs(numeroOs);
-        ordemServico.setVeiculo(new com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity());
-        ordemServico.getVeiculo().setPlaca("ABC1D23");
+        ordemServico.setVeiculo(new com.autoflow.domain.ordemservico.Veiculo(1L, "ABC1D23", null, null, null));
         ordemServico.setStatus(com.autoflow.domain.ordemservico.StatusOrdemServico.RECEBIDA);
         ordemServico.setServicosSolicitados(Collections.emptyList());
         return ordemServico;

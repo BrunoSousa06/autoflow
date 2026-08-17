@@ -1,6 +1,6 @@
 package com.autoflow.domain.orcamento;
 
-import com.autoflow.domain.ordemservico.ClienteOsEntity;
+import com.autoflow.domain.ordemservico.ClienteOs;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
@@ -28,7 +28,7 @@ public class ClienteOrcamentoSnapshot {
     private String telefone;
 
 
-    public static ClienteOrcamentoSnapshot from(ClienteOsEntity cliente) {
+    public static ClienteOrcamentoSnapshot from(ClienteOs cliente) {
         return ClienteOrcamentoSnapshot.builder()
                 .nome(cliente.getNome())
                 .cpfCnpj(cliente.getCpfCnpj())

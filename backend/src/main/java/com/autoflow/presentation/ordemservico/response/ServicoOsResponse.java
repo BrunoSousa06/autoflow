@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
 
 import java.math.BigDecimal;
@@ -17,7 +17,7 @@ public record ServicoOsResponse(
         LocalDateTime finalizadoEm,
         List<ItemNecessarioResponse> itensNecessarios
 ) {
-    public static ServicoOsResponse fromDomain(ServicoSolicitadoEntity servicoSolicitadoEntity) {
+    public static ServicoOsResponse fromDomain(ServicoSolicitado servicoSolicitadoEntity) {
         return new ServicoOsResponse(
                 servicoSolicitadoEntity.getId(),
                 servicoSolicitadoEntity.getServicoId(),

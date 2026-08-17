@@ -3,8 +3,8 @@ package com.autoflow.application.usecases.ordemservico;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
-import com.autoflow.domain.ordemservico.DiagnosticoEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.Diagnostico;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class AtribuirMecanicoUseCaseTest {
 
     @Test
     void deveAtribuirMecanicoPorIdCriandoDiagnostico() {
-        OrdemServicoEntity ordem = new OrdemServicoEntity();
+        OrdemServico ordem = new OrdemServico();
         Usuario mecanico = usuario(10L, RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findById(10L)).thenReturn(Optional.of(mecanico));
@@ -53,8 +53,8 @@ class AtribuirMecanicoUseCaseTest {
 
     @Test
     void deveAtribuirMecanicoPorEmailMantendoDiagnosticoExistente() {
-        OrdemServicoEntity ordem = new OrdemServicoEntity();
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        OrdemServico ordem = new OrdemServico();
+        Diagnostico diagnostico = new Diagnostico();
         ordem.setDiagnostico(diagnostico);
         Usuario mecanico = usuario(11L, RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOs("OS-2")).thenReturn(Optional.of(ordem));
@@ -75,7 +75,7 @@ class AtribuirMecanicoUseCaseTest {
         assertType(ApplicationException.ErrorType.NOT_FOUND, () -> new AtribuirMecanicoUseCase(
                 ordemServicoGateway, usuarioGateway).execute("ausente", 1L, null));
 
-        OrdemServicoEntity ordem = new OrdemServicoEntity();
+        OrdemServico ordem = new OrdemServico();
         when(ordemServicoGateway.findByNumeroOs("OS-3")).thenReturn(Optional.of(ordem));
         when(usuarioGateway.findById(12L)).thenReturn(Optional.empty());
         assertType(ApplicationException.ErrorType.NOT_FOUND, () -> new AtribuirMecanicoUseCase(

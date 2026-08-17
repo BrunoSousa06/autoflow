@@ -1,6 +1,6 @@
 package com.autoflow.domain.orcamento;
 
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.domain.ordemservico.Veiculo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
@@ -27,12 +27,12 @@ public class VeiculoOrcamentoSnapshot {
     @Column(name = "veiculo_ano")
     private Integer ano;
 
-    public static VeiculoOrcamentoSnapshot from(VeiculoEntity veiculo) {
+    public static VeiculoOrcamentoSnapshot from(Veiculo veiculo) {
         return VeiculoOrcamentoSnapshot.builder()
-                .placa(veiculo.getPlaca())
-                .marca(veiculo.getMarca())
-                .modelo(veiculo.getModelo())
-                .ano(veiculo.getAno())
+                .placa(veiculo.placa())
+                .marca(veiculo.marca())
+                .modelo(veiculo.modelo())
+                .ano(veiculo.ano())
                 .build();
     }
 }

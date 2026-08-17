@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.repository.historico;
 
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.HistoricoStatusOsEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

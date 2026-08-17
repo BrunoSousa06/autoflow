@@ -5,7 +5,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +17,7 @@ public class ConsultarStatusOrdemServicoUseCase {
     private final VeiculoClienteGateway clienteGateway;
 
     public StatusOrdemServicoOutput execute(String numeroOs, String emailUsuarioAutenticado) {
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
+        OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Ordem de serviço não encontrada."
                 ));
@@ -37,7 +37,7 @@ public class ConsultarStatusOrdemServicoUseCase {
                 ordemServico.getUltimaAtualizacao());
     }
 
-    private void validarTitularidade(OrdemServicoEntity ordemServico, String email) {
+    private void validarTitularidade(OrdemServico ordemServico, String email) {
         Long clienteId = clienteGateway.findIdByUsuarioEmail(email)
                 .orElseThrow(() -> ApplicationException.forbidden(
                         "Você não tem permissão para acessar esta ordem de serviço."

@@ -1,34 +1,25 @@
 package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.dto.cliente.ClienteOutput;
+import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.policy.PlacaPolicy;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
-import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Optional;
-
 
 @RequiredArgsConstructor
 public class BuscarOuCadastrarVeiculoForOrdemServicoUseCase {
 
-    private final VeiculoRepository veiculoRepository;
+    private final VeiculoGateway veiculoGateway;
 
-    public VeiculoEntity execute(ClienteOutput cliente, VeiculoOrdemServicoInput input) {
-        ClienteEntity clienteEntity = toEntity(cliente);
-        return execute(clienteEntity, input);
-    }
-
-    public VeiculoEntity execute(ClienteEntity cliente, VeiculoOrdemServicoInput input) {
+    public VeiculoOutput execute(ClienteOutput cliente, VeiculoOrdemServicoInput input) {
         String placa = PlacaPolicy.normalizar(input.placa());
-        Optional<VeiculoEntity> existente = veiculoRepository.findByPlaca(placa);
+        var existente = veiculoGateway.findByPlaca(placa);
 
         if (existente.isPresent()) {
-            VeiculoEntity veiculo = existente.get();
-            if (!veiculo.getCliente().getId().equals(cliente.getId())) {
+            VeiculoOutput veiculo = existente.get();
+            if (!veiculo.clienteId().equals(cliente.id())) {
                 throw ApplicationException.conflict(
                         "Placa já cadastrada para outro cliente.");
             }
@@ -42,22 +33,7 @@ public class BuscarOuCadastrarVeiculoForOrdemServicoUseCase {
                     "Marca, modelo e ano são obrigatórios para cadastrar um novo veículo.");
         }
 
-        VeiculoEntity novo = new VeiculoEntity();
-        novo.setCliente(cliente);
-        novo.setPlaca(placa);
-        novo.setMarca(input.marca());
-        novo.setModelo(input.modelo());
-        novo.setAno(input.ano());
-        return veiculoRepository.save(novo);
-    }
-
-    private ClienteEntity toEntity(ClienteOutput cliente) {
-        ClienteEntity entity = new ClienteEntity();
-        entity.setId(cliente.id());
-        entity.setNome(cliente.nome());
-        entity.setCpfCnpj(cliente.cpfCnpj());
-        entity.setTelefone(cliente.telefone());
-        entity.setEmail(cliente.email());
-        return entity;
+        return veiculoGateway.save(new VeiculoOrdemServicoInput(
+                placa, input.marca(), input.modelo(), input.ano()), cliente.id());
     }
 }

@@ -12,8 +12,8 @@ import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.usecases.ordemservico.StatusOrdemServicoMensagemPolicy;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -40,9 +40,9 @@ public class AcompanharOrdemServicoUseCase {
     }
 
     private AcompanhamentoOrdemServicoOutput montarAcompanhamento(
-            OrdemServicoEntity ordemServico) {
+            OrdemServico ordemServico) {
         OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(ordemServico.getNumeroOs());
-        List<HistoricoStatusOsEntity> historico = historicoStatusOsGateway
+        List<HistoricoStatusOs> historico = historicoStatusOsGateway
                 .findByNumeroOsOrderByRegistradoEmAsc(ordemServico.getNumeroOs());
 
         return new AcompanhamentoOrdemServicoOutput(

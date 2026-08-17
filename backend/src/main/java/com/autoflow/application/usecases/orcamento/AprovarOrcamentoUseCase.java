@@ -7,7 +7,7 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -45,7 +45,7 @@ public class AprovarOrcamentoUseCase {
             return orcamentoSalvo;
         }
 
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findById(orcamento.getOrdemServicoId())
+        OrdemServico ordemServico = ordemServicoGateway.findById(orcamento.getOrdemServicoId())
                 .orElseThrow(() -> ApplicationException.notFound("OS nao encontrada"));
         ordemServico.iniciarExecucao();
         ordemServicoGateway.save(ordemServico);

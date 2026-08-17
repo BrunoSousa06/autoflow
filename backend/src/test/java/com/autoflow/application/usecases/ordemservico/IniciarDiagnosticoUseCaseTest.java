@@ -4,7 +4,7 @@ import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
@@ -62,14 +62,14 @@ class IniciarDiagnosticoUseCaseTest {
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
 
-    private void configurarBusca(OrdemServicoEntity os, Usuario usuario) {
+    private void configurarBusca(OrdemServico os, Usuario usuario) {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(ordemServicoGateway.save(os)).thenReturn(os);
     }
 
-    private OrdemServicoEntity ordemRecebida() {
-        var os = new OrdemServicoEntity();
+    private OrdemServico ordemRecebida() {
+        var os = new OrdemServico();
         os.setId(1L);
         os.setNumeroOs("OS-1");
         os.setStatus(StatusOrdemServico.RECEBIDA);

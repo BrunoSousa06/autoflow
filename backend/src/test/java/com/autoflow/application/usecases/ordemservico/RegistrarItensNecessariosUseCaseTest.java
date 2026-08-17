@@ -5,9 +5,9 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
@@ -95,17 +95,17 @@ class RegistrarItensNecessariosUseCaseTest {
         verify(ordemServicoGateway, never()).save(os);
     }
 
-    private OrdemServicoEntity ordemEmDiagnostico() {
-        var os = new OrdemServicoEntity();
+    private OrdemServico ordemEmDiagnostico() {
+        var os = new OrdemServico();
         os.setNumeroOs("OS-1");
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         os.adicionarServicosSolicitados(List.of(
-                ServicoSolicitadoEntity.criar(10L, "Servico", BigDecimal.TEN)));
+                ServicoSolicitado.criar(10L, "Servico", BigDecimal.TEN)));
         return os;
     }
 
-    private ItemNecessarioEntity itemSolicitado() {
-        var item = new ItemNecessarioEntity();
+    private ItemNecessario itemSolicitado() {
+        var item = new ItemNecessario();
         item.setPecaInsumoId(20L);
         item.setQuantidade(2);
         return item;

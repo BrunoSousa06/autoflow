@@ -5,7 +5,7 @@ import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.dto.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.presentation.ordemservico.request.*;
 import com.autoflow.presentation.ordemservico.response.FinalizarDiagnosticoResponse;
@@ -73,7 +73,7 @@ public class OrdemServicoController {
     public OrdemServicoResponse criar(
             @Valid @RequestBody CriarOrdemServicoRequest request
     ) {
-        List<ServicoSolicitadoEntity> servicos =
+        List<ServicoSolicitado> servicos =
                 servicoSolicitadoMapper.mapToEntities(
                         request.servicosSolicitados()
                 );
@@ -111,7 +111,7 @@ public class OrdemServicoController {
             @Valid @RequestBody List<ServicoSolicitadoRequest> request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        List<ServicoSolicitadoEntity> servicos = servicoSolicitadoMapper.mapToEntities(request);
+        List<ServicoSolicitado> servicos = servicoSolicitadoMapper.mapToEntities(request);
         return OrdemServicoResponse.fromDomain(commandUseCases.incluir().execute(numeroOs, servicos, userDetails.getUsername()));
     }
 

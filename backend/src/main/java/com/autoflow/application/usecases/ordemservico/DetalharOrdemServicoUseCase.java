@@ -5,7 +5,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
 
 
@@ -16,7 +16,7 @@ public class DetalharOrdemServicoUseCase {
     private final OrcamentoGateway orcamentoGateway;
 
     public OrdemServicoDetalheOutput execute(String numeroOs) {
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
+        OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Ordem de serviço não encontrada."
                 ));

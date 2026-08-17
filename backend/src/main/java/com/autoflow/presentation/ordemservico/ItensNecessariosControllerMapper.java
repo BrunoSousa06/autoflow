@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico;
 
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.presentation.ordemservico.request.ItensNecessariosRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,7 +19,7 @@ public interface ItensNecessariosControllerMapper {
     @Mapping(target = "motivoPendencia", ignore = true)
     @Mapping(target = "quantidadeDisponivel", ignore = true)
     @Mapping(target = "mensagemStatus", ignore = true)
-    ItemNecessarioEntity mapToEntity(ItensNecessariosRequest request);
+    ItemNecessario mapToEntity(ItensNecessariosRequest request);
 
-    List<ItemNecessarioEntity> mapToEntities(List<ItensNecessariosRequest> requests);
+    List<ItemNecessario> mapToEntities(List<ItensNecessariosRequest> requests);
 }

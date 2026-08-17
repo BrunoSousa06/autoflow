@@ -2,8 +2,8 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +44,7 @@ class FinalizarServicoUseCaseTest {
 
     @Test
     void deveManterOsEmExecucaoQuandoHouverOutroServicoPendente() {
-        var os = ordemComServicos(servicoEmExecucao(1L), ServicoSolicitadoEntity.criar(2L, "Pendente", BigDecimal.TEN));
+        var os = ordemComServicos(servicoEmExecucao(1L), ServicoSolicitado.criar(2L, "Pendente", BigDecimal.TEN));
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
@@ -55,8 +55,8 @@ class FinalizarServicoUseCaseTest {
         verify(historicoStatusOsGateway, never()).save(any());
     }
 
-    private OrdemServicoEntity ordemComServicos(ServicoSolicitadoEntity... servicos) {
-        var os = new OrdemServicoEntity();
+    private OrdemServico ordemComServicos(ServicoSolicitado... servicos) {
+        var os = new OrdemServico();
         os.setId(1L);
         os.setNumeroOs("OS-1");
         os.setStatus(StatusOrdemServico.EM_EXECUCAO);
@@ -64,8 +64,8 @@ class FinalizarServicoUseCaseTest {
         return os;
     }
 
-    private ServicoSolicitadoEntity servicoEmExecucao(Long id) {
-        var servico = ServicoSolicitadoEntity.criar(id, "Servico", BigDecimal.TEN);
+    private ServicoSolicitado servicoEmExecucao(Long id) {
+        var servico = ServicoSolicitado.criar(id, "Servico", BigDecimal.TEN);
         servico.iniciar(List.of());
         return servico;
     }

@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.repository;
 
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

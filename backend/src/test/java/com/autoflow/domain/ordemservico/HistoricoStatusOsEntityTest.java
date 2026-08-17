@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class HistoricoStatusOsEntityTest {
+class HistoricoStatusOsTest {
 
-    private HistoricoStatusOsEntity historico;
+    private HistoricoStatusOs historico;
 
     @BeforeEach
     void setUp() {
-        historico = HistoricoStatusOsEntity.criar(
+        historico = HistoricoStatusOs.criar(
                 100L,
                 StatusOrdemServico.RECEBIDA,
                 "Ordem de serviço recebida com sucesso",
@@ -44,21 +44,21 @@ class HistoricoStatusOsEntityTest {
 
     @Test
     void testHistoricoMultiploStatus() {
-        HistoricoStatusOsEntity h1 = HistoricoStatusOsEntity.criar(
+        HistoricoStatusOs h1 = HistoricoStatusOs.criar(
                 100L,
                 StatusOrdemServico.RECEBIDA,
                 "Recebida",
                 "OS-001"
         );
 
-        HistoricoStatusOsEntity h2 = HistoricoStatusOsEntity.criar(
+        HistoricoStatusOs h2 = HistoricoStatusOs.criar(
                 100L,
                 StatusOrdemServico.EM_DIAGNOSTICO,
                 "Em diagnóstico",
                 "OS-001"
         );
 
-        HistoricoStatusOsEntity h3 = HistoricoStatusOsEntity.criar(
+        HistoricoStatusOs h3 = HistoricoStatusOs.criar(
                 100L,
                 StatusOrdemServico.FINALIZADA,
                 "Finalizada",
@@ -91,7 +91,7 @@ class HistoricoStatusOsEntityTest {
 
     @Test
     void testHistoricoConstructor() {
-        HistoricoStatusOsEntity h = new HistoricoStatusOsEntity();
+        HistoricoStatusOs h = new HistoricoStatusOs();
         assertNull(h.getId());
         assertNull(h.getOrdemServicoId());
         assertNull(h.getStatus());

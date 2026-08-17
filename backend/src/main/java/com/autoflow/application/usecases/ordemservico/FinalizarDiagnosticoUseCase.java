@@ -9,8 +9,8 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class FinalizarDiagnosticoUseCase {
 
     @TransactionalUseCase
     public FinalizarDiagnosticoOutput execute(String numeroOs, String emailUsuarioLogado) {
-        OrdemServicoEntity os = ordemServicoGateway.findByNumeroOs(numeroOs)
+        OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
         Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
@@ -57,8 +57,8 @@ public class FinalizarDiagnosticoUseCase {
         } catch (Exception exception) {
             log.error("Falha ao notificar cliente sobre orçamento da OS {}. orcamentoId={}", numeroOs, salvo.getId(), exception);
         }
-        OrdemServicoEntity osSalva = ordemServicoGateway.save(os);
-        historicoGateway.save(HistoricoStatusOsEntity.criar(osSalva.getId(), osSalva.getStatus(),
+        OrdemServico osSalva = ordemServicoGateway.save(os);
+        historicoGateway.save(HistoricoStatusOs.criar(osSalva.getId(), osSalva.getStatus(),
                 StatusOrdemServicoMensagemPolicy.mensagem(osSalva.getStatus()), osSalva.getNumeroOs()));
         return new FinalizarDiagnosticoOutput(osSalva, salvo.getId(), publicUrl);
     }

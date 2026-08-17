@@ -1,16 +1,16 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 
 import java.util.Optional;
 
 public interface ReparoAdicionalGateway {
 
-    ReparoAdicionalEntity save(ReparoAdicionalEntity reparoAdicional);
+    ReparoAdicional save(ReparoAdicional reparoAdicional);
 
-    Optional<ReparoAdicionalEntity> findById(Long id);
+    Optional<ReparoAdicional> findById(Long id);
 
-    Optional<ReparoAdicionalEntity> findByIdForUpdate(Long id);
+    Optional<ReparoAdicional> findByIdForUpdate(Long id);
 
-    Optional<ReparoAdicionalEntity> findByOrcamentoId(Long orcamentoId);
+    Optional<ReparoAdicional> findByOrcamentoId(Long orcamentoId);
 }

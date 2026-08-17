@@ -1,6 +1,6 @@
 package com.autoflow.domain.ordemservico;
 
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,13 +11,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ServicoSolicitadoEntityTest {
+class ServicoSolicitadoTest {
 
-    private ServicoSolicitadoEntity servicoSolicitado;
+    private ServicoSolicitado servicoSolicitado;
 
     @BeforeEach
     void setUp() {
-        servicoSolicitado = ServicoSolicitadoEntity.criar(
+        servicoSolicitado = ServicoSolicitado.criar(
                 1L,
                 "Troca de óleo",
                 new BigDecimal("150.00")
@@ -35,20 +35,20 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testServicoSolicitadoConstructorWithServicoId() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L);
+        ServicoSolicitado servico = new ServicoSolicitado(1L);
         assertEquals(1L, servico.getServicoId());
     }
 
     @Test
     void testServicoSolicitadoConstructorWithNome() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Revisão");
+        ServicoSolicitado servico = new ServicoSolicitado(1L, "Revisão");
         assertEquals(1L, servico.getServicoId());
         assertEquals("Revisão", servico.getNome());
     }
 
     @Test
     void testServicoSolicitadoConstructorComplete() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(
+        ServicoSolicitado servico = new ServicoSolicitado(
                 2L,
                 "Alinhamento",
                 new BigDecimal("200.00")
@@ -61,28 +61,28 @@ class ServicoSolicitadoEntityTest {
     @Test
     void testServicoSolicitadoInvalidServicoId() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new ServicoSolicitadoEntity(null);
+            new ServicoSolicitado(null);
         });
     }
 
     @Test
     void testServicoSolicitadoInvalidNome() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new ServicoSolicitadoEntity(1L, "");
+            new ServicoSolicitado(1L, "");
         });
     }
 
     @Test
     void testServicoSolicitadoInvalidValor() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new ServicoSolicitadoEntity(1L, "Serviço", null);
+            new ServicoSolicitado(1L, "Serviço", null);
         });
     }
 
     @Test
     void testRegistrarItensNecessarios() {
-        List<ItemNecessarioEntity> itens = new ArrayList<>();
-        ItemNecessarioEntity item = new ItemNecessarioEntity();
+        List<ItemNecessario> itens = new ArrayList<>();
+        ItemNecessario item = new ItemNecessario();
         item.setNome("Óleo sintético");
         itens.add(item);
 
@@ -94,7 +94,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testIniciarServico() {
-        List<ItemNecessarioEntity> itens = new ArrayList<>();
+        List<ItemNecessario> itens = new ArrayList<>();
         servicoSolicitado.iniciar(itens);
 
         assertEquals(StatusServicoOs.EM_EXECUCAO, servicoSolicitado.getStatus());
@@ -103,7 +103,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testIniciarServicoJaIniciado() {
-        List<ItemNecessarioEntity> itens = new ArrayList<>();
+        List<ItemNecessario> itens = new ArrayList<>();
         servicoSolicitado.iniciar(itens);
 
         assertThrows(IllegalStateException.class, () -> {
@@ -113,7 +113,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testFinalizarServico() {
-        List<ItemNecessarioEntity> itens = new ArrayList<>();
+        List<ItemNecessario> itens = new ArrayList<>();
         servicoSolicitado.iniciar(itens);
         servicoSolicitado.finalizar();
 
@@ -139,7 +139,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testServicoSolicitadoReparoAdicionalAssociation() {
-        ReparoAdicionalEntity reparo = new ReparoAdicionalEntity();
+        ReparoAdicional reparo = new ReparoAdicional();
         servicoSolicitado.setReparoAdicional(reparo);
 
         assertNotNull(servicoSolicitado.getReparoAdicional());
@@ -147,7 +147,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testServicoSolicitadoDefaultStatus() {
-        ServicoSolicitadoEntity novoServico = new ServicoSolicitadoEntity();
+        ServicoSolicitado novoServico = new ServicoSolicitado();
         assertEquals(StatusServicoOs.AGUARDANDO, novoServico.getStatus());
     }
 
@@ -159,7 +159,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testRegistrarItensNecessarios_statusNaoAguardando_lanca() {
-        List<ItemNecessarioEntity> itens = new ArrayList<>();
+        List<ItemNecessario> itens = new ArrayList<>();
         servicoSolicitado.iniciar(itens);
 
         assertThrows(IllegalStateException.class, () -> servicoSolicitado.registrarItensNecessarios(itens));
@@ -167,7 +167,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testIniciar_comOrdemServicoNaoEmExecucao_lanca() {
-        OrdemServicoEntity os = criarOrdemServicoEmStatus(StatusOrdemServico.RECEBIDA);
+        OrdemServico os = criarOrdemServicoEmStatus(StatusOrdemServico.RECEBIDA);
         servicoSolicitado.setOrdemServico(os);
 
         assertThrows(IllegalStateException.class, () -> servicoSolicitado.iniciar(new ArrayList<>()));
@@ -175,7 +175,7 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testIniciar_comOrdemServicoEmExecucao_sucesso() {
-        OrdemServicoEntity os = criarOrdemServicoEmStatus(StatusOrdemServico.EM_EXECUCAO);
+        OrdemServico os = criarOrdemServicoEmStatus(StatusOrdemServico.EM_EXECUCAO);
         servicoSolicitado.setOrdemServico(os);
 
         servicoSolicitado.iniciar(new ArrayList<>());
@@ -185,11 +185,11 @@ class ServicoSolicitadoEntityTest {
 
     @Test
     void testValidarNome_nulo_lanca() {
-        assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitadoEntity(1L, null));
+        assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitado(1L, null));
     }
 
-    private OrdemServicoEntity criarOrdemServicoEmStatus(StatusOrdemServico status) {
-        OrdemServicoEntity os = new OrdemServicoEntity();
+    private OrdemServico criarOrdemServicoEmStatus(StatusOrdemServico status) {
+        OrdemServico os = new OrdemServico();
         os.setStatus(status);
         return os;
     }

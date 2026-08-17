@@ -14,7 +14,7 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class CriarReparoAdicionalUseCase {
     public CriarReparoAdicionalOutput execute(CriarReparoAdicionalCommand command) {
         validarCommand(command);
 
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(command.numeroOs())
+        OrdemServico ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(command.numeroOs())
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Ordem de serviço não encontrada."
                 ));
@@ -63,18 +63,18 @@ public class CriarReparoAdicionalUseCase {
         validarAutorizacao(ordemServico, usuario);
         Long mecanicoId = usuario.getId();
 
-        List<ServicoSolicitadoEntity> servicos = command.servicos().stream()
+        List<ServicoSolicitado> servicos = command.servicos().stream()
                 .map(this::enriquecerServico)
                 .toList();
 
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
+        ReparoAdicional reparo = ReparoAdicional.criar(
                 ordemServico.getNumeroOs(),
                 mecanicoId,
                 servicos
         );
         reparo.setOrdemServicoId(ordemServico.getId());
 
-        ReparoAdicionalEntity reparoSalvo = reparoAdicionalGateway.save(reparo);
+        ReparoAdicional reparoSalvo = reparoAdicionalGateway.save(reparo);
         OrcamentoEntity orcamento = orcamentoComplementarGateway.criarESalvar(
                 ordemServico,
                 reparoSalvo,
@@ -110,14 +110,14 @@ public class CriarReparoAdicionalUseCase {
         }
     }
 
-    private void validarStatus(OrdemServicoEntity ordemServico) {
+    private void validarStatus(OrdemServico ordemServico) {
         if (StatusOrdemServico.FINALIZADA.equals(ordemServico.getStatus())
                 || StatusOrdemServico.ENTREGUE.equals(ordemServico.getStatus())) {
             throw new IllegalStateException("Não é possível registrar reparo adicional em uma OS finalizada.");
         }
     }
 
-    private void validarAutorizacao(OrdemServicoEntity ordemServico, Usuario usuario) {
+    private void validarAutorizacao(OrdemServico ordemServico, Usuario usuario) {
         if (RoleEnum.ADMIN.equals(usuario.getRole())) {
             return;
         }
@@ -137,7 +137,7 @@ public class CriarReparoAdicionalUseCase {
 
     private void validarServicosDuplicados(
             List<ServicoReparoAdicionalCommand> servicos,
-            OrdemServicoEntity ordemServico
+            OrdemServico ordemServico
     ) {
         Set<Long> idsInformados = new HashSet<>();
         Set<Long> pecasInformadas = new HashSet<>();
@@ -163,7 +163,7 @@ public class CriarReparoAdicionalUseCase {
         }
 
         Set<Long> servicosJaNaOs = ordemServico.getServicosSolicitados().stream()
-                .map(ServicoSolicitadoEntity::getServicoId)
+                .map(ServicoSolicitado::getServicoId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
@@ -178,7 +178,7 @@ public class CriarReparoAdicionalUseCase {
                 });
     }
 
-    private ServicoSolicitadoEntity enriquecerServico(ServicoReparoAdicionalCommand command) {
+    private ServicoSolicitado enriquecerServico(ServicoReparoAdicionalCommand command) {
         if (command.itensNecessarios() == null || command.itensNecessarios().isEmpty()) {
             throw new IllegalArgumentException("Servico do reparo adicional deve ter ao menos um item necessario.");
         }
@@ -189,11 +189,11 @@ public class CriarReparoAdicionalUseCase {
                         "Serviço não encontrado com o ID: " + command.servicoId()
                 ));
 
-        List<ItemNecessarioEntity> itensSolicitados = command.itensNecessarios().stream()
+        List<ItemNecessario> itensSolicitados = command.itensNecessarios().stream()
                 .map(this::mapearItemSolicitado)
                 .toList();
 
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity();
+        ServicoSolicitado servico = new ServicoSolicitado();
         servico.setServicoId(servicoCatalogo.getId());
         servico.setNome(servicoCatalogo.getNome());
         servico.setValor(servicoCatalogo.getValor());
@@ -204,7 +204,7 @@ public class CriarReparoAdicionalUseCase {
         return servico;
     }
 
-    private ItemNecessarioEntity mapearItemSolicitado(ItemReparoAdicionalCommand command) {
+    private ItemNecessario mapearItemSolicitado(ItemReparoAdicionalCommand command) {
         if (command == null || command.pecaInsumoId() == null || command.quantidade() == null) {
             throw new IllegalArgumentException("Item necessario e obrigatorio.");
         }
@@ -212,7 +212,7 @@ public class CriarReparoAdicionalUseCase {
             throw new IllegalArgumentException("Quantidade do item deve ser maior que zero.");
         }
 
-        ItemNecessarioEntity item = new ItemNecessarioEntity();
+        ItemNecessario item = new ItemNecessario();
         item.setPecaInsumoId(command.pecaInsumoId());
         item.setQuantidade(command.quantidade());
         return item;

@@ -1,7 +1,9 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.HistoricoStatusOsEntity;
+import com.autoflow.infrastructure.persistence.mapper.ordemservico.HistoricoStatusOsPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.historico.HistoricoStatusOsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,23 +15,24 @@ import java.util.List;
 public class HistoricoStatusOsRepositoryAdapter implements HistoricoStatusOsGateway {
 
     private final HistoricoStatusOsRepository repository;
+    private final HistoricoStatusOsPersistenceMapper mapper;
 
     @Override
-    public HistoricoStatusOsEntity save(HistoricoStatusOsEntity historico) {
-        return repository.save(historico);
+    public HistoricoStatusOs save(HistoricoStatusOs historico) {
+        return mapper.toDomain(repository.save(mapper.toEntity(historico)));
     }
 
     @Override
-    public List<HistoricoStatusOsEntity> findByOrdemServicoIdOrderByRegistradoEmAsc(
+    public List<HistoricoStatusOs> findByOrdemServicoIdOrderByRegistradoEmAsc(
             Long ordemServicoId) {
 
-        return repository.findByOrdemServicoIdOrderByRegistradoEmAsc(ordemServicoId);
+        return repository.findByOrdemServicoIdOrderByRegistradoEmAsc(ordemServicoId).stream().map(mapper::toDomain).toList();
     }
 
     @Override
-    public List<HistoricoStatusOsEntity> findByNumeroOsOrderByRegistradoEmAsc(
+    public List<HistoricoStatusOs> findByNumeroOsOrderByRegistradoEmAsc(
             String numeroOs) {
 
-        return repository.findByNumeroOsOrderByRegistradoEmAsc(numeroOs);
+        return repository.findByNumeroOsOrderByRegistradoEmAsc(numeroOs).stream().map(mapper::toDomain).toList();
     }
 }

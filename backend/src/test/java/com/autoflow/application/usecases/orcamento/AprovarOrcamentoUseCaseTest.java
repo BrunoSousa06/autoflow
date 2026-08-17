@@ -6,7 +6,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,7 @@ class AprovarOrcamentoUseCaseTest {
     @Test
     void deveAprovarEIniciarOsQuandoNaoHaReparoAdicional() {
         OrcamentoEntity orcamento = orcamentoDisponivel();
-        OrdemServicoEntity os = osAguardandoAprovacao();
+        OrdemServico os = osAguardandoAprovacao();
         when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(reparoUseCase.executeSeExistir(10L)).thenReturn(false);
         when(ordemServicoGateway.findById(1L)).thenReturn(Optional.of(os));
@@ -96,8 +96,8 @@ class AprovarOrcamentoUseCaseTest {
         return orcamento;
     }
 
-    private OrdemServicoEntity osAguardandoAprovacao() {
-        OrdemServicoEntity os = new OrdemServicoEntity();
+    private OrdemServico osAguardandoAprovacao() {
+        OrdemServico os = new OrdemServico();
         os.setId(1L); os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
         return os;
     }

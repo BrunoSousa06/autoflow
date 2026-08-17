@@ -1,6 +1,6 @@
 package com.autoflow.application.dto.ordemservico.acompanhamento;
 
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
 
 import java.math.BigDecimal;
@@ -17,7 +17,7 @@ public record ServicoSolicitadoOutput(
         LocalDateTime finalizadoEm,
         List<ItemNecessarioOutput> itensNecessarios
 ) {
-    public static ServicoSolicitadoOutput from(ServicoSolicitadoEntity servico) {
+    public static ServicoSolicitadoOutput from(ServicoSolicitado servico) {
         return new ServicoSolicitadoOutput(
                 servico.getId(), servico.getServicoId(), servico.getNome(), servico.getValor(),
                 servico.getStatus(), servico.getIniciadoEm(), servico.getFinalizadoEm(),

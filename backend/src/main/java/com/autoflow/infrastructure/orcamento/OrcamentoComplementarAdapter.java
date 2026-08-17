@@ -6,8 +6,8 @@ import com.autoflow.application.gateway.OrcamentoVersioningGateway;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +23,8 @@ public class OrcamentoComplementarAdapter implements OrcamentoComplementarGatewa
 
     @Override
     public OrcamentoEntity criarESalvar(
-            OrdemServicoEntity ordemServico,
-            ReparoAdicionalEntity reparo,
+            OrdemServico ordemServico,
+            ReparoAdicional reparo,
             LocalDateTime criadoEm
     ) {
         int versao = versioningGateway.proximaVersao(ordemServico.getId(), TipoOrcamento.COMPLEMENTAR);

@@ -1,7 +1,7 @@
 package com.autoflow.domain;
 
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import org.junit.jupiter.api.Test;
 
@@ -10,13 +10,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReparoAdicionalEntityTest {
+class ReparoAdicionalTest {
 
     @Test
     void deveCriarReparoAdicionalPendenteEVincularServicos() {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00"));
+        ServicoSolicitado servico = new ServicoSolicitado(1L, "Troca de pastilha", new BigDecimal("120.00"));
 
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(servico));
+        ReparoAdicional reparo = ReparoAdicional.criar("OS-123", 20L, List.of(servico));
 
         assertEquals("OS-123", reparo.getNumeroOs());
         assertEquals(20L, reparo.getMecanicoId());
@@ -28,10 +28,10 @@ class ReparoAdicionalEntityTest {
 
     @Test
     void deveAprovarReparoPendente() {
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
+        ReparoAdicional reparo = ReparoAdicional.criar(
                 "OS-123",
                 20L,
-                List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
+                List.of(new ServicoSolicitado(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
 
         reparo.aprovar();
@@ -43,10 +43,10 @@ class ReparoAdicionalEntityTest {
 
     @Test
     void deveRecusarReparoPendenteComMotivo() {
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
+        ReparoAdicional reparo = ReparoAdicional.criar(
                 "OS-123",
                 20L,
-                List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
+                List.of(new ServicoSolicitado(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
 
         reparo.recusar("Cliente recusou");
@@ -59,10 +59,10 @@ class ReparoAdicionalEntityTest {
 
     @Test
     void naoDeveAprovarReparoQueNaoEstaPendente() {
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
+        ReparoAdicional reparo = ReparoAdicional.criar(
                 "OS-123",
                 20L,
-                List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
+                List.of(new ServicoSolicitado(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
         reparo.recusar("Cliente recusou");
 
@@ -71,10 +71,10 @@ class ReparoAdicionalEntityTest {
 
     @Test
     void naoDeveRecusarReparoQueNaoEstaPendente() {
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar(
+        ReparoAdicional reparo = ReparoAdicional.criar(
                 "OS-123",
                 20L,
-                List.of(new ServicoSolicitadoEntity(1L, "Troca de pastilha", new BigDecimal("120.00")))
+                List.of(new ServicoSolicitado(1L, "Troca de pastilha", new BigDecimal("120.00")))
         );
         reparo.aprovar();
 

@@ -3,11 +3,11 @@ package com.autoflow.application.usecases.ordemservico.reparoadicional;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -20,16 +20,16 @@ public class AprovarReparoAdicionalUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
 
     @TransactionalUseCase
-    public OrdemServicoEntity execute(Long reparoAdicionalId) {
-        ReparoAdicionalEntity reparo = reparoAdicionalGateway.findByIdForUpdate(reparoAdicionalId)
+    public OrdemServico execute(Long reparoAdicionalId) {
+        ReparoAdicional reparo = reparoAdicionalGateway.findByIdForUpdate(reparoAdicionalId)
                 .orElseThrow(() -> new IllegalArgumentException("Reparo adicional não encontrado."));
 
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(reparo.getNumeroOs())
+        OrdemServico ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(reparo.getNumeroOs())
                 .orElseThrow(() -> new IllegalArgumentException("Ordem de serviço não encontrada."));
 
         reparo.aprovar();
 
-        List<ServicoSolicitadoEntity> servicosParaOs = reparo.getServicos().stream()
+        List<ServicoSolicitado> servicosParaOs = reparo.getServicos().stream()
                 .map(servico -> copiarServico(servico, ordemServico))
                 .toList();
         ordemServico.adicionarServicosSolicitados(servicosParaOs);
@@ -38,11 +38,11 @@ public class AprovarReparoAdicionalUseCase {
         return ordemServicoGateway.save(ordemServico);
     }
 
-    private ServicoSolicitadoEntity copiarServico(
-            ServicoSolicitadoEntity origem,
-            OrdemServicoEntity ordemServico
+    private ServicoSolicitado copiarServico(
+            ServicoSolicitado origem,
+            OrdemServico ordemServico
     ) {
-        ServicoSolicitadoEntity copia = new ServicoSolicitadoEntity();
+        ServicoSolicitado copia = new ServicoSolicitado();
         copia.setServicoId(origem.getServicoId());
         copia.setNome(origem.getNome());
         copia.setValor(origem.getValor());
@@ -54,8 +54,8 @@ public class AprovarReparoAdicionalUseCase {
         return copia;
     }
 
-    private ItemNecessarioEntity copiarItem(ItemNecessarioEntity origem) {
-        return ItemNecessarioEntity.criar(
+    private ItemNecessario copiarItem(ItemNecessario origem) {
+        return ItemNecessario.criar(
                 origem.getPecaInsumoId(),
                 origem.getNome(),
                 origem.getTipo(),

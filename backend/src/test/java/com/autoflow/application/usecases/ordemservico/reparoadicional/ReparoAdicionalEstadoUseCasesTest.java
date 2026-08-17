@@ -2,14 +2,14 @@ package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
@@ -216,13 +216,13 @@ class ReparoAdicionalEstadoUseCasesTest {
         verify(recusarReparoAdicionalUseCase).execute(40L, "Cliente recusou");
     }
 
-    private ReparoAdicionalEntity reparoPendente() {
-        var servico = new ServicoSolicitadoEntity();
+    private ReparoAdicional reparoPendente() {
+        var servico = new ServicoSolicitado();
         servico.setServicoId(5L);
         servico.setNome("Troca de pastilha");
         servico.setValor(new BigDecimal("120.00"));
         servico.setStatus(StatusServicoOs.AGUARDANDO);
-        servico.registrarItensNecessarios(java.util.List.of(ItemNecessarioEntity.criar(
+        servico.registrarItensNecessarios(java.util.List.of(ItemNecessario.criar(
                 7L,
                 "Pastilha",
                 CategoriaPecaInsumo.PECA,
@@ -232,15 +232,15 @@ class ReparoAdicionalEstadoUseCasesTest {
                 new SituacaoEstoque(1, MotivoPendenciaItem.ESTOQUE_INSUFICIENTE)
         )));
 
-        var reparo = ReparoAdicionalEntity.criar("OS-123", 20L, java.util.List.of(servico));
+        var reparo = ReparoAdicional.criar("OS-123", 20L, java.util.List.of(servico));
         reparo.setId(40L);
         reparo.setOrdemServicoId(10L);
         reparo.setOrcamentoId(30L);
         return reparo;
     }
 
-    private OrdemServicoEntity ordemServico() {
-        var ordemServico = new OrdemServicoEntity();
+    private OrdemServico ordemServico() {
+        var ordemServico = new OrdemServico();
         ordemServico.setId(10L);
         ordemServico.setNumeroOs("OS-123");
         return ordemServico;

@@ -91,19 +91,19 @@ class IniciarServicoUseCaseTest {
         verify(ordemServicoGateway, never()).save(ordem);
     }
 
-    private OrdemServicoEntity ordemEmExecucao() {
-        var ordem = new OrdemServicoEntity();
+    private OrdemServico ordemEmExecucao() {
+        var ordem = new OrdemServico();
         ordem.setNumeroOs("OS-1");
         ordem.setStatus(StatusOrdemServico.EM_EXECUCAO);
         return ordem;
     }
 
-    private ServicoSolicitadoEntity servico(Long id) {
-        return new ServicoSolicitadoEntity(id, "Servico", BigDecimal.TEN);
+    private ServicoSolicitado servico(Long id) {
+        return new ServicoSolicitado(id, "Servico", BigDecimal.TEN);
     }
 
-    private ItemNecessarioEntity item(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(
+    private ItemNecessario item(Long id, int quantidade) {
+        return ItemNecessario.criar(
                 id,
                 "Item",
                 CategoriaPecaInsumo.PECA,

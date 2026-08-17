@@ -5,9 +5,9 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
-import com.autoflow.domain.ordemservico.DiagnosticoEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.Diagnostico;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.servico.Servico;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -49,8 +49,8 @@ class IncluirServicosUseCaseTest {
         assertEquals(type, assertThrows(ApplicationException.class, executable).type());
     }
 
-    private static OrdemServicoEntity ordem(StatusOrdemServico status) {
-        var ordem = new OrdemServicoEntity();
+    private static OrdemServico ordem(StatusOrdemServico status) {
+        var ordem = new OrdemServico();
         ordem.setStatus(status);
         return ordem;
     }
@@ -61,7 +61,7 @@ class IncluirServicosUseCaseTest {
 
     @Test
     void deveIncluirServicoParaAdminDuranteDiagnostico() {
-        OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
+        OrdemServico ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
         Servico catalogo = servico(5L);
         Usuario admin = usuario(RoleEnum.ADMIN, 1L);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordem));
@@ -72,14 +72,14 @@ class IncluirServicosUseCaseTest {
 
         var resultado = new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-1",
-                List.of(new ServicoSolicitadoEntity(5L)), "admin@autoflow.com");
+                List.of(new ServicoSolicitado(5L)), "admin@autoflow.com");
 
         assertEquals(1, resultado.getServicosSolicitados().size());
         assertEquals("Troca de oleo", resultado.getServicosSolicitados().get(0).getNome());
         verify(accessPolicy, never()).validarPodeAlterarDiagnostico(ordem, admin);
     }
 
-    private OrdemServicoEntity incluir(String numeroOs, List<ServicoSolicitadoEntity> servicos,
+    private OrdemServico incluir(String numeroOs, List<ServicoSolicitado> servicos,
                                        String email) {
         return new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute(numeroOs, servicos, email);
@@ -87,8 +87,8 @@ class IncluirServicosUseCaseTest {
 
     @Test
     void deveValidarMecanicoEIncluirServicoForaDoDiagnostico() {
-        OrdemServicoEntity ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
-        ordem.setDiagnostico(new DiagnosticoEntity());
+        OrdemServico ordem = ordem(StatusOrdemServico.EM_DIAGNOSTICO);
+        ordem.setDiagnostico(new Diagnostico());
         Usuario mecanico = usuario(RoleEnum.MECANICO, 2L);
         Servico catalogo = servico(6L);
         when(ordemServicoGateway.findByNumeroOs("OS-2")).thenReturn(Optional.of(ordem));
@@ -100,14 +100,14 @@ class IncluirServicosUseCaseTest {
 
         new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-2",
-                List.of(new ServicoSolicitadoEntity(6L)), "mecanico@autoflow.com");
+                List.of(new ServicoSolicitado(6L)), "mecanico@autoflow.com");
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(ordem, mecanico);
 
         ordem.setStatus(StatusOrdemServico.RECEBIDA);
         new IncluirServicosUseCase(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-2",
-                List.of(new ServicoSolicitadoEntity(7L)), "nao-consulta@autoflow.com");
+                List.of(new ServicoSolicitado(7L)), "nao-consulta@autoflow.com");
         verify(usuarioGateway, never()).findByEmail("nao-consulta@autoflow.com");
     }
 
@@ -116,7 +116,7 @@ class IncluirServicosUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("ausente")).thenReturn(Optional.empty());
         assertType(ApplicationException.ErrorType.NOT_FOUND, () -> incluir("ausente", List.of(), "admin"));
 
-        OrdemServicoEntity ordem = ordem(StatusOrdemServico.RECEBIDA);
+        OrdemServico ordem = ordem(StatusOrdemServico.RECEBIDA);
         when(ordemServicoGateway.findByNumeroOs("OS-3")).thenReturn(Optional.of(ordem));
         assertThrows(IllegalArgumentException.class,
                 () -> incluir("OS-3", null, "admin"));
@@ -127,12 +127,12 @@ class IncluirServicosUseCaseTest {
         when(usuarioGateway.findByEmail("ausente"))
                 .thenReturn(Optional.empty());
         assertType(ApplicationException.ErrorType.NOT_FOUND,
-                () -> incluir("OS-3", List.of(new ServicoSolicitadoEntity(5L)), "ausente"));
+                () -> incluir("OS-3", List.of(new ServicoSolicitado(5L)), "ausente"));
 
         when(usuarioGateway.findByEmail("atendente"))
                 .thenReturn(Optional.of(usuario(RoleEnum.ATENDENTE, 3L)));
         when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
         assertType(ApplicationException.ErrorType.NOT_FOUND,
-                () -> incluir("OS-3", List.of(new ServicoSolicitadoEntity(5L)), "atendente"));
+                () -> incluir("OS-3", List.of(new ServicoSolicitado(5L)), "atendente"));
     }
 }

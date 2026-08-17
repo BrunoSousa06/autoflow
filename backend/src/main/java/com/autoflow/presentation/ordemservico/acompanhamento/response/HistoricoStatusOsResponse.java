@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.acompanhamento.response;
 
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 
 import java.time.LocalDateTime;
@@ -10,7 +10,7 @@ public record HistoricoStatusOsResponse(
         String mensagemCliente,
         LocalDateTime registradoEm
 ) {
-    public static HistoricoStatusOsResponse from(HistoricoStatusOsEntity historico) {
+    public static HistoricoStatusOsResponse from(HistoricoStatusOs historico) {
         return new HistoricoStatusOsResponse(
                 historico.getStatus(),
                 historico.getMensagemCliente(),

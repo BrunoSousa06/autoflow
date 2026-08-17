@@ -2,7 +2,7 @@ package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
 import com.autoflow.application.dto.notificacao.MensagemNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -11,7 +11,7 @@ public class EnviarLinkAcompanhamentoUseCase {
     private final NotificacaoGateway notificacaoGateway;
     private final String frontendPublicBaseUrl;
 
-    public void execute(OrdemServicoEntity ordemServico, String token) {
+    public void execute(OrdemServico ordemServico, String token) {
         String emailCliente = ordemServico.getCliente().getEmail();
         if (emailCliente == null || emailCliente.isBlank()) {
             return;

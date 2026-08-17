@@ -5,6 +5,7 @@ import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.dto.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
@@ -14,10 +15,11 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.domain.cliente.Cliente;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
+import com.autoflow.domain.ordemservico.Veiculo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,16 +42,17 @@ public class CriarOrdemServicoUseCase {
     public OrdemServicoCriadaOutput execute(
             String cpfCnpj,
             VeiculoOrdemServicoInput veiculoRequest,
-            List<ServicoSolicitadoEntity> servicosSolicitados) {
+            List<ServicoSolicitado> servicosSolicitados) {
         validarServicos(servicosSolicitados);
         ClienteOutput cliente = buscarCliente.execute(cpfCnpj);
-        VeiculoEntity veiculo = buscarOuCadastrarVeiculo.execute(cliente, veiculoRequest);
-        OrdemServicoEntity os = OrdemServicoEntity.criar(
-                cliente.id(), cliente.nome(), cliente.cpfCnpj(), cliente.email(), cliente.telefone(), veiculo);
+        VeiculoOutput veiculo = buscarOuCadastrarVeiculo.execute(cliente, veiculoRequest);
+        OrdemServico os = OrdemServico.criar(
+                Cliente.reconstituir(cliente.id(), cliente.nome(), cliente.cpfCnpj(), cliente.telefone(), cliente.email()),
+                new Veiculo(veiculo.id(), veiculo.placa(), veiculo.marca(), veiculo.modelo(), veiculo.ano()));
         os.adicionarServicosSolicitados(servicosSolicitados.stream()
                 .map(servico -> preencherServico(os, servico)).toList());
-        OrdemServicoEntity salva = ordemServicoGateway.save(os);
-        historicoGateway.save(HistoricoStatusOsEntity.criar(
+        OrdemServico salva = ordemServicoGateway.save(os);
+        historicoGateway.save(HistoricoStatusOs.criar(
                 salva.getId(),
                 salva.getStatus(),
                 StatusOrdemServicoMensagemPolicy.mensagem(salva.getStatus()),
@@ -63,14 +66,14 @@ public class CriarOrdemServicoUseCase {
         return new OrdemServicoCriadaOutput(salva, token.token());
     }
 
-    private ServicoSolicitadoEntity preencherServico(
-            OrdemServicoEntity os,
-            ServicoSolicitadoEntity solicitado) {
+    private ServicoSolicitado preencherServico(
+            OrdemServico os,
+            ServicoSolicitado solicitado) {
         ServicoOutput servico = servicoGateway.findById(solicitado.getServicoId())
                 .map(ServicoApplicationMapper::toOutput)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Serviço não encontrado com o ID: " + solicitado.getServicoId()));
-        ServicoSolicitadoEntity resultado = new ServicoSolicitadoEntity();
+        ServicoSolicitado resultado = new ServicoSolicitado();
         resultado.setServicoId(servico.getId());
         resultado.setNome(servico.getNome());
         resultado.setValor(servico.getValor());
@@ -79,7 +82,7 @@ public class CriarOrdemServicoUseCase {
         return resultado;
     }
 
-    private void validarServicos(List<ServicoSolicitadoEntity> servicos) {
+    private void validarServicos(List<ServicoSolicitado> servicos) {
         if (servicos == null || servicos.isEmpty()) {
             throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
         }

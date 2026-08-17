@@ -9,14 +9,18 @@ import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
 import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
 import com.autoflow.infrastructure.persistence.mapper.PecaInsumoPersistenceMapper;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.HistoricoStatusOsEntity;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
+import com.autoflow.infrastructure.persistence.mapper.ordemservico.HistoricoStatusOsPersistenceMapper;
+import com.autoflow.infrastructure.persistence.mapper.ordemservico.OrdemServicoPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.*;
 import com.autoflow.infrastructure.persistence.repository.historico.HistoricoStatusOsRepository;
 import org.junit.jupiter.api.Test;
@@ -43,6 +47,8 @@ class RepositoryAdaptersTest {
     @Mock OrcamentoRepository orcamentoRepository;
     @Mock OrdemServicoRepository ordemRepository;
     @Mock ServicoSolicitadoRepository servicoSolicitadoRepository;
+    @Mock HistoricoStatusOsPersistenceMapper historicoMapper;
+    @Mock OrdemServicoPersistenceMapper ordemMapper;
 
     @Test
     void pecaAdapterDeveDelegarTodasOperacoes() {
@@ -122,13 +128,16 @@ class RepositoryAdaptersTest {
 
     @Test
     void historicoAdapterDeveDelegarPersistenciaEOrdenacao() {
-        var adapter = new HistoricoStatusOsRepositoryAdapter(historicoRepository);
-        var historico = new HistoricoStatusOsEntity();
-        when(historicoRepository.save(historico)).thenReturn(historico);
-        when(historicoRepository.findByOrdemServicoIdOrderByRegistradoEmAsc(1L))
-                .thenReturn(List.of(historico));
-        when(historicoRepository.findByNumeroOsOrderByRegistradoEmAsc("OS-1"))
-                .thenReturn(List.of(historico));
+         var adapter = new HistoricoStatusOsRepositoryAdapter(historicoRepository, historicoMapper);
+         var historico = new HistoricoStatusOs();
+         var historicoEntity = new HistoricoStatusOsEntity();
+         when(historicoMapper.toEntity(historico)).thenReturn(historicoEntity);
+         when(historicoRepository.save(historicoEntity)).thenReturn(historicoEntity);
+         when(historicoMapper.toDomain(historicoEntity)).thenReturn(historico);
+         when(historicoRepository.findByOrdemServicoIdOrderByRegistradoEmAsc(1L))
+                 .thenReturn(List.of(historicoEntity));
+         when(historicoRepository.findByNumeroOsOrderByRegistradoEmAsc("OS-1"))
+                 .thenReturn(List.of(historicoEntity));
 
         assertSame(historico, adapter.save(historico));
         assertEquals(List.of(historico), adapter.findByOrdemServicoIdOrderByRegistradoEmAsc(1L));
@@ -163,19 +172,22 @@ class RepositoryAdaptersTest {
 
     @Test
     void ordemServicoAdapterDeveDelegarTodasConsultas() {
-        var adapter = new OrdemServicoRepositoryAdapter(ordemRepository);
-        var ordem = new OrdemServicoEntity();
-        var esperado = Optional.of(ordem);
+         var adapter = new OrdemServicoRepositoryAdapter(ordemRepository, ordemMapper);
+         var ordem = new OrdemServico();
+         var ordemEntity = new OrdemServicoEntity();
+         var esperado = Optional.of(ordem);
+         when(ordemMapper.toEntity(ordem)).thenReturn(ordemEntity);
+         when(ordemMapper.toDomain(ordemEntity)).thenReturn(ordem);
 
 
-        when(ordemRepository.save(ordem)).thenReturn(ordem);
-        when(ordemRepository.findById(1L)).thenReturn(esperado);
-        when(ordemRepository.findByNumeroOs("OS-1")).thenReturn(esperado);
-        when(ordemRepository.findByNumeroOsForUpdate("OS-1")).thenReturn(esperado);
-        when(ordemRepository.findByCliente_IdOrderByDataAberturaDesc(2L)).thenReturn(List.of(ordem));
-        when(ordemRepository.findAllByOrderByDataAberturaDesc()).thenReturn(List.of(ordem));
-        when(ordemRepository.findAll(any(Specification.class), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(ordem)));
+         when(ordemRepository.save(ordemEntity)).thenReturn(ordemEntity);
+         when(ordemRepository.findById(1L)).thenReturn(Optional.of(ordemEntity));
+         when(ordemRepository.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordemEntity));
+         when(ordemRepository.findByNumeroOsForUpdate("OS-1")).thenReturn(Optional.of(ordemEntity));
+         when(ordemRepository.findByCliente_IdOrderByDataAberturaDesc(2L)).thenReturn(List.of(ordemEntity));
+         when(ordemRepository.findAllByOrderByDataAberturaDesc()).thenReturn(List.of(ordemEntity));
+         when(ordemRepository.findAll(any(Specification.class), any(Pageable.class)))
+                 .thenReturn(new PageImpl<>(List.of(ordemEntity)));
 
         assertSame(ordem, adapter.save(ordem));
         assertEquals(esperado, adapter.findById(1L));

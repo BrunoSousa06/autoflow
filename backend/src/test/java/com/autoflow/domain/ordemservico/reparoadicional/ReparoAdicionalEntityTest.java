@@ -1,6 +1,6 @@
 package com.autoflow.domain.ordemservico.reparoadicional;
 
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,15 +10,15 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReparoAdicionalEntityTest {
+class ReparoAdicionalTest {
 
-    private ReparoAdicionalEntity reparoAdicional;
-    private List<ServicoSolicitadoEntity> servicos;
+    private ReparoAdicional reparoAdicional;
+    private List<ServicoSolicitado> servicos;
 
     @BeforeEach
     void setUp() {
         servicos = new ArrayList<>();
-        reparoAdicional = ReparoAdicionalEntity.criar("OS-001", 1L, servicos);
+        reparoAdicional = ReparoAdicional.criar("OS-001", 1L, servicos);
     }
 
     @Test
@@ -83,7 +83,7 @@ class ReparoAdicionalEntityTest {
 
     @Test
     void testReparoAdicionalDefaultStatus() {
-        ReparoAdicionalEntity novoReparo = new ReparoAdicionalEntity();
+        ReparoAdicional novoReparo = new ReparoAdicional();
         assertEquals(StatusReparoAdicional.PENDENTE_APROVACAO, novoReparo.getStatus());
     }
 

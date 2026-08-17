@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.orcamento;
 
 import com.autoflow.domain.orcamento.*;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Component
 public class OrcamentoFactory {
 
-    public OrcamentoEntity criarPrincipalDisponivel(OrdemServicoEntity ordemServico, int versao, LocalDateTime now) {
+    public OrcamentoEntity criarPrincipalDisponivel(OrdemServico ordemServico, int versao, LocalDateTime now) {
         List<OrcamentoServicoEntity> orcamentoServicoEntities = ordemServico.getServicosSolicitados().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
         List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
@@ -54,7 +54,7 @@ public class OrcamentoFactory {
                 .build();
     }
 
-    public OrcamentoEntity criarAdicionalDisponivel(OrdemServicoEntity ordemServico, ReparoAdicionalEntity reparoSalvo, int versao, LocalDateTime now) {
+    public OrcamentoEntity criarAdicionalDisponivel(OrdemServico ordemServico, ReparoAdicional reparoSalvo, int versao, LocalDateTime now) {
         List<OrcamentoServicoEntity> orcamentoServicoEntities = reparoSalvo.getServicos().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
         List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
@@ -93,12 +93,12 @@ public class OrcamentoFactory {
     }
 
     public OrcamentoEntity criarPrincipalConsolidadoDisponivel(
-            OrdemServicoEntity ordemServico,
-            ReparoAdicionalEntity reparo,
+            OrdemServico ordemServico,
+            ReparoAdicional reparo,
             int versao,
             LocalDateTime now
     ) {
-        List<ServicoSolicitadoEntity> servicosConsolidados = new ArrayList<>();
+        List<ServicoSolicitado> servicosConsolidados = new ArrayList<>();
         servicosConsolidados.addAll(ordemServico.getServicosSolicitados());
         servicosConsolidados.addAll(reparo.getServicos());
 

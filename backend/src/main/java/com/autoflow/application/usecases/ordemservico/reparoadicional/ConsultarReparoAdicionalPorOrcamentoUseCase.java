@@ -1,7 +1,7 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -12,7 +12,7 @@ public class ConsultarReparoAdicionalPorOrcamentoUseCase {
 
     private final ReparoAdicionalGateway reparoAdicionalGateway;
 
-    public Optional<ReparoAdicionalEntity> execute(Long orcamentoId) {
+    public Optional<ReparoAdicional> execute(Long orcamentoId) {
         return reparoAdicionalGateway.findByOrcamentoId(orcamentoId);
     }
 }

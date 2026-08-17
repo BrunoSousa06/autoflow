@@ -3,7 +3,7 @@ package com.autoflow.application.usecases.pecainsumo;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.application.gateway.EstoqueGateway;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
@@ -21,14 +21,14 @@ public class ConsultarDisponibilidadeEstoqueUseCase {
 
     private final EstoqueGateway estoqueGateway;
 
-    public List<ItemNecessarioEntity> execute(List<ItemNecessarioEntity> itensNecessarios) {
+    public List<ItemNecessario> execute(List<ItemNecessario> itensNecessarios) {
         if (itensNecessarios == null || itensNecessarios.isEmpty()) {
             return Collections.emptyList();
         }
 
         validarItens(itensNecessarios);
         List<Long> ids = itensNecessarios.stream()
-                .map(ItemNecessarioEntity::getPecaInsumoId)
+                .map(ItemNecessario::getPecaInsumoId)
                 .distinct()
                 .toList();
         List<EstoqueItemOutput> itensEstoque = estoqueGateway.findAllById(ids);
@@ -60,7 +60,7 @@ public class ConsultarDisponibilidadeEstoqueUseCase {
                             ? null
                             : MotivoPendenciaItem.ESTOQUE_INSUFICIENTE;
 
-                    return ItemNecessarioEntity.criar(
+                    return ItemNecessario.criar(
                             estoque.id(),
                             estoque.nome(),
                             estoque.tipo(),
@@ -75,13 +75,13 @@ public class ConsultarDisponibilidadeEstoqueUseCase {
                 }).toList();
     }
 
-    private void validarQuantidadeSolicitada(ItemNecessarioEntity item) {
+    private void validarQuantidadeSolicitada(ItemNecessario item) {
         if (item.getQuantidade() <= 0) {
             throw new IllegalArgumentException("Quantidade do item deve ser maior que zero.");
         }
     }
 
-    private void validarItens(List<ItemNecessarioEntity> itens) {
+    private void validarItens(List<ItemNecessario> itens) {
         Set<Long> ids = new HashSet<>();
         itens.forEach(item -> {
             if (item == null || item.getPecaInsumoId() == null || item.getQuantidade() == null) {

@@ -6,8 +6,8 @@ import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.dto.security.CurrentUser;
-import com.autoflow.domain.ordemservico.ClienteOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.ClienteOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class ConsultarStatusOrdemServicoUseCaseTest {
     @EnumSource(StatusOrdemServico.class)
     void deveRetornarOsStatusEUltimaAtualizacaoPersistidos(StatusOrdemServico status) {
         LocalDateTime ultimaAtualizacao = LocalDateTime.of(2026, 5, 30, 12, 0);
-        OrdemServicoEntity ordemServico = criarOrdemServico(status, ultimaAtualizacao, 10L);
+        OrdemServico ordemServico = criarOrdemServico(status, ultimaAtualizacao, 10L);
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(currentUserGateway.getCurrentUser())
                 .thenReturn(Optional.of(new CurrentUser("atendente@autoflow.com", RoleEnum.ATENDENTE)));
@@ -55,7 +55,7 @@ class ConsultarStatusOrdemServicoUseCaseTest {
 
     @Test
     void deveRetornarStatusParaClienteTitular() {
-        OrdemServicoEntity ordemServico = criarOrdemServico(
+        OrdemServico ordemServico = criarOrdemServico(
                 StatusOrdemServico.EM_EXECUCAO,
                 LocalDateTime.of(2026, 5, 30, 12, 0),
                 10L);
@@ -73,7 +73,7 @@ class ConsultarStatusOrdemServicoUseCaseTest {
 
     @Test
     void deveRecusarClienteNaoTitular() {
-        OrdemServicoEntity ordemServico = criarOrdemServico(
+        OrdemServico ordemServico = criarOrdemServico(
                 StatusOrdemServico.RECEBIDA,
                 LocalDateTime.of(2026, 5, 30, 12, 0),
                 10L);
@@ -111,15 +111,15 @@ class ConsultarStatusOrdemServicoUseCaseTest {
                 clienteGateway);
     }
 
-    private OrdemServicoEntity criarOrdemServico(
+    private OrdemServico criarOrdemServico(
             StatusOrdemServico status,
             LocalDateTime ultimaAtualizacao,
             Long clienteId) {
-        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        OrdemServico ordemServico = new OrdemServico();
         ordemServico.setNumeroOs("OS-123");
         ordemServico.setStatus(status);
         ordemServico.setUltimaAtualizacao(ultimaAtualizacao);
-        ordemServico.setCliente(ClienteOsEntity.fromFields(
+        ordemServico.setCliente(ClienteOs.fromFields(
                 clienteId,
                 "Cliente Teste",
                 "52998224725",

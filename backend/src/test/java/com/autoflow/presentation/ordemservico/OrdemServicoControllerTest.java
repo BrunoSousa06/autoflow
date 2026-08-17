@@ -13,8 +13,8 @@ import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.domain.cliente.Cliente;
+import com.autoflow.domain.ordemservico.Veiculo;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import org.junit.jupiter.api.Test;
@@ -120,7 +120,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveCriarOrdemServico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(criarOrdemServicoUseCase.execute(eq("52998224725"), any(VeiculoOrdemServicoInput.class), anyList()))
                 .thenReturn(new OrdemServicoCriadaOutput(ordemServico, "token-acompanhamento"));
@@ -151,7 +151,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.servicos[0].id").value(55L));
 
         ArgumentCaptor<VeiculoOrdemServicoInput> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoInput.class);
-        ArgumentCaptor<List<ServicoSolicitadoEntity>> servicosCaptor = captorDeLista();
+        ArgumentCaptor<List<ServicoSolicitado>> servicosCaptor = captorDeLista();
         verify(criarOrdemServicoUseCase).execute(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
         assertEquals("NEX0517", veiculoCaptor.getValue().placa());
         assertEquals("Honda", veiculoCaptor.getValue().marca());
@@ -164,7 +164,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveIncluirServicosNaOrdemServico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(incluirServicosUseCase.execute(eq("OS-123"), anyList(), eq("mecanico@autoflow.com")))
                 .thenReturn(ordemServico);
@@ -188,7 +188,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveAtribuirMecanicoPorEmail() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(atribuirMecanicoUseCase.execute(eq("OS-123"), isNull(), eq("mecanico@autoflow.com")))
                 .thenReturn(ordemServico);
@@ -210,7 +210,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveAtribuirMecanicoPorId() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(atribuirMecanicoUseCase.execute(eq("OS-123"), eq(2L), isNull()))
                 .thenReturn(ordemServico);
@@ -232,7 +232,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveRegistrarItensNecessariosComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(registrarItensNecessariosUseCase.execute(eq("342-sb"),eq(55L), eq("mecanico@autoflow.com"),anyList()))
                 .thenReturn(ordemServico);
@@ -251,7 +251,7 @@ class OrdemServicoControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1L));
 
-        ArgumentCaptor<List<ItemNecessarioEntity>> itensCaptor = captorDeLista();
+        ArgumentCaptor<List<ItemNecessario>> itensCaptor = captorDeLista();
         verify(registrarItensNecessariosUseCase).execute(eq("342-sb"),
                 eq(55L),
                 eq("mecanico@autoflow.com"),
@@ -273,7 +273,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveFinalizarServicoComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.FINALIZADO);
 
         when(finalizarServicoUseCase.execute("OS-123", 55L)).thenReturn(ordemServico);
@@ -289,7 +289,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveEntregarOrdemServicoComoAtendente() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.FINALIZADA);
         ordemServico.entregar();
 
@@ -308,8 +308,8 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
     void deveListarOrdensServicoComoAdmin() throws Exception {
-        OrdemServicoEntity primeiraOrdem = criarOrdemServico(1L, 55L, "OS-123");
-        OrdemServicoEntity segundaOrdem = criarOrdemServico(2L, 66L, "OS-456");
+        OrdemServico primeiraOrdem = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico segundaOrdem = criarOrdemServico(2L, 66L, "OS-456");
         var page = new PageResult<>(List.of(primeiraOrdem, segundaOrdem), 2, 0, 10);
 
         when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(PageQuery.class), anyString())).thenReturn(page);
@@ -331,7 +331,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "atendente@autoflow.com", roles = "ATENDENTE")
     void deveListarOrdensServicoComFiltroDeCliente() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         var page = new PageResult<>(List.of(ordemServico), 1, 0, 10);
 
         when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(PageQuery.class), anyString())).thenReturn(page);
@@ -351,7 +351,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "atendente@autoflow.com", roles = "ATENDENTE")
     void deveListarOrdensServicoComFiltroDeStatus() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         var page = new PageResult<>(List.of(ordemServico), 1, 0, 10);
 
         when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(PageQuery.class), anyString())).thenReturn(page);
@@ -388,7 +388,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveListarOrdensServicoComoMecanicoPassandoSeuEmail() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         var page = new PageResult<>(List.of(ordemServico), 1, 0, 10);
 
         when(listarOrdensServicoUseCase.execute(any(OrdemServicoFiltroInput.class), any(PageQuery.class), eq("mecanico@autoflow.com"))).thenReturn(page);
@@ -403,7 +403,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "ATENDENTE")
     void deveDetalharOrdemServicoComoAtendente() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getNumeroOs());
 
         when(detalharOrdemServicoUseCase.execute("OS-123"))
@@ -522,7 +522,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveFinalizarDiagnosticoComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
 
         when(finalizarDiagnosticoUseCase.execute("OS-123", "mecanico@autoflow.com"))
@@ -583,7 +583,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveIniciarDiagnosticoComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
 
         when(iniciarDiagnosticoUseCase.execute("OS-123", "mecanico@autoflow.com"))
@@ -611,7 +611,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveRegistrarLaudoComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
         when(registrarLaudoUseCase.execute("OS-123", "mecanico@autoflow.com", "Motor com desgaste"))
                 .thenReturn(ordemServico);
@@ -633,7 +633,7 @@ class OrdemServicoControllerTest {
     @Test
     @WithMockUser(roles = "MECANICO")
     void deveIniciarServicoComoMecanico() throws Exception {
-        OrdemServicoEntity ordemServico = criarOrdemServico(1L, 55L, "OS-123");
+        OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.getServicosSolicitados().getFirst().setStatus(StatusServicoOs.EM_EXECUCAO);
 
         when(iniciarServicoUseCase.execute("OS-123", 55L)).thenReturn(ordemServico);
@@ -687,24 +687,12 @@ class OrdemServicoControllerTest {
         verifyNoInteractions(criarOrdemServicoUseCase);
     }
 
-    private OrdemServicoEntity criarOrdemServico(Long id, Long servicoOsId, String numeroOs) {
-        ClienteEntity cliente = new ClienteEntity();
-        cliente.setId(1L);
-        cliente.setNome("Cliente 1");
-        cliente.setCpfCnpj("12345678901");
-        cliente.setEmail("cliente1@exemplo.com");
-        cliente.setTelefone("11999999999");
+    private OrdemServico criarOrdemServico(Long id, Long servicoOsId, String numeroOs) {
+        Cliente cliente = Cliente.reconstituir(1L, "Cliente 1", "12345678901", "11999999999", "cliente1@exemplo.com");
+        Veiculo veiculo = new Veiculo(2L, "ABC1D23", "Honda", "Civic", 2020);
 
-        VeiculoEntity veiculo = new VeiculoEntity();
-        veiculo.setId(2L);
-        veiculo.setCliente(cliente);
-        veiculo.setPlaca("ABC1D23");
-        veiculo.setMarca("Honda");
-        veiculo.setModelo("Civic");
-        veiculo.setAno(2020);
-
-        OrdemServicoEntity ordemServico = OrdemServicoEntity.criar(cliente, veiculo);
-        ServicoSolicitadoEntity servico = ServicoSolicitadoEntity.criar(10L, "Revisao", new BigDecimal("100.00"));
+        OrdemServico ordemServico = OrdemServico.criar(cliente, veiculo);
+        ServicoSolicitado servico = ServicoSolicitado.criar(10L, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
         ordemServico.adicionarServicosSolicitados(List.of(servico));
 

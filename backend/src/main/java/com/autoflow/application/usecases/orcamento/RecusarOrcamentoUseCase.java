@@ -7,7 +7,7 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -54,7 +54,7 @@ public class RecusarOrcamentoUseCase {
             return orcamentoSalvo;
         }
 
-        OrdemServicoEntity ordemServico = ordemServicoGateway.findByNumeroOs(orcamento.getNumeroOs())
+        OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(orcamento.getNumeroOs())
                 .orElseThrow(() -> ApplicationException.notFound("OS nao encontrada"));
         ordemServico.finalizarPorOrcamentoRecusado();
         ordemServicoGateway.save(ordemServico);

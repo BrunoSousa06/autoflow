@@ -3,7 +3,7 @@ package com.autoflow.application.usecases.pecainsumo;
 import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.application.gateway.EstoqueGateway;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -129,7 +129,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
     @Test
     void deveRejeitarItemNuloAntesDeConsultarEstoque() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
-        var itens = java.util.Collections.singletonList((ItemNecessarioEntity) null);
+        var itens = java.util.Collections.singletonList((ItemNecessario) null);
 
         assertThrows(IllegalArgumentException.class,
                 () -> useCase.execute(itens));
@@ -151,7 +151,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
     @Test
     void deveRejeitarItemSemQuantidadeAntesDeConsultarEstoque() {
         var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
-        var item = new ItemNecessarioEntity();
+        var item = new ItemNecessario();
         item.setPecaInsumoId(1L);
         var itens = List.of(item);
 
@@ -165,8 +165,8 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
         verify(gateway, never()).saveAll(any());
     }
 
-    private ItemNecessarioEntity itemSolicitado(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(
+    private ItemNecessario itemSolicitado(Long id, int quantidade) {
+        return ItemNecessario.criar(
                 id,
                 "Item solicitado",
                 CategoriaPecaInsumo.PECA,

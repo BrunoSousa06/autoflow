@@ -1,6 +1,6 @@
 package com.autoflow.application.dto.ordemservico;
 
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 
-public record OrdemServicoCriadaOutput(OrdemServicoEntity ordemServico, String tokenAcompanhamento) {
+public record OrdemServicoCriadaOutput(OrdemServico ordemServico, String tokenAcompanhamento) {
 }

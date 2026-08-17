@@ -11,7 +11,7 @@ import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEsto
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
 import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.ordemservico.*;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.domain.servico.Servico;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -87,7 +87,7 @@ class CriarReparoAdicionalUseCaseTest {
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido));
         when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
-            ReparoAdicionalEntity reparo = invocation.getArgument(0);
+            ReparoAdicional reparo = invocation.getArgument(0);
             reparo.setId(40L);
             return reparo;
         });
@@ -105,10 +105,10 @@ class CriarReparoAdicionalUseCaseTest {
         assertEquals(30L, output.orcamentoId());
         assertEquals("https://publicacao/orcamento/30", output.publicUrl());
 
-        ArgumentCaptor<ReparoAdicionalEntity> reparoCaptor =
-                ArgumentCaptor.forClass(ReparoAdicionalEntity.class);
+        ArgumentCaptor<ReparoAdicional> reparoCaptor =
+                ArgumentCaptor.forClass(ReparoAdicional.class);
         verify(reparoAdicionalGateway, times(2)).save(reparoCaptor.capture());
-        ReparoAdicionalEntity reparo = reparoCaptor.getAllValues().getLast();
+        ReparoAdicional reparo = reparoCaptor.getAllValues().getLast();
         assertEquals(10L, reparo.getOrdemServicoId());
         assertEquals(20L, reparo.getMecanicoId());
         assertEquals(30L, reparo.getOrcamentoId());
@@ -244,7 +244,7 @@ class CriarReparoAdicionalUseCaseTest {
     @Test
     void deveRejeitarServicoJaPresenteNaOrdemServico() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        ordemServico.adicionarServicosSolicitados(List.of(new ServicoSolicitadoEntity(5L)));
+        ordemServico.adicionarServicosSolicitados(List.of(new ServicoSolicitado(5L)));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
         var command = command(5L, 7L, 2);
 
@@ -293,7 +293,7 @@ class CriarReparoAdicionalUseCaseTest {
         orcamento.setId(30L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
         when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
-            ReparoAdicionalEntity reparo = invocation.getArgument(0);
+            ReparoAdicional reparo = invocation.getArgument(0);
             reparo.setId(40L);
             return reparo;
         });
@@ -342,7 +342,7 @@ class CriarReparoAdicionalUseCaseTest {
     @Test
     void deveRejeitarMecanicoQuandoDiagnosticoNaoPossuirMecanico() {
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
-        ordemServico.setDiagnostico(new DiagnosticoEntity());
+        ordemServico.setDiagnostico(new Diagnostico());
         var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
@@ -490,7 +490,7 @@ class CriarReparoAdicionalUseCaseTest {
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido(7L, 2)));
         when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
-            ReparoAdicionalEntity reparo = invocation.getArgument(0);
+            ReparoAdicional reparo = invocation.getArgument(0);
             reparo.setId(40L);
             return reparo;
         });
@@ -518,12 +518,12 @@ class CriarReparoAdicionalUseCaseTest {
         );
     }
 
-    private OrdemServicoEntity ordemServico(StatusOrdemServico status) {
-        var ordemServico = new OrdemServicoEntity();
+    private OrdemServico ordemServico(StatusOrdemServico status) {
+        var ordemServico = new OrdemServico();
         ordemServico.setId(10L);
         ordemServico.setNumeroOs("OS-123");
         ordemServico.setStatus(status);
-        var diagnostico = new DiagnosticoEntity();
+        var diagnostico = new Diagnostico();
         var mecanicoAtribuido = new Usuario();
         mecanicoAtribuido.setId(20L);
         diagnostico.setMecanico(mecanicoAtribuido);
@@ -535,8 +535,8 @@ class CriarReparoAdicionalUseCaseTest {
         return Servico.reconstituir(id, "Troca de pastilha", "Descricao", new BigDecimal("120.00"), true);
     }
 
-    private ItemNecessarioEntity itemEnriquecido(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(
+    private ItemNecessario itemEnriquecido(Long id, int quantidade) {
+        return ItemNecessario.criar(
                 id,
                 "Pastilha",
                 CategoriaPecaInsumo.PECA,

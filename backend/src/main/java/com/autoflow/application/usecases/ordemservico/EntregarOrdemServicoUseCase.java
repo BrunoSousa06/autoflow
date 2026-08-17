@@ -4,8 +4,8 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
 
 
@@ -15,12 +15,12 @@ public class EntregarOrdemServicoUseCase {
     private final HistoricoStatusOsGateway historicoStatusOsGateway;
 
     @TransactionalUseCase
-    public OrdemServicoEntity execute(String numeroOs) {
-        OrdemServicoEntity os = ordemServicoGateway.findByNumeroOs(numeroOs)
+    public OrdemServico execute(String numeroOs) {
+        OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
         os.entregar();
-        OrdemServicoEntity salva = ordemServicoGateway.save(os);
-        historicoStatusOsGateway.save(HistoricoStatusOsEntity.criar(salva.getId(), salva.getStatus(),
+        OrdemServico salva = ordemServicoGateway.save(os);
+        historicoStatusOsGateway.save(HistoricoStatusOs.criar(salva.getId(), salva.getStatus(),
                 StatusOrdemServicoMensagemPolicy.mensagem(salva.getStatus()), salva.getNumeroOs()));
         return salva;
     }

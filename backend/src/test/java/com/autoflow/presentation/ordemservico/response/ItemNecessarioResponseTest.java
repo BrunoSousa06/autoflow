@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -34,7 +34,7 @@ class ItemNecessarioResponseTest {
 
     @Test
     void deveConverterDeDomainComItemDisponivel() {
-        ItemNecessarioEntity entity = ItemNecessarioEntity.criar(
+        ItemNecessario entity = ItemNecessario.criar(
                 1L, "Filtro de óleo", CategoriaPecaInsumo.PECA,
                 BigDecimal.valueOf(50), 2, StatusItemNecessario.DISPONIVEL
         );
@@ -53,7 +53,7 @@ class ItemNecessarioResponseTest {
 
     @Test
     void deveConverterDeDomainComItemPendentePorEstoqueInsuficiente() {
-        ItemNecessarioEntity entity = ItemNecessarioEntity.criar(
+        ItemNecessario entity = ItemNecessario.criar(
                 2L, "Pastilha de freio", CategoriaPecaInsumo.PECA,
                 BigDecimal.valueOf(80), 4, StatusItemNecessario.PENDENTE,
                 new com.autoflow.domain.ordemservico.SituacaoEstoque(1, MotivoPendenciaItem.ESTOQUE_INSUFICIENTE)
