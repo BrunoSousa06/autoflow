@@ -10,6 +10,7 @@ import org.apache.logging.log4j.util.InternalException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
@@ -39,11 +40,13 @@ public class OrcamentoPublicacaoAdapter implements OrcamentoPublicacaoGateway {
     private String frontendPublicBaseUrl;
 
     @Override
+    @Transactional
     public String publicar(Long orcamentoId) {
         return publicarComLinks(orcamentoId).urlPdf();
     }
 
     @Override
+    @Transactional
     public OrcamentoPublicacao publicarComLinks(Long orcamentoId) {
         OrcamentoEntity orcamento = orcamentoGateway.findById(orcamentoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado."));

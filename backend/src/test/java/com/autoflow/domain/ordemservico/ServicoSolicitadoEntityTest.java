@@ -112,6 +112,15 @@ class ServicoSolicitadoTest {
     }
 
     @Test
+    void testIniciarServicoComItensReconstruidosComoListaImutavel() {
+        servicoSolicitado.setItensNecessarios(List.of(new ItemNecessario()));
+
+        servicoSolicitado.iniciar(List.of(new ItemNecessario()));
+
+        assertEquals(StatusServicoOs.EM_EXECUCAO, servicoSolicitado.getStatus());
+    }
+
+    @Test
     void testFinalizarServico() {
         List<ItemNecessario> itens = new ArrayList<>();
         servicoSolicitado.iniciar(itens);

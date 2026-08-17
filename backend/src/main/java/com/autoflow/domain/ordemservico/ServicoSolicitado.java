@@ -111,7 +111,9 @@ public class ServicoSolicitado {
     public OrdemServico getOrdemServico() { return ordemServico; }
     public void setOrdemServico(OrdemServico value) { this.ordemServico = value; }
     public List<ItemNecessario> getItensNecessarios() { return itensNecessarios; }
-    public void setItensNecessarios(List<ItemNecessario> value) { this.itensNecessarios = value; }
+    public void setItensNecessarios(List<ItemNecessario> value) {
+        this.itensNecessarios = value == null ? new ArrayList<>() : new ArrayList<>(value);
+    }
     public ReparoAdicional getReparoAdicional() { return reparoAdicional; }
     public void setReparoAdicional(ReparoAdicional value) { this.reparoAdicional = value; }
 }

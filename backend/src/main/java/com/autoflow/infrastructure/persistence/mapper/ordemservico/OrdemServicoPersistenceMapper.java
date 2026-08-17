@@ -92,7 +92,9 @@ public class OrdemServicoPersistenceMapper {
         entity.setStatus(domain.getStatus());
         entity.setIniciadoEm(domain.getIniciadoEm());
         entity.setFinalizadoEm(domain.getFinalizadoEm());
-        entity.setItensNecessarios(domain.getItensNecessarios().stream().map(this::toEntity).toList());
+        entity.setItensNecessarios(new ArrayList<>(domain.getItensNecessarios().stream()
+                .map(this::toEntity)
+                .toList()));
         if (domain.getReparoAdicional() != null) {
             ReparoAdicionalEntity repair = new ReparoAdicionalEntity();
             repair.setId(domain.getReparoAdicional().getId());
