@@ -4,14 +4,16 @@ import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
+import com.autoflow.application.port.in.servico.BuscarServicoPorIdUseCase;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class BuscarServicoPorIdUseCase {
+public class BuscarServicoPorIdUseCaseImpl implements BuscarServicoPorIdUseCase {
 
     private final ServicoGateway servicoGateway;
 
+    @Override
     public ServicoOutput execute(Long id) {
         return servicoGateway.findById(id)
                 .map(ServicoApplicationMapper::toOutput)

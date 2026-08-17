@@ -2,15 +2,17 @@ package com.autoflow.application.usecases.servico;
 
 import com.autoflow.application.dto.servico.TempoMedioServicoMetricaOutput;
 import com.autoflow.application.gateway.MetricsGateway;
+import com.autoflow.application.port.in.servico.CalcularTempoMedioServicoUseCase;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @RequiredArgsConstructor
-public class CalcularTempoMedioServicoUseCase {
+public class CalcularTempoMedioServicoUseCaseImpl implements CalcularTempoMedioServicoUseCase {
 
     private final MetricsGateway metricsGateway;
 
+    @Override
     public List<TempoMedioServicoMetricaOutput> execute() {
         return metricsGateway.calcularTempoMedioPorServico()
                 .stream()

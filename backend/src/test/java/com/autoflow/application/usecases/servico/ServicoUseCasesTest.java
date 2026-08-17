@@ -37,7 +37,7 @@ class ServicoUseCasesTest {
         when(servicoGateway.existsByNomeIgnoreCase(input.nome())).thenReturn(false);
         when(servicoGateway.save(any(Servico.class))).thenReturn(toDomain(output));
 
-        ServicoOutput resultado = new CriarServicoUseCase(servicoGateway).execute(input);
+        ServicoOutput resultado = new CriarServicoUseCaseImpl(servicoGateway).execute(input);
 
         assertEquals(output, resultado);
         verify(servicoGateway).save(any(Servico.class));
@@ -47,7 +47,7 @@ class ServicoUseCasesTest {
     void deveRejeitarNomeDuplicadoSemSalvar() {
         ServicoInput input = input("Revisão Completa");
         when(servicoGateway.existsByNomeIgnoreCase(input.nome())).thenReturn(true);
-        var useCase = new CriarServicoUseCase(servicoGateway);
+        var useCase = new CriarServicoUseCaseImpl(servicoGateway);
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
@@ -64,7 +64,7 @@ class ServicoUseCasesTest {
         ServicoOutput output = output(1L, true);
         when(servicoGateway.findById(1L)).thenReturn(Optional.of(toDomain(output)));
 
-        ServicoOutput resultado = new BuscarServicoPorIdUseCase(servicoGateway).execute(1L);
+        ServicoOutput resultado = new BuscarServicoPorIdUseCaseImpl(servicoGateway).execute(1L);
 
         assertEquals(output, resultado);
     }
@@ -72,7 +72,7 @@ class ServicoUseCasesTest {
     @Test
     void deveRetornar404AoBuscarServicoInexistente() {
         when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
-        var useCase = new BuscarServicoPorIdUseCase(servicoGateway);
+        var useCase = new BuscarServicoPorIdUseCaseImpl(servicoGateway);
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
@@ -89,7 +89,7 @@ class ServicoUseCasesTest {
         when(servicoGateway.findAllByAtivoTrue(page))
                 .thenReturn(new PageOutput<>(List.of(toDomain(output)), 0, 20, 1));
 
-        PageOutput<ServicoOutput> resultado = new ListarServicosUseCase(servicoGateway).execute(page);
+        PageOutput<ServicoOutput> resultado = new ListarServicosUseCaseImpl(servicoGateway).execute(page);
 
         assertEquals(List.of(output), resultado.content());
         assertEquals(1, resultado.totalElements());
@@ -104,7 +104,7 @@ class ServicoUseCasesTest {
         when(servicoGateway.findById(1L)).thenReturn(Optional.of(toDomain(existente)));
         when(servicoGateway.update(any(Servico.class))).thenReturn(toDomain(atualizado));
 
-        ServicoOutput resultado = new AtualizarServicoUseCase(servicoGateway).execute(1L, input);
+        ServicoOutput resultado = new AtualizarServicoUseCaseImpl(servicoGateway).execute(1L, input);
 
         assertEquals(atualizado, resultado);
         verify(servicoGateway).update(any(Servico.class));
@@ -114,7 +114,7 @@ class ServicoUseCasesTest {
     void deveRetornar404AoAtualizarServicoInexistente() {
         when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
         ServicoInput input = input("Revisão Premium");
-        var useCase = new AtualizarServicoUseCase(servicoGateway);
+        var useCase = new AtualizarServicoUseCaseImpl(servicoGateway);
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
@@ -129,7 +129,7 @@ class ServicoUseCasesTest {
     void deveInativarServicoSemRemoverRegistro() {
         when(servicoGateway.findById(1L)).thenReturn(Optional.of(toDomain(output(1L, true))));
 
-        new InativarServicoUseCase(servicoGateway).execute(1L);
+        new InativarServicoUseCaseImpl(servicoGateway).execute(1L);
 
         verify(servicoGateway).inativar(1L);
     }
@@ -137,7 +137,7 @@ class ServicoUseCasesTest {
     @Test
     void deveRetornar404AoInativarServicoInexistente() {
         when(servicoGateway.findById(1L)).thenReturn(Optional.empty());
-        var useCase = new InativarServicoUseCase(servicoGateway);
+        var useCase = new InativarServicoUseCaseImpl(servicoGateway);
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
@@ -154,7 +154,7 @@ class ServicoUseCasesTest {
                 new MetricsGateway.TempoMedioServicoData(1L, "Troca de óleo", 2L, 3600.0)
         ));
 
-        var resultado = new CalcularTempoMedioServicoUseCase(metricsGateway).execute();
+        var resultado = new CalcularTempoMedioServicoUseCaseImpl(metricsGateway).execute();
 
         assertNotNull(resultado);
         assertEquals(3600.0, resultado.getFirst().getTempoMedioSegundos());
@@ -166,7 +166,7 @@ class ServicoUseCasesTest {
     void deveRetornarListaVaziaQuandoNaoHaMetricas() {
         when(metricsGateway.calcularTempoMedioPorServico()).thenReturn(List.of());
 
-        var resultado = new CalcularTempoMedioServicoUseCase(metricsGateway).execute();
+        var resultado = new CalcularTempoMedioServicoUseCaseImpl(metricsGateway).execute();
 
         assertTrue(resultado.isEmpty());
     }

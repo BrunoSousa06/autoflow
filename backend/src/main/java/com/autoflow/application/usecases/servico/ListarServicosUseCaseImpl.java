@@ -5,14 +5,16 @@ import com.autoflow.application.dto.servico.PageOutput;
 import com.autoflow.application.dto.servico.ServicoOutput;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
+import com.autoflow.application.port.in.servico.ListarServicosUseCase;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class ListarServicosUseCase {
+public class ListarServicosUseCaseImpl implements ListarServicosUseCase {
 
     private final ServicoGateway servicoGateway;
 
+    @Override
     public PageOutput<ServicoOutput> execute(PageInput page) {
         var result = servicoGateway.findAllByAtivoTrue(page);
         return new PageOutput<>(result.content().stream()

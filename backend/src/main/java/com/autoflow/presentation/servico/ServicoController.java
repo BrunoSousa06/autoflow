@@ -2,7 +2,12 @@ package com.autoflow.presentation.servico;
 
 
 import com.autoflow.application.dto.servico.*;
-import com.autoflow.application.usecases.servico.*;
+import com.autoflow.application.port.in.servico.AtualizarServicoUseCase;
+import com.autoflow.application.port.in.servico.BuscarServicoPorIdUseCase;
+import com.autoflow.application.port.in.servico.CalcularTempoMedioServicoUseCase;
+import com.autoflow.application.port.in.servico.CriarServicoUseCase;
+import com.autoflow.application.port.in.servico.InativarServicoUseCase;
+import com.autoflow.application.port.in.servico.ListarServicosUseCase;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
 import com.autoflow.presentation.servico.response.TempoMedioServicoResponse;
