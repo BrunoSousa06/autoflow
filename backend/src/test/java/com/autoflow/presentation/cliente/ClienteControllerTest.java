@@ -2,7 +2,7 @@ package com.autoflow.presentation.cliente;
 
 import com.autoflow.application.dto.cliente.ClienteInput;
 import com.autoflow.application.dto.cliente.ClienteOutput;
-import com.autoflow.application.usecases.cliente.*;
+import com.autoflow.application.port.in.cliente.*;
 import com.autoflow.presentation.cliente.mapper.ClienteControllerMapper;
 import com.autoflow.presentation.cliente.mapper.ClienteControllerMapperImpl;
 import com.autoflow.presentation.cliente.request.ClienteRequest;

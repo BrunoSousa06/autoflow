@@ -5,14 +5,16 @@ import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.exception.ClienteDuplicadoException;
 import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.gateway.ClienteGateway;
+import com.autoflow.application.port.in.cliente.AtualizarClienteUseCase;
 import com.autoflow.domain.cliente.Cliente;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AtualizarClienteUseCase {
+public class AtualizarClienteUseCaseImpl implements AtualizarClienteUseCase {
 
     private final ClienteGateway clienteGateway;
 
+    @Override
     public ClienteOutput execute(Long id, ClienteInput input) {
         Cliente.reconstituir(id, input.nome(), input.cpfCnpj(), input.telefone(), input.email());
         if (clienteGateway.findById(id).isEmpty()) {

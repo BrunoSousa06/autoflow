@@ -27,28 +27,28 @@ class ClienteUseCasesTest {
     private ClienteGateway clienteGateway;
 
     @InjectMocks
-    private CriarClienteUseCase criarClienteUseCase;
+    private CriarClienteUseCaseImpl criarClienteUseCase;
 
     @InjectMocks
-    private BuscarClientePorEmailUseCase buscarClientePorEmailUseCase;
+    private BuscarClientePorEmailUseCaseImpl buscarClientePorEmailUseCase;
 
     @InjectMocks
-    private BuscarClientePorIdUseCase buscarClientePorIdUseCase;
+    private BuscarClientePorIdUseCaseImpl buscarClientePorIdUseCase;
 
     @InjectMocks
-    private ListarTodosClientesUseCase listarTodosClientesUseCase;
+    private ListarTodosClientesUseCaseImpl listarTodosClientesUseCase;
 
     @InjectMocks
-    private AtualizarClienteUseCase atualizarClienteUseCase;
+    private AtualizarClienteUseCaseImpl atualizarClienteUseCase;
 
     @InjectMocks
-    private DeletarClienteUseCase deletarClienteUseCase;
+    private DeletarClienteUseCaseImpl deletarClienteUseCase;
 
     @InjectMocks
-    private ListarClienteUseCase listarClienteUseCase;
+    private ListarClienteUseCaseImpl listarClienteUseCase;
 
     @InjectMocks
-    private BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
+    private BuscarClientePorCpfCnpjUseCaseImpl buscarClientePorCpfCnpjUseCase;
 
     private ClienteInput input;
     private ClienteOutput output;

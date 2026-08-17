@@ -3,14 +3,16 @@ package com.autoflow.application.usecases.cliente;
 import com.autoflow.application.dto.cliente.ClienteOutput;
 import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.gateway.ClienteGateway;
+import com.autoflow.application.port.in.cliente.ListarClienteUseCase;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class ListarClienteUseCase {
+public class ListarClienteUseCaseImpl implements ListarClienteUseCase {
 
     private final ClienteGateway clienteGateway;
 
+    @Override
     public ClienteOutput execute(Long documento) {
         String identificador = String.valueOf(documento).replaceAll("\\D", "");
 

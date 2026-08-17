@@ -12,7 +12,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.application.usecases.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.domain.cliente.Cliente;
