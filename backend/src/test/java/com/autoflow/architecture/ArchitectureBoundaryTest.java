@@ -9,8 +9,11 @@ import com.tngtech.archunit.lang.ArchRule;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
+import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.core.domain.properties.CanBeAnnotated.Predicates.annotatedWith;
@@ -34,12 +37,18 @@ class ArchitectureBoundaryTest {
     private static final String INFRASTRUCTURE = "com.autoflow.infrastructure..";
     private static final String PRESENTATION = "com.autoflow.presentation..";
     private static final String CONFIGURATION = "com.autoflow.config..";
+    private static final String PERSISTENCE = "com.autoflow.infrastructure.persistence..";
     private static final String PORTS = "com.autoflow.application.gateway..";
     private static final String[] TECHNICAL = {INFRASTRUCTURE, CONFIGURATION};
     private static final DescribedPredicate<? super JavaClass> JPA_TYPE =
             annotatedWith(Entity.class)
                     .or(annotatedWith(Embeddable.class))
                     .or(annotatedWith(MappedSuperclass.class));
+    private static final DescribedPredicate<? super JavaClass> WEB_ADAPTER =
+            annotatedWith(RestController.class)
+                    .or(annotatedWith(Controller.class))
+                    .or(annotatedWith(RestControllerAdvice.class))
+                    .or(annotatedWith(ControllerAdvice.class));
 
     @ArchTest
     static final ArchRule dependenciasSeguemParaDentro =
@@ -110,7 +119,7 @@ class ArchitectureBoundaryTest {
     @ArchTest
     static final ArchRule controllersNaoAcessamRepositorios =
             noClasses()
-                    .that().areAnnotatedWith(RestController.class)
+                    .that(WEB_ADAPTER)
                     .should().dependOnClassesThat()
                     .areAnnotatedWith(Repository.class)
                     .because("controllers delegam acesso a dados aos casos de uso");
@@ -145,20 +154,20 @@ class ArchitectureBoundaryTest {
                     .that().areAnnotatedWith(Entity.class)
                     .or().areAnnotatedWith(Embeddable.class)
                     .or().areAnnotatedWith(MappedSuperclass.class)
-                    .should().resideInAnyPackage(INFRASTRUCTURE)
+                    .should().resideInAnyPackage(PERSISTENCE)
                     .because("entidades e componentes JPA pertencem ao adapter de persistencia");
 
     @ArchTest
     static final ArchRule repositoriosFicamNaInfraestrutura =
             classes()
                     .that().areAnnotatedWith(Repository.class)
-                    .should().resideInAnyPackage(INFRASTRUCTURE)
+                    .should().resideInAnyPackage(PERSISTENCE)
                     .because("repositorios tecnicos pertencem a infraestrutura");
 
     @ArchTest
     static final ArchRule controllersFicamNaApresentacao =
             classes()
-                    .that().areAnnotatedWith(RestController.class)
+                    .that(WEB_ADAPTER)
                     .should().resideInAnyPackage(PRESENTATION)
                     .because("controllers REST sao adapters de apresentacao");
 
