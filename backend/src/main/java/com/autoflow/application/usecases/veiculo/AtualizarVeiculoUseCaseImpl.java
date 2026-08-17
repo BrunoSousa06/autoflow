@@ -5,17 +5,19 @@ import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.exception.VeiculoNaoEncontradoException;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.port.in.veiculo.AtualizarVeiculoUseCase;
 import com.autoflow.application.policy.PlacaPolicy;
 import com.autoflow.application.security.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class AtualizarVeiculoUseCase {
+public class AtualizarVeiculoUseCaseImpl implements AtualizarVeiculoUseCase {
 
     private final VeiculoGateway veiculoGateway;
     private final AuthorizationService authorizationService;
 
+    @Override
     public VeiculoOutput execute(Long id, VeiculoInput input) {
         VeiculoOutput veiculo = buscarPorId(id);
         authorizationService.validarPermissao(veiculo);

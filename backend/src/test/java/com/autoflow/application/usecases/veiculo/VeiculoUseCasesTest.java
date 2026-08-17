@@ -28,17 +28,17 @@ import static org.mockito.Mockito.*;
 class VeiculoUseCasesTest {
 
     @InjectMocks
-    private CadastrarVeiculoUseCase cadastrarVeiculoUseCase;
+    private CadastrarVeiculoUseCaseImpl cadastrarVeiculoUseCase;
     @InjectMocks
-    private BuscarVeiculoUseCase buscarVeiculoUseCase;
+    private BuscarVeiculoUseCaseImpl buscarVeiculoUseCase;
     @InjectMocks
-    private ListarVeiculosUseCase listarVeiculosUseCase;
+    private ListarVeiculosUseCaseImpl listarVeiculosUseCase;
     @InjectMocks
-    private AtualizarVeiculoUseCase atualizarVeiculoUseCase;
+    private AtualizarVeiculoUseCaseImpl atualizarVeiculoUseCase;
     @InjectMocks
-    private DeletarVeiculoUseCase deletarVeiculoUseCase;
+    private DeletarVeiculoUseCaseImpl deletarVeiculoUseCase;
     @InjectMocks
-    private BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
+    private BuscarOuCadastrarVeiculoUseCaseImpl buscarOuCadastrarVeiculoUseCase;
     @InjectMocks
     private BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoService;
 

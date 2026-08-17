@@ -14,7 +14,7 @@ import org.springframework.context.annotation.FilterType;
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(
                 type = FilterType.REGEX,
-                pattern = "com\\.autoflow\\.application\\.(usecases|security|policy)\\..*(UseCase|Service|Factory|Policy)"
+                pattern = "com\\.autoflow\\.application\\.(usecases|security|policy)\\..*(UseCase|Service|Factory|Policy).*"
         ),
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,

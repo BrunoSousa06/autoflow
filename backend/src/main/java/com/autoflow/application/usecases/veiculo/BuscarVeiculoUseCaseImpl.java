@@ -3,16 +3,18 @@ package com.autoflow.application.usecases.veiculo;
 import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoNaoEncontradoException;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.port.in.veiculo.BuscarVeiculoUseCase;
 import com.autoflow.application.security.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class BuscarVeiculoUseCase {
+public class BuscarVeiculoUseCaseImpl implements BuscarVeiculoUseCase {
 
     private final VeiculoGateway veiculoGateway;
     private final AuthorizationService authorizationService;
 
+    @Override
     public VeiculoOutput execute(Long id) {
         VeiculoOutput veiculo = veiculoGateway.findById(id)
                 .orElseThrow(() -> new VeiculoNaoEncontradoException(

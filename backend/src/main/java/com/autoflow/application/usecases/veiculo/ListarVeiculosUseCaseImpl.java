@@ -2,16 +2,18 @@ package com.autoflow.application.usecases.veiculo;
 
 import com.autoflow.application.dto.veiculo.*;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.port.in.veiculo.ListarVeiculosUseCase;
 import com.autoflow.application.security.ClienteAutenticadoService;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class ListarVeiculosUseCase {
+public class ListarVeiculosUseCaseImpl implements ListarVeiculosUseCase {
 
     private final VeiculoGateway veiculoGateway;
     private final ClienteAutenticadoService clienteAutenticadoService;
 
+    @Override
     public PageOutput<VeiculoOutput> execute(VeiculoInput filtro, PageInput page) {
         Long clienteId = clienteAutenticadoService.getClienteId().orElse(null);
 

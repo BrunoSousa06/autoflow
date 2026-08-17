@@ -6,16 +6,18 @@ import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.port.in.veiculo.CadastrarVeiculoUseCase;
 import com.autoflow.application.policy.PlacaPolicy;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class CadastrarVeiculoUseCase {
+public class CadastrarVeiculoUseCaseImpl implements CadastrarVeiculoUseCase {
 
     private final VeiculoGateway veiculoGateway;
     private final VeiculoClienteGateway clienteGateway;
 
+    @Override
     public VeiculoOutput execute(CadastrarVeiculoInput input) {
         Long clienteId = clienteGateway.findIdByCpfCnpj(input.cpfCnpj())
                 .orElseThrow(() -> new ClienteNaoEncontradoException(

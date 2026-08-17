@@ -5,15 +5,17 @@ import com.autoflow.application.dto.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoDadosInvalidosException;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.port.in.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.application.policy.PlacaPolicy;
 import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class BuscarOuCadastrarVeiculoUseCase {
+public class BuscarOuCadastrarVeiculoUseCaseImpl implements BuscarOuCadastrarVeiculoUseCase {
 
     private final VeiculoGateway veiculoGateway;
 
+    @Override
     public VeiculoOutput execute(Long clienteId, VeiculoOrdemServicoInput input) {
         String placa = PlacaPolicy.normalizar(input.placa());
         VeiculoOutput existente = veiculoGateway.findByPlaca(placa).orElse(null);
