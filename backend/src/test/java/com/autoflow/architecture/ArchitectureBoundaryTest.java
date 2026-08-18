@@ -104,6 +104,18 @@ class ArchitectureBoundaryTest {
                     .because("contratos e casos de uso nao manipulam entidades JPA");
 
     @ArchTest
+    static final ArchRule aplicacaoNaoDependeDeDetalhesHttpOuSeguranca =
+            noClasses()
+                    .that().resideInAnyPackage(APPLICATION)
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework.web..",
+                            "org.springframework.http..",
+                            "jakarta.servlet..",
+                            "org.springframework.security.core.userdetails..")
+                    .because("a aplicacao recebe comandos e identidade por portas, sem conhecer HTTP ou UserDetails");
+
+    @ArchTest
     static final ArchRule apresentacaoNaoAcessaDetalhesTecnicos =
             noClasses()
                     .that().resideInAnyPackage(PRESENTATION)
@@ -117,6 +129,14 @@ class ArchitectureBoundaryTest {
                     .that().resideInAnyPackage(PRESENTATION)
                     .should(dependOnClassesThat(JPA_TYPE))
                     .because("contratos HTTP nao expoem entidades de persistencia");
+
+    @ArchTest
+    static final ArchRule apresentacaoNaoDependeDeRepositoriosSpringData =
+            noClasses()
+                    .that().resideInAnyPackage(PRESENTATION)
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage("com.autoflow.infrastructure.persistence.repository..")
+                    .because("controllers nao acessam repositorios Spring Data");
 
     @ArchTest
     static final ArchRule controllersNaoAcessamRepositorios =
