@@ -1,7 +1,7 @@
 package com.autoflow.application.gateway;
 
 import com.autoflow.application.input.orcamento.OrcamentoFiltro;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 
@@ -10,32 +10,32 @@ import java.util.Optional;
 
 public interface OrcamentoGateway {
 
-    OrcamentoEntity save(OrcamentoEntity orcamento);
+    Orcamento save(Orcamento orcamento);
 
-    Optional<OrcamentoEntity> findById(Long id);
+    Optional<Orcamento> findById(Long id);
 
-    default Optional<OrcamentoEntity> findByIdForUpdate(Long id) {
+    default Optional<Orcamento> findByIdForUpdate(Long id) {
         return findById(id);
     }
 
-    Optional<OrcamentoEntity> findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(
+    Optional<Orcamento> findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(
             Long ordemServicoId,
             TipoOrcamento tipoOrcamento);
 
-    Optional<OrcamentoEntity> findTopByNumeroOsAndTipoOrderByVersaoDesc(
+    Optional<Orcamento> findTopByNumeroOsAndTipoOrderByVersaoDesc(
             String numeroOs,
             TipoOrcamento tipoOrcamento);
 
-    Optional<OrcamentoEntity> findByOrdemServicoIdAndStatus(
+    Optional<Orcamento> findByOrdemServicoIdAndStatus(
             Long ordemServicoId,
             StatusOrcamento status);
 
-    Optional<OrcamentoEntity> findByNumeroOsAndStatus(
+    Optional<Orcamento> findByNumeroOsAndStatus(
             String numeroOs,
             StatusOrcamento status);
 
-    Optional<OrcamentoEntity> findTopByNumeroOsOrderByVersaoDesc(
+    Optional<Orcamento> findTopByNumeroOsOrderByVersaoDesc(
             String numeroOs);
 
-    List<OrcamentoEntity> findAll(OrcamentoFiltro filtro);
+    List<Orcamento> findAll(OrcamentoFiltro filtro);
 }

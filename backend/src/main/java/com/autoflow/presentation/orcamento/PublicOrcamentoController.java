@@ -4,7 +4,7 @@ import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoPorTokenUseCase;
 import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.presentation.orcamento.request.AprovarOrcamentoRequest;
 import com.autoflow.presentation.orcamento.request.RecusarOrcamentoRequest;
 import com.autoflow.presentation.orcamento.response.OrcamentoResponse;
@@ -51,7 +51,7 @@ public class PublicOrcamentoController {
             @PathVariable Long orcamentoId,
             @RequestParam String token
     ) {
-        OrcamentoEntity orcamento = consultarOrcamentoPorTokenUseCase.execute(orcamentoId, token);
+        Orcamento orcamento = consultarOrcamentoPorTokenUseCase.execute(orcamentoId, token);
 
         byte[] pdf = orcamentoDocumentoGateway.gerarPdf(orcamento);
 
@@ -102,7 +102,7 @@ public class PublicOrcamentoController {
             @PathVariable Long orcamentoId,
             @RequestParam String token
     ) {
-        OrcamentoEntity orcamento = acessarOrcamentoAcompanhamentoUseCase.consultar(orcamentoId, token);
+        Orcamento orcamento = acessarOrcamentoAcompanhamentoUseCase.consultar(orcamentoId, token);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"orcamento-" + orcamentoId + ".pdf\"")

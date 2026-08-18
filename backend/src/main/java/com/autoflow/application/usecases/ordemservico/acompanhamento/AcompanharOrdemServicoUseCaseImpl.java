@@ -11,7 +11,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.AcompanharOrdemServicoUseCase;
 import com.autoflow.application.usecases.ordemservico.StatusOrdemServicoMensagemPolicy;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -43,7 +43,7 @@ public class AcompanharOrdemServicoUseCaseImpl implements AcompanharOrdemServico
 
     private AcompanhamentoOrdemServicoOutput montarAcompanhamento(
             OrdemServico ordemServico) {
-        OrcamentoEntity orcamentoAtual = buscarOrcamentoAtual(ordemServico.getNumeroOs());
+        Orcamento orcamentoAtual = buscarOrcamentoAtual(ordemServico.getNumeroOs());
         List<HistoricoStatusOs> historico = historicoStatusOsGateway
                 .findByNumeroOsOrderByRegistradoEmAsc(ordemServico.getNumeroOs());
 
@@ -62,7 +62,7 @@ public class AcompanharOrdemServicoUseCaseImpl implements AcompanharOrdemServico
                 historico.stream().map(HistoricoStatusOsOutput::from).toList());
     }
 
-    private OrcamentoEntity buscarOrcamentoAtual(String numeroOs) {
+    private Orcamento buscarOrcamentoAtual(String numeroOs) {
         return orcamentoGateway.findByNumeroOsAndStatus(numeroOs, StatusOrcamento.DISPONIVEL)
                 .or(() -> orcamentoGateway.findTopByNumeroOsOrderByVersaoDesc(numeroOs))
                 .orElse(null);

@@ -3,8 +3,9 @@ package com.autoflow.domain.orcamento;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
-public class OrcamentoEntity {
+public class Orcamento {
     private Long id;
 
     private Long ordemServicoId;
@@ -39,18 +40,18 @@ public class OrcamentoEntity {
 
     private String recusaMotivo;
 
-    private List<OrcamentoServicoEntity> servicos;
+    private List<OrcamentoServico> servicos;
 
-    private List<OrcamentoItemNecessarioEntity> itens;
+    private List<OrcamentoItemNecessario> itens;
 
     private ClienteOrcamentoSnapshot cliente;
 
     private VeiculoOrcamentoSnapshot veiculo;
 
-    public OrcamentoEntity() {
+    public Orcamento() {
     }
 
-    public OrcamentoEntity(
+    public Orcamento(
             Long id,
             Long ordemServicoId,
             String numeroOs,
@@ -68,8 +69,8 @@ public class OrcamentoEntity {
             LocalDateTime reprovadoEm,
             String assinaturaNome,
             String recusaMotivo,
-            List<OrcamentoServicoEntity> servicos,
-            List<OrcamentoItemNecessarioEntity> itens,
+            List<OrcamentoServico> servicos,
+            List<OrcamentoItemNecessario> itens,
             ClienteOrcamentoSnapshot cliente,
             VeiculoOrcamentoSnapshot veiculo) {
         this.id = id;
@@ -235,19 +236,19 @@ public class OrcamentoEntity {
         this.recusaMotivo = recusaMotivo;
     }
 
-    public List<OrcamentoServicoEntity> getServicos() {
+    public List<OrcamentoServico> getServicos() {
         return servicos;
     }
 
-    public void setServicos(List<OrcamentoServicoEntity> servicos) {
+    public void setServicos(List<OrcamentoServico> servicos) {
         this.servicos = servicos;
     }
 
-    public List<OrcamentoItemNecessarioEntity> getItens() {
+    public List<OrcamentoItemNecessario> getItens() {
         return itens;
     }
 
-    public void setItens(List<OrcamentoItemNecessarioEntity> itens) {
+    public void setItens(List<OrcamentoItemNecessario> itens) {
         this.itens = itens;
     }
 
@@ -264,7 +265,42 @@ public class OrcamentoEntity {
     }
 
     public void setVeiculo(VeiculoOrcamentoSnapshot veiculo) {
-        this.veiculo = java.util.Objects.requireNonNull(veiculo, "veiculo");
+        this.veiculo = Objects.requireNonNull(veiculo, "veiculo");
+    }
+
+    public void aprovar(String assinaturaNome, LocalDateTime aprovadoEm) {
+        validarDisponivel();
+        this.status = StatusOrcamento.APROVADO;
+        this.assinaturaNome = assinaturaNome;
+        this.aprovadoEm = Objects.requireNonNull(aprovadoEm, "aprovadoEm");
+    }
+
+    public void recusar(String motivo, String assinaturaNome, LocalDateTime reprovadoEm) {
+        validarDisponivel();
+        this.status = StatusOrcamento.REPROVADO;
+        this.assinaturaNome = assinaturaNome;
+        this.recusaMotivo = motivo;
+        this.reprovadoEm = Objects.requireNonNull(reprovadoEm, "reprovadoEm");
+    }
+
+    public void publicar(String tokenHash, LocalDateTime tokenExpiraEm, LocalDateTime disponibilizadoEm) {
+        validarDisponivel();
+        if (tokenHash == null || tokenHash.isBlank()) {
+            throw new IllegalArgumentException("Hash do token público é obrigatório.");
+        }
+        LocalDateTime expiraEm = Objects.requireNonNull(tokenExpiraEm, "tokenExpiraEm");
+        LocalDateTime publicadoEm = Objects.requireNonNull(disponibilizadoEm, "disponibilizadoEm");
+        this.publicTokenHash = tokenHash;
+        this.publicTokenExpiraEm = expiraEm;
+        if (this.disponibilizadoEm == null) {
+            this.disponibilizadoEm = publicadoEm;
+        }
+    }
+
+    private void validarDisponivel() {
+        if (status != StatusOrcamento.DISPONIVEL) {
+            throw new IllegalStateException("O orçamento deve estar disponível para esta operação.");
+        }
     }
 
     public static final class Builder {
@@ -285,8 +321,8 @@ public class OrcamentoEntity {
         private LocalDateTime reprovadoEm;
         private String assinaturaNome;
         private String recusaMotivo;
-        private List<OrcamentoServicoEntity> servicos;
-        private List<OrcamentoItemNecessarioEntity> itens;
+        private List<OrcamentoServico> servicos;
+        private List<OrcamentoItemNecessario> itens;
         private ClienteOrcamentoSnapshot cliente;
         private VeiculoOrcamentoSnapshot veiculo;
 
@@ -307,13 +343,13 @@ public class OrcamentoEntity {
         public Builder reprovadoEm(LocalDateTime value) { this.reprovadoEm = value; return this; }
         public Builder assinaturaNome(String value) { this.assinaturaNome = value; return this; }
         public Builder recusaMotivo(String value) { this.recusaMotivo = value; return this; }
-        public Builder servicos(List<OrcamentoServicoEntity> value) { this.servicos = value; return this; }
-        public Builder itens(List<OrcamentoItemNecessarioEntity> value) { this.itens = value; return this; }
+        public Builder servicos(List<OrcamentoServico> value) { this.servicos = value; return this; }
+        public Builder itens(List<OrcamentoItemNecessario> value) { this.itens = value; return this; }
         public Builder cliente(ClienteOrcamentoSnapshot value) { this.cliente = value; return this; }
         public Builder veiculo(VeiculoOrcamentoSnapshot value) { this.veiculo = value; return this; }
 
-        public OrcamentoEntity build() {
-            return new OrcamentoEntity(
+        public Orcamento build() {
+            return new Orcamento(
                     id,
                     ordemServicoId,
                     numeroOs,

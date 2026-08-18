@@ -6,7 +6,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.application.port.in.orcamento.RecusarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class RecusarOrcamentoUseCaseImpl implements RecusarOrcamentoUseCase {
 
     @TransactionalUseCase
     @Override
-    public OrcamentoEntity execute(OrcamentoEntity orcamento, String motivo, String assinaturaNome) {
+    public Orcamento execute(Orcamento orcamento, String motivo, String assinaturaNome) {
         if (orcamento.getStatus() == StatusOrcamento.APROVADO) {
             throw ApplicationException.badRequest("Orçamento já aprovado, não é possivel recusar");
         }
@@ -36,20 +36,18 @@ public class RecusarOrcamentoUseCaseImpl implements RecusarOrcamentoUseCase {
             throw ApplicationException.badRequest("Orçamento não esta disponivel");
         }
 
-        orcamento.setStatus(StatusOrcamento.REPROVADO);
-        orcamento.setReprovadoEm(LocalDateTime.now(ZoneId.systemDefault()));
-        orcamento.setAssinaturaNome(assinaturaNome);
+        String motivoNormalizado = null;
         if (motivo != null) {
-            String motivoNormalizado = motivo.trim();
+            motivoNormalizado = motivo.trim();
             if (motivoNormalizado.length() > 500) {
                 throw ApplicationException.badRequest(
                         "Motivo da recusa deve ter no máximo 500 caracteres");
             }
-            orcamento.setRecusaMotivo(
-                    motivoNormalizado.isBlank() ? null : motivoNormalizado);
+            motivoNormalizado = motivoNormalizado.isBlank() ? null : motivoNormalizado;
         }
+        orcamento.recusar(motivoNormalizado, assinaturaNome, LocalDateTime.now(ZoneId.systemDefault()));
 
-        OrcamentoEntity orcamentoSalvo = orcamentoGateway.save(orcamento);
+        Orcamento orcamentoSalvo = orcamentoGateway.save(orcamento);
 
         if (recusarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(
                 orcamento.getId(), orcamento.getRecusaMotivo())) {

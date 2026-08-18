@@ -1,28 +1,27 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
-import com.autoflow.domain.notificacao.NotificacaoEntity;
+import com.autoflow.domain.notificacao.Notificacao;
 import com.autoflow.infrastructure.persistence.entity.notificacao.NotificacaoPersistenceEntity;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NotificacaoPersistenceMapper {
-    public NotificacaoEntity toDomain(
+    public Notificacao toDomain(
             NotificacaoPersistenceEntity entity) {
-        var domain = new NotificacaoEntity();
-        domain.setId(entity.getId());
-        domain.setOrcamentoId(entity.getOrcamentoId());
-        domain.setClienteId(entity.getClienteId());
-        domain.setCanal(entity.getCanal());
-        domain.setDestinatario(entity.getDestinatario());
-        domain.setStatus(entity.getStatus());
-        domain.setEnviadaEm(entity.getEnviadaEm());
-        domain.setMensagemErro(entity.getMensagemErro());
-        domain.setCriadaEm(entity.getCriadaEm());
-        return domain;
+        return Notificacao.reconstituir(
+                entity.getId(),
+                entity.getOrcamentoId(),
+                entity.getClienteId(),
+                entity.getCanal(),
+                entity.getDestinatario(),
+                entity.getStatus(),
+                entity.getEnviadaEm(),
+                entity.getMensagemErro(),
+                entity.getCriadaEm());
     }
 
     public NotificacaoPersistenceEntity toEntity(
-            NotificacaoEntity domain) {
+            Notificacao domain) {
         var entity = new NotificacaoPersistenceEntity();
         entity.setId(domain.getId());
         entity.setOrcamentoId(domain.getOrcamentoId());

@@ -13,7 +13,7 @@ import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.usuario.RoleEnum;
@@ -77,7 +77,7 @@ public class CriarReparoAdicionalUseCaseImpl implements CriarReparoAdicionalUseC
         reparo.setOrdemServicoId(ordemServico.getId());
 
         ReparoAdicional reparoSalvo = reparoAdicionalGateway.save(reparo);
-        OrcamentoEntity orcamento = orcamentoComplementarGateway.criarESalvar(
+        Orcamento orcamento = orcamentoComplementarGateway.criarESalvar(
                 ordemServico,
                 reparoSalvo,
                 LocalDateTime.ofInstant(clock.instant(), ZoneId.systemDefault())
@@ -221,7 +221,7 @@ public class CriarReparoAdicionalUseCaseImpl implements CriarReparoAdicionalUseC
     }
 
     private void tentarNotificar(
-            OrcamentoEntity orcamento,
+            Orcamento orcamento,
             OrcamentoPublicacao publicacao
     ) {
         try {

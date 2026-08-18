@@ -9,7 +9,7 @@ import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.port.in.ordemservico.FinalizarDiagnosticoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -47,9 +47,9 @@ public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseC
         os.finalizarDiagnostico();
         int versao = versioningGateway.proximaVersaoPorNumeroOs(numeroOs, TipoOrcamento.PRINCIPAL);
         LocalDateTime agora = LocalDateTime.now(ZoneId.systemDefault());
-        OrcamentoEntity orcamento = orcamentoFactory.criarPrincipalDisponivel(os, versao, agora);
+        Orcamento orcamento = orcamentoFactory.criarPrincipalDisponivel(os, versao, agora);
         os.aguardarAprovacao();
-        OrcamentoEntity salvo = orcamentoGateway.save(orcamento);
+        Orcamento salvo = orcamentoGateway.save(orcamento);
         OrcamentoPublicacao publicacao = publicacaoGateway.publicarComLinks(salvo.getId());
         String publicUrl = publicacao.urlPdf();
         try {

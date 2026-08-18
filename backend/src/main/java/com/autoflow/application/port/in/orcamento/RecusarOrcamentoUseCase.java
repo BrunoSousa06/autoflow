@@ -1,7 +1,7 @@
 package com.autoflow.application.port.in.orcamento;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 
 public interface RecusarOrcamentoUseCase {
-    OrcamentoEntity execute(OrcamentoEntity orcamento, String motivo, String assinaturaNome);
+    Orcamento execute(Orcamento orcamento, String motivo, String assinaturaNome);
 }

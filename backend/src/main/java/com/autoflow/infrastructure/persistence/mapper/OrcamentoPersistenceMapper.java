@@ -1,9 +1,9 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
-import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
+import com.autoflow.domain.orcamento.OrcamentoItemNecessario;
+import com.autoflow.domain.orcamento.OrcamentoServico;
 import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
 import com.autoflow.infrastructure.persistence.entity.orcamento.ClienteOrcamentoSnapshotPersistenceEntity;
 import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoItemNecessarioPersistenceEntity;
@@ -17,9 +17,9 @@ import java.util.ArrayList;
 @Component
 public class OrcamentoPersistenceMapper {
 
-    public OrcamentoEntity toDomain(
+    public Orcamento toDomain(
             OrcamentoPersistenceEntity entity) {
-        return OrcamentoEntity.builder()
+        return Orcamento.builder()
                 .id(entity.getId())
                 .ordemServicoId(entity.getOrdemServicoId())
                 .numeroOs(entity.getNumeroOs())
@@ -49,7 +49,7 @@ public class OrcamentoPersistenceMapper {
     }
 
     public OrcamentoPersistenceEntity toEntity(
-            OrcamentoEntity domain) {
+            Orcamento domain) {
         var entity = new OrcamentoPersistenceEntity();
         entity.setId(domain.getId());
         entity.setOrdemServicoId(domain.getOrdemServicoId());
@@ -123,9 +123,9 @@ public class OrcamentoPersistenceMapper {
         return entity;
     }
 
-    private OrcamentoServicoEntity toDomain(
+    private OrcamentoServico toDomain(
             OrcamentoServicoPersistenceEntity entity) {
-        return OrcamentoServicoEntity.builder()
+        return OrcamentoServico.builder()
                 .servicoId(entity.getServicoId())
                 .nome(entity.getNome())
                 .valor(entity.getValor())
@@ -133,7 +133,7 @@ public class OrcamentoPersistenceMapper {
     }
 
     private OrcamentoServicoPersistenceEntity toEntity(
-            OrcamentoServicoEntity domain) {
+            OrcamentoServico domain) {
         var entity = new OrcamentoServicoPersistenceEntity();
         entity.setServicoId(domain.getServicoId());
         entity.setNome(domain.getNome());
@@ -141,9 +141,9 @@ public class OrcamentoPersistenceMapper {
         return entity;
     }
 
-    private OrcamentoItemNecessarioEntity toDomain(
+    private OrcamentoItemNecessario toDomain(
             OrcamentoItemNecessarioPersistenceEntity entity) {
-        return OrcamentoItemNecessarioEntity.builder()
+        return OrcamentoItemNecessario.builder()
                 .pecaInsumoId(entity.getPecaInsumoId())
                 .servicoOsId(entity.getServicoOsId())
                 .nome(entity.getNome())
@@ -155,7 +155,7 @@ public class OrcamentoPersistenceMapper {
     }
 
     private OrcamentoItemNecessarioPersistenceEntity toEntity(
-            OrcamentoItemNecessarioEntity domain) {
+            OrcamentoItemNecessario domain) {
         var entity = new OrcamentoItemNecessarioPersistenceEntity();
         entity.setPecaInsumoId(domain.getPecaInsumoId());
         entity.setServicoOsId(domain.getServicoOsId());

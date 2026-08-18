@@ -1,6 +1,6 @@
 package com.autoflow.presentation.orcamento.response;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 
@@ -24,7 +24,7 @@ public record OrcamentoResponse(
         LocalDateTime criadoEm,
         LocalDateTime disponibilizadoEm
 ) {
-    public static OrcamentoResponse from(OrcamentoEntity orcamentoEntity) {
+    public static OrcamentoResponse from(Orcamento orcamentoEntity) {
         return new OrcamentoResponse(orcamentoEntity.getId(),
                 orcamentoEntity.getOrdemServicoId(),
                 orcamentoEntity.getNumeroOs(),
@@ -40,7 +40,7 @@ public record OrcamentoResponse(
                 orcamentoEntity.getDisponibilizadoEm());
     }
 
-    private static List<OrcamentoServicoResponse> mapServicos(OrcamentoEntity orcamentoEntity) {
+    private static List<OrcamentoServicoResponse> mapServicos(Orcamento orcamentoEntity) {
         if (orcamentoEntity.getServicos() == null) {
             return List.of();
         }
@@ -52,7 +52,7 @@ public record OrcamentoResponse(
                 .toList();
     }
 
-    private static List<OrcamentoItemNecessarioResponse> mapItens(OrcamentoEntity orcamentoEntity) {
+    private static List<OrcamentoItemNecessarioResponse> mapItens(Orcamento orcamentoEntity) {
         if (orcamentoEntity.getItens() == null) {
             return List.of();
         }

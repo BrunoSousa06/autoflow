@@ -8,7 +8,7 @@ import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
 import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.application.port.in.orcamento.RecusarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -29,32 +29,32 @@ public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
 
     @TransactionalUseCase
     @Override
-    public OrcamentoEntity aprovarComoUsuario(Long orcamentoId, String emailUsuario) {
-        OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
+    public Orcamento aprovarComoUsuario(Long orcamentoId, String emailUsuario) {
+        Orcamento orcamento = buscarOrcamento(orcamentoId);
         Usuario usuario = validarAcesso(orcamento, emailUsuario);
         return aprovarOrcamentoUseCase.execute(orcamento, usuario.getNome());
     }
 
     @TransactionalUseCase
     @Override
-    public OrcamentoEntity recusarComoUsuario(Long orcamentoId, String motivo, String emailUsuario) {
-        OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
+    public Orcamento recusarComoUsuario(Long orcamentoId, String motivo, String emailUsuario) {
+        Orcamento orcamento = buscarOrcamento(orcamentoId);
         Usuario usuario = validarAcesso(orcamento, emailUsuario);
         return recusarOrcamentoUseCase.execute(orcamento, motivo, usuario.getNome());
     }
 
     @TransactionalUseCase
     @Override
-    public OrcamentoEntity aprovarComoToken(Long orcamentoId, String token, String nome) {
-        OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
+    public Orcamento aprovarComoToken(Long orcamentoId, String token, String nome) {
+        Orcamento orcamento = buscarOrcamento(orcamentoId);
         validarToken(orcamento, token);
         return aprovarOrcamentoUseCase.execute(orcamento, normalizarAssinatura(orcamento, nome));
     }
 
     @TransactionalUseCase
     @Override
-    public OrcamentoEntity recusarComoToken(Long orcamentoId, String token, String motivo, String nome) {
-        OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
+    public Orcamento recusarComoToken(Long orcamentoId, String token, String motivo, String nome) {
+        Orcamento orcamento = buscarOrcamento(orcamentoId);
         validarToken(orcamento, token);
         return recusarOrcamentoUseCase.execute(
                 orcamento,
@@ -65,8 +65,8 @@ public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
 
     @TransactionalUseCase
     @Override
-    public OrcamentoEntity aprovarDaOrdem(Long orcamentoId, String numeroOs) {
-        OrcamentoEntity orcamento = buscarOrcamento(orcamentoId);
+    public Orcamento aprovarDaOrdem(Long orcamentoId, String numeroOs) {
+        Orcamento orcamento = buscarOrcamento(orcamentoId);
         if (!orcamento.getNumeroOs().equals(numeroOs)) {
             throw ApplicationException.notFound(
                     "Orçamento não encontrado para esta ordem de serviço");
@@ -74,18 +74,18 @@ public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
         return aprovarOrcamentoUseCase.execute(orcamento, orcamento.getCliente().getNome());
     }
 
-    private OrcamentoEntity buscarOrcamento(Long orcamentoId) {
+    private Orcamento buscarOrcamento(Long orcamentoId) {
         return orcamentoGateway.findByIdForUpdate(orcamentoId)
                 .orElseThrow(() -> ApplicationException.notFound("Orçamento não encontrado"));
     }
 
-    private void validarToken(OrcamentoEntity orcamento, String token) {
+    private void validarToken(Orcamento orcamento, String token) {
         if (!publicacaoGateway.validarToken(orcamento, token)) {
             throw ApplicationException.unauthorized("Token invalido ou expirado");
         }
     }
 
-    private String normalizarAssinatura(OrcamentoEntity orcamento, String nome) {
+    private String normalizarAssinatura(Orcamento orcamento, String nome) {
         String assinatura = nome == null || nome.isBlank()
                 ? orcamento.getCliente().getNome()
                 : nome.trim();
@@ -96,7 +96,7 @@ public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
         return assinatura;
     }
 
-    private Usuario validarAcesso(OrcamentoEntity orcamento, String emailUsuario) {
+    private Usuario validarAcesso(Orcamento orcamento, String emailUsuario) {
         Usuario usuario = usuarioGateway.findByEmail(emailUsuario)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Usuário autenticado não encontrado"));

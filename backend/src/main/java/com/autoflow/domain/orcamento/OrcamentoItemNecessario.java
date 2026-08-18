@@ -4,7 +4,7 @@ import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 
 import java.math.BigDecimal;
 
-public class OrcamentoItemNecessarioEntity {
+public class OrcamentoItemNecessario {
 
     private Long pecaInsumoId;
 
@@ -20,10 +20,10 @@ public class OrcamentoItemNecessarioEntity {
 
     private BigDecimal valorTotal;
 
-    public OrcamentoItemNecessarioEntity() {
+    public OrcamentoItemNecessario() {
     }
 
-    public OrcamentoItemNecessarioEntity(
+    public OrcamentoItemNecessario(
             Long pecaInsumoId,
             Long servicoOsId,
             String nome,
@@ -144,8 +144,8 @@ public class OrcamentoItemNecessarioEntity {
             return this;
         }
 
-        public OrcamentoItemNecessarioEntity build() {
-            return new OrcamentoItemNecessarioEntity(
+        public OrcamentoItemNecessario build() {
+            return new OrcamentoItemNecessario(
                     pecaInsumoId,
                     servicoOsId,
                     nome,

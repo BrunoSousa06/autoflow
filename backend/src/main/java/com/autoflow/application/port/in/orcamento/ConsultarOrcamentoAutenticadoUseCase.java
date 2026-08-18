@@ -1,7 +1,7 @@
 package com.autoflow.application.port.in.orcamento;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 
 public interface ConsultarOrcamentoAutenticadoUseCase {
-    OrcamentoEntity execute(Long id, String email);
+    Orcamento execute(Long id, String email);
 }

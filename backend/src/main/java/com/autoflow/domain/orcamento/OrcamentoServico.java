@@ -2,7 +2,7 @@ package com.autoflow.domain.orcamento;
 
 import java.math.BigDecimal;
 
-public class OrcamentoServicoEntity {
+public class OrcamentoServico {
 
     private Long servicoId;
 
@@ -10,10 +10,10 @@ public class OrcamentoServicoEntity {
 
     private BigDecimal valor;
 
-    public OrcamentoServicoEntity() {
+    public OrcamentoServico() {
     }
 
-    public OrcamentoServicoEntity(Long servicoId, String nome, BigDecimal valor) {
+    public OrcamentoServico(Long servicoId, String nome, BigDecimal valor) {
         this.servicoId = servicoId;
         this.nome = nome;
         this.valor = valor;
@@ -67,8 +67,8 @@ public class OrcamentoServicoEntity {
             return this;
         }
 
-        public OrcamentoServicoEntity build() {
-            return new OrcamentoServicoEntity(servicoId, nome, valor);
+        public OrcamentoServico build() {
+            return new OrcamentoServico(servicoId, nome, valor);
         }
     }
 }

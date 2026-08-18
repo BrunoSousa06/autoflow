@@ -1,6 +1,6 @@
 package com.autoflow.presentation.orcamento.response;
 
-import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
+import com.autoflow.domain.orcamento.OrcamentoItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 
 import java.math.BigDecimal;
@@ -14,7 +14,7 @@ public record OrcamentoItemNecessarioResponse(
         Integer quantidade,
         BigDecimal valorTotal
 ) {
-    public static OrcamentoItemNecessarioResponse from(OrcamentoItemNecessarioEntity item) {
+    public static OrcamentoItemNecessarioResponse from(OrcamentoItemNecessario item) {
         return new OrcamentoItemNecessarioResponse(
                 item.getPecaInsumoId(),
                 item.getServicoOsId(),

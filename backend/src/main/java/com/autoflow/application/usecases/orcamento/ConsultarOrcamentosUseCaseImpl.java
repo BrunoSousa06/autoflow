@@ -5,7 +5,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentosUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ public class ConsultarOrcamentosUseCaseImpl implements ConsultarOrcamentosUseCas
     private final UsuarioGateway usuarioGateway;
 
     @Override
-    public List<OrcamentoEntity> execute(String emailUsuario, OrcamentoFiltro filtro) {
+    public List<Orcamento> execute(String emailUsuario, OrcamentoFiltro filtro) {
         var usuario = usuarioGateway.findByEmail(emailUsuario)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado"));
         OrcamentoFiltro filtroEfetivo = normalizar(filtro);

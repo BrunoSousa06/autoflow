@@ -1,6 +1,6 @@
 package com.autoflow.application.output.ordemservico.acompanhamento;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 
@@ -21,7 +21,7 @@ public record OrcamentoResumoOutput(
         LocalDateTime reprovadoEm,
         String mensagem
 ) {
-    public static OrcamentoResumoOutput from(OrcamentoEntity orcamento) {
+    public static OrcamentoResumoOutput from(Orcamento orcamento) {
         return new OrcamentoResumoOutput(
                 orcamento.getId(), orcamento.getTipo(), orcamento.getVersao(),
                 orcamento.getStatus(), orcamento.getTotalServicos(), orcamento.getTotalItens(),

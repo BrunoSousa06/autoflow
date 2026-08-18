@@ -1,7 +1,7 @@
 package com.autoflow.application.port.in.orcamento;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 
 public interface AprovarOrcamentoUseCase {
-    OrcamentoEntity execute(OrcamentoEntity orcamento, String assinaturaNome);
+    Orcamento execute(Orcamento orcamento, String assinaturaNome);
 }

@@ -2,7 +2,7 @@ package com.autoflow.domain.notificacao;
 
 import java.time.LocalDateTime;
 
-public class NotificacaoEntity {
+public class Notificacao {
 
     private Long id;
 
@@ -22,15 +22,15 @@ public class NotificacaoEntity {
 
     private LocalDateTime criadaEm;
 
-    public NotificacaoEntity() {
+    public Notificacao() {
     }
 
-    public static NotificacaoEntity pendente(
+    public static Notificacao pendente(
             Long orcamentoId,
             Long clienteId,
             String destinatario
     ) {
-        NotificacaoEntity notificacao = new NotificacaoEntity();
+        Notificacao notificacao = new Notificacao();
         notificacao.orcamentoId = orcamentoId;
         notificacao.clienteId = clienteId;
         notificacao.canal = CanalNotificacao.EMAIL;
@@ -40,15 +40,47 @@ public class NotificacaoEntity {
         return notificacao;
     }
 
+    public static Notificacao reconstituir(
+            Long id,
+            Long orcamentoId,
+            Long clienteId,
+            CanalNotificacao canal,
+            String destinatario,
+            StatusNotificacao status,
+            LocalDateTime enviadaEm,
+            String mensagemErro,
+            LocalDateTime criadaEm) {
+        Notificacao notificacao = new Notificacao();
+        notificacao.id = id;
+        notificacao.orcamentoId = orcamentoId;
+        notificacao.clienteId = clienteId;
+        notificacao.canal = canal;
+        notificacao.destinatario = destinatario;
+        notificacao.status = status;
+        notificacao.enviadaEm = enviadaEm;
+        notificacao.mensagemErro = mensagemErro;
+        notificacao.criadaEm = criadaEm;
+        return notificacao;
+    }
+
     public void marcarComoEnviada() {
+        validarPodeAlterarStatus();
         this.status = StatusNotificacao.ENVIADA;
         this.enviadaEm = LocalDateTime.now();
         this.mensagemErro = null;
     }
 
     public void marcarComoFalha(String mensagemErro) {
+        validarPodeAlterarStatus();
         this.status = StatusNotificacao.FALHA;
+        this.enviadaEm = null;
         this.mensagemErro = mensagemErro;
+    }
+
+    private void validarPodeAlterarStatus() {
+        if (status != StatusNotificacao.PENDENTE && status != StatusNotificacao.FALHA) {
+            throw new IllegalStateException("A notificação não pode mais ser processada.");
+        }
     }
 
     public Long getId() {
@@ -122,4 +154,5 @@ public class NotificacaoEntity {
     public void setCriadaEm(LocalDateTime criadaEm) {
         this.criadaEm = criadaEm;
     }
+
 }

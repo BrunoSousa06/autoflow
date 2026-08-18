@@ -6,7 +6,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
 
     @TransactionalUseCase
     @Override
-    public OrcamentoEntity execute(OrcamentoEntity orcamento, String assinaturaNome
+    public Orcamento execute(Orcamento orcamento, String assinaturaNome
     ) {
         if (orcamento.getStatus() == StatusOrcamento.APROVADO) {
             return orcamento;
@@ -37,11 +37,9 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
             throw ApplicationException.badRequest("Orçamento nao esta disponível");
         }
 
-        orcamento.setStatus(StatusOrcamento.APROVADO);
-        orcamento.setAssinaturaNome(assinaturaNome);
-        orcamento.setAprovadoEm(LocalDateTime.now(ZoneId.systemDefault()));
+        orcamento.aprovar(assinaturaNome, LocalDateTime.now(ZoneId.systemDefault()));
 
-        OrcamentoEntity orcamentoSalvo = orcamentoGateway.save(orcamento);
+        Orcamento orcamentoSalvo = orcamentoGateway.save(orcamento);
 
         if (aprovarReparoAdicionalPorOrcamentoUseCase.executeSeExistir(orcamento.getId())) {
             return orcamentoSalvo;

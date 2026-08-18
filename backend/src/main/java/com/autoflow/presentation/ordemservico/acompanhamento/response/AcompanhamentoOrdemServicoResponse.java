@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.acompanhamento.response;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -24,7 +24,7 @@ public record AcompanhamentoOrdemServicoResponse(
 ) {
     public static AcompanhamentoOrdemServicoResponse from(
             OrdemServico os,
-            OrcamentoEntity orcamentoAtual,
+            Orcamento orcamentoAtual,
             List<HistoricoStatusOs> historico
     ) {
         return new AcompanhamentoOrdemServicoResponse(
