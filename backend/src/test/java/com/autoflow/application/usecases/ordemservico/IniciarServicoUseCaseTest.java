@@ -2,7 +2,7 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.usecases.pecainsumo.BaixarEstoqueUseCase;
+import com.autoflow.application.port.in.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class IniciarServicoUseCaseTest {
         when(baixarEstoqueUseCase.execute(List.of(item))).thenReturn(List.of(item));
         when(ordemServicoGateway.save(ordem)).thenReturn(ordem);
 
-        var resultado = new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase)
+        var resultado = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase)
                 .execute("OS-1", 10L);
 
         assertEquals(ordem, resultado);
@@ -54,7 +54,7 @@ class IniciarServicoUseCaseTest {
         servico.iniciar(List.of());
         ordem.adicionarServicosSolicitados(List.of(servico));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-1")).thenReturn(Optional.of(ordem));
-        var useCase = new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase);
+        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase);
 
         assertThrows(IllegalStateException.class,
                 () -> useCase.execute("OS-1", 10L));
@@ -66,7 +66,7 @@ class IniciarServicoUseCaseTest {
     @Test
     void deveInformarQuandoOrdemNaoExistir() {
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-404")).thenReturn(Optional.empty());
-        var useCase = new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase);
+        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase);
 
         var erro = assertThrows(ApplicationException.class,
                 () -> useCase.execute("OS-404", 10L));
@@ -82,7 +82,7 @@ class IniciarServicoUseCaseTest {
         var servico = servico(10L);
         ordem.adicionarServicosSolicitados(List.of(servico));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-1")).thenReturn(Optional.of(ordem));
-        var useCase = new IniciarServicoUseCase(ordemServicoGateway, baixarEstoqueUseCase);
+        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase);
 
         assertThrows(IllegalStateException.class,
                 () -> useCase.execute("OS-1", 10L));
@@ -91,19 +91,19 @@ class IniciarServicoUseCaseTest {
         verify(ordemServicoGateway, never()).save(ordem);
     }
 
-    private OrdemServicoEntity ordemEmExecucao() {
-        var ordem = new OrdemServicoEntity();
+    private OrdemServico ordemEmExecucao() {
+        var ordem = new OrdemServico();
         ordem.setNumeroOs("OS-1");
         ordem.setStatus(StatusOrdemServico.EM_EXECUCAO);
         return ordem;
     }
 
-    private ServicoSolicitadoEntity servico(Long id) {
-        return new ServicoSolicitadoEntity(id, "Servico", BigDecimal.TEN);
+    private ServicoSolicitado servico(Long id) {
+        return new ServicoSolicitado(id, "Servico", BigDecimal.TEN);
     }
 
-    private ItemNecessarioEntity item(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(
+    private ItemNecessario item(Long id, int quantidade) {
+        return ItemNecessario.criar(
                 id,
                 "Item",
                 CategoriaPecaInsumo.PECA,

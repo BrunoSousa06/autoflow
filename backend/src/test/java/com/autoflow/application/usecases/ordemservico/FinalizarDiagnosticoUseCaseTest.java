@@ -1,17 +1,17 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.gateway.*;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.DiagnosticoEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.Diagnostico;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -61,16 +61,16 @@ class FinalizarDiagnosticoUseCaseTest {
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
 
-    private FinalizarDiagnosticoUseCase novoCasoDeUso() {
-        return new FinalizarDiagnosticoUseCase(
+    private FinalizarDiagnosticoUseCaseImpl novoCasoDeUso() {
+        return new FinalizarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, versioningGateway,
                 orcamentoFactory, orcamentoGateway, publicacaoGateway,
                 notificacaoGateway, historicoGateway
         );
     }
 
-    private void configurarFluxo(OrdemServicoEntity os, UsuarioEntity usuario) {
-        var orcamento = new OrcamentoEntity();
+    private void configurarFluxo(OrdemServico os, Usuario usuario) {
+        var orcamento = new Orcamento();
         orcamento.setId(10L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
@@ -84,19 +84,19 @@ class FinalizarDiagnosticoUseCaseTest {
         when(ordemServicoGateway.save(os)).thenReturn(os);
     }
 
-    private OrdemServicoEntity ordemEmDiagnostico() {
-        var os = new OrdemServicoEntity();
+    private OrdemServico ordemEmDiagnostico() {
+        var os = new OrdemServico();
         os.setId(1L);
         os.setNumeroOs("OS-1");
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-        var diagnostico = new DiagnosticoEntity();
+        var diagnostico = new Diagnostico();
         diagnostico.setLaudo("Laudo concluido");
         os.setDiagnostico(diagnostico);
         return os;
     }
 
-    private UsuarioEntity usuario(RoleEnum role) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role) {
+        var usuario = new Usuario();
         usuario.setEmail(role == RoleEnum.ADMIN ? "admin@autoflow.com" : "mecanico@autoflow.com");
         usuario.setRole(role);
         return usuario;

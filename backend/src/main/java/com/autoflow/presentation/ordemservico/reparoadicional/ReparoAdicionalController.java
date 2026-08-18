@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.reparoadicional;
 
-import com.autoflow.application.usecases.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
 import com.autoflow.presentation.ordemservico.reparoadicional.request.CriarReparoAdicionalRequest;
 import com.autoflow.presentation.ordemservico.reparoadicional.response.CriarReparoAdicionalResponse;
 import io.swagger.v3.oas.annotations.Operation;

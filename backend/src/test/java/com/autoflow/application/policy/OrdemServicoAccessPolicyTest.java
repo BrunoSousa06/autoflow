@@ -1,10 +1,10 @@
 package com.autoflow.application.policy;
 
 import com.autoflow.application.exception.ApplicationException;
-import com.autoflow.domain.ordemservico.DiagnosticoEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.Diagnostico;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,13 +13,20 @@ class OrdemServicoAccessPolicyTest {
 
     private final OrdemServicoAccessPolicy policy = new OrdemServicoAccessPolicy();
 
+    private static Usuario usuario(Long id, RoleEnum role) {
+        var usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setRole(role);
+        return usuario;
+    }
+
     @Test
     void devePermitirAdminEOMecanicoAtribuido() {
-        OrdemServicoEntity ordem = new OrdemServicoEntity();
-        UsuarioEntity admin = usuario(1L, RoleEnum.ADMIN);
+        OrdemServico ordem = new OrdemServico();
+        Usuario admin = usuario(1L, RoleEnum.ADMIN);
         assertDoesNotThrow(() -> policy.validarPodeAlterarDiagnostico(ordem, admin));
 
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        Diagnostico diagnostico = new Diagnostico();
         diagnostico.setMecanico(usuario(2L, RoleEnum.MECANICO));
         ordem.setDiagnostico(diagnostico);
         assertDoesNotThrow(() -> policy.validarPodeAlterarDiagnostico(ordem,
@@ -28,8 +35,8 @@ class OrdemServicoAccessPolicyTest {
 
     @Test
     void deveRejeitarUsuarioSemMecanicoAtribuido() {
-        OrdemServicoEntity ordem = new OrdemServicoEntity();
-        UsuarioEntity mecanico = usuario(2L, RoleEnum.MECANICO);
+        OrdemServico ordem = new OrdemServico();
+        Usuario mecanico = usuario(2L, RoleEnum.MECANICO);
         ApplicationException exception = assertThrows(ApplicationException.class,
                 () -> policy.validarPodeAlterarDiagnostico(ordem, mecanico));
 
@@ -38,22 +45,15 @@ class OrdemServicoAccessPolicyTest {
 
     @Test
     void deveRejeitarMecanicoDiferenteDoAtribuido() {
-        OrdemServicoEntity ordem = new OrdemServicoEntity();
-        DiagnosticoEntity diagnostico = new DiagnosticoEntity();
+        OrdemServico ordem = new OrdemServico();
+        Diagnostico diagnostico = new Diagnostico();
         diagnostico.setMecanico(usuario(2L, RoleEnum.MECANICO));
         ordem.setDiagnostico(diagnostico);
-        UsuarioEntity mecanico = usuario(3L, RoleEnum.MECANICO);
+        Usuario mecanico = usuario(3L, RoleEnum.MECANICO);
 
         ApplicationException exception = assertThrows(ApplicationException.class,
                 () -> policy.validarPodeAlterarDiagnostico(ordem, mecanico));
 
         assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
-    }
-
-    private static UsuarioEntity usuario(Long id, RoleEnum role) {
-        var usuario = new UsuarioEntity();
-        usuario.setId(id);
-        usuario.setRole(role);
-        return usuario;
     }
 }

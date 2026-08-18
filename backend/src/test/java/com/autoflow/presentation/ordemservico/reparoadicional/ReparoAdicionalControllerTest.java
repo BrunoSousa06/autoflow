@@ -1,8 +1,8 @@
 package com.autoflow.presentation.ordemservico.reparoadicional;
 
-import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
-import com.autoflow.application.dto.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
+import com.autoflow.application.input.ordemservico.reparoadicional.CriarReparoAdicionalCommand;
+import com.autoflow.application.output.ordemservico.reparoadicional.CriarReparoAdicionalOutput;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.CriarReparoAdicionalUseCase;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import org.junit.jupiter.api.Test;

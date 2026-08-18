@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.security;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import org.springframework.stereotype.Component;
 

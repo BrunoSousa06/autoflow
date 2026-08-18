@@ -1,9 +1,9 @@
 package com.autoflow.presentation.ordemservico.acompanhamento.response;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.presentation.ordemservico.response.ServicoOsResponse;
 
@@ -23,13 +23,13 @@ public record AcompanhamentoOrdemServicoResponse(
         List<HistoricoStatusOsResponse> historicoStatus
 ) {
     public static AcompanhamentoOrdemServicoResponse from(
-            OrdemServicoEntity os,
-            OrcamentoEntity orcamentoAtual,
-            List<HistoricoStatusOsEntity> historico
+            OrdemServico os,
+            Orcamento orcamentoAtual,
+            List<HistoricoStatusOs> historico
     ) {
         return new AcompanhamentoOrdemServicoResponse(
                 os.getNumeroOs(),
-                os.getVeiculo().getPlaca(),
+                os.getVeiculo().placa(),
                 os.getStatus(),
                 os.getDataAbertura(),
                 os.getUltimaAtualizacao(),

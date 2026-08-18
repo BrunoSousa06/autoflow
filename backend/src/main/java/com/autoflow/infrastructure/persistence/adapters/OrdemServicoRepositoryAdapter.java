@@ -1,10 +1,12 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.PageQuery;
-import com.autoflow.application.dto.PageResult;
-import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.output.PageResult;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
+import com.autoflow.infrastructure.persistence.mapper.ordemservico.OrdemServicoPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.OrdemServicoRepository;
 import com.autoflow.infrastructure.persistence.repository.OrdemServicoSpecifications;
 import lombok.RequiredArgsConstructor;
@@ -21,39 +23,40 @@ import java.util.Optional;
 public class OrdemServicoRepositoryAdapter implements OrdemServicoGateway {
 
     private final OrdemServicoRepository repository;
+    private final OrdemServicoPersistenceMapper mapper;
 
     @Override
-    public OrdemServicoEntity save(OrdemServicoEntity ordemServico) {
-        return repository.save(ordemServico);
+    public OrdemServico save(OrdemServico ordemServico) {
+        return mapper.toDomain(repository.save(mapper.toEntity(ordemServico)));
     }
 
     @Override
-    public Optional<OrdemServicoEntity> findById(Long id) {
-        return repository.findById(id);
+    public Optional<OrdemServico> findById(Long id) {
+        return repository.findById(id).map(mapper::toDomain);
     }
 
     @Override
-    public Optional<OrdemServicoEntity> findByNumeroOs(String numeroOs) {
-        return repository.findByNumeroOs(numeroOs);
+    public Optional<OrdemServico> findByNumeroOs(String numeroOs) {
+        return repository.findByNumeroOs(numeroOs).map(mapper::toDomain);
     }
 
     @Override
-    public Optional<OrdemServicoEntity> findByNumeroOsForUpdate(String numeroOs) {
-        return repository.findByNumeroOsForUpdate(numeroOs);
+    public Optional<OrdemServico> findByNumeroOsForUpdate(String numeroOs) {
+        return repository.findByNumeroOsForUpdate(numeroOs).map(mapper::toDomain);
     }
 
     @Override
-    public List<OrdemServicoEntity> findByClienteIdOrderByDataAberturaDesc(Long clienteId) {
-        return repository.findByCliente_IdOrderByDataAberturaDesc(clienteId);
+    public List<OrdemServico> findByClienteIdOrderByDataAberturaDesc(Long clienteId) {
+        return repository.findByCliente_IdOrderByDataAberturaDesc(clienteId).stream().map(mapper::toDomain).toList();
     }
 
     @Override
-    public List<OrdemServicoEntity> findAllByOrderByDataAberturaDesc() {
-        return repository.findAllByOrderByDataAberturaDesc();
+    public List<OrdemServico> findAllByOrderByDataAberturaDesc() {
+        return repository.findAllByOrderByDataAberturaDesc().stream().map(mapper::toDomain).toList();
     }
 
     @Override
-    public PageResult<OrdemServicoEntity> findAll(
+    public PageResult<OrdemServico> findAll(
             OrdemServicoFiltroInput filtro,
             String emailMecanico,
             PageQuery pageQuery) {
@@ -62,7 +65,7 @@ public class OrdemServicoRepositoryAdapter implements OrdemServicoGateway {
         Page<OrdemServicoEntity> page = repository.findAll(
                 specification,
                 PageRequest.of(pageQuery.page(), pageQuery.size()));
-        return new PageResult<>(page.getContent(), page.getTotalElements(),
+        return new PageResult<>(page.getContent().stream().map(mapper::toDomain).toList(), page.getTotalElements(),
                 pageQuery.page(), pageQuery.size());
     }
 }

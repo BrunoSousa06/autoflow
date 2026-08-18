@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.pecainsumo;
 
 import com.autoflow.application.gateway.EstoqueGateway;
-import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class BaixarEstoqueUseCaseTest {
 
     @Test
     void deveRetornarListaVaziaSemConsultarEstoque() {
-        var useCase = new BaixarEstoqueUseCase(gateway);
+        var useCase = new BaixarEstoqueUseCaseImpl(gateway);
 
         assertTrue(useCase.execute(null).isEmpty());
         assertTrue(useCase.execute(List.of()).isEmpty());
@@ -46,7 +46,7 @@ class BaixarEstoqueUseCaseTest {
         when(gateway.findAllByIdForUpdate(List.of(1L, 2L)))
                 .thenReturn(List.of(disponivel, insuficiente));
 
-        assertThrows(IllegalStateException.class, () -> new BaixarEstoqueUseCase(gateway).execute(List.of(
+        assertThrows(IllegalStateException.class, () -> new BaixarEstoqueUseCaseImpl(gateway).execute(List.of(
                 item(1L, 3),
                 item(2L, 2))));
 
@@ -58,7 +58,7 @@ class BaixarEstoqueUseCaseTest {
         when(gateway.findAllByIdForUpdate(List.of(1L, 2L)))
                 .thenReturn(List.of(estoque(1L, 5), estoque(2L, 3)));
 
-        var resultado = new BaixarEstoqueUseCase(gateway).execute(List.of(
+        var resultado = new BaixarEstoqueUseCaseImpl(gateway).execute(List.of(
                 item(1L, 3), item(2L, 2)));
 
         assertEquals(2, resultado.size());
@@ -72,7 +72,7 @@ class BaixarEstoqueUseCaseTest {
         when(gateway.findAllByIdForUpdate(List.of(9L))).thenReturn(List.of());
 
         EstoqueItemNaoEncontradoException exception = assertThrows(EstoqueItemNaoEncontradoException.class,
-                () -> new BaixarEstoqueUseCase(gateway).execute(List.of(item(9L, 1))));
+                () -> new BaixarEstoqueUseCaseImpl(gateway).execute(List.of(item(9L, 1))));
 
         assertEquals("Peça/Insumo não encontrado com o ID: 9", exception.getMessage());
         verify(gateway, never()).saveAll(any());
@@ -84,7 +84,7 @@ class BaixarEstoqueUseCaseTest {
         when(gateway.findAllByIdForUpdate(List.of(1L, 9L))).thenReturn(List.of(existente));
 
         assertThrows(EstoqueItemNaoEncontradoException.class,
-                () -> new BaixarEstoqueUseCase(gateway).execute(List.of(
+                () -> new BaixarEstoqueUseCaseImpl(gateway).execute(List.of(
                         item(1L, 2),
                         item(9L, 1)
                 )));
@@ -94,7 +94,7 @@ class BaixarEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarItensRepetidosDoMesmoEstoque() {
-        assertThrows(IllegalArgumentException.class, () -> new BaixarEstoqueUseCase(gateway).execute(List.of(
+        assertThrows(IllegalArgumentException.class, () -> new BaixarEstoqueUseCaseImpl(gateway).execute(List.of(
                 item(1L, 3), item(1L, 3))));
         verify(gateway, never()).saveAll(any());
     }
@@ -102,7 +102,7 @@ class BaixarEstoqueUseCaseTest {
     @Test
     void deveRejeitarItemNuloAntesDeConsultarEstoque() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BaixarEstoqueUseCase(gateway)
+                () -> new BaixarEstoqueUseCaseImpl(gateway)
                         .execute(java.util.Collections.singletonList(null)));
 
         verify(gateway, never()).findAllByIdForUpdate(any());
@@ -111,7 +111,7 @@ class BaixarEstoqueUseCaseTest {
     @Test
     void deveRejeitarItemSemPecaAntesDeConsultarEstoque() {
         assertThrows(IllegalArgumentException.class,
-                () -> new BaixarEstoqueUseCase(gateway)
+                () -> new BaixarEstoqueUseCaseImpl(gateway)
                         .execute(List.of(item(null, 1))));
 
         verify(gateway, never()).findAllByIdForUpdate(any());
@@ -119,11 +119,11 @@ class BaixarEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarItemSemQuantidadeAntesDeConsultarEstoque() {
-        var item = new ItemNecessarioEntity();
+        var item = new ItemNecessario();
         item.setPecaInsumoId(1L);
 
         assertThrows(IllegalArgumentException.class,
-                () -> new BaixarEstoqueUseCase(gateway).execute(List.of(item)));
+                () -> new BaixarEstoqueUseCaseImpl(gateway).execute(List.of(item)));
 
         verify(gateway, never()).findAllByIdForUpdate(any());
     }
@@ -133,12 +133,12 @@ class BaixarEstoqueUseCaseTest {
         when(gateway.findAllByIdForUpdate(List.of(1L))).thenReturn(List.of(estoque(1L, 0)));
 
         assertThrows(IllegalStateException.class,
-                () -> new BaixarEstoqueUseCase(gateway).execute(List.of(item(1L, 1))));
+                () -> new BaixarEstoqueUseCaseImpl(gateway).execute(List.of(item(1L, 1))));
         verify(gateway, never()).saveAll(any());
     }
 
-    private static ItemNecessarioEntity item(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(id, "Item", CategoriaPecaInsumo.PECA,
+    private static ItemNecessario item(Long id, int quantidade) {
+        return ItemNecessario.criar(id, "Item", CategoriaPecaInsumo.PECA,
                 BigDecimal.ONE, quantidade, null);
     }
 

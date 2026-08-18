@@ -1,8 +1,8 @@
 package com.autoflow.infrastructure.orcamento;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
+import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,8 +78,8 @@ class OrcamentoVersioningAdapterTest {
         return new OrcamentoVersioningAdapter(repository);
     }
 
-    private OrcamentoEntity orcamento(int versao, TipoOrcamento tipo, StatusOrcamento status) {
-        var orcamento = new OrcamentoEntity();
+    private OrcamentoPersistenceEntity orcamento(int versao, TipoOrcamento tipo, StatusOrcamento status) {
+        var orcamento = new OrcamentoPersistenceEntity();
         orcamento.setVersao(versao);
         orcamento.setTipo(tipo);
         orcamento.setStatus(status);

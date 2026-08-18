@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.repository.reparoadicional;
 
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

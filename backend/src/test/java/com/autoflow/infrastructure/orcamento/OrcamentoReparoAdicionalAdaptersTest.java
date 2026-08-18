@@ -3,12 +3,12 @@ package com.autoflow.infrastructure.orcamento;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoVersioningGateway;
 import com.autoflow.application.gateway.NotificacaoGateway;
-import com.autoflow.application.dto.notificacao.MensagemNotificacao;
-import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.application.input.notificacao.MensagemNotificacao;
+import com.autoflow.application.input.notificacao.OrcamentoNotificacao;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,13 +41,13 @@ class OrcamentoReparoAdicionalAdaptersTest {
                 factory,
                 orcamentoGateway
         );
-        var ordemServico = new OrdemServicoEntity();
+        var ordemServico = new OrdemServico();
         ordemServico.setId(10L);
         ordemServico.setNumeroOs("OS-123");
-        var reparo = new ReparoAdicionalEntity();
+        var reparo = new ReparoAdicional();
         var criadoEm = LocalDateTime.of(2026, 8, 2, 12, 30);
-        var orcamentoCriado = new OrcamentoEntity();
-        var orcamentoSalvo = new OrcamentoEntity();
+        var orcamentoCriado = new Orcamento();
+        var orcamentoSalvo = new Orcamento();
 
         when(versioningGateway.proximaVersao(10L, TipoOrcamento.COMPLEMENTAR)).thenReturn(2);
         when(factory.criarAdicionalDisponivel(ordemServico, reparo, 2, criadoEm))

@@ -1,9 +1,9 @@
 package com.autoflow.presentation.orcamento;
 
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoPorTokenUseCase;
-import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
-import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
+import com.autoflow.application.port.in.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoPorTokenUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.domain.orcamento.*;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
@@ -53,7 +53,7 @@ class PublicOrcamentoControllerTest {
 
     @Test
     void deveBaixarPdfValidandoTokenPublico() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         byte[] pdf = "%PDF fake".getBytes();
 
         when(consultarOrcamentoPorTokenUseCase.execute(10L, "tok")).thenReturn(orcamento);
@@ -82,7 +82,7 @@ class PublicOrcamentoControllerTest {
 
     @Test
     void deveAprovarOrcamentoComTokenPublico() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.APROVADO);
         when(decidirOrcamentoUseCase.aprovarComoToken(10L, "tok", "Maria")).thenReturn(orcamento);
 
@@ -98,7 +98,7 @@ class PublicOrcamentoControllerTest {
 
     @Test
     void deveRecusarOrcamentoComTokenPublicoEMotivo() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
         when(decidirOrcamentoUseCase.recusarComoToken(10L, "tok", "Muito caro", "Maria"))
                 .thenReturn(orcamento);
@@ -115,7 +115,7 @@ class PublicOrcamentoControllerTest {
 
     @Test
     void deveRecusarOrcamentoComTokenPublicoSemBody() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
         when(decidirOrcamentoUseCase.recusarComoToken(10L, "tok", null, null)).thenReturn(orcamento);
 
@@ -144,7 +144,7 @@ class PublicOrcamentoControllerTest {
 
     @Test
     void deveBaixarPdfComTokenDeAcompanhamento() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         when(acessarOrcamentoAcompanhamentoUseCase.consultar(10L, "token-os")).thenReturn(orcamento);
         when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn("%PDF".getBytes());
 
@@ -158,7 +158,7 @@ class PublicOrcamentoControllerTest {
 
     @Test
     void deveAprovarComTokenDeAcompanhamento() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.APROVADO);
         when(acessarOrcamentoAcompanhamentoUseCase.aprovar(10L, "token-os")).thenReturn(orcamento);
 
@@ -169,8 +169,8 @@ class PublicOrcamentoControllerTest {
         verify(acessarOrcamentoAcompanhamentoUseCase).aprovar(10L, "token-os");
     }
 
-    private OrcamentoEntity baseOrcamento() {
-        return OrcamentoEntity.builder()
+    private Orcamento baseOrcamento() {
+        return Orcamento.builder()
                 .id(10L)
                 .ordemServicoId(1L)
                 .numeroOs("OS-123")

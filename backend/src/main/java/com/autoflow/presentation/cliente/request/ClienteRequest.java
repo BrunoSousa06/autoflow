@@ -1,7 +1,7 @@
 package com.autoflow.presentation.cliente.request;
 
 
-import com.autoflow.config.validator.CpfCnpj;
+import com.autoflow.presentation.validation.CpfCnpj;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

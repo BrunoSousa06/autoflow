@@ -1,9 +1,9 @@
 package com.autoflow.infrastructure.orcamento;
 
 import com.autoflow.application.gateway.OrcamentoVersioningGateway;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
+import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import com.autoflow.infrastructure.persistence.repository.OrcamentoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class OrcamentoVersioningAdapter implements OrcamentoVersioningGateway {
     @Transactional(readOnly = true)
     public int proximaVersao(Long ordemServicoId, TipoOrcamento tipo) {
         return repository.findTopByOrdemServicoIdAndTipoOrderByVersaoDesc(ordemServicoId, tipo)
-                .map(OrcamentoEntity::getVersao)
+                .map(OrcamentoPersistenceEntity::getVersao)
                 .map(versao -> versao + 1)
                 .orElse(1);
     }
@@ -27,7 +27,7 @@ public class OrcamentoVersioningAdapter implements OrcamentoVersioningGateway {
     @Transactional(readOnly = true)
     public int proximaVersaoPorNumeroOs(String numeroOs, TipoOrcamento tipo) {
         return repository.findTopByNumeroOsAndTipoOrderByVersaoDesc(numeroOs, tipo)
-                .map(OrcamentoEntity::getVersao)
+                .map(OrcamentoPersistenceEntity::getVersao)
                 .map(versao -> versao + 1)
                 .orElse(1);
     }

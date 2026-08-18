@@ -1,8 +1,8 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 
 public interface OrcamentoDocumentoGateway {
 
-    byte[] gerarPdf(OrcamentoEntity orcamento);
+    byte[] gerarPdf(Orcamento orcamento);
 }

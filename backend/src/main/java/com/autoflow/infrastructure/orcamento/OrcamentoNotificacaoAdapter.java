@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.orcamento;
 
-import com.autoflow.application.dto.notificacao.MensagemNotificacao;
-import com.autoflow.application.dto.notificacao.OrcamentoNotificacao;
+import com.autoflow.application.input.notificacao.MensagemNotificacao;
+import com.autoflow.application.input.notificacao.OrcamentoNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.application.gateway.OrcamentoNotificacaoGateway;
 import com.autoflow.domain.orcamento.TipoOrcamento;

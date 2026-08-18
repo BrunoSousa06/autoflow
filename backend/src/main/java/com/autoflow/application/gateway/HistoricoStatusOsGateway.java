@@ -1,16 +1,16 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.domain.ordemservico.HistoricoStatusOsEntity;
+import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 
 import java.util.List;
 
 public interface HistoricoStatusOsGateway {
 
-    HistoricoStatusOsEntity save(HistoricoStatusOsEntity historico);
+    HistoricoStatusOs save(HistoricoStatusOs historico);
 
-    List<HistoricoStatusOsEntity> findByOrdemServicoIdOrderByRegistradoEmAsc(
+    List<HistoricoStatusOs> findByOrdemServicoIdOrderByRegistradoEmAsc(
             Long ordemServicoId);
 
-    List<HistoricoStatusOsEntity> findByNumeroOsOrderByRegistradoEmAsc(
+    List<HistoricoStatusOs> findByNumeroOsOrderByRegistradoEmAsc(
             String numeroOs);
 }

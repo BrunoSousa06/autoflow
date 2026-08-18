@@ -4,13 +4,13 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
-import com.autoflow.application.usecases.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
+import com.autoflow.domain.ordemservico.ItemNecessario;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -49,7 +49,7 @@ class RegistrarItensNecessariosUseCaseTest {
         when(disponibilidadeEstoque.execute(itens)).thenReturn(itens);
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new RegistrarItensNecessariosUseCase(
+        var resultado = new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque)
                 .execute("OS-1", 10L, usuario.getEmail(), itens);
 
@@ -68,7 +68,7 @@ class RegistrarItensNecessariosUseCaseTest {
         when(disponibilidadeEstoque.execute(itens)).thenReturn(itens);
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        new RegistrarItensNecessariosUseCase(
+        new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque)
                 .execute("OS-1", 10L, usuario.getEmail(), itens);
 
@@ -84,7 +84,7 @@ class RegistrarItensNecessariosUseCaseTest {
         var email = usuario.getEmail();
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
-        var useCase = new RegistrarItensNecessariosUseCase(
+        var useCase = new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque);
 
         var exception = assertThrows(ApplicationException.class,
@@ -95,24 +95,24 @@ class RegistrarItensNecessariosUseCaseTest {
         verify(ordemServicoGateway, never()).save(os);
     }
 
-    private OrdemServicoEntity ordemEmDiagnostico() {
-        var os = new OrdemServicoEntity();
+    private OrdemServico ordemEmDiagnostico() {
+        var os = new OrdemServico();
         os.setNumeroOs("OS-1");
         os.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
         os.adicionarServicosSolicitados(List.of(
-                ServicoSolicitadoEntity.criar(10L, "Servico", BigDecimal.TEN)));
+                ServicoSolicitado.criar(10L, "Servico", BigDecimal.TEN)));
         return os;
     }
 
-    private ItemNecessarioEntity itemSolicitado() {
-        var item = new ItemNecessarioEntity();
+    private ItemNecessario itemSolicitado() {
+        var item = new ItemNecessario();
         item.setPecaInsumoId(20L);
         item.setQuantidade(2);
         return item;
     }
 
-    private UsuarioEntity usuario(RoleEnum role, String email) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role, String email) {
+        var usuario = new Usuario();
         usuario.setRole(role);
         usuario.setEmail(email);
         return usuario;

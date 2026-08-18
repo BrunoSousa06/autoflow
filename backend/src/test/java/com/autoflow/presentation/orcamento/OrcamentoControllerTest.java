@@ -1,10 +1,10 @@
 package com.autoflow.presentation.orcamento;
 
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoAutenticadoUseCase;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentosUseCase;
-import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoAutenticadoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentosUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.domain.orcamento.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
@@ -80,7 +80,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
     void deveConsultarOrcamentoAutenticado() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         when(consultarOrcamentoAutenticadoUseCase.execute(10L, "admin@autoflow.com")).thenReturn(orcamento);
 
         mockMvc.perform(get("/orcamentos/{id}", 10L))
@@ -105,7 +105,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "cliente@exemplo.com", roles = "CLIENTE")
     void deveAprovarOrcamentoAutenticadoSemTokenPublico() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.APROVADO);
         when(decidirOrcamentoUseCase.aprovarComoUsuario(10L, "cliente@exemplo.com")).thenReturn(orcamento);
 
@@ -120,7 +120,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "cliente@exemplo.com", roles = "CLIENTE")
     void deveRecusarOrcamentoAutenticadoSemTokenPublico() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
         when(decidirOrcamentoUseCase.recusarComoUsuario(10L, "Nao quero", "cliente@exemplo.com")).thenReturn(orcamento);
 
@@ -138,7 +138,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "cliente@exemplo.com", roles = "CLIENTE")
     void deveRecusarOrcamentoAutenticadoSemBody() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
         when(decidirOrcamentoUseCase.recusarComoUsuario(10L, null, "cliente@exemplo.com")).thenReturn(orcamento);
 
@@ -153,7 +153,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "atendente@autoflow.com", roles = "ATENDENTE")
     void deveListarOrcamentosComFiltrosAutenticado() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         OrcamentoFiltro filtroEsperado = new OrcamentoFiltro(
                 StatusOrcamento.DISPONIVEL,
                 "OS-123",
@@ -186,7 +186,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "admin@autoflow.com", roles = "ADMIN")
     void deveBaixarPdfComoAdmin() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         byte[] pdfBytes = new byte[]{1, 2, 3};
         when(consultarOrcamentoAutenticadoUseCase.execute(10L, "admin@autoflow.com")).thenReturn(orcamento);
         when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn(pdfBytes);
@@ -203,7 +203,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "cliente@exemplo.com", roles = "CLIENTE")
     void deveBaixarPdfComoCliente() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         byte[] pdfBytes = new byte[]{1, 2, 3};
         when(consultarOrcamentoAutenticadoUseCase.execute(10L, "cliente@exemplo.com")).thenReturn(orcamento);
         when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn(pdfBytes);
@@ -218,7 +218,7 @@ class OrcamentoControllerTest {
     @Test
     @WithMockUser(username = "atendente@autoflow.com", roles = "ATENDENTE")
     void deveBaixarPdfComoAtendente() throws Exception {
-        OrcamentoEntity orcamento = baseOrcamento();
+        Orcamento orcamento = baseOrcamento();
         byte[] pdfBytes = new byte[]{1, 2, 3};
         when(consultarOrcamentoAutenticadoUseCase.execute(10L, "atendente@autoflow.com")).thenReturn(orcamento);
         when(orcamentoDocumentoGateway.gerarPdf(orcamento)).thenReturn(pdfBytes);
@@ -251,8 +251,8 @@ class OrcamentoControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    private OrcamentoEntity baseOrcamento() {
-        return OrcamentoEntity.builder()
+    private Orcamento baseOrcamento() {
+        return Orcamento.builder()
                 .id(10L)
                 .ordemServicoId(1L)
                 .numeroOs("OS-123")
@@ -264,12 +264,12 @@ class OrcamentoControllerTest {
                 .totalServicos(new BigDecimal("100.00"))
                 .totalItens(new BigDecimal("50.00"))
                 .totalGeral(new BigDecimal("150.00"))
-                .servicos(List.of(OrcamentoServicoEntity.builder()
+                .servicos(List.of(OrcamentoServico.builder()
                         .servicoId(20L)
                         .nome("Revisao")
                         .valor(new BigDecimal("100.00"))
                         .build()))
-                .itens(List.of(OrcamentoItemNecessarioEntity.builder()
+                .itens(List.of(OrcamentoItemNecessario.builder()
                         .pecaInsumoId(30L)
                         .servicoOsId(40L)
                         .nome("Filtro")

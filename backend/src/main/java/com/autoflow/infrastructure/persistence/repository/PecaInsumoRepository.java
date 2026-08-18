@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.repository;
 
 
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

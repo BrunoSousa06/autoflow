@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.application.dto.ordemservico.StatusOrdemServicoOutput;
+import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

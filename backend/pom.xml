@@ -189,7 +189,8 @@
 					<excludes>
 						<exclude>com/autoflow/config/security/SecurityConfig.class</exclude>
 						<exclude>com/autoflow/infrastructure/persistence/mapper/**</exclude>
-						<exclude>**/*Application.java</exclude>
+						<exclude>**/*MapperImpl.class</exclude>
+						<exclude>**/*Application.class</exclude>
 						<exclude>com/autoflow/application/gateway/**</exclude>
 						<exclude>jdk/**</exclude>
 					</excludes>

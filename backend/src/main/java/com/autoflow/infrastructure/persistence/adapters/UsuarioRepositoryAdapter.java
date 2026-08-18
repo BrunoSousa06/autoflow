@@ -2,7 +2,9 @@ package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
+import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,25 +17,32 @@ import java.util.Optional;
 public class UsuarioRepositoryAdapter implements UsuarioGateway {
 
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioPersistenceMapper usuarioPersistenceMapper;
 
     @Override
-    public List<UsuarioEntity> findAll() {
-        return usuarioRepository.findAll();
+    public List<Usuario> findAll() {
+        return usuarioRepository.findAll().stream()
+                .map(usuarioPersistenceMapper::toDomain)
+                .toList();
     }
 
     @Override
-    public List<UsuarioEntity> findByRole(RoleEnum roleEnum) {
-        return usuarioRepository.findByRole(roleEnum);
+    public List<Usuario> findByRole(RoleEnum roleEnum) {
+        return usuarioRepository.findByRole(roleEnum).stream()
+                .map(usuarioPersistenceMapper::toDomain)
+                .toList();
     }
 
     @Override
-    public Optional<UsuarioEntity> findById(Long mecanicoId) {
-        return usuarioRepository.findById(mecanicoId);
+    public Optional<Usuario> findById(Long mecanicoId) {
+        return usuarioRepository.findById(mecanicoId)
+                .map(usuarioPersistenceMapper::toDomain);
     }
 
     @Override
-    public Optional<UsuarioEntity> findByEmail(String email) {
-        return usuarioRepository.findByEmail(email);
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .map(usuarioPersistenceMapper::toDomain);
     }
 
     @Override
@@ -42,7 +51,8 @@ public class UsuarioRepositoryAdapter implements UsuarioGateway {
     }
 
     @Override
-    public UsuarioEntity save(UsuarioEntity usuario) {
-        return usuarioRepository.save(usuario);
+    public Usuario save(Usuario usuario) {
+        UsuarioEntity entity = usuarioPersistenceMapper.toEntity(usuario);
+        return usuarioPersistenceMapper.toDomain(usuarioRepository.save(entity));
     }
 }

@@ -2,9 +2,9 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -27,13 +27,13 @@ class DetalharOrdemServicoUseCaseTest {
 
     @Test
     void deveRetornarOsEOrcamentoDisponivel() {
-        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+        OrdemServico ordemServico = new OrdemServico();
+        Orcamento orcamento = new Orcamento();
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(orcamentoGateway.findByNumeroOsAndStatus("OS-123", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.of(orcamento));
 
-        var resultado = new DetalharOrdemServicoUseCase(ordemServicoGateway, orcamentoGateway).execute("OS-123");
+        var resultado = new DetalharOrdemServicoUseCaseImpl(ordemServicoGateway, orcamentoGateway).execute("OS-123");
 
         assertSame(ordemServico, resultado.ordemServico());
         assertSame(orcamento, resultado.orcamentoAtual());
@@ -41,15 +41,15 @@ class DetalharOrdemServicoUseCaseTest {
 
     @Test
     void deveUsarUltimoOrcamentoQuandoNaoHouverDisponivel() {
-        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+        OrdemServico ordemServico = new OrdemServico();
+        Orcamento orcamento = new Orcamento();
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(orcamentoGateway.findByNumeroOsAndStatus("OS-123", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.empty());
         when(orcamentoGateway.findTopByNumeroOsOrderByVersaoDesc("OS-123"))
                 .thenReturn(Optional.of(orcamento));
 
-        var resultado = new DetalharOrdemServicoUseCase(ordemServicoGateway, orcamentoGateway).execute("OS-123");
+        var resultado = new DetalharOrdemServicoUseCaseImpl(ordemServicoGateway, orcamentoGateway).execute("OS-123");
 
         assertSame(orcamento, resultado.orcamentoAtual());
         verify(orcamentoGateway).findTopByNumeroOsOrderByVersaoDesc("OS-123");
@@ -59,7 +59,7 @@ class DetalharOrdemServicoUseCaseTest {
     void deveFalharQuandoOsNaoExistir() {
         when(ordemServicoGateway.findByNumeroOs("OS-404")).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> new DetalharOrdemServicoUseCase(ordemServicoGateway, orcamentoGateway)
+        assertThrows(RuntimeException.class, () -> new DetalharOrdemServicoUseCaseImpl(ordemServicoGateway, orcamentoGateway)
                 .execute("OS-404"));
     }
 }

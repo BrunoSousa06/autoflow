@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.repository;
 
-import com.autoflow.application.dto.ordemservico.OrdemServicoFiltroInput;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.BeforeEach;

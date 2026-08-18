@@ -1,7 +1,7 @@
 package com.autoflow.presentation.ordemservico.acompanhamento.response;
 
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 
@@ -22,7 +22,7 @@ public record OrcamentoResumoResponse(
         LocalDateTime reprovadoEm,
         String mensagem
 ) {
-    public static OrcamentoResumoResponse from(OrcamentoEntity orcamento) {
+    public static OrcamentoResumoResponse from(Orcamento orcamento) {
         return new OrcamentoResumoResponse(
                 orcamento.getId(),
                 orcamento.getTipo(),

@@ -1,7 +1,7 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.application.dto.ordemservico.OrdemServicoCriadaOutput;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 
 import java.time.LocalDateTime;
@@ -29,13 +29,13 @@ public record OrdemServicoResponse(
     }
 
     public static OrdemServicoResponse fromDomain(
-            OrdemServicoEntity ordemServico
+            OrdemServico ordemServico
     ) {
         return fromEntity(ordemServico, null);
     }
 
     private static OrdemServicoResponse fromEntity(
-            OrdemServicoEntity ordemServico,
+            OrdemServico ordemServico,
             String acompanhamentoUrl
     ) {
         return new OrdemServicoResponse(

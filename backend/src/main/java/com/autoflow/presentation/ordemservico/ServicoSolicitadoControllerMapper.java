@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico;
 
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.presentation.ordemservico.request.ServicoSolicitadoRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,7 +19,7 @@ public interface ServicoSolicitadoControllerMapper {
     @Mapping(target = "ordemServico", ignore = true)
     @Mapping(target = "itensNecessarios", ignore = true)
     @Mapping(target = "reparoAdicional", ignore = true)
-    ServicoSolicitadoEntity mapToEntity(ServicoSolicitadoRequest servicoSolicitadoRequest);
+    ServicoSolicitado mapToEntity(ServicoSolicitadoRequest servicoSolicitadoRequest);
 
-    List<ServicoSolicitadoEntity> mapToEntities(List<ServicoSolicitadoRequest> servicosRequest);
+    List<ServicoSolicitado> mapToEntities(List<ServicoSolicitadoRequest> servicosRequest);
 }

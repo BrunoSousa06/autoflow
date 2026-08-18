@@ -1,6 +1,6 @@
 package com.autoflow.infrastructure.persistence.repository.reparoadicional;
 
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;

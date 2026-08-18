@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.*;
+import com.autoflow.application.output.ordemservico.acompanhamento.*;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.AcompanhamentoOrdemServicoResponse;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.HistoricoStatusOsResponse;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.OrcamentoResumoResponse;

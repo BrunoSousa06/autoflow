@@ -3,10 +3,11 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.application.port.in.orcamento.RecusarOrcamentoUseCase;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,17 +26,17 @@ class RecusarOrcamentoUseCaseTest {
     @Mock OrcamentoGateway orcamentoGateway;
     @Mock OrdemServicoGateway ordemServicoGateway;
     @Mock RecusarReparoAdicionalPorOrcamentoUseCase reparoUseCase;
-    @InjectMocks RecusarOrcamentoUseCase useCase;
+    @InjectMocks RecusarOrcamentoUseCaseImpl useCase;
 
     @Test
     void deveRecusarEFinalizarOsQuandoNaoHaReparoAdicional() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
-        OrdemServicoEntity os = osAguardandoAprovacao();
+        Orcamento orcamento = orcamentoDisponivel();
+        OrdemServico os = osAguardandoAprovacao();
         when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(reparoUseCase.executeSeExistir(10L, "Nao quero")).thenReturn(false);
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
 
-        OrcamentoEntity resultado = useCase.execute(orcamento, "Nao quero", "Maria");
+        Orcamento resultado = useCase.execute(orcamento, "Nao quero", "Maria");
 
         assertSame(orcamento, resultado);
         assertEquals(StatusOrcamento.REPROVADO, resultado.getStatus());
@@ -48,7 +49,7 @@ class RecusarOrcamentoUseCaseTest {
 
     @Test
     void naoDeveFinalizarOsQuandoRecusaForDeReparoAdicional() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(reparoUseCase.executeSeExistir(10L, "Motivo")).thenReturn(true);
 
@@ -59,8 +60,8 @@ class RecusarOrcamentoUseCaseTest {
 
     @Test
     void deveAceitarRecusaSemMotivo() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
-        OrdemServicoEntity os = osAguardandoAprovacao();
+        Orcamento orcamento = orcamentoDisponivel();
+        OrdemServico os = osAguardandoAprovacao();
         when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(reparoUseCase.executeSeExistir(10L, null)).thenReturn(false);
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(os));
@@ -73,7 +74,7 @@ class RecusarOrcamentoUseCaseTest {
 
     @Test
     void deveSerIdempotenteQuandoOrcamentoJaEstiverRecusado() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
 
         assertSame(orcamento, useCase.execute(orcamento, "Novo motivo", "Maria"));
@@ -83,7 +84,7 @@ class RecusarOrcamentoUseCaseTest {
 
     @Test
     void deveBloquearRecusaConflitanteDepoisDaAprovacao() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         orcamento.setStatus(StatusOrcamento.APROVADO);
 
         ApplicationException exception = assertThrows(ApplicationException.class,
@@ -95,7 +96,7 @@ class RecusarOrcamentoUseCaseTest {
 
     @Test
     void deveRejeitarMotivoMaiorQueLimiteDaColuna() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         String motivo = "x".repeat(501);
 
         ApplicationException exception = assertThrows(ApplicationException.class,
@@ -106,14 +107,14 @@ class RecusarOrcamentoUseCaseTest {
         verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
     }
 
-    private OrcamentoEntity orcamentoDisponivel() {
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+    private Orcamento orcamentoDisponivel() {
+        Orcamento orcamento = new Orcamento();
         orcamento.setId(10L); orcamento.setNumeroOs("OS-123"); orcamento.setStatus(StatusOrcamento.DISPONIVEL);
         return orcamento;
     }
 
-    private OrdemServicoEntity osAguardandoAprovacao() {
-        OrdemServicoEntity os = new OrdemServicoEntity();
+    private OrdemServico osAguardandoAprovacao() {
+        OrdemServico os = new OrdemServico();
         os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
         return os;
     }

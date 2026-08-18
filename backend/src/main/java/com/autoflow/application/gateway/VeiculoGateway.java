@@ -1,6 +1,7 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.veiculo.*;
+import com.autoflow.application.input.veiculo.*;
+import com.autoflow.application.output.veiculo.*;
 
 import java.util.Optional;
 

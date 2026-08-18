@@ -1,6 +1,7 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.veiculo.*;
+import com.autoflow.application.input.veiculo.*;
+import com.autoflow.application.output.veiculo.*;
 import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;

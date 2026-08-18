@@ -1,23 +1,22 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.servico.PageInput;
-import com.autoflow.application.dto.servico.PageOutput;
-import com.autoflow.application.dto.servico.ServicoInput;
-import com.autoflow.application.dto.servico.ServicoOutput;
+import com.autoflow.application.input.servico.PageInput;
+import com.autoflow.application.output.servico.PageOutput;
+import com.autoflow.domain.servico.Servico;
 
 import java.util.Optional;
 
 public interface ServicoGateway {
 
-    ServicoOutput save(ServicoInput input);
+    Servico save(Servico servico);
 
-    ServicoOutput update(Long id, ServicoInput input);
+    Servico update(Servico servico);
 
-    Optional<ServicoOutput> findById(Long id);
+    Optional<Servico> findById(Long id);
 
     boolean existsByNomeIgnoreCase(String nome);
 
-    PageOutput<ServicoOutput> findAllByAtivoTrue(PageInput page);
+    PageOutput<Servico> findAllByAtivoTrue(PageInput page);
 
     void inativar(Long id);
 

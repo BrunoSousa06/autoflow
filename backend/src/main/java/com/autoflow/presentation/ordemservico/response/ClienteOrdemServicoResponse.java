@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 
 public record ClienteOrdemServicoResponse(
         Long id,
@@ -9,7 +9,7 @@ public record ClienteOrdemServicoResponse(
         String email,
         String telefone
 ) {
-    public static ClienteOrdemServicoResponse fromDomain(OrdemServicoEntity os) {
+    public static ClienteOrdemServicoResponse fromDomain(OrdemServico os) {
         return new ClienteOrdemServicoResponse(
                 os.getCliente().getId(),
                 os.getCliente().getNome(),

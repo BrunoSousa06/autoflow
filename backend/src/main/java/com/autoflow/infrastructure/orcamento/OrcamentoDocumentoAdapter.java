@@ -1,9 +1,9 @@
 package com.autoflow.infrastructure.orcamento;
 
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
-import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
+import com.autoflow.domain.orcamento.OrcamentoItemNecessario;
+import com.autoflow.domain.orcamento.OrcamentoServico;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPTable;
@@ -25,7 +25,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Override
-    public byte[] gerarPdf(OrcamentoEntity orcamento) {
+    public byte[] gerarPdf(Orcamento orcamento) {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -54,7 +54,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
 
     private void adicionarAvisoReparoAdicional(
             Document document,
-            OrcamentoEntity orcamento
+            Orcamento orcamento
     ) throws DocumentException {
         if (!TipoOrcamento.COMPLEMENTAR.equals(orcamento.getTipo())) {
             return;
@@ -99,7 +99,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
 
     private void adicionarDadosOrcamento(
             Document document,
-            OrcamentoEntity orcamento
+            Orcamento orcamento
     ) throws DocumentException {
         Font textoFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
 
@@ -129,7 +129,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
         document.add(espaco);
     }
 
-    private String descricaoTipoOrcamento(OrcamentoEntity orcamento) {
+    private String descricaoTipoOrcamento(Orcamento orcamento) {
         if (TipoOrcamento.COMPLEMENTAR.equals(orcamento.getTipo())) {
             return "Orçamento complementar";
         }
@@ -139,7 +139,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
 
     private void adicionarServicos(
             Document document,
-            java.util.List<OrcamentoServicoEntity> servicos
+            java.util.List<OrcamentoServico> servicos
     ) throws DocumentException {
         Paragraph subtitulo = new Paragraph(
                 "Serviços",
@@ -161,7 +161,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
         tabela.addCell("Descrição");
         tabela.addCell("Valor");
 
-        for (OrcamentoServicoEntity servico : servicos) {
+        for (OrcamentoServico servico : servicos) {
             tabela.addCell(String.valueOf(servico.getNome()));
             tabela.addCell(formatarMoeda(servico.getValor()));
         }
@@ -171,7 +171,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
 
     private void adicionarItens(
             Document document,
-            List<OrcamentoItemNecessarioEntity> itens
+            List<OrcamentoItemNecessario> itens
     ) throws DocumentException {
         Paragraph subtitulo = new Paragraph(
                 "Itens necessários",
@@ -195,7 +195,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
         tabela.addCell("Valor unitário");
         tabela.addCell("Total");
 
-        for (OrcamentoItemNecessarioEntity item : itens) {
+        for (OrcamentoItemNecessario item : itens) {
             tabela.addCell(item.getNome());
             tabela.addCell(String.valueOf(item.getQuantidade()));
             tabela.addCell(formatarMoeda(item.getValorUnitario()));
@@ -207,7 +207,7 @@ public class OrcamentoDocumentoAdapter implements OrcamentoDocumentoGateway {
 
     private void adicionarTotais(
             Document document,
-            OrcamentoEntity orcamento
+            Orcamento orcamento
     ) throws DocumentException {
         Paragraph espaco = new Paragraph(" ");
         espaco.setSpacingBefore(15);

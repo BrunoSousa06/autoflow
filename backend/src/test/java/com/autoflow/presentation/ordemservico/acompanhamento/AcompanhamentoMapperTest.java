@@ -1,7 +1,7 @@
 package com.autoflow.presentation.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
-import com.autoflow.application.dto.ordemservico.acompanhamento.OrcamentoResumoOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.AcompanhamentoOrdemServicoOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.OrcamentoResumoOutput;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import org.junit.jupiter.api.Test;

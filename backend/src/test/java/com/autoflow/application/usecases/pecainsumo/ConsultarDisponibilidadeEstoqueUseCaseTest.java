@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.application.gateway.EstoqueGateway;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -27,7 +27,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveMarcarItemComoDisponivelSemBaixarEstoque() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
         var solicitado = itemSolicitado(1L, 3);
         var estoque = itemEstoque(1L, 5);
         when(gateway.findAllById(List.of(1L))).thenReturn(List.of(estoque));
@@ -44,7 +44,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveConsiderarDisponivelQuandoEstoqueForIgualAoSolicitado() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
         var solicitado = itemSolicitado(1L, 5);
         var estoque = itemEstoque(1L, 5);
         when(gateway.findAllById(List.of(1L))).thenReturn(List.of(estoque));
@@ -61,7 +61,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveMarcarItemComoPendenteQuandoEstoqueForInsuficiente() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
         var solicitado = itemSolicitado(1L, 6);
         var estoque = itemEstoque(1L, 5);
         when(gateway.findAllById(List.of(1L))).thenReturn(List.of(estoque));
@@ -79,7 +79,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarPecaDuplicadaAntesDeConsultarEstoque() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
         var primeiro = itemSolicitado(1L, 2);
         var segundo = itemSolicitado(1L, 3);
         var itensDuplicados = List.of(primeiro, segundo);
@@ -93,7 +93,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveRetornarListaVaziaSemConsultarEstoqueParaEntradaNulaOuVazia() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
 
         assertTrue(useCase.execute(null).isEmpty());
         assertTrue(useCase.execute(List.of()).isEmpty());
@@ -104,7 +104,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveInformarItemInexistenteSemPersistirAlteracoes() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
         when(gateway.findAllById(List.of(9L))).thenReturn(List.of());
         var itens = List.of(itemSolicitado(9L, 1));
 
@@ -117,7 +117,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarQuantidadeNaoPositiva() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
         when(gateway.findAllById(List.of(1L))).thenReturn(List.of(itemEstoque(1L, 5)));
         var itens = List.of(itemSolicitado(1L, 0));
 
@@ -128,8 +128,8 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarItemNuloAntesDeConsultarEstoque() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
-        var itens = java.util.Collections.singletonList((ItemNecessarioEntity) null);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
+        var itens = java.util.Collections.singletonList((ItemNecessario) null);
 
         assertThrows(IllegalArgumentException.class,
                 () -> useCase.execute(itens));
@@ -139,7 +139,7 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarItemSemPecaAntesDeConsultarEstoque() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
         var itens = List.of(itemSolicitado(null, 1));
 
         assertThrows(IllegalArgumentException.class,
@@ -150,8 +150,8 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
 
     @Test
     void deveRejeitarItemSemQuantidadeAntesDeConsultarEstoque() {
-        var useCase = new ConsultarDisponibilidadeEstoqueUseCase(gateway);
-        var item = new ItemNecessarioEntity();
+        var useCase = new ConsultarDisponibilidadeEstoqueUseCaseImpl(gateway);
+        var item = new ItemNecessario();
         item.setPecaInsumoId(1L);
         var itens = List.of(item);
 
@@ -165,8 +165,8 @@ class ConsultarDisponibilidadeEstoqueUseCaseTest {
         verify(gateway, never()).saveAll(any());
     }
 
-    private ItemNecessarioEntity itemSolicitado(Long id, int quantidade) {
-        return ItemNecessarioEntity.criar(
+    private ItemNecessario itemSolicitado(Long id, int quantidade) {
+        return ItemNecessario.criar(
                 id,
                 "Item solicitado",
                 CategoriaPecaInsumo.PECA,

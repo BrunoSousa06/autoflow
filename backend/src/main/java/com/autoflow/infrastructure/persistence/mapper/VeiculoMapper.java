@@ -1,10 +1,10 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
 
-import com.autoflow.application.dto.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoClienteOutput;
-import com.autoflow.application.dto.veiculo.VeiculoInput;
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoClienteOutput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import org.mapstruct.Mapper;

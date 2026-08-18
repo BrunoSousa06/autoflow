@@ -3,10 +3,11 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoAutenticadoUseCase;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,7 +29,7 @@ class ConsultarOrcamentoAutenticadoUseCaseTest {
     private UsuarioGateway usuarioGateway;
 
     @InjectMocks
-    private ConsultarOrcamentoAutenticadoUseCase useCase;
+    private ConsultarOrcamentoAutenticadoUseCaseImpl useCase;
 
     @Test
     void devePermitirClienteConsultarSeuProprioOrcamento() {
@@ -74,14 +75,14 @@ class ConsultarOrcamentoAutenticadoUseCaseTest {
         assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
     }
 
-    private OrcamentoEntity orcamentoDoCliente(String email) {
-        var orcamento = new OrcamentoEntity();
+    private Orcamento orcamentoDoCliente(String email) {
+        var orcamento = new Orcamento();
         orcamento.setCliente(ClienteOrcamentoSnapshot.builder().email(email).build());
         return orcamento;
     }
 
-    private UsuarioEntity usuario(RoleEnum role, String email) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role, String email) {
+        var usuario = new Usuario();
         usuario.setRole(role);
         usuario.setEmail(email);
         return usuario;

@@ -1,2 +1,0 @@
-Method <com.autoflow.domain.ordemservico.OrdemServicoEntity.validaSePodeFinalizarDiagnostico()> calls constructor <org.springframework.web.server.ResponseStatusException.<init>(org.springframework.http.HttpStatusCode, java.lang.String)> in (OrdemServicoEntity.java:139)
-Method <com.autoflow.domain.ordemservico.OrdemServicoEntity.validaSePodeFinalizarDiagnostico()> gets field <org.springframework.http.HttpStatus.BAD_REQUEST> in (OrdemServicoEntity.java:139)

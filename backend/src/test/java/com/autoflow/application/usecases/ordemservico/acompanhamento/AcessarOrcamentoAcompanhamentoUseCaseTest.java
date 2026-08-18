@@ -4,9 +4,10 @@ import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoExce
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoDaOsUseCase;
-import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoDaOsUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCaseImpl;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,14 +35,14 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
     @Mock private TokenAcompanhamentoGateway tokenGateway;
     @Mock private ConsultarOrcamentoDaOsUseCase consultarOrcamentoDaOsUseCase;
     @Mock private DecidirOrcamentoUseCase decidirOrcamentoUseCase;
-    @Mock private OrcamentoEntity orcamento;
+    @Mock private Orcamento orcamento;
 
-    private AcessarOrcamentoAcompanhamentoUseCase useCase;
+    private AcessarOrcamentoAcompanhamentoUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
         var clock = Clock.fixed(Instant.parse("2026-08-01T12:00:00Z"), ZoneOffset.UTC);
-        useCase = new AcessarOrcamentoAcompanhamentoUseCase(
+        useCase = new AcessarOrcamentoAcompanhamentoUseCaseImpl(
                 acompanhamentoGateway, tokenGateway, consultarOrcamentoDaOsUseCase, decidirOrcamentoUseCase, clock);
     }
 

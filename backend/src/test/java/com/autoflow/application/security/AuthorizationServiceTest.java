@@ -1,6 +1,6 @@
 package com.autoflow.application.security;
 
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

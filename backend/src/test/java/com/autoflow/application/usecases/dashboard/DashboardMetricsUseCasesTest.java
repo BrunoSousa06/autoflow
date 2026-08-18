@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.dashboard;
 
 import com.autoflow.application.gateway.MetricsGateway;
-import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
-import com.autoflow.application.usecases.servico.CalcularTempoMedioServicoUseCase;
+import com.autoflow.application.usecases.ordemservico.CalcularTempoMedioOrdemServicoUseCaseImpl;
+import com.autoflow.application.usecases.servico.CalcularTempoMedioServicoUseCaseImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,7 +21,7 @@ class DashboardMetricsUseCasesTest {
         when(metricsGateway.calcularTempoMedioOrdensServico())
                 .thenReturn(new MetricsGateway.TempoMedioOrdemServicoData(5L, 5400.0));
 
-        var resultado = new CalcularTempoMedioOrdemServicoUseCase(metricsGateway).execute();
+        var resultado = new CalcularTempoMedioOrdemServicoUseCaseImpl(metricsGateway).execute();
 
         assertEquals(5L, resultado.quantidadeOrdensFinalizadas());
         assertEquals(5400.0, resultado.tempoMedioSegundos());
@@ -34,7 +34,7 @@ class DashboardMetricsUseCasesTest {
         when(metricsGateway.calcularTempoMedioOrdensServico())
                 .thenReturn(new MetricsGateway.TempoMedioOrdemServicoData(0L, null));
 
-        var resultado = new CalcularTempoMedioOrdemServicoUseCase(metricsGateway).execute();
+        var resultado = new CalcularTempoMedioOrdemServicoUseCaseImpl(metricsGateway).execute();
 
         assertEquals(0L, resultado.quantidadeOrdensFinalizadas());
         assertNull(resultado.tempoMedioSegundos());
@@ -49,7 +49,7 @@ class DashboardMetricsUseCasesTest {
                 new MetricsGateway.TempoMedioServicoData(2L, "Diagnostico", 2L, 7200.0)
         ));
 
-        var resultado = new CalcularTempoMedioServicoUseCase(metricsGateway).execute();
+        var resultado = new CalcularTempoMedioServicoUseCaseImpl(metricsGateway).execute();
 
         assertEquals(2, resultado.size());
         assertEquals(1.5, resultado.getFirst().getTempoMedioMinutos());
@@ -65,7 +65,7 @@ class DashboardMetricsUseCasesTest {
                 new MetricsGateway.TempoMedioServicoData(1L, "Revisao", 0L, null)
         ));
 
-        var resultado = new CalcularTempoMedioServicoUseCase(metricsGateway).execute().getFirst();
+        var resultado = new CalcularTempoMedioServicoUseCaseImpl(metricsGateway).execute().getFirst();
 
         assertNull(resultado.getTempoMedioSegundos());
         assertNull(resultado.getTempoMedioMinutos());

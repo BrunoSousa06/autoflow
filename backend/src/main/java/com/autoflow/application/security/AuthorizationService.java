@@ -1,6 +1,6 @@
 package com.autoflow.application.security;
 
-import com.autoflow.application.dto.veiculo.VeiculoOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

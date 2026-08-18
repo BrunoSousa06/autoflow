@@ -1,6 +1,6 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
+import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 
 public interface TokenAcompanhamentoGateway {
 

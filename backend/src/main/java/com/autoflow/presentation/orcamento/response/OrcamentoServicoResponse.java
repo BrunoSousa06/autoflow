@@ -1,6 +1,6 @@
 package com.autoflow.presentation.orcamento.response;
 
-import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
+import com.autoflow.domain.orcamento.OrcamentoServico;
 
 import java.math.BigDecimal;
 
@@ -9,7 +9,7 @@ public record OrcamentoServicoResponse(
         String nome,
         BigDecimal valor
 ) {
-    public static OrcamentoServicoResponse from(OrcamentoServicoEntity servico) {
+    public static OrcamentoServicoResponse from(OrcamentoServico servico) {
         return new OrcamentoServicoResponse(
                 servico.getServicoId(),
                 servico.getNome(),

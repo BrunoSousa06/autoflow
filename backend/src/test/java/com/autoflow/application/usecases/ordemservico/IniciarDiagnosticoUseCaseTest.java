@@ -4,10 +4,10 @@ import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -17,9 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IniciarDiagnosticoUseCaseTest {
@@ -42,7 +40,7 @@ class IniciarDiagnosticoUseCaseTest {
         var admin = usuario(RoleEnum.ADMIN);
         configurarBusca(os, admin);
 
-        var resultado = new IniciarDiagnosticoUseCase(
+        var resultado = new IniciarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
         ).execute("OS-1", "admin@autoflow.com");
 
@@ -57,29 +55,29 @@ class IniciarDiagnosticoUseCaseTest {
         var mecanico = usuario(RoleEnum.MECANICO);
         configurarBusca(os, mecanico);
 
-        new IniciarDiagnosticoUseCase(
+        new IniciarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
         ).execute("OS-1", "mecanico@autoflow.com");
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
 
-    private void configurarBusca(OrdemServicoEntity os, UsuarioEntity usuario) {
+    private void configurarBusca(OrdemServico os, Usuario usuario) {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(ordemServicoGateway.save(os)).thenReturn(os);
     }
 
-    private OrdemServicoEntity ordemRecebida() {
-        var os = new OrdemServicoEntity();
+    private OrdemServico ordemRecebida() {
+        var os = new OrdemServico();
         os.setId(1L);
         os.setNumeroOs("OS-1");
         os.setStatus(StatusOrdemServico.RECEBIDA);
         return os;
     }
 
-    private UsuarioEntity usuario(RoleEnum role) {
-        var usuario = new UsuarioEntity();
+    private Usuario usuario(RoleEnum role) {
+        var usuario = new Usuario();
         usuario.setEmail(role == RoleEnum.ADMIN ? "admin@autoflow.com" : "mecanico@autoflow.com");
         usuario.setRole(role);
         return usuario;

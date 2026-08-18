@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.orcamento;
 
 import com.autoflow.domain.orcamento.*;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 @Component
 public class OrcamentoFactory {
 
-    public OrcamentoEntity criarPrincipalDisponivel(OrdemServicoEntity ordemServico, int versao, LocalDateTime now) {
-        List<OrcamentoServicoEntity> orcamentoServicoEntities = ordemServico.getServicosSolicitados().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
+    public Orcamento criarPrincipalDisponivel(OrdemServico ordemServico, int versao, LocalDateTime now) {
+        List<OrcamentoServico> orcamentoServicoEntities = ordemServico.getServicosSolicitados().stream().map(servicoSolicitadoEntity -> OrcamentoServico.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
-        List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
+        List<OrcamentoItemNecessario> itemNecessarioEntities =
                 ordemServico.getServicosSolicitados().stream()
                         .flatMap(servico -> servico.getItensNecessarios().stream()
-                                .map(item -> OrcamentoItemNecessarioEntity.builder()
+                                .map(item -> OrcamentoItemNecessario.builder()
                                         .servicoOsId(servico.getId())
                                         .tipo(item.getTipo())
                                         .pecaInsumoId(item.getPecaInsumoId())
@@ -37,7 +37,7 @@ public class OrcamentoFactory {
         BigDecimal totalItens = totalItens(itemNecessarioEntities);
         BigDecimal totalGeral = totalGeral(totalServicos, totalItens);
 
-        return OrcamentoEntity.builder()
+        return Orcamento.builder()
                 .ordemServicoId(ordemServico.getId())
                 .numeroOs(ordemServico.getNumeroOs())
                 .tipo(TipoOrcamento.PRINCIPAL).versao(versao)
@@ -54,13 +54,13 @@ public class OrcamentoFactory {
                 .build();
     }
 
-    public OrcamentoEntity criarAdicionalDisponivel(OrdemServicoEntity ordemServico, ReparoAdicionalEntity reparoSalvo, int versao, LocalDateTime now) {
-        List<OrcamentoServicoEntity> orcamentoServicoEntities = reparoSalvo.getServicos().stream().map(servicoSolicitadoEntity -> OrcamentoServicoEntity.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
+    public Orcamento criarAdicionalDisponivel(OrdemServico ordemServico, ReparoAdicional reparoSalvo, int versao, LocalDateTime now) {
+        List<OrcamentoServico> orcamentoServicoEntities = reparoSalvo.getServicos().stream().map(servicoSolicitadoEntity -> OrcamentoServico.builder().valor(servicoSolicitadoEntity.getValor()).nome(servicoSolicitadoEntity.getNome()).servicoId(servicoSolicitadoEntity.getServicoId()).build()).collect(Collectors.toCollection(ArrayList::new));
 
-        List<OrcamentoItemNecessarioEntity> itemNecessarioEntities =
+        List<OrcamentoItemNecessario> itemNecessarioEntities =
                 reparoSalvo.getServicos().stream()
                         .flatMap(servico -> servico.getItensNecessarios().stream()
-                                .map(item -> OrcamentoItemNecessarioEntity.builder()
+                                .map(item -> OrcamentoItemNecessario.builder()
                                         .servicoOsId(servico.getId())
                                         .tipo(item.getTipo())
                                         .pecaInsumoId(item.getPecaInsumoId())
@@ -75,7 +75,7 @@ public class OrcamentoFactory {
         BigDecimal totalItens = totalItens(itemNecessarioEntities);
         BigDecimal totalGeral = totalGeral(totalServicos, totalItens);
 
-        return OrcamentoEntity.builder()
+        return Orcamento.builder()
                 .ordemServicoId(ordemServico.getId())
                 .numeroOs(ordemServico.getNumeroOs())
                 .tipo(TipoOrcamento.COMPLEMENTAR).versao(versao)
@@ -92,27 +92,27 @@ public class OrcamentoFactory {
                 .build();
     }
 
-    public OrcamentoEntity criarPrincipalConsolidadoDisponivel(
-            OrdemServicoEntity ordemServico,
-            ReparoAdicionalEntity reparo,
+    public Orcamento criarPrincipalConsolidadoDisponivel(
+            OrdemServico ordemServico,
+            ReparoAdicional reparo,
             int versao,
             LocalDateTime now
     ) {
-        List<ServicoSolicitadoEntity> servicosConsolidados = new ArrayList<>();
+        List<ServicoSolicitado> servicosConsolidados = new ArrayList<>();
         servicosConsolidados.addAll(ordemServico.getServicosSolicitados());
         servicosConsolidados.addAll(reparo.getServicos());
 
-        List<OrcamentoServicoEntity> servicos = servicosConsolidados.stream()
-                .map(servico -> OrcamentoServicoEntity.builder()
+        List<OrcamentoServico> servicos = servicosConsolidados.stream()
+                .map(servico -> OrcamentoServico.builder()
                         .servicoId(servico.getServicoId())
                         .nome(servico.getNome())
                         .valor(servico.getValor())
                         .build())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        List<OrcamentoItemNecessarioEntity> itens = servicosConsolidados.stream()
+        List<OrcamentoItemNecessario> itens = servicosConsolidados.stream()
                 .flatMap(servico -> servico.getItensNecessarios().stream()
-                        .map(item -> OrcamentoItemNecessarioEntity.builder()
+                        .map(item -> OrcamentoItemNecessario.builder()
                                 .servicoOsId(servico.getId())
                                 .tipo(item.getTipo())
                                 .pecaInsumoId(item.getPecaInsumoId())
@@ -126,7 +126,7 @@ public class OrcamentoFactory {
         BigDecimal totalServicos = totalServicos(servicos);
         BigDecimal totalItens = totalItens(itens);
 
-        return OrcamentoEntity.builder()
+        return Orcamento.builder()
                 .ordemServicoId(ordemServico.getId())
                 .tipo(TipoOrcamento.PRINCIPAL)
                 .versao(versao)
@@ -148,18 +148,18 @@ public class OrcamentoFactory {
         return totalServicos.add(totalItens);
     }
 
-    private BigDecimal totalServicos(List<OrcamentoServicoEntity> servicos) {
+    private BigDecimal totalServicos(List<OrcamentoServico> servicos) {
         if (servicos == null || servicos.isEmpty()) return BigDecimal.ZERO;
         return servicos.stream()
-                .map(OrcamentoServicoEntity::getValor)
+                .map(OrcamentoServico::getValor)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal totalItens(List<OrcamentoItemNecessarioEntity> itens) {
+    private BigDecimal totalItens(List<OrcamentoItemNecessario> itens) {
         if (itens == null || itens.isEmpty()) return BigDecimal.ZERO;
         return itens.stream()
-                .map(OrcamentoItemNecessarioEntity::getValorTotal)
+                .map(OrcamentoItemNecessario::getValorTotal)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }

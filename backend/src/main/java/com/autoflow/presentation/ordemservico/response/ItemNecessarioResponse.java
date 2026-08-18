@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -19,7 +19,7 @@ public record ItemNecessarioResponse(
         Integer quantidadeDisponivel,
         String mensagemStatus
 ) {
-    public static ItemNecessarioResponse fromDomain(ItemNecessarioEntity item) {
+    public static ItemNecessarioResponse fromDomain(ItemNecessario item) {
         return new ItemNecessarioResponse(
                 item.getPecaInsumoId(),
                 item.getNome(),

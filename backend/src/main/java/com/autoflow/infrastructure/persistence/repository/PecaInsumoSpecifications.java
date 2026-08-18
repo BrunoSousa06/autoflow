@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.persistence.repository;
 
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class PecaInsumoSpecifications {

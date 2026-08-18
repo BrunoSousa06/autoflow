@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.request;
 
-import com.autoflow.config.validator.CpfCnpj;
+import com.autoflow.presentation.validation.CpfCnpj;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

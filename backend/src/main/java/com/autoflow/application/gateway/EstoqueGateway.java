@@ -1,6 +1,6 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
 
 import java.util.List;
 

@@ -1,9 +1,13 @@
 package com.autoflow.presentation.pecainsumo;
 
-import com.autoflow.application.dto.PageQuery;
-import com.autoflow.application.dto.pecainsumo.PecaInsumoInput;
-import com.autoflow.application.dto.pecainsumo.PecaInsumoOutput;
-import com.autoflow.application.usecases.pecainsumo.*;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
+import com.autoflow.application.port.in.pecainsumo.AtualizarPecaInsumoUseCase;
+import com.autoflow.application.port.in.pecainsumo.BuscarPecaInsumoPorIdUseCase;
+import com.autoflow.application.port.in.pecainsumo.CadastrarPecaInsumoUseCase;
+import com.autoflow.application.port.in.pecainsumo.DeletarPecaInsumoUseCase;
+import com.autoflow.application.port.in.pecainsumo.ListarPecaInsumoPaginadoUseCase;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import com.autoflow.presentation.pecainsumo.request.PecaInsumoRequest;
 import com.autoflow.presentation.pecainsumo.response.PecaInsumoResponse;

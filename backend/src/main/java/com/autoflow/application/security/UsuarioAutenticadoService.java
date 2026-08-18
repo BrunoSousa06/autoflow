@@ -1,6 +1,6 @@
 package com.autoflow.application.security;
 
-import com.autoflow.application.dto.security.CurrentUser;
+import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.domain.usuario.RoleEnum;

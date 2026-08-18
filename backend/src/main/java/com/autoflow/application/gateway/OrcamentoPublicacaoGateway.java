@@ -1,7 +1,7 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
+import com.autoflow.domain.orcamento.Orcamento;
 
 public interface OrcamentoPublicacaoGateway {
 
@@ -11,5 +11,5 @@ public interface OrcamentoPublicacaoGateway {
         return new OrcamentoPublicacao(publicar(orcamentoId), null);
     }
 
-    boolean validarToken(OrcamentoEntity orcamento, String token);
+    boolean validarToken(Orcamento orcamento, String token);
 }

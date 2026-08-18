@@ -1,15 +1,15 @@
 package com.autoflow.application.usecases.orcamento;
 
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.cliente.Cliente;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.ItemNecessarioEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
-import com.autoflow.domain.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicionalEntity;
+import com.autoflow.domain.ordemservico.ItemNecessario;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
+import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.domain.ordemservico.Veiculo;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -25,15 +25,15 @@ class OrcamentoFactoryTest {
 
     @Test
     void deveGerarOrcamentoPrincipalComTotais() {
-        ClienteEntity cliente = criarCliente();
-        VeiculoEntity veiculo = criarVeiculo(cliente);
-        ServicoSolicitadoEntity servico1 = criarServico(1L, 101L, "S1", new BigDecimal("100.00"));
+        Cliente cliente = criarCliente();
+        Veiculo veiculo = criarVeiculo(cliente);
+        ServicoSolicitado servico1 = criarServico(1L, 101L, "S1", new BigDecimal("100.00"));
         servico1.registrarItensNecessarios(List.of(criarItem(5L, "Peca", new BigDecimal("10.00"), 3)));
-        ServicoSolicitadoEntity servico2 = criarServico(2L, 102L, "S2", new BigDecimal("50.00"));
-        OrdemServicoEntity os = criarOrdemServico(cliente, veiculo, List.of(servico1, servico2));
+        ServicoSolicitado servico2 = criarServico(2L, 102L, "S2", new BigDecimal("50.00"));
+        OrdemServico os = criarOrdemServico(cliente, veiculo, List.of(servico1, servico2));
         LocalDateTime now = LocalDateTime.of(2026, 5, 31, 10, 0);
 
-        OrcamentoEntity orcamento = factory.criarPrincipalDisponivel(os, 1, now);
+        Orcamento orcamento = factory.criarPrincipalDisponivel(os, 1, now);
 
         assertEquals(TipoOrcamento.PRINCIPAL, orcamento.getTipo());
         assertEquals(StatusOrcamento.DISPONIVEL, orcamento.getStatus());
@@ -45,10 +45,10 @@ class OrcamentoFactoryTest {
 
     @Test
     void deveGerarOrcamentoComTotaisZeradosQuandoNaoHaServicos() {
-        ClienteEntity cliente = criarCliente();
-        OrdemServicoEntity os = criarOrdemServico(cliente, criarVeiculo(cliente), List.of());
+        Cliente cliente = criarCliente();
+        OrdemServico os = criarOrdemServico(cliente, criarVeiculo(cliente), List.of());
 
-        OrcamentoEntity orcamento = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.now());
+        Orcamento orcamento = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.now());
 
         assertEquals(BigDecimal.ZERO, orcamento.getTotalServicos());
         assertEquals(BigDecimal.ZERO, orcamento.getTotalItens());
@@ -57,14 +57,14 @@ class OrcamentoFactoryTest {
 
     @Test
     void deveGerarOrcamentoAdicionalComServicosDoReparo() {
-        ClienteEntity cliente = criarCliente();
-        VeiculoEntity veiculo = criarVeiculo(cliente);
-        OrdemServicoEntity os = criarOrdemServico(cliente, veiculo, List.of());
-        ServicoSolicitadoEntity adicional = criarServico(2L, 202L, "Servico adicional", new BigDecimal("80.00"));
+        Cliente cliente = criarCliente();
+        Veiculo veiculo = criarVeiculo(cliente);
+        OrdemServico os = criarOrdemServico(cliente, veiculo, List.of());
+        ServicoSolicitado adicional = criarServico(2L, 202L, "Servico adicional", new BigDecimal("80.00"));
         adicional.registrarItensNecessarios(List.of(criarItem(7L, "Peca adicional", new BigDecimal("15.00"), 2)));
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(adicional));
+        ReparoAdicional reparo = ReparoAdicional.criar("OS-123", 20L, List.of(adicional));
 
-        OrcamentoEntity orcamento = factory.criarAdicionalDisponivel(os, reparo, 3, LocalDateTime.now());
+        Orcamento orcamento = factory.criarAdicionalDisponivel(os, reparo, 3, LocalDateTime.now());
 
         assertEquals(TipoOrcamento.COMPLEMENTAR, orcamento.getTipo());
         assertEquals(new BigDecimal("80.00"), orcamento.getTotalServicos());
@@ -74,16 +74,16 @@ class OrcamentoFactoryTest {
 
     @Test
     void deveGerarOrcamentoPrincipalConsolidadoComSnapshots() {
-        ClienteEntity cliente = criarCliente();
-        VeiculoEntity veiculo = criarVeiculo(cliente);
-        ServicoSolicitadoEntity principal = criarServico(1L, 101L, "Servico original", new BigDecimal("100.00"));
+        Cliente cliente = criarCliente();
+        Veiculo veiculo = criarVeiculo(cliente);
+        ServicoSolicitado principal = criarServico(1L, 101L, "Servico original", new BigDecimal("100.00"));
         principal.registrarItensNecessarios(List.of(criarItem(5L, "Peca original", new BigDecimal("10.00"), 2)));
-        OrdemServicoEntity os = criarOrdemServico(cliente, veiculo, List.of(principal));
-        ServicoSolicitadoEntity adicional = criarServico(2L, 202L, "Servico adicional", new BigDecimal("80.00"));
+        OrdemServico os = criarOrdemServico(cliente, veiculo, List.of(principal));
+        ServicoSolicitado adicional = criarServico(2L, 202L, "Servico adicional", new BigDecimal("80.00"));
         adicional.registrarItensNecessarios(List.of(criarItem(7L, "Peca adicional", new BigDecimal("15.00"), 3)));
-        ReparoAdicionalEntity reparo = ReparoAdicionalEntity.criar("OS-123", 20L, List.of(adicional));
+        ReparoAdicional reparo = ReparoAdicional.criar("OS-123", 20L, List.of(adicional));
 
-        OrcamentoEntity orcamento = factory.criarPrincipalConsolidadoDisponivel(os, reparo, 4, LocalDateTime.now());
+        Orcamento orcamento = factory.criarPrincipalConsolidadoDisponivel(os, reparo, 4, LocalDateTime.now());
 
         assertEquals(2, orcamento.getServicos().size());
         assertEquals(2, orcamento.getItens().size());
@@ -94,38 +94,29 @@ class OrcamentoFactoryTest {
         assertNotNull(orcamento.getVeiculo());
     }
 
-    private ClienteEntity criarCliente() {
-        ClienteEntity cliente = new ClienteEntity();
-        cliente.setId(1L);
-        cliente.setNome("Cliente");
-        cliente.setCpfCnpj("12345678901");
-        cliente.setEmail("cliente@exemplo.com");
-        cliente.setTelefone("11999999999");
-        return cliente;
+    private Cliente criarCliente() {
+        return Cliente.reconstituir(1L, "Cliente", "12345678901", "11999999999", "cliente@exemplo.com");
     }
 
-    private VeiculoEntity criarVeiculo(ClienteEntity cliente) {
-        VeiculoEntity veiculo = new VeiculoEntity();
-        veiculo.setId(10L);
-        veiculo.setCliente(cliente);
-        return veiculo;
+    private Veiculo criarVeiculo(Cliente cliente) {
+        return new Veiculo(10L, "ABC1D23", "Honda", "Civic", 2020);
     }
 
-    private OrdemServicoEntity criarOrdemServico(ClienteEntity cliente, VeiculoEntity veiculo, List<ServicoSolicitadoEntity> servicos) {
-        OrdemServicoEntity os = OrdemServicoEntity.criar(cliente, veiculo);
+    private OrdemServico criarOrdemServico(Cliente cliente, Veiculo veiculo, List<ServicoSolicitado> servicos) {
+        OrdemServico os = OrdemServico.criar(cliente, veiculo);
         os.setId(99L);
         os.setNumeroOs("OS-123");
         os.adicionarServicosSolicitados(servicos);
         return os;
     }
 
-    private ServicoSolicitadoEntity criarServico(Long servicoId, Long id, String nome, BigDecimal valor) {
-        ServicoSolicitadoEntity servico = new ServicoSolicitadoEntity(servicoId, nome, valor);
+    private ServicoSolicitado criarServico(Long servicoId, Long id, String nome, BigDecimal valor) {
+        ServicoSolicitado servico = new ServicoSolicitado(servicoId, nome, valor);
         servico.setId(id);
         return servico;
     }
 
-    private ItemNecessarioEntity criarItem(Long pecaId, String nome, BigDecimal valorUnitario, int quantidade) {
-        return ItemNecessarioEntity.criar(pecaId, nome, CategoriaPecaInsumo.PECA, valorUnitario, quantidade, null);
+    private ItemNecessario criarItem(Long pecaId, String nome, BigDecimal valorUnitario, int quantidade) {
+        return ItemNecessario.criar(pecaId, nome, CategoriaPecaInsumo.PECA, valorUnitario, quantidade, null);
     }
 }

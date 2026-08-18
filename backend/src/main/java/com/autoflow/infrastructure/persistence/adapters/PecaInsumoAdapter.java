@@ -1,12 +1,15 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.dto.PageQuery;
-import com.autoflow.application.dto.PageResult;
-import com.autoflow.application.dto.pecainsumo.EstoqueItemOutput;
-import com.autoflow.application.dto.pecainsumo.PecaInsumoFiltro;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.output.PageResult;
+import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
+import com.autoflow.application.input.pecainsumo.PecaInsumoFiltro;
+import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.gateway.PecaInsumoGateway;
-import com.autoflow.domain.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.entity.pecainsumo.PecaInsumoEntity;
+import com.autoflow.infrastructure.persistence.mapper.PecaInsumoPersistenceMapper;
 import com.autoflow.infrastructure.persistence.repository.PecaInsumoRepository;
 import com.autoflow.infrastructure.persistence.repository.PecaInsumoSpecifications;
 import lombok.RequiredArgsConstructor;
@@ -26,33 +29,42 @@ import java.util.stream.Collectors;
 public class PecaInsumoAdapter implements PecaInsumoGateway, EstoqueGateway {
 
     private final PecaInsumoRepository pecaInsumoRepository;
+    private final PecaInsumoPersistenceMapper mapper;
 
     @Override
-    public Optional<PecaInsumoEntity> findById(Long id) {
-        return pecaInsumoRepository.findById(id);
+    public Optional<PecaInsumoOutput> findById(Long id) {
+        return pecaInsumoRepository.findById(id).map(mapper::toOutput);
     }
 
     @Override
-    public Optional<PecaInsumoEntity> findByNomeIgnoreCase(String nome) {
-        return pecaInsumoRepository.findByNomeIgnoreCase(nome);
+    public Optional<PecaInsumoOutput> findByNomeIgnoreCase(String nome) {
+        return pecaInsumoRepository.findByNomeIgnoreCase(nome).map(mapper::toOutput);
     }
 
     @Override
-    public PecaInsumoEntity save(PecaInsumoEntity pecaInsumoEntity) {
-        return pecaInsumoRepository.save(pecaInsumoEntity);
+    public PecaInsumoOutput save(PecaInsumoInput input) {
+        return mapper.toOutput(pecaInsumoRepository.save(mapper.toEntity(input)));
     }
 
     @Override
-    public List<PecaInsumoEntity> findAll() {
-        return pecaInsumoRepository.findAll();
+    public PecaInsumoOutput update(Long id, PecaInsumoInput input) {
+        PecaInsumoEntity entity = pecaInsumoRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Peça/Insumo não encontrado: " + id));
+        mapper.updateEntity(input, entity);
+        return mapper.toOutput(pecaInsumoRepository.save(entity));
     }
 
     @Override
-    public PageResult<PecaInsumoEntity> findAll(PecaInsumoFiltro filtro, PageQuery pageQuery) {
+    public List<PecaInsumoOutput> findAll() {
+        return pecaInsumoRepository.findAll().stream().map(mapper::toOutput).toList();
+    }
+
+    @Override
+    public PageResult<PecaInsumoOutput> findAll(PecaInsumoFiltro filtro, PageQuery pageQuery) {
         Page<PecaInsumoEntity> page = pecaInsumoRepository.findAll(
                 PecaInsumoSpecifications.comFiltros(filtro.nome(), filtro.tipo()),
                 PageRequest.of(pageQuery.page(), pageQuery.size(), Sort.by("nome").ascending()));
-        return new PageResult<>(page.getContent(), page.getTotalElements(),
+        return new PageResult<>(page.getContent().stream().map(mapper::toOutput).toList(), page.getTotalElements(),
                 pageQuery.page(), pageQuery.size());
     }
 

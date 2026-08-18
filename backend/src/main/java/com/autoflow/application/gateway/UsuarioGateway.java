@@ -1,23 +1,23 @@
 package com.autoflow.application.gateway;
 
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
+import com.autoflow.domain.usuario.Usuario;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface UsuarioGateway {
 
-    List<UsuarioEntity> findAll();
+    List<Usuario> findAll();
 
-    List<UsuarioEntity> findByRole(RoleEnum roleEnum);
+    List<Usuario> findByRole(RoleEnum roleEnum);
 
-    Optional<UsuarioEntity> findById(Long mecanicoId);
+    Optional<Usuario> findById(Long mecanicoId);
 
-    Optional<UsuarioEntity> findByEmail(String email);
+    Optional<Usuario> findByEmail(String email);
 
     boolean existsByEmail(String email);
 
-    UsuarioEntity save(UsuarioEntity usuario);
+    Usuario save(Usuario usuario);
 
 }

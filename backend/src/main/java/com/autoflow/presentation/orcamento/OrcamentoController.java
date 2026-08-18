@@ -1,11 +1,11 @@
 package com.autoflow.presentation.orcamento;
 
-import com.autoflow.application.dto.orcamento.OrcamentoFiltro;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentoAutenticadoUseCase;
-import com.autoflow.application.usecases.orcamento.ConsultarOrcamentosUseCase;
-import com.autoflow.application.usecases.orcamento.DecidirOrcamentoUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoAutenticadoUseCase;
+import com.autoflow.application.port.in.orcamento.ConsultarOrcamentosUseCase;
+import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.presentation.orcamento.request.RecusarOrcamentoRequest;
@@ -131,7 +131,7 @@ public class OrcamentoController {
             @PathVariable Long orcamentoId,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        OrcamentoEntity orcamento = consultarOrcamentoAutenticadoUseCase.execute(orcamentoId, userDetails.getUsername());
+        Orcamento orcamento = consultarOrcamentoAutenticadoUseCase.execute(orcamentoId, userDetails.getUsername());
         byte[] pdf = orcamentoDocumentoGateway.gerarPdf(orcamento);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)

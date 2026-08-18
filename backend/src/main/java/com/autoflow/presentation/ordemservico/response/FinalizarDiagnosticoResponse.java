@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.application.dto.ordemservico.FinalizarDiagnosticoOutput;
+import com.autoflow.application.output.ordemservico.FinalizarDiagnosticoOutput;
 
 public record FinalizarDiagnosticoResponse(OrdemServicoResponse ordemServico, Long orcamentoId, String publicUrl) {
 

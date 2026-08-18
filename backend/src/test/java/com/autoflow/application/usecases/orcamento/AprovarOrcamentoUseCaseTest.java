@@ -3,10 +3,11 @@ package com.autoflow.application.usecases.orcamento;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,17 +26,17 @@ class AprovarOrcamentoUseCaseTest {
     @Mock OrcamentoGateway orcamentoGateway;
     @Mock OrdemServicoGateway ordemServicoGateway;
     @Mock AprovarReparoAdicionalPorOrcamentoUseCase reparoUseCase;
-    @InjectMocks AprovarOrcamentoUseCase useCase;
+    @InjectMocks AprovarOrcamentoUseCaseImpl useCase;
 
     @Test
     void deveAprovarEIniciarOsQuandoNaoHaReparoAdicional() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
-        OrdemServicoEntity os = osAguardandoAprovacao();
+        Orcamento orcamento = orcamentoDisponivel();
+        OrdemServico os = osAguardandoAprovacao();
         when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(reparoUseCase.executeSeExistir(10L)).thenReturn(false);
         when(ordemServicoGateway.findById(1L)).thenReturn(Optional.of(os));
 
-        OrcamentoEntity resultado = useCase.execute(orcamento, "Maria");
+        Orcamento resultado = useCase.execute(orcamento, "Maria");
 
         assertSame(orcamento, resultado);
         assertEquals(StatusOrcamento.APROVADO, resultado.getStatus());
@@ -47,7 +48,7 @@ class AprovarOrcamentoUseCaseTest {
 
     @Test
     void naoDeveIniciarOsQuandoAprovacaoForDeReparoAdicional() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(reparoUseCase.executeSeExistir(10L)).thenReturn(true);
 
@@ -58,7 +59,7 @@ class AprovarOrcamentoUseCaseTest {
 
     @Test
     void deveFalharParaStatusNaoDisponivel() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         orcamento.setStatus(StatusOrcamento.SUBSTITUIDO);
 
         ApplicationException exception = assertThrows(ApplicationException.class,
@@ -70,7 +71,7 @@ class AprovarOrcamentoUseCaseTest {
 
     @Test
     void deveSerIdempotenteQuandoOrcamentoJaEstiverAprovado() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         orcamento.setStatus(StatusOrcamento.APROVADO);
 
         assertSame(orcamento, useCase.execute(orcamento, "Maria"));
@@ -80,7 +81,7 @@ class AprovarOrcamentoUseCaseTest {
 
     @Test
     void deveBloquearAprovacaoConflitanteDepoisDaRecusa() {
-        OrcamentoEntity orcamento = orcamentoDisponivel();
+        Orcamento orcamento = orcamentoDisponivel();
         orcamento.setStatus(StatusOrcamento.REPROVADO);
 
         ApplicationException exception = assertThrows(ApplicationException.class,
@@ -90,14 +91,14 @@ class AprovarOrcamentoUseCaseTest {
         verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
     }
 
-    private OrcamentoEntity orcamentoDisponivel() {
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+    private Orcamento orcamentoDisponivel() {
+        Orcamento orcamento = new Orcamento();
         orcamento.setId(10L); orcamento.setOrdemServicoId(1L); orcamento.setStatus(StatusOrcamento.DISPONIVEL);
         return orcamento;
     }
 
-    private OrdemServicoEntity osAguardandoAprovacao() {
-        OrdemServicoEntity os = new OrdemServicoEntity();
+    private OrdemServico osAguardandoAprovacao() {
+        OrdemServico os = new OrdemServico();
         os.setId(1L); os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
         return os;
     }

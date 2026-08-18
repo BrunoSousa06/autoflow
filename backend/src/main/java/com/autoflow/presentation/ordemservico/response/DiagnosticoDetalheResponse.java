@@ -1,6 +1,6 @@
 package com.autoflow.presentation.ordemservico.response;
 
-import com.autoflow.domain.ordemservico.DiagnosticoEntity;
+import com.autoflow.domain.ordemservico.Diagnostico;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +12,7 @@ public record DiagnosticoDetalheResponse(
         LocalDateTime iniciadoEm,
         LocalDateTime concluidoEm
 ) {
-    public static DiagnosticoDetalheResponse fromDomain(DiagnosticoEntity diagnostico) {
+    public static DiagnosticoDetalheResponse fromDomain(Diagnostico diagnostico) {
         if (diagnostico == null) return null;
         var mecanico = diagnostico.getMecanico();
         return new DiagnosticoDetalheResponse(

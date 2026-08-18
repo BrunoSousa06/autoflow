@@ -1,7 +1,7 @@
 package com.autoflow.presentation.acompanhamento;
 
-import com.autoflow.application.dto.ordemservico.acompanhamento.AcompanhamentoPublicoOutput;
-import com.autoflow.application.usecases.ordemservico.acompanhamento.ConsultarAcompanhamentoPublicoUseCase;
+import com.autoflow.application.output.ordemservico.acompanhamento.AcompanhamentoPublicoOutput;
+import com.autoflow.application.port.in.ordemservico.acompanhamento.ConsultarAcompanhamentoPublicoUseCase;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.presentation.ordemservico.acompanhamento.PublicAcompanhamentoController;
 import org.junit.jupiter.api.Test;

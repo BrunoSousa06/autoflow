@@ -1,15 +1,16 @@
 package com.autoflow.infrastructure.orcamento;
 
-import com.autoflow.application.dto.orcamento.OrcamentoPublicacao;
+import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.InternalException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
@@ -39,13 +40,15 @@ public class OrcamentoPublicacaoAdapter implements OrcamentoPublicacaoGateway {
     private String frontendPublicBaseUrl;
 
     @Override
+    @Transactional
     public String publicar(Long orcamentoId) {
         return publicarComLinks(orcamentoId).urlPdf();
     }
 
     @Override
+    @Transactional
     public OrcamentoPublicacao publicarComLinks(Long orcamentoId) {
-        OrcamentoEntity orcamento = orcamentoGateway.findById(orcamentoId)
+        Orcamento orcamento = orcamentoGateway.findById(orcamentoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orçamento não encontrado."));
 
         if (orcamento.getStatus() != StatusOrcamento.DISPONIVEL) {
@@ -55,11 +58,8 @@ public class OrcamentoPublicacaoAdapter implements OrcamentoPublicacaoGateway {
         String token = gerarTokenUrl();
         String hash = sha256Hex(token + ":" + tokenSecret);
 
-        orcamento.setPublicTokenHash(hash);
-
         LocalDateTime agora = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
-        orcamento.setPublicTokenExpiraEm(agora.plusDays(tokenExpirationDays));
-        if (orcamento.getDisponibilizadoEm() == null) orcamento.setDisponibilizadoEm(agora);
+        orcamento.publicar(hash, agora.plusDays(tokenExpirationDays), agora);
 
         orcamentoGateway.save(orcamento);
 
@@ -70,7 +70,7 @@ public class OrcamentoPublicacaoAdapter implements OrcamentoPublicacaoGateway {
     }
 
     @Override
-    public boolean validarToken(OrcamentoEntity orcamento, String token) {
+    public boolean validarToken(Orcamento orcamento, String token) {
         if (token == null || orcamento.getPublicTokenHash() == null
                 || orcamento.getPublicTokenExpiraEm() == null) return false;
 

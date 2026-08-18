@@ -1,15 +1,15 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.dto.veiculo.*;
+import com.autoflow.application.input.veiculo.*;
+import com.autoflow.application.output.veiculo.*;
 import com.autoflow.application.exception.*;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.gateway.VeiculoGateway;
 import com.autoflow.application.security.AuthorizationService;
 import com.autoflow.application.security.ClienteAutenticadoService;
-import com.autoflow.application.usecases.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
-import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
-import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.application.usecases.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCaseImpl;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
+import com.autoflow.application.output.cliente.ClienteOutput;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,19 +29,19 @@ import static org.mockito.Mockito.*;
 class VeiculoUseCasesTest {
 
     @InjectMocks
-    private CadastrarVeiculoUseCase cadastrarVeiculoUseCase;
+    private CadastrarVeiculoUseCaseImpl cadastrarVeiculoUseCase;
     @InjectMocks
-    private BuscarVeiculoUseCase buscarVeiculoUseCase;
+    private BuscarVeiculoUseCaseImpl buscarVeiculoUseCase;
     @InjectMocks
-    private ListarVeiculosUseCase listarVeiculosUseCase;
+    private ListarVeiculosUseCaseImpl listarVeiculosUseCase;
     @InjectMocks
-    private AtualizarVeiculoUseCase atualizarVeiculoUseCase;
+    private AtualizarVeiculoUseCaseImpl atualizarVeiculoUseCase;
     @InjectMocks
-    private DeletarVeiculoUseCase deletarVeiculoUseCase;
+    private DeletarVeiculoUseCaseImpl deletarVeiculoUseCase;
     @InjectMocks
-    private BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculoUseCase;
+    private BuscarOuCadastrarVeiculoUseCaseImpl buscarOuCadastrarVeiculoUseCase;
     @InjectMocks
-    private BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculoService;
+    private BuscarOuCadastrarVeiculoForOrdemServicoUseCaseImpl buscarOuCadastrarVeiculoService;
 
     @Mock
     private VeiculoGateway veiculoGateway;
@@ -257,27 +257,20 @@ class VeiculoUseCasesTest {
 
     @Test
     void deveRetornarVeiculoExistenteParaOS() {
-        ClienteEntity cliente = new ClienteEntity();
-        cliente.setId(10L);
-        VeiculoEntity veiculo = new VeiculoEntity();
-        veiculo.setCliente(cliente);
-        veiculo.setPlaca("ABC1234");
+        ClienteOutput cliente = ClienteOutput.builder().id(10L).nome("Cliente").cpfCnpj("123").email("cliente@email.com").build();
+        VeiculoOutput veiculo = new VeiculoOutput(1L, "ABC1234", "Honda", "Civic", 2020, 10L);
         VeiculoOrdemServicoInput input = new VeiculoOrdemServicoInput("abc-1234", null, null, null);
-        when(veiculoRepository.findByPlaca("ABC1234")).thenReturn(Optional.of(veiculo));
+        when(veiculoGateway.findByPlaca("ABC1234")).thenReturn(Optional.of(veiculo));
 
         assertSame(veiculo, buscarOuCadastrarVeiculoService.execute(cliente, input));
-        verify(veiculoRepository, never()).save(any());
+        verify(veiculoGateway, never()).save(any(VeiculoOrdemServicoInput.class), any());
     }
 
     @Test
     void deveRecusarPlacaDeOutroClienteNaOS() {
-        ClienteEntity cliente = new ClienteEntity();
-        cliente.setId(10L);
-        ClienteEntity outroCliente = new ClienteEntity();
-        outroCliente.setId(20L);
-        VeiculoEntity veiculo = new VeiculoEntity();
-        veiculo.setCliente(outroCliente);
-        when(veiculoRepository.findByPlaca("ABC1234")).thenReturn(Optional.of(veiculo));
+        ClienteOutput cliente = ClienteOutput.builder().id(10L).nome("Cliente").cpfCnpj("123").email("cliente@email.com").build();
+        VeiculoOutput veiculo = new VeiculoOutput(1L, "ABC1234", "Honda", "Civic", 2020, 20L);
+        when(veiculoGateway.findByPlaca("ABC1234")).thenReturn(Optional.of(veiculo));
         var veiculoInput = new VeiculoOrdemServicoInput("ABC1234", null, null, null);
 
         ApplicationException exception = assertThrows(
@@ -289,26 +282,23 @@ class VeiculoUseCasesTest {
 
     @Test
     void deveCadastrarVeiculoNovoParaOS() {
-        ClienteEntity cliente = new ClienteEntity();
-        cliente.setId(10L);
-        when(veiculoRepository.findByPlaca("ABC1234")).thenReturn(Optional.empty());
-        when(veiculoRepository.save(any(VeiculoEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        ClienteOutput cliente = ClienteOutput.builder().id(10L).nome("Cliente").cpfCnpj("123").email("cliente@email.com").build();
+        when(veiculoGateway.findByPlaca("ABC1234")).thenReturn(Optional.empty());
+        when(veiculoGateway.save(any(VeiculoOrdemServicoInput.class), eq(10L))).thenReturn(output);
 
-        VeiculoEntity resultado = buscarOuCadastrarVeiculoService.execute(
+        VeiculoOutput resultado = buscarOuCadastrarVeiculoService.execute(
                 cliente,
                 new VeiculoOrdemServicoInput("abc-1234", "Honda", "Civic", 2023));
 
-        assertEquals("ABC1234", resultado.getPlaca());
-        assertEquals(cliente, resultado.getCliente());
-        verify(veiculoRepository).save(any(VeiculoEntity.class));
+        assertEquals("ABC1234", resultado.placa());
+        assertEquals(10L, resultado.clienteId());
+        verify(veiculoGateway).save(any(VeiculoOrdemServicoInput.class), eq(10L));
     }
 
     @Test
     void deveRejeitarDadosIncompletosAoCadastrarVeiculoNovoParaOS() {
-        ClienteEntity cliente = new ClienteEntity();
-        cliente.setId(10L);
-        when(veiculoRepository.findByPlaca("ABC1234")).thenReturn(Optional.empty());
+        ClienteOutput cliente = ClienteOutput.builder().id(10L).nome("Cliente").cpfCnpj("123").email("cliente@email.com").build();
+        when(veiculoGateway.findByPlaca("ABC1234")).thenReturn(Optional.empty());
 
         List<VeiculoOrdemServicoInput> entradasInvalidas = List.of(
                 new VeiculoOrdemServicoInput("ABC1234", null, "Civic", 2023),
@@ -323,6 +313,6 @@ class VeiculoUseCasesTest {
                     () -> buscarOuCadastrarVeiculoService.execute(cliente, entrada));
             assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
         }
-        verify(veiculoRepository, never()).save(any());
+        verify(veiculoGateway, never()).save(any(VeiculoOrdemServicoInput.class), any());
     }
 }

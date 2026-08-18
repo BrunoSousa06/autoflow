@@ -1,9 +1,10 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.dto.notificacao.MensagemNotificacao;
+import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
-import com.autoflow.domain.ordemservico.ClienteOsEntity;
-import com.autoflow.domain.ordemservico.OrdemServicoEntity;
+import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCaseImpl;
+import com.autoflow.domain.ordemservico.ClienteOs;
+import com.autoflow.domain.ordemservico.OrdemServico;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,19 +21,19 @@ class EnviarLinkAcompanhamentoUseCaseTest {
     @Mock
     private NotificacaoGateway notificacaoGateway;
 
-    private EnviarLinkAcompanhamentoUseCase useCase;
+    private EnviarLinkAcompanhamentoUseCaseImpl useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new EnviarLinkAcompanhamentoUseCase(notificacaoGateway, "http://localhost:4200");
+        useCase = new EnviarLinkAcompanhamentoUseCaseImpl(notificacaoGateway, "http://localhost:4200");
     }
 
     @Test
     void deveEnviarLinkEAlternativaDeLoginParaCliente() {
-        ClienteOsEntity cliente = mock(ClienteOsEntity.class);
+        ClienteOs cliente = mock(ClienteOs.class);
         when(cliente.getNome()).thenReturn("Maria");
         when(cliente.getEmail()).thenReturn("maria@email.com");
-        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        OrdemServico ordemServico = new OrdemServico();
         ordemServico.setCliente(cliente);
         ordemServico.setNumeroOs("OS-123");
 
@@ -51,9 +52,9 @@ class EnviarLinkAcompanhamentoUseCaseTest {
 
     @Test
     void naoDeveEnviarQuandoClienteNaoPossuiEmail() {
-        ClienteOsEntity cliente = mock(ClienteOsEntity.class);
+        ClienteOs cliente = mock(ClienteOs.class);
         when(cliente.getEmail()).thenReturn(" ");
-        OrdemServicoEntity ordemServico = new OrdemServicoEntity();
+        OrdemServico ordemServico = new OrdemServico();
         ordemServico.setCliente(cliente);
 
         useCase.execute(ordemServico, "token");
