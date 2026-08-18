@@ -1,0 +1,84 @@
+package com.autoflow.presentation.ordemservico;
+
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
+import com.autoflow.application.port.in.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.ConsultarStatusOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.DetalharOrdemServicoUseCase;
+import com.autoflow.application.port.in.ordemservico.ListarOrdensServicoUseCase;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.presentation.ordemservico.response.OrdemServicoDetalheResponse;
+import com.autoflow.presentation.ordemservico.response.OrdemServicoResponse;
+import com.autoflow.presentation.ordemservico.response.StatusOrdemServicoResponse;
+import com.autoflow.presentation.ordemservico.response.TempoMedioOrdemServicoResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/ordens-servico")
+public class OrdemServicoConsultaController {
+
+    private final CalcularTempoMedioOrdemServicoUseCase calcularTempoMedio;
+    private final ListarOrdensServicoUseCase listar;
+    private final DetalharOrdemServicoUseCase detalhar;
+    private final ConsultarStatusOrdemServicoUseCase consultarStatus;
+
+    public OrdemServicoConsultaController(
+            CalcularTempoMedioOrdemServicoUseCase calcularTempoMedio,
+            ListarOrdensServicoUseCase listar,
+            DetalharOrdemServicoUseCase detalhar,
+            ConsultarStatusOrdemServicoUseCase consultarStatus) {
+        this.calcularTempoMedio = calcularTempoMedio;
+        this.listar = listar;
+        this.detalhar = detalhar;
+        this.consultarStatus = consultarStatus;
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO')")
+    public Page<OrdemServicoResponse> listar(
+            @RequestParam(required = false) String cliente,
+            @RequestParam(required = false) String numeroOs,
+            @RequestParam(required = false) StatusOrdemServico status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        var resultado = listar.execute(new OrdemServicoFiltroInput(cliente, numeroOs, status),
+                new PageQuery(page, size), userDetails.getUsername());
+        return new PageImpl<>(resultado.content().stream().map(OrdemServicoResponse::fromDomain).toList(),
+                PageRequest.of(page, size), resultado.totalElements());
+    }
+
+    @GetMapping("/{numeroOs}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO')")
+    public OrdemServicoDetalheResponse detalhar(@PathVariable String numeroOs) {
+        var detalhe = detalhar.execute(numeroOs);
+        return OrdemServicoDetalheResponse.fromDomain(detalhe.ordemServico(), detalhe.orcamentoAtual());
+    }
+
+    @GetMapping("/{numeroOs}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO', 'CLIENTE')")
+    public StatusOrdemServicoResponse status(
+            @PathVariable String numeroOs,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return StatusOrdemServicoResponse.from(consultarStatus.execute(numeroOs, userDetails.getUsername()));
+    }
+
+    @GetMapping("/metricas/tempo-medio")
+    @PreAuthorize("hasRole('ADMIN')")
+    public TempoMedioOrdemServicoResponse tempoMedio() {
+        TempoMedioOrdemServicoOutput output = calcularTempoMedio.execute();
+        return new TempoMedioOrdemServicoResponse(output.quantidadeOrdensFinalizadas(), output.tempoMedioSegundos(),
+                output.tempoMedioMinutos(), output.tempoMedioHoras());
+    }
+}

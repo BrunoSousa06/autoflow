@@ -1,6 +1,7 @@
 package com.autoflow.presentation.ordemservico;
 
 import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.gateway.AcompanhamentoUrlGateway;
 import com.autoflow.application.output.PageResult;
 import com.autoflow.application.output.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
@@ -55,14 +56,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = OrdemServicoController.class)
+@WebMvcTest(controllers = {
+        OrdemServicoAdministracaoController.class,
+        OrdemServicoDiagnosticoController.class,
+        OrdemServicoExecucaoController.class,
+        OrdemServicoConsultaController.class
+})
 @AutoConfigureMockMvc(addFilters = false)
 @Import({
         ItensNecessariosControllerMapperImpl.class,
         ServicoSolicitadoControllerMapperImpl.class,
-        OrdemServicoCommandUseCases.class,
-        OrdemServicoQueryUseCases.class,
-        OrdemServicoWorkflowUseCases.class,
         OrdemServicoControllerTest.MethodSecurityTestConfig.class,
         OrdemServicoControllerTest.SecurityExceptionHandler.class
 })
@@ -112,6 +115,9 @@ class OrdemServicoControllerTest {
 
     @MockitoBean
     private AtribuirMecanicoUseCase atribuirMecanicoUseCase;
+
+    @MockitoBean
+    private AcompanhamentoUrlGateway acompanhamentoUrlGateway;
 
     @MockitoBean
     private JwtService jwtService;
