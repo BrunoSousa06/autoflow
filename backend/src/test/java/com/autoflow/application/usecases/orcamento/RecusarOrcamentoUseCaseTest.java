@@ -17,6 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +31,7 @@ class RecusarOrcamentoUseCaseTest {
     @Mock OrdemServicoGateway ordemServicoGateway;
     @Mock RecusarReparoAdicionalPorOrcamentoUseCase reparoUseCase;
     @Mock RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+    @org.mockito.Spy Clock clock = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
     @InjectMocks RecusarOrcamentoUseCaseImpl useCase;
 
     @Test
