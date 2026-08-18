@@ -6,6 +6,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarHistoricoStatusOsService;
 import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -21,6 +22,7 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
     private final AprovarReparoAdicionalPorOrcamentoUseCase aprovarReparoAdicionalPorOrcamentoUseCase;
     private final OrdemServicoGateway ordemServicoGateway;
     private final OrcamentoGateway orcamentoGateway;
+    private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @TransactionalUseCase
     @Override
@@ -49,6 +51,7 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
                 .orElseThrow(() -> ApplicationException.notFound("OS nao encontrada"));
         ordemServico.iniciarExecucao();
         ordemServicoGateway.save(ordemServico);
+        registrarHistoricoStatusOs.registrar(ordemServico);
 
         return orcamentoSalvo;
     }

@@ -5,6 +5,7 @@ import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.port.in.orcamento.RecusarOrcamentoUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarHistoricoStatusOsService;
 import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -26,6 +27,7 @@ class RecusarOrcamentoUseCaseTest {
     @Mock OrcamentoGateway orcamentoGateway;
     @Mock OrdemServicoGateway ordemServicoGateway;
     @Mock RecusarReparoAdicionalPorOrcamentoUseCase reparoUseCase;
+    @Mock RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
     @InjectMocks RecusarOrcamentoUseCaseImpl useCase;
 
     @Test

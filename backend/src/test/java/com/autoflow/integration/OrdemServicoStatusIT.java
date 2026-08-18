@@ -65,6 +65,21 @@ class OrdemServicoStatusIT extends AbstractIT {
     }
 
     @Test
+    @DisplayName("aprovação do orçamento deve registrar a transição para EM_EXECUCAO")
+    void aprovacaoDoOrcamentoDeveRegistrarTransicaoNoHistorico() {
+        Long ordemServicoId = jdbcTemplate.queryForObject(
+                "SELECT id FROM ordem_servico WHERE numero_os = ?",
+                Long.class,
+                numeroOs);
+
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM ordem_servico_status_historico
+                WHERE ordem_servico_id = ? AND status = 'EM_EXECUCAO'
+                """, Integer.class, ordemServicoId)).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("usuário autorizado deve consultar status ENTREGUE com resposta enxuta")
     void deveConsultarStatusEntregue() {
         patch("/ordens-servico/" + numeroOs + "/servicos/" + servicoId + "/finalizar", null, mecanicoToken);
