@@ -7,7 +7,6 @@ import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
 import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
-import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
@@ -34,7 +33,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CriarOrdemServicoUseCaseTest {
 
-    private static final LocalDateTime AGORA = LocalDateTime.of(2026, 8, 18, 15, 30);
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T18:30:00Z"), ZoneOffset.UTC);
 
     @Mock BuscarClientePorCpfCnpjUseCase buscarCliente;

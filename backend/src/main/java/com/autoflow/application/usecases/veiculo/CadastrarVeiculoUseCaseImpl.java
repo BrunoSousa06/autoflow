@@ -1,13 +1,13 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.gateway.VeiculoGateway;
-import com.autoflow.application.port.in.veiculo.CadastrarVeiculoUseCase;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.policy.PlacaPolicy;
+import com.autoflow.application.port.in.veiculo.CadastrarVeiculoUseCase;
 import lombok.RequiredArgsConstructor;
 
 
@@ -18,7 +18,7 @@ public class CadastrarVeiculoUseCaseImpl implements CadastrarVeiculoUseCase {
     private final VeiculoClienteGateway clienteGateway;
 
     @Override
-    public VeiculoOutput execute(CadastrarVeiculoInput input) {
+    public VeiculoOutput execute(CadastrarVeiculoCommand input) {
         Long clienteId = clienteGateway.findIdByCpfCnpj(input.cpfCnpj())
                 .orElseThrow(() -> new ClienteNaoEncontradoException(
                         "Cliente não encontrado com o CPF/CNPJ: " + input.cpfCnpj()));
@@ -29,7 +29,7 @@ public class CadastrarVeiculoUseCaseImpl implements CadastrarVeiculoUseCase {
                     "Já existe um veículo cadastrado com a placa: " + input.placa());
         }
 
-        CadastrarVeiculoInput inputNormalizado = new CadastrarVeiculoInput(
+        CadastrarVeiculoCommand inputNormalizado = new CadastrarVeiculoCommand(
                 input.cpfCnpj(),
                 placa,
                 input.marca(),

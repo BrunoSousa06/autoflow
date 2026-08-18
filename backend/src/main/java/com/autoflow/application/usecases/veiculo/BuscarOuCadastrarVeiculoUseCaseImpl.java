@@ -1,13 +1,13 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.input.veiculo.VeiculoInput;
-import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoDadosInvalidosException;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.gateway.VeiculoGateway;
-import com.autoflow.application.port.in.veiculo.BuscarOuCadastrarVeiculoUseCase;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.policy.PlacaPolicy;
+import com.autoflow.application.port.in.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import lombok.RequiredArgsConstructor;
 
 
@@ -36,7 +36,7 @@ public class BuscarOuCadastrarVeiculoUseCaseImpl implements BuscarOuCadastrarVei
         }
 
         return veiculoGateway.save(
-                new CadastrarVeiculoInput(null, placa, input.marca(), input.modelo(), input.ano()),
+                new CadastrarVeiculoCommand(null, placa, input.marca(), input.modelo(), input.ano()),
                 clienteId);
     }
 }

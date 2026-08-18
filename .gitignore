@@ -33,12 +33,7 @@ build/
 
 ### VS Code ###
 .vscode/
-/.claude
-/docs/*
-!/docs/fluxo-orcamento-publico.md
-!/docs/diagramas-sequencia/
-/docs/diagramas-sequencia/*
-!/docs/diagramas-sequencia/aprovacao_recusa_orcamento_publico.mermaid
+/docs/trello
 backend/.m2
 
 ###Terraform###

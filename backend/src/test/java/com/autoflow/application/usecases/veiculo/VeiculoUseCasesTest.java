@@ -1,10 +1,16 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.input.veiculo.*;
-import com.autoflow.application.output.veiculo.*;
-import com.autoflow.application.exception.*;
+import com.autoflow.application.exception.ClienteNaoEncontradoException;
+import com.autoflow.application.exception.VeiculoDadosInvalidosException;
+import com.autoflow.application.exception.VeiculoDuplicadoException;
+import com.autoflow.application.exception.VeiculoNaoEncontradoException;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
+import com.autoflow.application.input.veiculo.PageInput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.PageOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.security.AuthorizationService;
 import com.autoflow.application.security.ClienteAutenticadoService;
 import com.autoflow.infrastructure.persistence.repository.VeiculoRepository;
@@ -50,8 +56,8 @@ class VeiculoUseCasesTest {
     @Mock
     private VeiculoRepository veiculoRepository;
 
-    private final CadastrarVeiculoInput cadastro =
-            new CadastrarVeiculoInput("12345678901", "ABC-1234", "Honda", "Civic", 2020);
+    private final CadastrarVeiculoCommand cadastro =
+            new CadastrarVeiculoCommand("12345678901", "ABC-1234", "Honda", "Civic", 2020);
     private final VeiculoInput atualizacao =
             new VeiculoInput("Honda", 2021, "ABC-1234", "Civic Touring");
     private final VeiculoOutput output =
@@ -61,14 +67,14 @@ class VeiculoUseCasesTest {
     void deveCadastrarVeiculoComPlacaNormalizada() {
         when(clienteGateway.findIdByCpfCnpj(cadastro.cpfCnpj())).thenReturn(Optional.of(10L));
         when(veiculoGateway.existsByPlaca("ABC1234")).thenReturn(false);
-        when(veiculoGateway.save(any(CadastrarVeiculoInput.class), org.mockito.ArgumentMatchers.eq(10L)))
+        when(veiculoGateway.save(any(CadastrarVeiculoCommand.class), org.mockito.ArgumentMatchers.eq(10L)))
                 .thenReturn(output);
 
         VeiculoOutput resultado = cadastrarVeiculoUseCase.execute(cadastro);
 
         assertEquals(output, resultado);
         verify(veiculoGateway).existsByPlaca("ABC1234");
-        verify(veiculoGateway).save(any(CadastrarVeiculoInput.class), org.mockito.ArgumentMatchers.eq(10L));
+        verify(veiculoGateway).save(any(CadastrarVeiculoCommand.class), org.mockito.ArgumentMatchers.eq(10L));
     }
 
     @Test
@@ -79,7 +85,7 @@ class VeiculoUseCasesTest {
                 ClienteNaoEncontradoException.class,
                 () -> cadastrarVeiculoUseCase.execute(cadastro));
 
-        verify(veiculoGateway, never()).save(any(CadastrarVeiculoInput.class), any());
+        verify(veiculoGateway, never()).save(any(CadastrarVeiculoCommand.class), any());
     }
 
     @Test
@@ -91,7 +97,7 @@ class VeiculoUseCasesTest {
                 VeiculoDuplicadoException.class,
                 () -> cadastrarVeiculoUseCase.execute(cadastro));
 
-        verify(veiculoGateway, never()).save(any(CadastrarVeiculoInput.class), any());
+        verify(veiculoGateway, never()).save(any(CadastrarVeiculoCommand.class), any());
     }
 
     @Test
@@ -207,7 +213,7 @@ class VeiculoUseCasesTest {
         when(veiculoGateway.findByPlaca("ABC1234")).thenReturn(Optional.of(existente));
 
         assertSame(existente, buscarOuCadastrarVeiculoUseCase.execute(10L, input));
-        verify(veiculoGateway, never()).save(any(CadastrarVeiculoInput.class), any());
+        verify(veiculoGateway, never()).save(any(CadastrarVeiculoCommand.class), any());
     }
 
     @Test
@@ -218,18 +224,18 @@ class VeiculoUseCasesTest {
 
         assertThrows(VeiculoDuplicadoException.class,
                 () -> buscarOuCadastrarVeiculoUseCase.execute(10L, input));
-        verify(veiculoGateway, never()).save(any(CadastrarVeiculoInput.class), any());
+        verify(veiculoGateway, never()).save(any(CadastrarVeiculoCommand.class), any());
     }
 
     @Test
     void deveCadastrarVeiculoNovoAoBuscarOuCadastrar() {
         VeiculoInput input = new VeiculoInput("Honda", 2023, "abc-1234", "Civic");
         when(veiculoGateway.findByPlaca("ABC1234")).thenReturn(Optional.empty());
-        when(veiculoGateway.save(any(CadastrarVeiculoInput.class), eq(10L))).thenReturn(output);
+        when(veiculoGateway.save(any(CadastrarVeiculoCommand.class), eq(10L))).thenReturn(output);
 
         assertSame(output, buscarOuCadastrarVeiculoUseCase.execute(10L, input));
         verify(veiculoGateway).save(
-                new CadastrarVeiculoInput(null, "ABC1234", "Honda", "Civic", 2023), 10L);
+                new CadastrarVeiculoCommand(null, "ABC1234", "Honda", "Civic", 2023), 10L);
     }
 
     @Test
@@ -248,6 +254,6 @@ class VeiculoUseCasesTest {
             assertThrows(VeiculoDadosInvalidosException.class,
                     () -> buscarOuCadastrarVeiculoUseCase.execute(10L, entrada));
         }
-        verify(veiculoGateway, never()).save(any(CadastrarVeiculoInput.class), any());
+        verify(veiculoGateway, never()).save(any(CadastrarVeiculoCommand.class), any());
     }
 }

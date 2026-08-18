@@ -17,7 +17,9 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<sonar.organization>autoflow</sonar.organization>
-		<sonar.coverage.exclusions>**/SecurityConfig.java,**/com/autoflow/mapper/**,**/*Application.java,**/com/autoflow/controller/**/request/**,**/com/autoflow/controller/**/response/**</sonar.coverage.exclusions>
+        <sonar.coverage.exclusions>
+            **/SecurityConfig.java,**/infrastructure/persistence/mapper/**,**/com/autoflow/mapper/**,**/*Application.java,**/com/autoflow/controller/**/request/**,**/com/autoflow/controller/**/response/**
+        </sonar.coverage.exclusions>
 		<sonar.exclusions>**/SecurityConfig.java</sonar.exclusions>
 	</properties>
 	<dependencies>

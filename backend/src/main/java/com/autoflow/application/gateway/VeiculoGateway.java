@@ -1,13 +1,17 @@
 package com.autoflow.application.gateway;
 
-import com.autoflow.application.input.veiculo.*;
-import com.autoflow.application.output.veiculo.*;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
+import com.autoflow.application.input.veiculo.PageInput;
+import com.autoflow.application.input.veiculo.VeiculoFiltro;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.PageOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 
 import java.util.Optional;
 
 public interface VeiculoGateway {
 
-    VeiculoOutput save(CadastrarVeiculoInput input, Long clienteId);
+    VeiculoOutput save(CadastrarVeiculoCommand input, Long clienteId);
 
     VeiculoOutput update(Long id, VeiculoInput input);
 

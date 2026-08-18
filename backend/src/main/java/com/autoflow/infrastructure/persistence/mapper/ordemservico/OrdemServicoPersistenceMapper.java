@@ -6,6 +6,7 @@ import com.autoflow.domain.veiculo.Veiculo;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.ServicoSolicitadoEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
+import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class OrdemServicoPersistenceMapper {
         this.servicoMapper = servicoMapper;
     }
 
-    public OrdemServicoPersistenceMapper(com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper usuarioMapper) {
+    public OrdemServicoPersistenceMapper(UsuarioPersistenceMapper usuarioMapper) {
         this(new ClienteOsPersistenceMapper(), new DiagnosticoPersistenceMapper(usuarioMapper), new ServicoSolicitadoPersistenceMapper());
     }
 

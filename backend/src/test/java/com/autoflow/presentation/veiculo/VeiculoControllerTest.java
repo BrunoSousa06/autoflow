@@ -1,18 +1,13 @@
 package com.autoflow.presentation.veiculo;
 
-import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
 import com.autoflow.application.input.veiculo.PageInput;
-import com.autoflow.application.output.veiculo.PageOutput;
 import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.PageOutput;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
-import com.autoflow.application.port.in.veiculo.AtualizarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.BuscarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.CadastrarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.DeletarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.ListarVeiculosUseCase;
+import com.autoflow.application.port.in.veiculo.*;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;
-import com.autoflow.presentation.veiculo.response.VeiculoResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,8 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -30,14 +23,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -103,7 +90,7 @@ class VeiculoControllerTest {
     @Test
     void deveCadastrarVeiculo() throws Exception {
 
-        when(cadastrarVeiculoUseCase.execute(any(CadastrarVeiculoInput.class)))
+        when(cadastrarVeiculoUseCase.execute(any(CadastrarVeiculoCommand.class)))
                 .thenReturn(veiculoOutput);
 
         mockMvc.perform(post("/veiculos")
@@ -112,7 +99,7 @@ class VeiculoControllerTest {
                 .andExpect(status().isCreated());
 
         verify(cadastrarVeiculoUseCase)
-                .execute(any(CadastrarVeiculoInput.class));
+                .execute(any(CadastrarVeiculoCommand.class));
     }
 
     @Test

@@ -1,13 +1,12 @@
 package com.autoflow.presentation.veiculo;
 
 
-import com.autoflow.application.input.veiculo.*;
-import com.autoflow.application.output.veiculo.*;
-import com.autoflow.application.port.in.veiculo.AtualizarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.BuscarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.CadastrarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.DeletarVeiculoUseCase;
-import com.autoflow.application.port.in.veiculo.ListarVeiculosUseCase;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
+import com.autoflow.application.input.veiculo.PageInput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.PageOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
+import com.autoflow.application.port.in.veiculo.*;
 import com.autoflow.presentation.veiculo.request.VeiculoRequest;
 import com.autoflow.presentation.veiculo.request.VeiculoUpdateRequest;
 import com.autoflow.presentation.veiculo.response.VeiculoResponse;
@@ -43,7 +42,7 @@ public class VeiculoController {
     public ResponseEntity<VeiculoResponse> cadastrar(
             @Valid @RequestBody VeiculoRequest request) {
 
-        CadastrarVeiculoInput input = mapper.toInput(request);
+        CadastrarVeiculoCommand input = mapper.toInput(request);
 
         VeiculoOutput output =
                 cadastrarVeiculoUseCase.execute(input);

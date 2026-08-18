@@ -1,8 +1,12 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.input.veiculo.*;
-import com.autoflow.application.output.veiculo.*;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
+import com.autoflow.application.input.veiculo.PageInput;
+import com.autoflow.application.input.veiculo.VeiculoFiltro;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.PageOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.mapper.VeiculoMapper;
@@ -26,7 +30,7 @@ public class VeiculoRepositoryAdapter implements VeiculoGateway {
     private final VeiculoMapper veiculoMapper;
 
     @Override
-    public VeiculoOutput save(CadastrarVeiculoInput input, Long clienteId) {
+    public VeiculoOutput save(CadastrarVeiculoCommand input, Long clienteId) {
         ClienteEntity cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new IllegalStateException("Cliente não encontrado durante o cadastro do veículo"));
 
