@@ -5,7 +5,7 @@ import com.autoflow.application.gateway.*;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.Diagnostico;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -70,7 +70,7 @@ class FinalizarDiagnosticoUseCaseTest {
     }
 
     private void configurarFluxo(OrdemServico os, Usuario usuario) {
-        var orcamento = new OrcamentoEntity();
+        var orcamento = new Orcamento();
         orcamento.setId(10L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));

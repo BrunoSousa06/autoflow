@@ -7,7 +7,7 @@ import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoDaOsUseCase;
 import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCaseImpl;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +35,7 @@ class AcessarOrcamentoAcompanhamentoUseCaseTest {
     @Mock private TokenAcompanhamentoGateway tokenGateway;
     @Mock private ConsultarOrcamentoDaOsUseCase consultarOrcamentoDaOsUseCase;
     @Mock private DecidirOrcamentoUseCase decidirOrcamentoUseCase;
-    @Mock private OrcamentoEntity orcamento;
+    @Mock private Orcamento orcamento;
 
     private AcessarOrcamentoAcompanhamentoUseCaseImpl useCase;
 

@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class NotificacaoEntityTest {
+class NotificacaoTest {
 
-    private NotificacaoEntity notificacao;
+    private Notificacao notificacao;
 
     @BeforeEach
     void setUp() {
-        notificacao = new NotificacaoEntity();
+        notificacao = new Notificacao();
         notificacao.setId(1L);
         notificacao.setOrcamentoId(100L);
         notificacao.setClienteId(50L);
@@ -25,7 +25,7 @@ class NotificacaoEntityTest {
 
     @Test
     void testNotificacaoPendenteFactory() {
-        NotificacaoEntity notif = NotificacaoEntity.pendente(100L, 50L, "cliente@example.com");
+        Notificacao notif = Notificacao.pendente(100L, 50L, "cliente@example.com");
 
         assertNotNull(notif);
         assertEquals(100L, notif.getOrcamentoId());
@@ -48,9 +48,11 @@ class NotificacaoEntityTest {
     @Test
     void testMarcarComoFalha() {
         String mensagemErro = "SMTP connection failed";
+        notificacao.setEnviadaEm(LocalDateTime.now());
         notificacao.marcarComoFalha(mensagemErro);
 
         assertEquals(StatusNotificacao.FALHA, notificacao.getStatus());
+        assertNull(notificacao.getEnviadaEm());
         assertEquals(mensagemErro, notificacao.getMensagemErro());
     }
 
@@ -91,5 +93,12 @@ class NotificacaoEntityTest {
             notificacao.setCanal(canal);
             assertEquals(canal, notificacao.getCanal());
         }
+    }
+
+    @Test
+    void testNaoPodeSerEnviadaNovamenteDepoisDeEnviada() {
+        notificacao.marcarComoEnviada();
+
+        assertThrows(IllegalStateException.class, notificacao::marcarComoEnviada);
     }
 }

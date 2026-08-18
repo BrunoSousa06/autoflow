@@ -6,7 +6,7 @@ import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.input.pecainsumo.PecaInsumoFiltro;
 import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
 import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
@@ -150,7 +150,7 @@ class RepositoryAdaptersTest {
     @Test
     void orcamentoAdapterDeveDelegarTodasConsultas() {
          var adapter = new OrcamentoRepositoryAdapter(orcamentoRepository, orcamentoMapper);
-         var orcamento = new OrcamentoEntity();
+         var orcamento = new Orcamento();
          var orcamentoEntity = new OrcamentoPersistenceEntity();
          var esperado = Optional.of(orcamento);
          when(orcamentoMapper.toEntity(orcamento)).thenReturn(orcamentoEntity);

@@ -2,7 +2,7 @@ package com.autoflow.infrastructure.orcamento;
 
 import com.autoflow.application.output.orcamento.OrcamentoPublicacao;
 import com.autoflow.application.gateway.OrcamentoGateway;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,13 +35,13 @@ class OrcamentoPublicacaoServiceImplTest {
 
     @Test
     void publicar_deveGerarTokenHashEDefinirDisponibilizadoEm() {
-        OrcamentoEntity orc = new OrcamentoEntity();
+        Orcamento orc = new Orcamento();
         orc.setId(10L);
         orc.setStatus(StatusOrcamento.DISPONIVEL);
         orc.setDisponibilizadoEm(null);
 
         when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orc));
-        when(orcamentoGateway.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orcamentoGateway.save(any(Orcamento.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ReflectionTestUtils.setField(service, "publicBaseUrl", "http://localhost:8080");
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
@@ -61,14 +61,14 @@ class OrcamentoPublicacaoServiceImplTest {
 
     @Test
     void publicar_deveManterDisponibilizadoEmQuandoJaExistir() {
-        OrcamentoEntity orc = new OrcamentoEntity();
+        Orcamento orc = new Orcamento();
         orc.setId(10L);
         orc.setStatus(StatusOrcamento.DISPONIVEL);
         var disponibilizadoEm = java.time.LocalDateTime.of(2026, Month.JUNE, 4, 10, 0);
         orc.setDisponibilizadoEm(disponibilizadoEm);
 
         when(orcamentoGateway.findById(10L)).thenReturn(Optional.of(orc));
-        when(orcamentoGateway.save(any(OrcamentoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orcamentoGateway.save(any(Orcamento.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ReflectionTestUtils.setField(service, "publicBaseUrl", "http://localhost:8080");
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
@@ -91,7 +91,7 @@ class OrcamentoPublicacaoServiceImplTest {
 
     @Test
     void publicar_deveDarBadRequestQuandoOrcamentoNaoDisponivel() {
-        OrcamentoEntity orc = new OrcamentoEntity();
+        Orcamento orc = new Orcamento();
         orc.setId(10L);
         orc.setStatus(StatusOrcamento.APROVADO);
 
@@ -103,7 +103,7 @@ class OrcamentoPublicacaoServiceImplTest {
 
     @Test
     void validarToken_deveRetornarFalseQuandoHashNulo() {
-        OrcamentoEntity orc = new OrcamentoEntity();
+        Orcamento orc = new Orcamento();
         orc.setPublicTokenHash(null);
 
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
@@ -115,7 +115,7 @@ class OrcamentoPublicacaoServiceImplTest {
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
         when(clock.instant()).thenReturn(Instant.parse("2026-06-04T12:00:00Z"));
 
-        OrcamentoEntity orc = new OrcamentoEntity();
+        Orcamento orc = new Orcamento();
         String token = "abc";
         String hash = ReflectionTestUtils.invokeMethod(service, "sha256Hex", token + ":" + "local-secret");
         orc.setPublicTokenHash(hash);
@@ -130,7 +130,7 @@ class OrcamentoPublicacaoServiceImplTest {
         ReflectionTestUtils.setField(service, "tokenSecret", "local-secret");
         when(clock.instant()).thenReturn(Instant.parse("2026-06-05T12:00:00Z"));
 
-        OrcamentoEntity orc = new OrcamentoEntity();
+        Orcamento orc = new Orcamento();
         String token = "abc";
         orc.setPublicTokenHash(ReflectionTestUtils.invokeMethod(
                 service, "sha256Hex", token + ":local-secret"));

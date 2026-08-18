@@ -10,7 +10,7 @@ import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
 import com.autoflow.application.port.in.ordemservico.*;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
@@ -405,7 +405,7 @@ class OrdemServicoControllerTest {
     @WithMockUser(roles = "ATENDENTE")
     void deveDetalharOrdemServicoComoAtendente() throws Exception {
         OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
-        OrcamentoEntity orcamento = criarOrcamento(10L, ordemServico.getNumeroOs());
+        Orcamento orcamento = criarOrcamento(10L, ordemServico.getNumeroOs());
 
         when(detalharOrdemServicoUseCase.execute("OS-123"))
                 .thenReturn(new OrdemServicoDetalheOutput(ordemServico, orcamento));
@@ -704,8 +704,8 @@ class OrdemServicoControllerTest {
         return ordemServico;
     }
 
-    private OrcamentoEntity criarOrcamento(Long id, String numeroOs) {
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+    private Orcamento criarOrcamento(Long id, String numeroOs) {
+        Orcamento orcamento = new Orcamento();
         orcamento.setId(id);
         orcamento.setNumeroOs(numeroOs);
         orcamento.setTipo(TipoOrcamento.PRINCIPAL);

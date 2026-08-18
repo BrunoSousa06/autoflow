@@ -1,6 +1,6 @@
 package com.autoflow.presentation.acompanhamento.response;
 
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.presentation.ordemservico.acompanhamento.response.OrcamentoResumoResponse;
@@ -22,7 +22,7 @@ class OrcamentoResumoResponseTest {
             StatusOrcamento status,
             String mensagemEsperada
     ) {
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+        Orcamento orcamento = new Orcamento();
         orcamento.setId(1L);
         orcamento.setTipo(TipoOrcamento.PRINCIPAL);
         orcamento.setVersao(1);

@@ -4,7 +4,7 @@ import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrcamentoPublicacaoGateway;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoPorTokenUseCase;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,7 +25,7 @@ class ConsultarOrcamentoPorTokenUseCaseTest {
 
     @Test
     void deveNegarTokenInvalido() {
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+        Orcamento orcamento = new Orcamento();
         when(orcamentoGateway.findById(1L)).thenReturn(Optional.of(orcamento));
         when(publicacaoGateway.validarToken(orcamento, "invalido")).thenReturn(false);
 

@@ -6,7 +6,7 @@ import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
 import com.autoflow.application.usecases.ordemservico.acompanhamento.AcompanharOrdemServicoUseCaseImpl;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -43,7 +43,7 @@ class AcompanharOrdemServicoUseCaseTest {
     @Test
     void deveRetornarListaDeAcompanhamentos() {
         OrdemServico ordemServico = ordemServico("OS001");
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+        Orcamento orcamento = new Orcamento();
         orcamento.setStatus(StatusOrcamento.DISPONIVEL);
         HistoricoStatusOs historico = new HistoricoStatusOs();
         configurarClienteComOs(ordemServico);
@@ -62,7 +62,7 @@ class AcompanharOrdemServicoUseCaseTest {
     @Test
     void deveUtilizarUltimaVersaoQuandoNaoExistirOrcamentoDisponivel() {
         OrdemServico ordemServico = ordemServico("OS001");
-        OrcamentoEntity ultimaVersao = new OrcamentoEntity();
+        Orcamento ultimaVersao = new Orcamento();
         ultimaVersao.setStatus(StatusOrcamento.DISPONIVEL);
         configurarClienteComOs(ordemServico);
         when(orcamentoGateway.findByNumeroOsAndStatus("OS001", StatusOrcamento.DISPONIVEL))

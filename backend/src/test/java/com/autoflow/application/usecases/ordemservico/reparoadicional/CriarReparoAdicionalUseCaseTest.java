@@ -10,7 +10,7 @@ import com.autoflow.application.gateway.*;
 import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.application.usecases.ordemservico.reparoadicional.CriarReparoAdicionalUseCaseImpl;
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -79,7 +79,7 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setRole(RoleEnum.MECANICO);
         var servicoCatalogo = servicoCatalogo(5L);
         var itemEnriquecido = itemEnriquecido(7L, 2);
-        var orcamento = new OrcamentoEntity();
+        var orcamento = new Orcamento();
         orcamento.setId(30L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
 
@@ -290,7 +290,7 @@ class CriarReparoAdicionalUseCaseTest {
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido(7L, 2)));
 
-        var orcamento = new OrcamentoEntity();
+        var orcamento = new Orcamento();
         orcamento.setId(30L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
         when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
@@ -483,7 +483,7 @@ class CriarReparoAdicionalUseCaseTest {
         var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
-        var orcamento = new OrcamentoEntity();
+        var orcamento = new Orcamento();
         orcamento.setId(30L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));

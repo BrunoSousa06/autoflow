@@ -1,9 +1,9 @@
 package com.autoflow.infrastructure.orcamento;
 
 import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
-import com.autoflow.domain.orcamento.OrcamentoItemNecessarioEntity;
-import com.autoflow.domain.orcamento.OrcamentoServicoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
+import com.autoflow.domain.orcamento.OrcamentoItemNecessario;
+import com.autoflow.domain.orcamento.OrcamentoServico;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
@@ -23,7 +23,7 @@ class OrcamentoDocumentoAdapterTest {
 
     @Test
     void deveGerarPdfParaOrcamentoCompleto() {
-        OrcamentoEntity orcamento = OrcamentoEntity.builder()
+        Orcamento orcamento = Orcamento.builder()
                 .id(10L)
                 .ordemServicoId(1L)
                 .numeroOs("OS-123")
@@ -34,12 +34,12 @@ class OrcamentoDocumentoAdapterTest {
                 .status(StatusOrcamento.DISPONIVEL)
                 .criadoEm(LocalDateTime.of(2026, 6, 7, 10, 0))
                 .disponibilizadoEm(LocalDateTime.of(2026, 6, 7, 11, 0))
-                .servicos(List.of(OrcamentoServicoEntity.builder()
+                .servicos(List.of(OrcamentoServico.builder()
                         .servicoId(55L)
                         .nome("Revisao")
                         .valor(new BigDecimal("100.00"))
                         .build()))
-                .itens(List.of(OrcamentoItemNecessarioEntity.builder()
+                .itens(List.of(OrcamentoItemNecessario.builder()
                         .pecaInsumoId(20L)
                         .servicoOsId(55L)
                         .nome("Filtro")
@@ -60,7 +60,7 @@ class OrcamentoDocumentoAdapterTest {
 
     @Test
     void deveGerarPdfQuandoListasDatasEValoresForemNulos() {
-        OrcamentoEntity orcamento = OrcamentoEntity.builder()
+        Orcamento orcamento = Orcamento.builder()
                 .id(10L)
                 .ordemServicoId(1L)
                 .numeroOs("OS-123")
@@ -83,7 +83,7 @@ class OrcamentoDocumentoAdapterTest {
 
     @Test
     void deveGerarPdfQuandoListasForemVazias() {
-        OrcamentoEntity orcamento = OrcamentoEntity.builder()
+        Orcamento orcamento = Orcamento.builder()
                 .id(10L)
                 .ordemServicoId(1L)
                 .numeroOs("OS-123")

@@ -1,7 +1,7 @@
 package com.autoflow.application.usecases.orcamento;
 
 import com.autoflow.domain.cliente.Cliente;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.ItemNecessario;
@@ -33,7 +33,7 @@ class OrcamentoFactoryTest {
         OrdemServico os = criarOrdemServico(cliente, veiculo, List.of(servico1, servico2));
         LocalDateTime now = LocalDateTime.of(2026, 5, 31, 10, 0);
 
-        OrcamentoEntity orcamento = factory.criarPrincipalDisponivel(os, 1, now);
+        Orcamento orcamento = factory.criarPrincipalDisponivel(os, 1, now);
 
         assertEquals(TipoOrcamento.PRINCIPAL, orcamento.getTipo());
         assertEquals(StatusOrcamento.DISPONIVEL, orcamento.getStatus());
@@ -48,7 +48,7 @@ class OrcamentoFactoryTest {
         Cliente cliente = criarCliente();
         OrdemServico os = criarOrdemServico(cliente, criarVeiculo(cliente), List.of());
 
-        OrcamentoEntity orcamento = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.now());
+        Orcamento orcamento = factory.criarPrincipalDisponivel(os, 1, LocalDateTime.now());
 
         assertEquals(BigDecimal.ZERO, orcamento.getTotalServicos());
         assertEquals(BigDecimal.ZERO, orcamento.getTotalItens());
@@ -64,7 +64,7 @@ class OrcamentoFactoryTest {
         adicional.registrarItensNecessarios(List.of(criarItem(7L, "Peca adicional", new BigDecimal("15.00"), 2)));
         ReparoAdicional reparo = ReparoAdicional.criar("OS-123", 20L, List.of(adicional));
 
-        OrcamentoEntity orcamento = factory.criarAdicionalDisponivel(os, reparo, 3, LocalDateTime.now());
+        Orcamento orcamento = factory.criarAdicionalDisponivel(os, reparo, 3, LocalDateTime.now());
 
         assertEquals(TipoOrcamento.COMPLEMENTAR, orcamento.getTipo());
         assertEquals(new BigDecimal("80.00"), orcamento.getTotalServicos());
@@ -83,7 +83,7 @@ class OrcamentoFactoryTest {
         adicional.registrarItensNecessarios(List.of(criarItem(7L, "Peca adicional", new BigDecimal("15.00"), 3)));
         ReparoAdicional reparo = ReparoAdicional.criar("OS-123", 20L, List.of(adicional));
 
-        OrcamentoEntity orcamento = factory.criarPrincipalConsolidadoDisponivel(os, reparo, 4, LocalDateTime.now());
+        Orcamento orcamento = factory.criarPrincipalConsolidadoDisponivel(os, reparo, 4, LocalDateTime.now());
 
         assertEquals(2, orcamento.getServicos().size());
         assertEquals(2, orcamento.getItens().size());

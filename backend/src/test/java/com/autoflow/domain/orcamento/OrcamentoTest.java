@@ -10,9 +10,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class OrcamentoEntityTest {
+class OrcamentoTest {
 
-    private OrcamentoEntity orcamento;
+    private Orcamento orcamento;
 
     @BeforeEach
     void setUp() {
@@ -24,7 +24,7 @@ class OrcamentoEntityTest {
         veiculo.setMarca("Toyota");
         veiculo.setPlaca("ABC1234");
 
-        orcamento = OrcamentoEntity.builder()
+        orcamento = Orcamento.builder()
                 .id(1L)
                 .ordemServicoId(100L)
                 .numeroOs("OS-001")
@@ -87,35 +87,45 @@ class OrcamentoEntityTest {
 
     @Test
     void testOrcamentoAprovacao() {
-        orcamento.setStatus(StatusOrcamento.APROVADO);
-        orcamento.setAprovadoEm(LocalDateTime.now());
+        LocalDateTime aprovadoEm = LocalDateTime.now();
+        orcamento.aprovar("Maria", aprovadoEm);
 
         assertEquals(StatusOrcamento.APROVADO, orcamento.getStatus());
-        assertNotNull(orcamento.getAprovadoEm());
+        assertEquals(aprovadoEm, orcamento.getAprovadoEm());
+        assertEquals("Maria", orcamento.getAssinaturaNome());
     }
 
     @Test
     void testOrcamentoReprovacao() {
-        orcamento.setStatus(StatusOrcamento.REPROVADO);
-        orcamento.setReprovadoEm(LocalDateTime.now());
-        orcamento.setRecusaMotivo("Valor muito alto");
+        LocalDateTime reprovadoEm = LocalDateTime.now();
+        orcamento.recusar("Valor muito alto", "Maria", reprovadoEm);
 
         assertEquals(StatusOrcamento.REPROVADO, orcamento.getStatus());
-        assertNotNull(orcamento.getReprovadoEm());
+        assertEquals(reprovadoEm, orcamento.getReprovadoEm());
         assertEquals("Valor muito alto", orcamento.getRecusaMotivo());
     }
 
     @Test
     void testOrcamentoPublicToken() {
         String tokenHash = "hash_token_123456";
-        orcamento.setPublicTokenHash(tokenHash);
+        LocalDateTime disponibilizadoEm = LocalDateTime.now();
+        orcamento.publicar(tokenHash, disponibilizadoEm.plusDays(7), disponibilizadoEm);
 
         assertEquals(tokenHash, orcamento.getPublicTokenHash());
     }
 
     @Test
     void testOrcamentoDisponibilizacao() {
-        orcamento.setDisponibilizadoEm(LocalDateTime.now());
+        LocalDateTime disponibilizadoEm = LocalDateTime.now();
+        orcamento.publicar("hash_token_123456", disponibilizadoEm.plusDays(7), disponibilizadoEm);
         assertNotNull(orcamento.getDisponibilizadoEm());
+    }
+
+    @Test
+    void testOrcamentoNaoPodeSerAprovadoDepoisDeRecusado() {
+        orcamento.recusar("Valor muito alto", "Maria", LocalDateTime.now());
+
+        assertThrows(IllegalStateException.class,
+                () -> orcamento.aprovar("Maria", LocalDateTime.now()));
     }
 }

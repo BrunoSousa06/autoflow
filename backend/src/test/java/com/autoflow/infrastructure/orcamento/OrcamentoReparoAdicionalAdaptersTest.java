@@ -5,7 +5,7 @@ import com.autoflow.application.gateway.OrcamentoVersioningGateway;
 import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import com.autoflow.application.input.notificacao.OrcamentoNotificacao;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
@@ -46,8 +46,8 @@ class OrcamentoReparoAdicionalAdaptersTest {
         ordemServico.setNumeroOs("OS-123");
         var reparo = new ReparoAdicional();
         var criadoEm = LocalDateTime.of(2026, 8, 2, 12, 30);
-        var orcamentoCriado = new OrcamentoEntity();
-        var orcamentoSalvo = new OrcamentoEntity();
+        var orcamentoCriado = new Orcamento();
+        var orcamentoSalvo = new Orcamento();
 
         when(versioningGateway.proximaVersao(10L, TipoOrcamento.COMPLEMENTAR)).thenReturn(2);
         when(factory.criarAdicionalDisponivel(ordemServico, reparo, 2, criadoEm))

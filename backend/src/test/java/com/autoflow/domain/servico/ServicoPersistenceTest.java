@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ServicoEntityTest {
+class ServicoPersistenceTest {
 
     private ServicoEntity servico;
 

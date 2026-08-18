@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class VeiculoEntityTest {
+class VeiculoPersistenceTest {
 
     private VeiculoEntity veiculo;
     private ClienteEntity cliente;

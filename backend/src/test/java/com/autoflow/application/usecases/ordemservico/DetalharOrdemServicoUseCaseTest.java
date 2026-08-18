@@ -2,7 +2,7 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.domain.orcamento.OrcamentoEntity;
+import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class DetalharOrdemServicoUseCaseTest {
     @Test
     void deveRetornarOsEOrcamentoDisponivel() {
         OrdemServico ordemServico = new OrdemServico();
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+        Orcamento orcamento = new Orcamento();
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(orcamentoGateway.findByNumeroOsAndStatus("OS-123", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.of(orcamento));
@@ -42,7 +42,7 @@ class DetalharOrdemServicoUseCaseTest {
     @Test
     void deveUsarUltimoOrcamentoQuandoNaoHouverDisponivel() {
         OrdemServico ordemServico = new OrdemServico();
-        OrcamentoEntity orcamento = new OrcamentoEntity();
+        Orcamento orcamento = new Orcamento();
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(orcamentoGateway.findByNumeroOsAndStatus("OS-123", StatusOrcamento.DISPONIVEL))
                 .thenReturn(Optional.empty());
