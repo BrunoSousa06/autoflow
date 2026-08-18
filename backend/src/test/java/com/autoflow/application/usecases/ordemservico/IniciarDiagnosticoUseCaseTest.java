@@ -1,6 +1,5 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
@@ -29,7 +28,7 @@ class IniciarDiagnosticoUseCaseTest {
     private UsuarioGateway usuarioGateway;
 
     @Mock
-    private HistoricoStatusOsGateway historicoStatusOsGateway;
+    private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @Mock
     private OrdemServicoAccessPolicy accessPolicy;
@@ -41,12 +40,12 @@ class IniciarDiagnosticoUseCaseTest {
         configurarBusca(os, admin);
 
         var resultado = new IniciarDiagnosticoUseCaseImpl(
-                ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
+                ordemServicoGateway, usuarioGateway, registrarHistoricoStatusOs, accessPolicy
         ).execute("OS-1", "admin@autoflow.com");
 
         assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
         verify(accessPolicy, never()).validarPodeAlterarDiagnostico(any(), any());
-        verify(historicoStatusOsGateway).save(any());
+        verify(registrarHistoricoStatusOs).registrar(any());
     }
 
     @Test
@@ -56,7 +55,7 @@ class IniciarDiagnosticoUseCaseTest {
         configurarBusca(os, mecanico);
 
         new IniciarDiagnosticoUseCaseImpl(
-                ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
+                ordemServicoGateway, usuarioGateway, registrarHistoricoStatusOs, accessPolicy
         ).execute("OS-1", "mecanico@autoflow.com");
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);

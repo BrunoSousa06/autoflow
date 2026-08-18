@@ -1,6 +1,5 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
@@ -27,7 +26,7 @@ class FinalizarServicoUseCaseTest {
     private OrdemServicoGateway ordemServicoGateway;
 
     @Mock
-    private HistoricoStatusOsGateway historicoStatusOsGateway;
+    private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @Test
     void deveFinalizarOsERegistrarHistoricoQuandoUltimoServicoForFinalizado() {
@@ -35,11 +34,11 @@ class FinalizarServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new FinalizarServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
+        var resultado = new FinalizarServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs)
                 .execute("OS-1", 1L);
 
         assertEquals(StatusOrdemServico.FINALIZADA, resultado.getStatus());
-        verify(historicoStatusOsGateway).save(any());
+        verify(registrarHistoricoStatusOs).registrar(any());
     }
 
     @Test
@@ -48,11 +47,11 @@ class FinalizarServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        new FinalizarServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
+        new FinalizarServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs)
                 .execute("OS-1", 1L);
 
         assertEquals(StatusOrdemServico.EM_EXECUCAO, os.getStatus());
-        verify(historicoStatusOsGateway, never()).save(any());
+        verify(registrarHistoricoStatusOs, never()).registrar(any());
     }
 
     private OrdemServico ordemComServicos(ServicoSolicitado... servicos) {

@@ -11,7 +11,6 @@ import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.usecases.orcamento.OrcamentoFactory;
 import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
@@ -33,7 +32,7 @@ public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseC
     private final OrcamentoGateway orcamentoGateway;
     private final OrcamentoPublicacaoGateway publicacaoGateway;
     private final OrcamentoNotificacaoGateway notificacaoGateway;
-    private final HistoricoStatusOsGateway historicoGateway;
+    private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @TransactionalUseCase
     @Override
@@ -61,8 +60,7 @@ public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseC
             log.error("Falha ao notificar cliente sobre orçamento da OS {}. orcamentoId={}", numeroOs, salvo.getId(), exception);
         }
         OrdemServico osSalva = ordemServicoGateway.save(os);
-        historicoGateway.save(HistoricoStatusOs.criar(osSalva.getId(), osSalva.getStatus(),
-                StatusOrdemServicoMensagemPolicy.mensagem(osSalva.getStatus()), osSalva.getNumeroOs()));
+        registrarHistoricoStatusOs.registrar(osSalva);
         return new FinalizarDiagnosticoOutput(osSalva, salvo.getId(), publicUrl);
     }
 }

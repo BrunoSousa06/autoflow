@@ -1,14 +1,11 @@
 package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.exception.ApplicationException;
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,7 +23,7 @@ class EntregarOrdemServicoUseCaseTest {
     private OrdemServicoGateway ordemServicoGateway;
 
     @Mock
-    private HistoricoStatusOsGateway historicoStatusOsGateway;
+    private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @Test
     void deveEntregarOsERegistrarHistorico() {
@@ -34,21 +31,17 @@ class EntregarOrdemServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
+        var resultado = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs)
                 .execute("OS-1");
 
         assertEquals(StatusOrdemServico.ENTREGUE, resultado.getStatus());
-        var captor = ArgumentCaptor.forClass(HistoricoStatusOs.class);
-        verify(historicoStatusOsGateway).save(captor.capture());
-        assertEquals(1L, captor.getValue().getOrdemServicoId());
-        assertEquals("OS-1", captor.getValue().getNumeroOs());
-        assertEquals(StatusOrdemServico.ENTREGUE, captor.getValue().getStatus());
+        verify(registrarHistoricoStatusOs).registrar(os);
     }
 
     @Test
     void deveRetornar404QuandoOsNaoExiste() {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.empty());
-        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway);
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs);
 
         var exception = assertThrows(ApplicationException.class,
                 () -> useCase.execute("OS-1"));
@@ -61,7 +54,7 @@ class EntregarOrdemServicoUseCaseTest {
         var os = ordemFinalizada();
         os.setStatus(StatusOrdemServico.EM_EXECUCAO);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway);
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs);
 
         assertThrows(IllegalStateException.class,
                 () -> useCase.execute("OS-1"));

@@ -7,7 +7,6 @@ import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ApplicationException;
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
@@ -18,7 +17,6 @@ import com.autoflow.application.port.in.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.domain.cliente.Cliente;
-import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
@@ -37,7 +35,7 @@ public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
     private final BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculo;
     private final ServicoGateway servicoGateway;
     private final OrdemServicoGateway ordemServicoGateway;
-    private final HistoricoStatusOsGateway historicoGateway;
+    private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
     private final GerarTokenAcompanhamentoUseCase gerarToken;
     private final EnviarLinkAcompanhamentoUseCase enviarLink;
 
@@ -56,11 +54,7 @@ public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
         os.adicionarServicosSolicitados(servicosSolicitados.stream()
                 .map(servico -> preencherServico(os, servico)).toList());
         OrdemServico salva = ordemServicoGateway.save(os);
-        historicoGateway.save(HistoricoStatusOs.criar(
-                salva.getId(),
-                salva.getStatus(),
-                StatusOrdemServicoMensagemPolicy.mensagem(salva.getStatus()),
-                salva.getNumeroOs()));
+        registrarHistoricoStatusOs.registrar(salva);
         TokenAcompanhamentoOutput token = gerarToken.execute(salva.getId());
         try {
             enviarLink.execute(salva, token.token());

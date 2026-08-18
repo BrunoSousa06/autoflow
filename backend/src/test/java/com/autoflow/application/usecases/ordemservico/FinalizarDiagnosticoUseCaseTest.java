@@ -36,7 +36,7 @@ class FinalizarDiagnosticoUseCaseTest {
     @Mock private OrcamentoGateway orcamentoGateway;
     @Mock private OrcamentoPublicacaoGateway publicacaoGateway;
     @Mock private OrcamentoNotificacaoGateway notificacaoGateway;
-    @Mock private HistoricoStatusOsGateway historicoGateway;
+    @Mock private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @Test
     void deveFinalizarDiagnosticoSemValidarPermissaoParaAdmin() {
@@ -65,7 +65,7 @@ class FinalizarDiagnosticoUseCaseTest {
         return new FinalizarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, versioningGateway,
                 orcamentoFactory, orcamentoGateway, publicacaoGateway,
-                notificacaoGateway, historicoGateway
+                notificacaoGateway, registrarHistoricoStatusOs
         );
     }
 
