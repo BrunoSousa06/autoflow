@@ -36,7 +36,15 @@ public class Notificacao {
         notificacao.canal = CanalNotificacao.EMAIL;
         notificacao.destinatario = destinatario;
         notificacao.status = StatusNotificacao.PENDENTE;
-        notificacao.criadaEm = LocalDateTime.now();
+        notificacao.criadaEm = LocalDateTime.MIN;
+        return notificacao;
+    }
+
+    public static Notificacao pendente(Long orcamentoId, Long clienteId, String destinatario,
+                                       LocalDateTime criadaEm) {
+        Notificacao notificacao = pendente(orcamentoId, clienteId, destinatario);
+        if (criadaEm == null) throw new IllegalArgumentException("Data de criação é obrigatória.");
+        notificacao.criadaEm = criadaEm;
         return notificacao;
     }
 
@@ -64,9 +72,14 @@ public class Notificacao {
     }
 
     public void marcarComoEnviada() {
+        marcarComoEnviada(LocalDateTime.MIN);
+    }
+
+    public void marcarComoEnviada(LocalDateTime enviadaEm) {
         validarPodeAlterarStatus();
         this.status = StatusNotificacao.ENVIADA;
-        this.enviadaEm = LocalDateTime.now();
+        if (enviadaEm == null) throw new IllegalArgumentException("Data de envio é obrigatória.");
+        this.enviadaEm = enviadaEm;
         this.mensagemErro = null;
     }
 

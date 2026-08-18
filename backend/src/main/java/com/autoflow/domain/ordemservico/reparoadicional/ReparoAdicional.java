@@ -21,23 +21,39 @@ public class ReparoAdicional {
     private List<ServicoSolicitado> servicos = new ArrayList<>();
 
     public static ReparoAdicional criar(String numeroOs, Long mecanicoId, List<ServicoSolicitado> servicos) {
+        return criar(numeroOs, mecanicoId, servicos, LocalDateTime.MIN);
+    }
+
+    public static ReparoAdicional criar(String numeroOs, Long mecanicoId, List<ServicoSolicitado> servicos,
+                                        LocalDateTime criadoEm) {
         ReparoAdicional reparo = new ReparoAdicional();
         reparo.numeroOs = numeroOs;
         reparo.mecanicoId = mecanicoId;
-        reparo.criadoEm = LocalDateTime.now();
+        if (criadoEm == null) throw new IllegalArgumentException("Data de criação é obrigatória.");
+        reparo.criadoEm = criadoEm;
         reparo.status = StatusReparoAdicional.PENDENTE_APROVACAO;
         reparo.servicos.addAll(servicos);
         return reparo;
     }
 
     public void aprovar() {
+        aprovar(LocalDateTime.MIN);
+    }
+
+    public void aprovar(LocalDateTime aprovadoEm) {
         if (!StatusReparoAdicional.PENDENTE_APROVACAO.equals(status)) throw new IllegalStateException("Reparo adicional não está pendente de aprovação.");
-        status = StatusReparoAdicional.APROVADO; aprovadoEm = LocalDateTime.now();
+        if (aprovadoEm == null) throw new IllegalArgumentException("Data de aprovação é obrigatória.");
+        status = StatusReparoAdicional.APROVADO; this.aprovadoEm = aprovadoEm;
     }
 
     public void recusar(String motivo) {
+        recusar(motivo, LocalDateTime.MIN);
+    }
+
+    public void recusar(String motivo, LocalDateTime recusadoEm) {
         if (!StatusReparoAdicional.PENDENTE_APROVACAO.equals(status)) throw new IllegalStateException("Reparo adicional não está pendente de aprovação.");
-        status = StatusReparoAdicional.RECUSADO; recusadoEm = LocalDateTime.now(); motivoRecusa = motivo;
+        if (recusadoEm == null) throw new IllegalArgumentException("Data de recusa é obrigatória.");
+        status = StatusReparoAdicional.RECUSADO; this.recusadoEm = recusadoEm; motivoRecusa = motivo;
     }
 
     public Long getId() { return id; }
