@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.Clock;
 
 @Slf4j
 
@@ -33,6 +33,7 @@ public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseC
     private final OrcamentoPublicacaoGateway publicacaoGateway;
     private final OrcamentoNotificacaoGateway notificacaoGateway;
     private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
@@ -43,11 +44,11 @@ public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseC
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) accessPolicy.validarPodeAlterarDiagnostico(os, usuario);
 
-        os.finalizarDiagnostico();
+        LocalDateTime agora = LocalDateTime.now(clock);
+        os.finalizarDiagnostico(agora);
         int versao = versioningGateway.proximaVersaoPorNumeroOs(numeroOs, TipoOrcamento.PRINCIPAL);
-        LocalDateTime agora = LocalDateTime.now(ZoneId.systemDefault());
         Orcamento orcamento = orcamentoFactory.criarPrincipalDisponivel(os, versao, agora);
-        os.aguardarAprovacao();
+        os.aguardarAprovacao(agora);
         Orcamento salvo = orcamentoGateway.save(orcamento);
         OrcamentoPublicacao publicacao = publicacaoGateway.publicarComLinks(salvo.getId());
         String publicUrl = publicacao.urlPdf();

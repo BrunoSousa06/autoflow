@@ -4,14 +4,12 @@ import com.autoflow.domain.cliente.Cliente;
 import com.autoflow.domain.veiculo.Veiculo;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class OrdemServico {
@@ -43,21 +41,25 @@ public class OrdemServico {
         this.dataAbertura = dataAbertura;
     }
 
-    public static OrdemServico criar(Cliente cliente, Veiculo veiculo) {
+    public static OrdemServico criar(Cliente cliente, Veiculo veiculo,
+                                     String numeroOs, LocalDateTime dataHora) {
         validarVeiculo(veiculo);
         if (cliente == null) throw new IllegalArgumentException("Veiculo deve ter cliente para criar OS.");
-        OrdemServico ordemServico = novaOrdem(veiculo);
+        validarDadosDeCriacao(numeroOs, dataHora);
+        OrdemServico ordemServico = novaOrdem(veiculo, numeroOs, dataHora);
         ordemServico.cliente = ClienteOs.fromCliente(cliente);
-        ordemServico.atualizarUltimaAtualizacao();
+        ordemServico.ultimaAtualizacao = dataHora;
         return ordemServico;
     }
 
     public static OrdemServico criar(Long clienteId, String clienteNome, String clienteCpfCnpj,
-                                     String clienteEmail, String clienteTelefone, Veiculo veiculo) {
+                                     String clienteEmail, String clienteTelefone, Veiculo veiculo,
+                                     String numeroOs, LocalDateTime dataHora) {
         validarVeiculo(veiculo);
-        OrdemServico ordemServico = novaOrdem(veiculo);
+        validarDadosDeCriacao(numeroOs, dataHora);
+        OrdemServico ordemServico = novaOrdem(veiculo, numeroOs, dataHora);
         ordemServico.cliente = ClienteOs.fromFields(clienteId, clienteNome, clienteCpfCnpj, clienteEmail, clienteTelefone);
-        ordemServico.atualizarUltimaAtualizacao();
+        ordemServico.ultimaAtualizacao = dataHora;
         return ordemServico;
     }
 
@@ -88,30 +90,32 @@ public class OrdemServico {
         return ordemServico;
     }
 
-    private static OrdemServico novaOrdem(Veiculo veiculo) {
-        return new OrdemServico(gerarNumeroOs(), veiculo, StatusOrdemServico.RECEBIDA, agora());
+    private static OrdemServico novaOrdem(Veiculo veiculo, String numeroOs, LocalDateTime dataHora) {
+        return new OrdemServico(numeroOs, veiculo, StatusOrdemServico.RECEBIDA, dataHora);
     }
 
-    public void atualizarUltimaAtualizacao() { ultimaAtualizacao = agora(); }
+    public void atualizarUltimaAtualizacao(LocalDateTime dataHora) {
+        ultimaAtualizacao = validarDataHora(dataHora);
+    }
 
-    public void registrarLaudo(String laudo) {
+    public void registrarLaudo(String laudo, LocalDateTime dataHora) {
         if (status != StatusOrdemServico.EM_DIAGNOSTICO) throw new IllegalArgumentException("O status deve ser EM_DIAGNOSTICO.");
         diagnostico.setLaudo(laudo);
-        atualizarUltimaAtualizacao();
+        atualizarUltimaAtualizacao(dataHora);
     }
 
-    public void iniciarDiagnostico() {
+    public void iniciarDiagnostico(LocalDateTime dataHora) {
         validarTransicao(StatusOrdemServico.RECEBIDA, StatusOrdemServico.EM_DIAGNOSTICO);
         if (diagnostico == null) diagnostico = new Diagnostico();
-        diagnostico.setIniciadoEm(agora());
+        diagnostico.setIniciadoEm(validarDataHora(dataHora));
         status = StatusOrdemServico.EM_DIAGNOSTICO;
-        atualizarUltimaAtualizacao();
+        atualizarUltimaAtualizacao(dataHora);
     }
 
-    public void finalizarDiagnostico() {
+    public void finalizarDiagnostico(LocalDateTime dataHora) {
         validaSePodeFinalizarDiagnostico();
-        diagnostico.setConcluidoEm(agora());
-        atualizarUltimaAtualizacao();
+        diagnostico.setConcluidoEm(validarDataHora(dataHora));
+        atualizarUltimaAtualizacao(dataHora);
     }
 
     private void validaSePodeFinalizarDiagnostico() {
@@ -142,33 +146,33 @@ public class OrdemServico {
                 .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado na OS."));
     }
 
-    public void aguardarAprovacao() {
+    public void aguardarAprovacao(LocalDateTime dataHora) {
         validarTransicao(StatusOrdemServico.EM_DIAGNOSTICO, StatusOrdemServico.AGUARDANDO_APROVACAO);
-        status = StatusOrdemServico.AGUARDANDO_APROVACAO; atualizarUltimaAtualizacao();
+        status = StatusOrdemServico.AGUARDANDO_APROVACAO; atualizarUltimaAtualizacao(dataHora);
     }
 
-    public void finalizarPorOrcamentoRecusado() {
+    public void finalizarPorOrcamentoRecusado(LocalDateTime dataHora) {
         validarTransicao(StatusOrdemServico.AGUARDANDO_APROVACAO, StatusOrdemServico.FINALIZADA);
-        status = StatusOrdemServico.FINALIZADA; finalizadaEm = agora(); atualizarUltimaAtualizacao();
+        status = StatusOrdemServico.FINALIZADA; finalizadaEm = validarDataHora(dataHora); atualizarUltimaAtualizacao(dataHora);
     }
 
-    public void iniciarExecucao() {
+    public void iniciarExecucao(LocalDateTime dataHora) {
         validarTransicao(StatusOrdemServico.AGUARDANDO_APROVACAO, StatusOrdemServico.EM_EXECUCAO);
-        if (execucaoIniciadaEm == null) execucaoIniciadaEm = agora();
-        atualizarUltimaAtualizacao(); status = StatusOrdemServico.EM_EXECUCAO;
+        if (execucaoIniciadaEm == null) execucaoIniciadaEm = validarDataHora(dataHora);
+        atualizarUltimaAtualizacao(dataHora); status = StatusOrdemServico.EM_EXECUCAO;
     }
 
-    public void finalizarSeTodosServicosFinalizados() {
+    public void finalizarSeTodosServicosFinalizados(LocalDateTime dataHora) {
         if (status == StatusOrdemServico.FINALIZADA || status == StatusOrdemServico.ENTREGUE) return;
         if (servicosSolicitados.isEmpty()) return;
         boolean todosFinalizados = servicosSolicitados.stream().allMatch(servico -> servico.getStatus() == StatusServicoOs.FINALIZADO
                 || servico.getStatus() == StatusServicoOs.CANCELADO);
-        if (todosFinalizados) { status = StatusOrdemServico.FINALIZADA; finalizadaEm = agora(); atualizarUltimaAtualizacao(); }
+        if (todosFinalizados) { status = StatusOrdemServico.FINALIZADA; finalizadaEm = validarDataHora(dataHora); atualizarUltimaAtualizacao(dataHora); }
     }
 
-    public void entregar() {
+    public void entregar(LocalDateTime dataHora) {
         validarTransicao(StatusOrdemServico.FINALIZADA, StatusOrdemServico.ENTREGUE);
-        status = StatusOrdemServico.ENTREGUE; entregueEm = agora(); atualizarUltimaAtualizacao();
+        status = StatusOrdemServico.ENTREGUE; entregueEm = validarDataHora(dataHora); atualizarUltimaAtualizacao(dataHora);
     }
 
     private void validarTransicao(StatusOrdemServico esperado, StatusOrdemServico destino) {
@@ -180,9 +184,15 @@ public class OrdemServico {
         if (veiculo == null) throw new IllegalArgumentException("Veiculo e obrigatorio.");
     }
 
-    private static final AtomicLong SEQUENCIA_NUMERO_OS = new AtomicLong(0);
-    private static String gerarNumeroOs() { return "OS-" + System.currentTimeMillis() + "-" + SEQUENCIA_NUMERO_OS.incrementAndGet(); }
-    private static LocalDateTime agora() { return LocalDateTime.now(ZoneId.systemDefault()); }
+    private static void validarDadosDeCriacao(String numeroOs, LocalDateTime dataHora) {
+        if (numeroOs == null || numeroOs.isBlank()) throw new IllegalArgumentException("Numero da OS e obrigatorio.");
+        validarDataHora(dataHora);
+    }
+
+    private static LocalDateTime validarDataHora(LocalDateTime dataHora) {
+        if (dataHora == null) throw new IllegalArgumentException("Data e hora sao obrigatorias.");
+        return dataHora;
+    }
 
     public List<ServicoSolicitado> getServicosSolicitados() { return Collections.unmodifiableList(servicosSolicitados); }
     public Long getClienteId() { return cliente.getId(); }

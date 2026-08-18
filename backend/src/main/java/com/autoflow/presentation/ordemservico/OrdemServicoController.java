@@ -1,12 +1,13 @@
 package com.autoflow.presentation.ordemservico;
 
 import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.input.veiculo.VeiculoInput;
-import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.presentation.ordemservico.request.*;
 import com.autoflow.presentation.ordemservico.response.FinalizarDiagnosticoResponse;
 import com.autoflow.presentation.ordemservico.response.OrdemServicoDetalheResponse;
@@ -73,19 +74,17 @@ public class OrdemServicoController {
     public OrdemServicoResponse criar(
             @Valid @RequestBody CriarOrdemServicoRequest request
     ) {
-        List<ServicoSolicitado> servicos =
-                servicoSolicitadoMapper.mapToEntities(
-                        request.servicosSolicitados()
-                );
-
         OrdemServicoCriadaOutput osCriada = commandUseCases.criar().execute(
-                request.cpfCnpj(),
-                new VeiculoInput(
+                new CriarOrdemServicoCommand(
+                        request.cpfCnpj(),
+                        new VeiculoInput(
                         request.veiculo().marca(),
                         request.veiculo().ano(),
                         request.veiculo().placa(),
                         request.veiculo().modelo()),
-                servicos
+                        request.servicosSolicitados().stream()
+                                .map(ServicoSolicitadoRequest::servicoId)
+                                .toList())
         );
 
         String acompanhamentoUrl = frontendPublicBaseUrl

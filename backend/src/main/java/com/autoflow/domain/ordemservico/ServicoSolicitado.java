@@ -53,21 +53,23 @@ public class ServicoSolicitado {
         itensNecessarios.addAll(itens);
     }
 
-    public void iniciar(List<ItemNecessario> itensAtualizados) {
+    public void iniciar(List<ItemNecessario> itensAtualizados, LocalDateTime dataHora) {
         validarStatusParaInicio();
-        atualizarExecucao(itensAtualizados);
+        atualizarExecucao(itensAtualizados, dataHora);
     }
 
-    public void iniciar(List<ItemNecessario> itensAtualizados, StatusOrdemServico statusOrdemServico) {
+    public void iniciar(List<ItemNecessario> itensAtualizados, StatusOrdemServico statusOrdemServico,
+                        LocalDateTime dataHora) {
         validarPodeIniciar(statusOrdemServico);
-        atualizarExecucao(itensAtualizados);
+        atualizarExecucao(itensAtualizados, dataHora);
     }
 
-    private void atualizarExecucao(List<ItemNecessario> itensAtualizados) {
+    private void atualizarExecucao(List<ItemNecessario> itensAtualizados, LocalDateTime dataHora) {
+        if (dataHora == null) throw new IllegalArgumentException("Data e hora sao obrigatorias.");
         itensNecessarios.clear();
         itensNecessarios.addAll(itensAtualizados);
         status = StatusServicoOs.EM_EXECUCAO;
-        iniciadoEm = LocalDateTime.now();
+        iniciadoEm = dataHora;
     }
 
     public void validarPodeIniciar(StatusOrdemServico statusOrdemServico) {
@@ -83,12 +85,13 @@ public class ServicoSolicitado {
         }
     }
 
-    public void finalizar() {
+    public void finalizar(LocalDateTime dataHora) {
         if (status != StatusServicoOs.EM_EXECUCAO) {
             throw new IllegalStateException("Servico deve estar em execucao para finalizar.");
         }
         status = StatusServicoOs.FINALIZADO;
-        finalizadoEm = LocalDateTime.now();
+        if (dataHora == null) throw new IllegalArgumentException("Data e hora sao obrigatorias.");
+        finalizadoEm = dataHora;
     }
 
     private static void validarServicoId(Long servicoId) {

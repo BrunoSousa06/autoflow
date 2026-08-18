@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ServicoSolicitadoTest {
 
+    private static final LocalDateTime AGORA = LocalDateTime.of(2026, 8, 18, 12, 30);
+
     private ServicoSolicitado servicoSolicitado;
 
     @BeforeEach
@@ -94,7 +96,7 @@ class ServicoSolicitadoTest {
     @Test
     void testIniciarServico() {
         List<ItemNecessario> itens = new ArrayList<>();
-        servicoSolicitado.iniciar(itens);
+        servicoSolicitado.iniciar(itens, AGORA);
 
         assertEquals(StatusServicoOs.EM_EXECUCAO, servicoSolicitado.getStatus());
         assertNotNull(servicoSolicitado.getIniciadoEm());
@@ -103,10 +105,10 @@ class ServicoSolicitadoTest {
     @Test
     void testIniciarServicoJaIniciado() {
         List<ItemNecessario> itens = new ArrayList<>();
-        servicoSolicitado.iniciar(itens);
+        servicoSolicitado.iniciar(itens, AGORA);
 
         assertThrows(IllegalStateException.class, () -> {
-            servicoSolicitado.iniciar(itens);
+            servicoSolicitado.iniciar(itens, AGORA);
         });
     }
 
@@ -114,7 +116,7 @@ class ServicoSolicitadoTest {
     void testIniciarServicoComItensReconstruidosComoListaImutavel() {
         servicoSolicitado.setItensNecessarios(List.of(new ItemNecessario()));
 
-        servicoSolicitado.iniciar(List.of(new ItemNecessario()));
+        servicoSolicitado.iniciar(List.of(new ItemNecessario()), AGORA);
 
         assertEquals(StatusServicoOs.EM_EXECUCAO, servicoSolicitado.getStatus());
     }
@@ -122,8 +124,8 @@ class ServicoSolicitadoTest {
     @Test
     void testFinalizarServico() {
         List<ItemNecessario> itens = new ArrayList<>();
-        servicoSolicitado.iniciar(itens);
-        servicoSolicitado.finalizar();
+        servicoSolicitado.iniciar(itens, AGORA);
+        servicoSolicitado.finalizar(AGORA);
 
         assertEquals(StatusServicoOs.FINALIZADO, servicoSolicitado.getStatus());
         assertNotNull(servicoSolicitado.getFinalizadoEm());
@@ -132,7 +134,7 @@ class ServicoSolicitadoTest {
     @Test
     void testFinalizarServicoNaoIniciado() {
         assertThrows(IllegalStateException.class, () -> {
-            servicoSolicitado.finalizar();
+            servicoSolicitado.finalizar(AGORA);
         });
     }
 
@@ -160,7 +162,7 @@ class ServicoSolicitadoTest {
     @Test
     void testRegistrarItensNecessarios_statusNaoAguardando_lanca() {
         List<ItemNecessario> itens = new ArrayList<>();
-        servicoSolicitado.iniciar(itens);
+            servicoSolicitado.iniciar(itens, AGORA);
 
         assertThrows(IllegalStateException.class, () -> servicoSolicitado.registrarItensNecessarios(itens));
     }
@@ -173,7 +175,7 @@ class ServicoSolicitadoTest {
 
     @Test
     void testIniciar_comOrdemServicoEmExecucao_sucesso() {
-        servicoSolicitado.iniciar(new ArrayList<>(), StatusOrdemServico.EM_EXECUCAO);
+        servicoSolicitado.iniciar(new ArrayList<>(), StatusOrdemServico.EM_EXECUCAO, AGORA);
 
         assertEquals(StatusServicoOs.EM_EXECUCAO, servicoSolicitado.getStatus());
     }

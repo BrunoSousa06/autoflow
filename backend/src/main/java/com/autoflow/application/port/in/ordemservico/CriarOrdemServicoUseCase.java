@@ -1,14 +1,8 @@
 package com.autoflow.application.port.in.ordemservico;
 
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
-import com.autoflow.application.input.veiculo.VeiculoInput;
-import com.autoflow.domain.ordemservico.ServicoSolicitado;
-
-import java.util.List;
+import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
 
 public interface CriarOrdemServicoUseCase {
-    OrdemServicoCriadaOutput execute(
-            String cpfCnpj,
-            VeiculoInput veiculoRequest,
-            List<ServicoSolicitado> servicosSolicitados);
+    OrdemServicoCriadaOutput execute(CriarOrdemServicoCommand command);
 }

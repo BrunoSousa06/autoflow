@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.Clock;
 
 
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final OrcamentoGateway orcamentoGateway;
     private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
@@ -39,7 +41,7 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
             throw ApplicationException.badRequest("Orçamento nao esta disponível");
         }
 
-        orcamento.aprovar(assinaturaNome, LocalDateTime.now(ZoneId.systemDefault()));
+        orcamento.aprovar(assinaturaNome, LocalDateTime.now(clock));
 
         Orcamento orcamentoSalvo = orcamentoGateway.save(orcamento);
 
@@ -49,7 +51,7 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
 
         OrdemServico ordemServico = ordemServicoGateway.findById(orcamento.getOrdemServicoId())
                 .orElseThrow(() -> ApplicationException.notFound("OS nao encontrada"));
-        ordemServico.iniciarExecucao();
+        ordemServico.iniciarExecucao(LocalDateTime.now(clock));
         ordemServicoGateway.save(ordemServico);
         registrarHistoricoStatusOs.registrar(ordemServico);
 

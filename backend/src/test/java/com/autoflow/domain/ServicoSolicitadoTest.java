@@ -8,12 +8,15 @@ import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServicoSolicitadoTest {
+
+    private static final LocalDateTime AGORA = LocalDateTime.of(2026, 8, 18, 12, 30);
 
     @Test
     void deveCriarServicoSolicitado() {
@@ -68,7 +71,7 @@ class ServicoSolicitadoTest {
         ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
         ItemNecessario itemAtualizado = item(1L, "Peca 1", 1);
 
-        servico.iniciar(List.of(itemAtualizado));
+        servico.iniciar(List.of(itemAtualizado), AGORA);
 
         assertEquals(StatusServicoOs.EM_EXECUCAO, servico.getStatus());
         assertNotNull(servico.getIniciadoEm());
@@ -78,19 +81,19 @@ class ServicoSolicitadoTest {
     @Test
     void naoDeveIniciarServicoFinalizado() {
         ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
-        servico.iniciar(List.of(item(1L, "Peca 1", 1)));
-        servico.finalizar();
+        servico.iniciar(List.of(item(1L, "Peca 1", 1)), AGORA);
+        servico.finalizar(AGORA);
         List<ItemNecessario> itensAtualizados = List.of(item(2L, "Peca 2", 1));
 
-        assertThrows(IllegalStateException.class, () -> servico.iniciar(itensAtualizados));
+        assertThrows(IllegalStateException.class, () -> servico.iniciar(itensAtualizados, AGORA));
     }
 
     @Test
     void deveFinalizarServicoEmExecucao() {
         ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
-        servico.iniciar(List.of(item(1L, "Peca 1", 1)));
+        servico.iniciar(List.of(item(1L, "Peca 1", 1)), AGORA);
 
-        servico.finalizar();
+        servico.finalizar(AGORA);
 
         assertEquals(StatusServicoOs.FINALIZADO, servico.getStatus());
         assertNotNull(servico.getFinalizadoEm());
@@ -100,7 +103,7 @@ class ServicoSolicitadoTest {
     void naoDeveFinalizarServicoQueNaoEstaEmExecucao() {
         ServicoSolicitado servico = new ServicoSolicitado(1L, "Alinhamento", new BigDecimal("120.00"));
 
-        assertThrows(IllegalStateException.class, servico::finalizar);
+        assertThrows(IllegalStateException.class, () -> servico.finalizar(AGORA));
     }
 
     private ItemNecessario item(Long id, String nome, int quantidade) {

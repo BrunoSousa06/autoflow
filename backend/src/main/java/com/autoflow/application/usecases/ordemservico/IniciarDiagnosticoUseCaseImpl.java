@@ -11,6 +11,9 @@ import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 
 @RequiredArgsConstructor
 public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase {
@@ -18,6 +21,7 @@ public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase 
     private final UsuarioGateway usuarioGateway;
     private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
     private final OrdemServicoAccessPolicy accessPolicy;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
@@ -28,7 +32,7 @@ public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase 
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
             accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);
         }
-        ordemServico.iniciarDiagnostico();
+        ordemServico.iniciarDiagnostico(LocalDateTime.now(clock));
         OrdemServico salva = ordemServicoGateway.save(ordemServico);
         registrarHistoricoStatusOs.registrar(salva);
         return salva;

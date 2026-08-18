@@ -13,17 +13,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OrdemServicoTest {
 
+    private static final LocalDateTime AGORA = LocalDateTime.of(2026, 8, 18, 12, 30);
+
     @Test
     void deveCriarEAvancarUmaOrdemServico() {
         Cliente cliente = Cliente.reconstituir(1L, "Cliente", "123", "11999999999", "cliente@email.com");
-        OrdemServico ordem = OrdemServico.criar(cliente, new Veiculo(2L, "ABC1D23", "Honda", "Civic", 2020));
+        OrdemServico ordem = OrdemServico.criar(cliente, new Veiculo(2L, "ABC1D23", "Honda", "Civic", 2020), "OS-1", AGORA);
         ordem.adicionarServicosSolicitados(List.of(ServicoSolicitado.criar(10L, "Revisao", BigDecimal.TEN)));
 
-        ordem.iniciarDiagnostico();
-        ordem.registrarLaudo("Laudo");
-        ordem.finalizarDiagnostico();
-        ordem.aguardarAprovacao();
-        ordem.iniciarExecucao();
+        ordem.iniciarDiagnostico(AGORA);
+        ordem.registrarLaudo("Laudo", AGORA);
+        ordem.finalizarDiagnostico(AGORA);
+        ordem.aguardarAprovacao(AGORA);
+        ordem.iniciarExecucao(AGORA);
 
         assertEquals(StatusOrdemServico.EM_EXECUCAO, ordem.getStatus());
         assertEquals(1L, ordem.getClienteId());
@@ -34,16 +36,16 @@ class OrdemServicoTest {
     void deveRecusarTransicaoInvalida() {
         OrdemServico ordem = OrdemServico.criar(
                 Cliente.reconstituir(1L, "Cliente", "123", null, "cliente@email.com"),
-                new Veiculo(2L, "ABC1D23", null, null, null));
+                new Veiculo(2L, "ABC1D23", null, null, null), "OS-2", AGORA);
 
-        assertThrows(IllegalStateException.class, ordem::entregar);
+        assertThrows(IllegalStateException.class, () -> ordem.entregar(AGORA));
     }
 
     @Test
     void deveCriarOrdemComIdentificadoresEDataDeAbertura() {
         OrdemServico ordem = OrdemServico.criar(
                 Cliente.reconstituir(1L, "Cliente", "123", null, "cliente@email.com"),
-                new Veiculo(2L, "ABC1D23", "Honda", "Civic", 2020));
+                new Veiculo(2L, "ABC1D23", "Honda", "Civic", 2020), "OS-3", AGORA);
 
         assertNotNull(ordem.getNumeroOs());
         assertTrue(ordem.getNumeroOs().startsWith("OS-"));

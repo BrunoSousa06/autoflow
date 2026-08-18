@@ -8,20 +8,25 @@ import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 
 @RequiredArgsConstructor
 public class FinalizarServicoUseCaseImpl implements FinalizarServicoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
     public OrdemServico execute(String numeroOs, Long servicoId) {
         OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
-        os.buscarServicoSolicitado(servicoId).finalizar();
-        os.atualizarUltimaAtualizacao();
-        os.finalizarSeTodosServicosFinalizados();
+        LocalDateTime agora = LocalDateTime.now(clock);
+        os.buscarServicoSolicitado(servicoId).finalizar(agora);
+        os.atualizarUltimaAtualizacao(agora);
+        os.finalizarSeTodosServicosFinalizados(agora);
         OrdemServico salva = ordemServicoGateway.save(os);
         if (StatusOrdemServico.FINALIZADA.equals(salva.getStatus())) {
             registrarHistoricoStatusOs.registrar(salva);

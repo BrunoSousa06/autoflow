@@ -103,7 +103,8 @@ class OrcamentoFactoryTest {
     }
 
     private OrdemServico criarOrdemServico(Cliente cliente, Veiculo veiculo, List<ServicoSolicitado> servicos) {
-        OrdemServico os = OrdemServico.criar(cliente, veiculo);
+        OrdemServico os = OrdemServico.criar(
+                cliente, veiculo, "OS-1", java.time.LocalDateTime.of(2026, 8, 18, 12, 30));
         os.setId(99L);
         os.setNumeroOs("OS-123");
         os.adicionarServicosSolicitados(servicos);

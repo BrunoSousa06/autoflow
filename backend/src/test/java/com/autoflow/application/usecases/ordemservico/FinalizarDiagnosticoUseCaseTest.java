@@ -18,6 +18,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +30,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FinalizarDiagnosticoUseCaseTest {
+
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
 
     @Mock private OrdemServicoGateway ordemServicoGateway;
     @Mock private UsuarioGateway usuarioGateway;
@@ -65,7 +70,7 @@ class FinalizarDiagnosticoUseCaseTest {
         return new FinalizarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, versioningGateway,
                 orcamentoFactory, orcamentoGateway, publicacaoGateway,
-                notificacaoGateway, registrarHistoricoStatusOs
+                notificacaoGateway, registrarHistoricoStatusOs, CLOCK
         );
     }
 

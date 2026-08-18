@@ -4,10 +4,11 @@ import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.output.servico.ServicoOutput;
-import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.gateway.NumeroOrdemServicoGateway;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
@@ -19,12 +20,13 @@ import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.domain.cliente.Cliente;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
-import com.autoflow.domain.ordemservico.StatusServicoOs;
 import com.autoflow.domain.veiculo.Veiculo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Slf4j
 
@@ -38,21 +40,22 @@ public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
     private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
     private final GerarTokenAcompanhamentoUseCase gerarToken;
     private final EnviarLinkAcompanhamentoUseCase enviarLink;
+    private final NumeroOrdemServicoGateway numeroOrdemServicoGateway;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
-    public OrdemServicoCriadaOutput execute(
-            String cpfCnpj,
-            VeiculoInput veiculoRequest,
-            List<ServicoSolicitado> servicosSolicitados) {
-        validarServicos(servicosSolicitados);
-        ClienteOutput cliente = buscarCliente.execute(cpfCnpj);
-        VeiculoOutput veiculo = buscarOuCadastrarVeiculo.execute(cliente.id(), veiculoRequest);
+    public OrdemServicoCriadaOutput execute(CriarOrdemServicoCommand command) {
+        validarCommand(command);
+        ClienteOutput cliente = buscarCliente.execute(command.cpfCnpj());
+        VeiculoOutput veiculo = buscarOuCadastrarVeiculo.execute(cliente.id(), command.veiculo());
+        LocalDateTime agora = LocalDateTime.now(clock);
         OrdemServico os = OrdemServico.criar(
                 Cliente.reconstituir(cliente.id(), cliente.nome(), cliente.cpfCnpj(), cliente.telefone(), cliente.email()),
-                new Veiculo(veiculo.id(), veiculo.placa(), veiculo.marca(), veiculo.modelo(), veiculo.ano()));
-        os.adicionarServicosSolicitados(servicosSolicitados.stream()
-                .map(servico -> preencherServico(os, servico)).toList());
+                new Veiculo(veiculo.id(), veiculo.placa(), veiculo.marca(), veiculo.modelo(), veiculo.ano()),
+                numeroOrdemServicoGateway.gerar(), agora);
+        os.adicionarServicosSolicitados(command.servicoIds().stream()
+                .map(this::preencherServico).toList());
         OrdemServico salva = ordemServicoGateway.save(os);
         registrarHistoricoStatusOs.registrar(salva);
         TokenAcompanhamentoOutput token = gerarToken.execute(salva.getId());
@@ -64,23 +67,20 @@ public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
         return new OrdemServicoCriadaOutput(salva, token.token());
     }
 
-    private ServicoSolicitado preencherServico(
-            OrdemServico os,
-            ServicoSolicitado solicitado) {
-        ServicoOutput servico = servicoGateway.findById(solicitado.getServicoId())
+    private ServicoSolicitado preencherServico(Long servicoId) {
+        ServicoOutput servico = servicoGateway.findById(servicoId)
                 .map(ServicoApplicationMapper::toOutput)
                 .orElseThrow(() -> ApplicationException.notFound(
-                        "Serviço não encontrado com o ID: " + solicitado.getServicoId()));
-        ServicoSolicitado resultado = new ServicoSolicitado();
-        resultado.setServicoId(servico.getId());
-        resultado.setNome(servico.getNome());
-        resultado.setValor(servico.getValor());
-        resultado.setStatus(StatusServicoOs.AGUARDANDO);
-        return resultado;
+                        "Serviço não encontrado com o ID: " + servicoId));
+        return ServicoSolicitado.criar(servico.getId(), servico.getNome(), servico.getValor());
     }
 
-    private void validarServicos(List<ServicoSolicitado> servicos) {
-        if (servicos == null || servicos.isEmpty()) {
+    private void validarCommand(CriarOrdemServicoCommand command) {
+        if (command == null || command.veiculo() == null) {
+            throw new IllegalArgumentException("Comando de criação da ordem de serviço é obrigatório.");
+        }
+        List<Long> servicos = command.servicoIds();
+        if (servicos == null || servicos.isEmpty() || servicos.stream().anyMatch(id -> id == null)) {
             throw new IllegalArgumentException("A ordem de servico deve ter ao menos um servico solicitado.");
         }
     }

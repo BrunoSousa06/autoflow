@@ -10,6 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,6 +21,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class EntregarOrdemServicoUseCaseTest {
+
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
 
     @Mock
     private OrdemServicoGateway ordemServicoGateway;
@@ -31,7 +36,7 @@ class EntregarOrdemServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs)
+        var resultado = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK)
                 .execute("OS-1");
 
         assertEquals(StatusOrdemServico.ENTREGUE, resultado.getStatus());
@@ -41,7 +46,7 @@ class EntregarOrdemServicoUseCaseTest {
     @Test
     void deveRetornar404QuandoOsNaoExiste() {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.empty());
-        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs);
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK);
 
         var exception = assertThrows(ApplicationException.class,
                 () -> useCase.execute("OS-1"));
@@ -54,7 +59,7 @@ class EntregarOrdemServicoUseCaseTest {
         var os = ordemFinalizada();
         os.setStatus(StatusOrdemServico.EM_EXECUCAO);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs);
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK);
 
         assertThrows(IllegalStateException.class,
                 () -> useCase.execute("OS-1"));

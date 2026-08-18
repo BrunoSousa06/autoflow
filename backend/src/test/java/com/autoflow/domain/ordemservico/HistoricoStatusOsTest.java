@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class HistoricoStatusOsTest {
 
+    private static final LocalDateTime AGORA = LocalDateTime.of(2026, 8, 18, 12, 30);
+
     private HistoricoStatusOs historico;
 
     @BeforeEach
@@ -17,7 +19,7 @@ class HistoricoStatusOsTest {
                 100L,
                 StatusOrdemServico.RECEBIDA,
                 "Ordem de serviço recebida com sucesso",
-                "OS-001"
+                "OS-001", AGORA
         );
     }
 
@@ -48,21 +50,21 @@ class HistoricoStatusOsTest {
                 100L,
                 StatusOrdemServico.RECEBIDA,
                 "Recebida",
-                "OS-001"
+                "OS-001", AGORA
         );
 
         HistoricoStatusOs h2 = HistoricoStatusOs.criar(
                 100L,
                 StatusOrdemServico.EM_DIAGNOSTICO,
                 "Em diagnóstico",
-                "OS-001"
+                "OS-001", AGORA
         );
 
         HistoricoStatusOs h3 = HistoricoStatusOs.criar(
                 100L,
                 StatusOrdemServico.FINALIZADA,
                 "Finalizada",
-                "OS-001"
+                "OS-001", AGORA
         );
 
         assertEquals(StatusOrdemServico.RECEBIDA, h1.getStatus());
