@@ -135,6 +135,19 @@ class OrdemServicoStatusIT extends AbstractIT {
         assertThat(json.get("servicos").isArray()).isTrue();
     }
 
+    @Test
+    @DisplayName("não deve permitir reutilizar veículo de outro cliente na criação da OS")
+    void deveBloquearVeiculoDeOutroClienteNaCriacaoDaOs() {
+        ResponseEntity<String> response = post(
+                "/ordens-servico",
+                TestUtils.criarOsRequest("52998224725", "STT1234", List.of(servicoId)),
+                adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(parseJson(response.getBody()).get("erro").asText())
+                .isEqualTo("Placa já cadastrada para outro cliente.");
+    }
+
     private void prepararOsEmExecucao(Long servicoSolicitadoId) {
         patch("/ordens-servico/" + numeroOs + "/mecanico",
                 TestUtils.incluirMecanicoRequest(mecanicoId, TestUtils.EMAIL_MECANICO),

@@ -35,18 +35,6 @@ public class VeiculoRepositoryAdapter implements VeiculoGateway {
     }
 
     @Override
-    public VeiculoOutput save(VeiculoOrdemServicoInput input, Long clienteId) {
-        return save(
-                new CadastrarVeiculoInput(
-                        null,
-                        input.placa(),
-                        input.marca(),
-                        input.modelo(),
-                        input.ano()),
-                clienteId);
-    }
-
-    @Override
     public VeiculoOutput update(Long id, VeiculoInput input) {
         VeiculoEntity veiculo = veiculoRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Veículo não encontrado durante a atualização"));

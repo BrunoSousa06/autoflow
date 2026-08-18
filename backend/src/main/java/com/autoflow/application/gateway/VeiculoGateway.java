@@ -9,8 +9,6 @@ public interface VeiculoGateway {
 
     VeiculoOutput save(CadastrarVeiculoInput input, Long clienteId);
 
-    VeiculoOutput save(VeiculoOrdemServicoInput input, Long clienteId);
-
     VeiculoOutput update(Long id, VeiculoInput input);
 
     Optional<VeiculoOutput> findById(Long id);

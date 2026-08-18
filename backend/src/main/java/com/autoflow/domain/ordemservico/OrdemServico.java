@@ -1,6 +1,7 @@
 package com.autoflow.domain.ordemservico;
 
 import com.autoflow.domain.cliente.Cliente;
+import com.autoflow.domain.veiculo.Veiculo;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

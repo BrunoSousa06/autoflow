@@ -1,6 +1,7 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoDadosInvalidosException;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
@@ -16,7 +17,7 @@ public class BuscarOuCadastrarVeiculoUseCaseImpl implements BuscarOuCadastrarVei
     private final VeiculoGateway veiculoGateway;
 
     @Override
-    public VeiculoOutput execute(Long clienteId, VeiculoOrdemServicoInput input) {
+    public VeiculoOutput execute(Long clienteId, VeiculoInput input) {
         String placa = PlacaPolicy.normalizar(input.placa());
         VeiculoOutput existente = veiculoGateway.findByPlaca(placa).orElse(null);
 
@@ -35,7 +36,7 @@ public class BuscarOuCadastrarVeiculoUseCaseImpl implements BuscarOuCadastrarVei
         }
 
         return veiculoGateway.save(
-                new VeiculoOrdemServicoInput(placa, input.marca(), input.modelo(), input.ano()),
+                new CadastrarVeiculoInput(null, placa, input.marca(), input.modelo(), input.ano()),
                 clienteId);
     }
 }

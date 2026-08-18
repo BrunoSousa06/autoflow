@@ -4,7 +4,7 @@ import com.autoflow.application.input.PageQuery;
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
-import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.presentation.ordemservico.request.*;
@@ -80,11 +80,11 @@ public class OrdemServicoController {
 
         OrdemServicoCriadaOutput osCriada = commandUseCases.criar().execute(
                 request.cpfCnpj(),
-                new VeiculoOrdemServicoInput(
-                        request.veiculo().placa(),
+                new VeiculoInput(
                         request.veiculo().marca(),
-                        request.veiculo().modelo(),
-                        request.veiculo().ano()),
+                        request.veiculo().ano(),
+                        request.veiculo().placa(),
+                        request.veiculo().modelo()),
                 servicos
         );
 

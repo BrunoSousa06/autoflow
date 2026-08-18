@@ -2,6 +2,7 @@ package com.autoflow.infrastructure.persistence.mapper.ordemservico;
 
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
+import com.autoflow.domain.veiculo.Veiculo;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.ClienteOsEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.DiagnosticoEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.ItemNecessarioEntity;

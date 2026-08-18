@@ -1,5 +1,7 @@
 package com.autoflow.domain.ordemservico;
 
+import com.autoflow.domain.veiculo.Veiculo;
+
 import com.autoflow.domain.cliente.Cliente;
 import org.junit.jupiter.api.Test;
 

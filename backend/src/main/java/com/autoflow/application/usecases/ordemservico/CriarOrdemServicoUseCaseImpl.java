@@ -4,7 +4,7 @@ import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.output.servico.ServicoOutput;
-import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.HistoricoStatusOsGateway;
@@ -13,8 +13,8 @@ import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
-import com.autoflow.application.port.in.ordemservico.BuscarOuCadastrarVeiculoForOrdemServicoUseCase;
 import com.autoflow.application.port.in.ordemservico.CriarOrdemServicoUseCase;
+import com.autoflow.application.port.in.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.domain.cliente.Cliente;
@@ -22,7 +22,7 @@ import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusServicoOs;
-import com.autoflow.domain.ordemservico.Veiculo;
+import com.autoflow.domain.veiculo.Veiculo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +34,7 @@ import java.util.List;
 public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
 
     private final BuscarClientePorCpfCnpjUseCase buscarCliente;
-    private final BuscarOuCadastrarVeiculoForOrdemServicoUseCase buscarOuCadastrarVeiculo;
+    private final BuscarOuCadastrarVeiculoUseCase buscarOuCadastrarVeiculo;
     private final ServicoGateway servicoGateway;
     private final OrdemServicoGateway ordemServicoGateway;
     private final HistoricoStatusOsGateway historicoGateway;
@@ -45,11 +45,11 @@ public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
     @Override
     public OrdemServicoCriadaOutput execute(
             String cpfCnpj,
-            VeiculoOrdemServicoInput veiculoRequest,
+            VeiculoInput veiculoRequest,
             List<ServicoSolicitado> servicosSolicitados) {
         validarServicos(servicosSolicitados);
         ClienteOutput cliente = buscarCliente.execute(cpfCnpj);
-        VeiculoOutput veiculo = buscarOuCadastrarVeiculo.execute(cliente, veiculoRequest);
+        VeiculoOutput veiculo = buscarOuCadastrarVeiculo.execute(cliente.id(), veiculoRequest);
         OrdemServico os = OrdemServico.criar(
                 Cliente.reconstituir(cliente.id(), cliente.nome(), cliente.cpfCnpj(), cliente.telefone(), cliente.email()),
                 new Veiculo(veiculo.id(), veiculo.placa(), veiculo.marca(), veiculo.modelo(), veiculo.ano()));

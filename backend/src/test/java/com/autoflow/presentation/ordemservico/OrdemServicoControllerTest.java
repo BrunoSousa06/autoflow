@@ -8,14 +8,14 @@ import com.autoflow.application.output.ordemservico.OrdemServicoDetalheOutput;
 import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
-import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.application.port.in.ordemservico.*;
 import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.cliente.Cliente;
-import com.autoflow.domain.ordemservico.Veiculo;
+import com.autoflow.domain.veiculo.Veiculo;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import org.junit.jupiter.api.Test;
@@ -123,7 +123,7 @@ class OrdemServicoControllerTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(criarOrdemServicoUseCase.execute(eq("52998224725"), any(VeiculoOrdemServicoInput.class), anyList()))
+        when(criarOrdemServicoUseCase.execute(eq("52998224725"), any(VeiculoInput.class), anyList()))
                 .thenReturn(new OrdemServicoCriadaOutput(ordemServico, "token-acompanhamento"));
 
         mockMvc.perform(post("/ordens-servico")
@@ -151,7 +151,7 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.status").value("RECEBIDA"))
                 .andExpect(jsonPath("$.servicos[0].id").value(55L));
 
-        ArgumentCaptor<VeiculoOrdemServicoInput> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoInput.class);
+        ArgumentCaptor<VeiculoInput> veiculoCaptor = ArgumentCaptor.forClass(VeiculoInput.class);
         ArgumentCaptor<List<ServicoSolicitado>> servicosCaptor = captorDeLista();
         verify(criarOrdemServicoUseCase).execute(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
         assertEquals("NEX0517", veiculoCaptor.getValue().placa());

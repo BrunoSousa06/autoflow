@@ -9,7 +9,7 @@ import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
-import com.autoflow.domain.ordemservico.Veiculo;
+import com.autoflow.domain.veiculo.Veiculo;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
