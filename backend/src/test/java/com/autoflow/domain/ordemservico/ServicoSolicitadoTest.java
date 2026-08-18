@@ -1,6 +1,5 @@
 package com.autoflow.domain.ordemservico;
 
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -147,14 +146,6 @@ class ServicoSolicitadoTest {
     }
 
     @Test
-    void testServicoSolicitadoReparoAdicionalAssociation() {
-        ReparoAdicional reparo = new ReparoAdicional();
-        servicoSolicitado.setReparoAdicional(reparo);
-
-        assertNotNull(servicoSolicitado.getReparoAdicional());
-    }
-
-    @Test
     void testServicoSolicitadoDefaultStatus() {
         ServicoSolicitado novoServico = new ServicoSolicitado();
         assertEquals(StatusServicoOs.AGUARDANDO, novoServico.getStatus());
@@ -176,18 +167,13 @@ class ServicoSolicitadoTest {
 
     @Test
     void testIniciar_comOrdemServicoNaoEmExecucao_lanca() {
-        OrdemServico os = criarOrdemServicoEmStatus(StatusOrdemServico.RECEBIDA);
-        servicoSolicitado.setOrdemServico(os);
-
-        assertThrows(IllegalStateException.class, () -> servicoSolicitado.iniciar(new ArrayList<>()));
+        assertThrows(IllegalStateException.class,
+                () -> servicoSolicitado.validarPodeIniciar(StatusOrdemServico.RECEBIDA));
     }
 
     @Test
     void testIniciar_comOrdemServicoEmExecucao_sucesso() {
-        OrdemServico os = criarOrdemServicoEmStatus(StatusOrdemServico.EM_EXECUCAO);
-        servicoSolicitado.setOrdemServico(os);
-
-        servicoSolicitado.iniciar(new ArrayList<>());
+        servicoSolicitado.iniciar(new ArrayList<>(), StatusOrdemServico.EM_EXECUCAO);
 
         assertEquals(StatusServicoOs.EM_EXECUCAO, servicoSolicitado.getStatus());
     }
@@ -197,9 +183,4 @@ class ServicoSolicitadoTest {
         assertThrows(IllegalArgumentException.class, () -> new ServicoSolicitado(1L, null));
     }
 
-    private OrdemServico criarOrdemServicoEmStatus(StatusOrdemServico status) {
-        OrdemServico os = new OrdemServico();
-        os.setStatus(status);
-        return os;
-    }
 }

@@ -114,7 +114,6 @@ class CriarReparoAdicionalUseCaseTest {
         assertEquals(20L, reparo.getMecanicoId());
         assertEquals(30L, reparo.getOrcamentoId());
         assertEquals(1, reparo.getServicos().size());
-        assertSame(reparo, reparo.getServicos().getFirst().getReparoAdicional());
         assertSame(itemEnriquecido, reparo.getServicos().getFirst().getItensNecessarios().getFirst());
 
         ArgumentCaptor<LocalDateTime> dataCaptor = ArgumentCaptor.forClass(LocalDateTime.class);

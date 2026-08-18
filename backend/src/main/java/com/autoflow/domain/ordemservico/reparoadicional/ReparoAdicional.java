@@ -27,7 +27,6 @@ public class ReparoAdicional {
         reparo.criadoEm = LocalDateTime.now();
         reparo.status = StatusReparoAdicional.PENDENTE_APROVACAO;
         reparo.servicos.addAll(servicos);
-        reparo.servicos.forEach(servico -> servico.setReparoAdicional(reparo));
         return reparo;
     }
 

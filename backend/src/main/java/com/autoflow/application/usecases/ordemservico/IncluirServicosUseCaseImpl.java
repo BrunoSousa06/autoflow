@@ -51,7 +51,6 @@ public class IncluirServicosUseCaseImpl implements IncluirServicosUseCase {
             resultado.setNome(catalogo.getNome());
             resultado.setValor(catalogo.getValor());
             resultado.setStatus(StatusServicoOs.AGUARDANDO);
-            resultado.setOrdemServico(os);
             return resultado;
         }).toList();
         os.adicionarServicosSolicitados(preenchidos);

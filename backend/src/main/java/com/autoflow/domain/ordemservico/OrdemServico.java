@@ -77,7 +77,6 @@ public class OrdemServico {
         ordemServico.dataAbertura = dataAbertura;
         ordemServico.diagnostico = diagnostico;
         ordemServico.servicosSolicitados = new ArrayList<>(servicosSolicitados);
-        ordemServico.servicosSolicitados.forEach(servico -> servico.setOrdemServico(ordemServico));
         ordemServico.execucaoIniciadaEm = execucaoIniciadaEm;
         ordemServico.finalizadaEm = finalizadaEm;
         ordemServico.entregueEm = entregueEm;
@@ -135,7 +134,7 @@ public class OrdemServico {
             if (!idsNovos.add(servicoId)) throw new IllegalArgumentException("Serviço repetido na requisição: ID " + servicoId);
             if (idsJaAdicionados.contains(servicoId)) throw new IllegalArgumentException("Serviço já incluído na ordem de serviço: ID " + servicoId);
         }
-        servicos.forEach(servico -> { servico.setOrdemServico(this); this.servicosSolicitados.add(servico); });
+        this.servicosSolicitados.addAll(servicos);
     }
 
     public ServicoSolicitado buscarServicoSolicitado(Long servicoId) {

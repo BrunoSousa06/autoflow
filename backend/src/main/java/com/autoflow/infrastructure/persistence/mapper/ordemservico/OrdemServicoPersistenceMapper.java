@@ -8,7 +8,6 @@ import com.autoflow.infrastructure.persistence.entity.ordemservico.DiagnosticoEn
 import com.autoflow.infrastructure.persistence.entity.ordemservico.ItemNecessarioEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.ServicoSolicitadoEntity;
-import com.autoflow.infrastructure.persistence.entity.ordemservico.reparoadicional.ReparoAdicionalEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
 import org.springframework.stereotype.Component;
@@ -74,9 +73,6 @@ public class OrdemServicoPersistenceMapper {
         domain.setIniciadoEm(entity.getIniciadoEm());
         domain.setFinalizadoEm(entity.getFinalizadoEm());
         domain.setItensNecessarios(entity.getItensNecessarios().stream().map(this::toDomain).toList());
-        if (entity.getReparoAdicional() != null) {
-            domain.setReparoAdicional(toRepairReference(entity.getReparoAdicional()));
-        }
         return domain;
     }
 
@@ -96,11 +92,6 @@ public class OrdemServicoPersistenceMapper {
         entity.setItensNecessarios(new ArrayList<>(domain.getItensNecessarios().stream()
                 .map(this::toEntity)
                 .toList()));
-        if (domain.getReparoAdicional() != null) {
-            ReparoAdicionalEntity repair = new ReparoAdicionalEntity();
-            repair.setId(domain.getReparoAdicional().getId());
-            entity.setReparoAdicional(repair);
-        }
         return entity;
     }
 
@@ -162,10 +153,4 @@ public class OrdemServicoPersistenceMapper {
         return entity;
     }
 
-    private ReparoAdicional toRepairReference(ReparoAdicionalEntity entity) {
-        var domain = new ReparoAdicional();
-        domain.setId(entity.getId()); domain.setOrdemServicoId(entity.getOrdemServicoId()); domain.setNumeroOs(entity.getNumeroOs());
-        domain.setMecanicoId(entity.getMecanicoId()); domain.setOrcamentoId(entity.getOrcamentoId()); domain.setStatus(entity.getStatus());
-        return domain;
-    }
 }

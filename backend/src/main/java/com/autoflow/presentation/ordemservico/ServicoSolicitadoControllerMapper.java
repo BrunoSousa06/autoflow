@@ -16,9 +16,7 @@ public interface ServicoSolicitadoControllerMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "iniciadoEm", ignore = true)
     @Mapping(target = "finalizadoEm", ignore = true)
-    @Mapping(target = "ordemServico", ignore = true)
     @Mapping(target = "itensNecessarios", ignore = true)
-    @Mapping(target = "reparoAdicional", ignore = true)
     ServicoSolicitado mapToEntity(ServicoSolicitadoRequest servicoSolicitadoRequest);
 
     List<ServicoSolicitado> mapToEntities(List<ServicoSolicitadoRequest> servicosRequest);

@@ -23,7 +23,6 @@ class ReparoAdicionalTest {
         assertEquals(StatusReparoAdicional.PENDENTE_APROVACAO, reparo.getStatus());
         assertNotNull(reparo.getCriadoEm());
         assertEquals(List.of(servico), reparo.getServicos());
-        assertSame(reparo, servico.getReparoAdicional());
     }
 
     @Test

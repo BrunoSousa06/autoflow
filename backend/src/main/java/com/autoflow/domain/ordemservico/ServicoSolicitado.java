@@ -1,7 +1,5 @@
 package com.autoflow.domain.ordemservico;
 
-import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,9 +14,7 @@ public class ServicoSolicitado {
     private StatusServicoOs status = StatusServicoOs.AGUARDANDO;
     private LocalDateTime iniciadoEm;
     private LocalDateTime finalizadoEm;
-    private OrdemServico ordemServico;
     private List<ItemNecessario> itensNecessarios = new ArrayList<>();
-    private ReparoAdicional reparoAdicional;
 
     public ServicoSolicitado() {
     }
@@ -58,19 +54,32 @@ public class ServicoSolicitado {
     }
 
     public void iniciar(List<ItemNecessario> itensAtualizados) {
-        validarPodeIniciar();
+        validarStatusParaInicio();
+        atualizarExecucao(itensAtualizados);
+    }
+
+    public void iniciar(List<ItemNecessario> itensAtualizados, StatusOrdemServico statusOrdemServico) {
+        validarPodeIniciar(statusOrdemServico);
+        atualizarExecucao(itensAtualizados);
+    }
+
+    private void atualizarExecucao(List<ItemNecessario> itensAtualizados) {
         itensNecessarios.clear();
         itensNecessarios.addAll(itensAtualizados);
         status = StatusServicoOs.EM_EXECUCAO;
         iniciadoEm = LocalDateTime.now();
     }
 
-    public void validarPodeIniciar() {
+    public void validarPodeIniciar(StatusOrdemServico statusOrdemServico) {
+        validarStatusParaInicio();
+        if (statusOrdemServico != StatusOrdemServico.EM_EXECUCAO) {
+            throw new IllegalStateException("Um serviço só pode ser iniciado se a Ordem de Serviço estiver em execução (após a aprovação do orçamento).");
+        }
+    }
+
+    private void validarStatusParaInicio() {
         if (status != StatusServicoOs.AGUARDANDO) {
             throw new IllegalStateException("O serviço só pode ser iniciado se estiver no status AGUARDANDO. Status atual: " + status);
-        }
-        if (ordemServico != null && ordemServico.getStatus() != StatusOrdemServico.EM_EXECUCAO) {
-            throw new IllegalStateException("Um serviço só pode ser iniciado se a Ordem de Serviço estiver em execução (após a aprovação do orçamento).");
         }
     }
 
@@ -108,12 +117,8 @@ public class ServicoSolicitado {
     public void setIniciadoEm(LocalDateTime value) { this.iniciadoEm = value; }
     public LocalDateTime getFinalizadoEm() { return finalizadoEm; }
     public void setFinalizadoEm(LocalDateTime value) { this.finalizadoEm = value; }
-    public OrdemServico getOrdemServico() { return ordemServico; }
-    public void setOrdemServico(OrdemServico value) { this.ordemServico = value; }
     public List<ItemNecessario> getItensNecessarios() { return itensNecessarios; }
     public void setItensNecessarios(List<ItemNecessario> value) {
         this.itensNecessarios = value == null ? new ArrayList<>() : new ArrayList<>(value);
     }
-    public ReparoAdicional getReparoAdicional() { return reparoAdicional; }
-    public void setReparoAdicional(ReparoAdicional value) { this.reparoAdicional = value; }
 }

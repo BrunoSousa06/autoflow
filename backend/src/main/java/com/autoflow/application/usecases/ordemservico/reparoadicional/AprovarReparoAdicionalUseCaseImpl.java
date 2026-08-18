@@ -49,7 +49,6 @@ public class AprovarReparoAdicionalUseCaseImpl implements AprovarReparoAdicional
         copia.setNome(origem.getNome());
         copia.setValor(origem.getValor());
         copia.setStatus(origem.getStatus());
-        copia.setOrdemServico(ordemServico);
         copia.registrarItensNecessarios(origem.getItensNecessarios().stream()
                 .map(this::copiarItem)
                 .toList());

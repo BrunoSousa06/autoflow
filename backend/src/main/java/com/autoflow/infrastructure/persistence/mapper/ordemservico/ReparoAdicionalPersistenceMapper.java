@@ -28,7 +28,6 @@ public class ReparoAdicionalPersistenceMapper {
             servicos.add(ordemServicoMapper.toDomainServico(servico));
         }
         domain.setServicos(servicos);
-        servicos.forEach(servico -> servico.setReparoAdicional(domain));
         return domain;
     }
 

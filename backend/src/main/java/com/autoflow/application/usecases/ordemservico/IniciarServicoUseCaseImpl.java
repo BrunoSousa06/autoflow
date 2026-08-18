@@ -25,7 +25,7 @@ public class IniciarServicoUseCaseImpl implements IniciarServicoUseCase {
             throw new IllegalStateException("O serviço só pode ser iniciado após a aprovação do orçamento.");
         }
         ServicoSolicitado servico = os.buscarServicoSolicitado(servicoId);
-        servico.validarPodeIniciar();
+        servico.validarPodeIniciar(os.getStatus());
         servico.iniciar(baixarEstoqueUseCase.execute(servico.getItensNecessarios()));
         return ordemServicoGateway.save(os);
     }

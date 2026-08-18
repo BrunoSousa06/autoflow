@@ -76,7 +76,6 @@ public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
         resultado.setNome(servico.getNome());
         resultado.setValor(servico.getValor());
         resultado.setStatus(StatusServicoOs.AGUARDANDO);
-        resultado.setOrdemServico(os);
         return resultado;
     }
 
