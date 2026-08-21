@@ -6,6 +6,7 @@ import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.application.port.in.orcamento.AprovarOrcamentoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarHistoricoStatusOsService;
 import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.Clock;
 
 
 @RequiredArgsConstructor
@@ -21,6 +23,8 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
     private final AprovarReparoAdicionalPorOrcamentoUseCase aprovarReparoAdicionalPorOrcamentoUseCase;
     private final OrdemServicoGateway ordemServicoGateway;
     private final OrcamentoGateway orcamentoGateway;
+    private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
@@ -37,7 +41,7 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
             throw ApplicationException.badRequest("Orçamento nao esta disponível");
         }
 
-        orcamento.aprovar(assinaturaNome, LocalDateTime.now(ZoneId.systemDefault()));
+        orcamento.aprovar(assinaturaNome, LocalDateTime.now(clock));
 
         Orcamento orcamentoSalvo = orcamentoGateway.save(orcamento);
 
@@ -47,8 +51,9 @@ public class AprovarOrcamentoUseCaseImpl implements AprovarOrcamentoUseCase {
 
         OrdemServico ordemServico = ordemServicoGateway.findById(orcamento.getOrdemServicoId())
                 .orElseThrow(() -> ApplicationException.notFound("OS nao encontrada"));
-        ordemServico.iniciarExecucao();
+        ordemServico.iniciarExecucao(LocalDateTime.now(clock));
         ordemServicoGateway.save(ordemServico);
+        registrarHistoricoStatusOs.registrar(ordemServico);
 
         return orcamentoSalvo;
     }

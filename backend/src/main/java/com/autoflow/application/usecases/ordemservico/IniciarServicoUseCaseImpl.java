@@ -10,11 +10,15 @@ import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 
 @RequiredArgsConstructor
 public class IniciarServicoUseCaseImpl implements IniciarServicoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final BaixarEstoqueUseCase baixarEstoqueUseCase;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
@@ -25,8 +29,8 @@ public class IniciarServicoUseCaseImpl implements IniciarServicoUseCase {
             throw new IllegalStateException("O serviço só pode ser iniciado após a aprovação do orçamento.");
         }
         ServicoSolicitado servico = os.buscarServicoSolicitado(servicoId);
-        servico.validarPodeIniciar();
-        servico.iniciar(baixarEstoqueUseCase.execute(servico.getItensNecessarios()));
+        servico.validarPodeIniciar(os.getStatus());
+        servico.iniciar(baixarEstoqueUseCase.execute(servico.getItensNecessarios()), LocalDateTime.now(clock));
         return ordemServicoGateway.save(os);
     }
 }

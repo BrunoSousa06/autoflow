@@ -77,7 +77,6 @@ class ReparoAdicionalEstadoUseCasesTest {
         var itemCopiado = servicoCopiado.getItensNecessarios().getFirst();
         assertNotSame(servicoOriginal, servicoCopiado);
         assertNotSame(itemOriginal, itemCopiado);
-        assertSame(ordemServico, servicoCopiado.getOrdemServico());
         assertEquals(servicoOriginal.getServicoId(), servicoCopiado.getServicoId());
         assertEquals(itemOriginal.getPecaInsumoId(), itemCopiado.getPecaInsumoId());
         assertEquals(itemOriginal.getQuantidadeDisponivel(), itemCopiado.getQuantidadeDisponivel());

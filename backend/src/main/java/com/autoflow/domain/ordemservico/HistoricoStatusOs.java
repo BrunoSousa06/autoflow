@@ -12,13 +12,15 @@ public class HistoricoStatusOs {
     private String mensagemCliente;
 
     public static HistoricoStatusOs criar(Long ordemServicoId, StatusOrdemServico status,
-                                           String mensagemCliente, String numeroOs) {
+                                           String mensagemCliente, String numeroOs,
+                                           LocalDateTime registradoEm) {
         HistoricoStatusOs historico = new HistoricoStatusOs();
         historico.ordemServicoId = ordemServicoId;
         historico.status = status;
         historico.numeroOs = numeroOs;
         historico.mensagemCliente = mensagemCliente;
-        historico.registradoEm = LocalDateTime.now();
+        if (registradoEm == null) throw new IllegalArgumentException("Data do historico e obrigatoria.");
+        historico.registradoEm = registradoEm;
         return historico;
     }
 

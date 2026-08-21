@@ -9,16 +9,31 @@ import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 import java.util.List;
 
 
-@RequiredArgsConstructor
 public class AprovarReparoAdicionalUseCaseImpl implements AprovarReparoAdicionalUseCase {
 
     private final ReparoAdicionalGateway reparoAdicionalGateway;
     private final OrdemServicoGateway ordemServicoGateway;
+    private final Clock clock;
+
+    @Autowired
+    public AprovarReparoAdicionalUseCaseImpl(ReparoAdicionalGateway reparoAdicionalGateway,
+                                             OrdemServicoGateway ordemServicoGateway, Clock clock) {
+        this.reparoAdicionalGateway = reparoAdicionalGateway;
+        this.ordemServicoGateway = ordemServicoGateway;
+        this.clock = clock;
+    }
+
+    public AprovarReparoAdicionalUseCaseImpl(ReparoAdicionalGateway reparoAdicionalGateway,
+                                             OrdemServicoGateway ordemServicoGateway) {
+        this(reparoAdicionalGateway, ordemServicoGateway, Clock.systemUTC());
+    }
 
     @TransactionalUseCase
     @Override
@@ -29,7 +44,7 @@ public class AprovarReparoAdicionalUseCaseImpl implements AprovarReparoAdicional
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(reparo.getNumeroOs())
                 .orElseThrow(() -> new IllegalArgumentException("Ordem de serviço não encontrada."));
 
-        reparo.aprovar();
+        reparo.aprovar(LocalDateTime.now(clock));
 
         List<ServicoSolicitado> servicosParaOs = reparo.getServicos().stream()
                 .map(servico -> copiarServico(servico, ordemServico))
@@ -49,7 +64,6 @@ public class AprovarReparoAdicionalUseCaseImpl implements AprovarReparoAdicional
         copia.setNome(origem.getNome());
         copia.setValor(origem.getValor());
         copia.setStatus(origem.getStatus());
-        copia.setOrdemServico(ordemServico);
         copia.registrarItensNecessarios(origem.getItensNecessarios().stream()
                 .map(this::copiarItem)
                 .toList());

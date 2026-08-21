@@ -11,6 +11,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +23,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IniciarServicoUseCaseTest {
+
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
 
     @Mock
     private OrdemServicoGateway ordemServicoGateway;
@@ -38,7 +43,7 @@ class IniciarServicoUseCaseTest {
         when(baixarEstoqueUseCase.execute(List.of(item))).thenReturn(List.of(item));
         when(ordemServicoGateway.save(ordem)).thenReturn(ordem);
 
-        var resultado = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase)
+        var resultado = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase, CLOCK)
                 .execute("OS-1", 10L);
 
         assertEquals(ordem, resultado);
@@ -51,10 +56,10 @@ class IniciarServicoUseCaseTest {
     void deveImpedirNovaBaixaQuandoServicoJaFoiIniciado() {
         var ordem = ordemEmExecucao();
         var servico = servico(10L);
-        servico.iniciar(List.of());
+        servico.iniciar(List.of(), CLOCK.instant().atOffset(ZoneOffset.UTC).toLocalDateTime());
         ordem.adicionarServicosSolicitados(List.of(servico));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-1")).thenReturn(Optional.of(ordem));
-        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase);
+        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase, CLOCK);
 
         assertThrows(IllegalStateException.class,
                 () -> useCase.execute("OS-1", 10L));
@@ -66,7 +71,7 @@ class IniciarServicoUseCaseTest {
     @Test
     void deveInformarQuandoOrdemNaoExistir() {
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-404")).thenReturn(Optional.empty());
-        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase);
+        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase, CLOCK);
 
         var erro = assertThrows(ApplicationException.class,
                 () -> useCase.execute("OS-404", 10L));
@@ -82,7 +87,7 @@ class IniciarServicoUseCaseTest {
         var servico = servico(10L);
         ordem.adicionarServicosSolicitados(List.of(servico));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-1")).thenReturn(Optional.of(ordem));
-        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase);
+        var useCase = new IniciarServicoUseCaseImpl(ordemServicoGateway, baixarEstoqueUseCase, CLOCK);
 
         assertThrows(IllegalStateException.class,
                 () -> useCase.execute("OS-1", 10L));

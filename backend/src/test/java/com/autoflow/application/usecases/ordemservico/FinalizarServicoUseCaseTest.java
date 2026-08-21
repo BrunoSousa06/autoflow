@@ -1,6 +1,5 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
@@ -11,6 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,11 +25,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class FinalizarServicoUseCaseTest {
 
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
+
     @Mock
     private OrdemServicoGateway ordemServicoGateway;
 
     @Mock
-    private HistoricoStatusOsGateway historicoStatusOsGateway;
+    private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @Test
     void deveFinalizarOsERegistrarHistoricoQuandoUltimoServicoForFinalizado() {
@@ -35,11 +39,11 @@ class FinalizarServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        var resultado = new FinalizarServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
+        var resultado = new FinalizarServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK)
                 .execute("OS-1", 1L);
 
         assertEquals(StatusOrdemServico.FINALIZADA, resultado.getStatus());
-        verify(historicoStatusOsGateway).save(any());
+        verify(registrarHistoricoStatusOs).registrar(any());
     }
 
     @Test
@@ -48,11 +52,11 @@ class FinalizarServicoUseCaseTest {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
-        new FinalizarServicoUseCaseImpl(ordemServicoGateway, historicoStatusOsGateway)
+        new FinalizarServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK)
                 .execute("OS-1", 1L);
 
         assertEquals(StatusOrdemServico.EM_EXECUCAO, os.getStatus());
-        verify(historicoStatusOsGateway, never()).save(any());
+        verify(registrarHistoricoStatusOs, never()).registrar(any());
     }
 
     private OrdemServico ordemComServicos(ServicoSolicitado... servicos) {
@@ -66,7 +70,7 @@ class FinalizarServicoUseCaseTest {
 
     private ServicoSolicitado servicoEmExecucao(Long id) {
         var servico = ServicoSolicitado.criar(id, "Servico", BigDecimal.TEN);
-        servico.iniciar(List.of());
+        servico.iniciar(List.of(), CLOCK.instant().atOffset(ZoneOffset.UTC).toLocalDateTime());
         return servico;
     }
 }

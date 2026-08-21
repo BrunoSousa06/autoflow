@@ -1,9 +1,9 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
 
-import com.autoflow.application.input.veiculo.CadastrarVeiculoInput;
-import com.autoflow.application.output.veiculo.VeiculoClienteOutput;
+import com.autoflow.application.input.veiculo.CadastrarVeiculoCommand;
 import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoClienteOutput;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.infrastructure.persistence.entity.cliente.ClienteEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
@@ -16,7 +16,7 @@ public interface VeiculoMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cliente", source = "cliente")
-    VeiculoEntity mapToEntity(CadastrarVeiculoInput request, ClienteEntity cliente);
+    VeiculoEntity mapToEntity(CadastrarVeiculoCommand request, ClienteEntity cliente);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cliente", ignore = true)

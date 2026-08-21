@@ -10,12 +10,16 @@ import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 
 @RequiredArgsConstructor
 public class RegistrarLaudoUseCaseImpl implements RegistrarLaudoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
     private final OrdemServicoAccessPolicy accessPolicy;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
@@ -25,7 +29,7 @@ public class RegistrarLaudoUseCaseImpl implements RegistrarLaudoUseCase {
         Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);
-        ordemServico.registrarLaudo(laudo);
+        ordemServico.registrarLaudo(laudo, LocalDateTime.now(clock));
         return ordemServicoGateway.save(ordemServico);
     }
 }

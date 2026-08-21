@@ -1,6 +1,6 @@
 package com.autoflow.domain.orcamento;
 
-import com.autoflow.domain.ordemservico.Veiculo;
+import com.autoflow.domain.veiculo.Veiculo;
 
 import java.util.Objects;
 

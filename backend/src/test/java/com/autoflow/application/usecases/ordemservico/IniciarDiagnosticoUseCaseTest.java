@@ -1,6 +1,5 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
@@ -13,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +24,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class IniciarDiagnosticoUseCaseTest {
 
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
+
     @Mock
     private OrdemServicoGateway ordemServicoGateway;
 
@@ -29,7 +33,7 @@ class IniciarDiagnosticoUseCaseTest {
     private UsuarioGateway usuarioGateway;
 
     @Mock
-    private HistoricoStatusOsGateway historicoStatusOsGateway;
+    private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
 
     @Mock
     private OrdemServicoAccessPolicy accessPolicy;
@@ -41,12 +45,12 @@ class IniciarDiagnosticoUseCaseTest {
         configurarBusca(os, admin);
 
         var resultado = new IniciarDiagnosticoUseCaseImpl(
-                ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
+                ordemServicoGateway, usuarioGateway, registrarHistoricoStatusOs, accessPolicy, CLOCK
         ).execute("OS-1", "admin@autoflow.com");
 
         assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
         verify(accessPolicy, never()).validarPodeAlterarDiagnostico(any(), any());
-        verify(historicoStatusOsGateway).save(any());
+        verify(registrarHistoricoStatusOs).registrar(any());
     }
 
     @Test
@@ -56,7 +60,7 @@ class IniciarDiagnosticoUseCaseTest {
         configurarBusca(os, mecanico);
 
         new IniciarDiagnosticoUseCaseImpl(
-                ordemServicoGateway, usuarioGateway, historicoStatusOsGateway, accessPolicy
+                ordemServicoGateway, usuarioGateway, registrarHistoricoStatusOs, accessPolicy, CLOCK
         ).execute("OS-1", "mecanico@autoflow.com");
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);

@@ -1,7 +1,7 @@
 package com.autoflow.application.input.veiculo;
 
 
-public record CadastrarVeiculoInput(
+public record CadastrarVeiculoCommand(
 
         String cpfCnpj,
         String placa,

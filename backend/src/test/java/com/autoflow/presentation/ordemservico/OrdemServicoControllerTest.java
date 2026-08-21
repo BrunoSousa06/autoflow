@@ -1,21 +1,23 @@
 package com.autoflow.presentation.ordemservico;
 
 import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.gateway.AcompanhamentoUrlGateway;
 import com.autoflow.application.output.PageResult;
 import com.autoflow.application.output.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.output.ordemservico.OrdemServicoDetalheOutput;
 import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
 import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
-import com.autoflow.application.input.veiculo.VeiculoOrdemServicoInput;
+import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.application.port.in.ordemservico.*;
 import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.cliente.Cliente;
-import com.autoflow.domain.ordemservico.Veiculo;
+import com.autoflow.domain.veiculo.Veiculo;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import org.junit.jupiter.api.Test;
@@ -54,14 +56,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = OrdemServicoController.class)
+@WebMvcTest(controllers = {
+        OrdemServicoAdministracaoController.class,
+        OrdemServicoDiagnosticoController.class,
+        OrdemServicoExecucaoController.class,
+        OrdemServicoConsultaController.class
+})
 @AutoConfigureMockMvc(addFilters = false)
 @Import({
         ItensNecessariosControllerMapperImpl.class,
         ServicoSolicitadoControllerMapperImpl.class,
-        OrdemServicoCommandUseCases.class,
-        OrdemServicoQueryUseCases.class,
-        OrdemServicoWorkflowUseCases.class,
         OrdemServicoControllerTest.MethodSecurityTestConfig.class,
         OrdemServicoControllerTest.SecurityExceptionHandler.class
 })
@@ -113,6 +117,9 @@ class OrdemServicoControllerTest {
     private AtribuirMecanicoUseCase atribuirMecanicoUseCase;
 
     @MockitoBean
+    private AcompanhamentoUrlGateway acompanhamentoUrlGateway;
+
+    @MockitoBean
     private JwtService jwtService;
 
     @MockitoBean
@@ -123,7 +130,7 @@ class OrdemServicoControllerTest {
     void deveCriarOrdemServico() throws Exception {
         OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
 
-        when(criarOrdemServicoUseCase.execute(eq("52998224725"), any(VeiculoOrdemServicoInput.class), anyList()))
+        when(criarOrdemServicoUseCase.execute(any(CriarOrdemServicoCommand.class)))
                 .thenReturn(new OrdemServicoCriadaOutput(ordemServico, "token-acompanhamento"));
 
         mockMvc.perform(post("/ordens-servico")
@@ -151,15 +158,15 @@ class OrdemServicoControllerTest {
                 .andExpect(jsonPath("$.status").value("RECEBIDA"))
                 .andExpect(jsonPath("$.servicos[0].id").value(55L));
 
-        ArgumentCaptor<VeiculoOrdemServicoInput> veiculoCaptor = ArgumentCaptor.forClass(VeiculoOrdemServicoInput.class);
-        ArgumentCaptor<List<ServicoSolicitado>> servicosCaptor = captorDeLista();
-        verify(criarOrdemServicoUseCase).execute(eq("52998224725"), veiculoCaptor.capture(), servicosCaptor.capture());
-        assertEquals("NEX0517", veiculoCaptor.getValue().placa());
-        assertEquals("Honda", veiculoCaptor.getValue().marca());
-        assertEquals("Civic", veiculoCaptor.getValue().modelo());
-        assertEquals(2020, veiculoCaptor.getValue().ano());
-        assertEquals(10L, servicosCaptor.getValue().getFirst().getServicoId());
-        assertNull(servicosCaptor.getValue().getFirst().getNome());
+        ArgumentCaptor<CriarOrdemServicoCommand> commandCaptor = ArgumentCaptor.forClass(CriarOrdemServicoCommand.class);
+        verify(criarOrdemServicoUseCase).execute(commandCaptor.capture());
+        CriarOrdemServicoCommand command = commandCaptor.getValue();
+        assertEquals("52998224725", command.cpfCnpj());
+        assertEquals("NEX0517", command.veiculo().placa());
+        assertEquals("Honda", command.veiculo().marca());
+        assertEquals("Civic", command.veiculo().modelo());
+        assertEquals(2020, command.veiculo().ano());
+        assertEquals(List.of(10L), command.servicoIds());
     }
 
     @Test
@@ -292,7 +299,7 @@ class OrdemServicoControllerTest {
     void deveEntregarOrdemServicoComoAtendente() throws Exception {
         OrdemServico ordemServico = criarOrdemServico(1L, 55L, "OS-123");
         ordemServico.setStatus(StatusOrdemServico.FINALIZADA);
-        ordemServico.entregar();
+        ordemServico.entregar(LocalDateTime.of(2026, 8, 18, 12, 30));
 
         when(entregarOrdemServicoUseCase.execute("OS-123")).thenReturn(ordemServico);
 
@@ -692,7 +699,8 @@ class OrdemServicoControllerTest {
         Cliente cliente = Cliente.reconstituir(1L, "Cliente 1", "12345678901", "11999999999", "cliente1@exemplo.com");
         Veiculo veiculo = new Veiculo(2L, "ABC1D23", "Honda", "Civic", 2020);
 
-        OrdemServico ordemServico = OrdemServico.criar(cliente, veiculo);
+        OrdemServico ordemServico = OrdemServico.criar(
+                cliente, veiculo, numeroOs, LocalDateTime.of(2026, 8, 18, 12, 30));
         ServicoSolicitado servico = ServicoSolicitado.criar(10L, "Revisao", new BigDecimal("100.00"));
         servico.setId(servicoOsId);
         ordemServico.adicionarServicosSolicitados(List.of(servico));

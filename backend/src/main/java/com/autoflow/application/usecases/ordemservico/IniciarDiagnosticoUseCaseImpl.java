@@ -1,25 +1,27 @@
 package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.exception.ApplicationException;
-import com.autoflow.application.gateway.HistoricoStatusOsGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.port.in.ordemservico.IniciarDiagnosticoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.domain.ordemservico.HistoricoStatusOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 
 @RequiredArgsConstructor
 public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase {
     private final OrdemServicoGateway ordemServicoGateway;
     private final UsuarioGateway usuarioGateway;
-    private final HistoricoStatusOsGateway historicoStatusOsGateway;
+    private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
     private final OrdemServicoAccessPolicy accessPolicy;
+    private final Clock clock;
 
     @TransactionalUseCase
     @Override
@@ -30,10 +32,9 @@ public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase 
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
             accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);
         }
-        ordemServico.iniciarDiagnostico();
+        ordemServico.iniciarDiagnostico(LocalDateTime.now(clock));
         OrdemServico salva = ordemServicoGateway.save(ordemServico);
-        historicoStatusOsGateway.save(HistoricoStatusOs.criar(
-                salva.getId(), salva.getStatus(), StatusOrdemServicoMensagemPolicy.mensagem(salva.getStatus()), salva.getNumeroOs()));
+        registrarHistoricoStatusOs.registrar(salva);
         return salva;
     }
 
