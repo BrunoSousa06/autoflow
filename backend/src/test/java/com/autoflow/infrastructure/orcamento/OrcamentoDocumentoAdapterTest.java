@@ -1,12 +1,6 @@
 package com.autoflow.infrastructure.orcamento;
 
-import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.Orcamento;
-import com.autoflow.domain.orcamento.OrcamentoItemNecessario;
-import com.autoflow.domain.orcamento.OrcamentoServico;
-import com.autoflow.domain.orcamento.StatusOrcamento;
-import com.autoflow.domain.orcamento.TipoOrcamento;
-import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
+import com.autoflow.domain.orcamento.*;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
 

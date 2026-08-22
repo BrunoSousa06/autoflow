@@ -4,9 +4,9 @@ import com.autoflow.application.exception.OrdemServicoNaoEncontradaException;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
+import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.ClienteOsEntity;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
-import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.mapper.UsuarioPersistenceMapper;
 import com.autoflow.infrastructure.persistence.mapper.ordemservico.OrdemServicoPersistenceMapper;
@@ -15,9 +15,9 @@ import com.autoflow.infrastructure.persistence.repository.OrdemServicoRepository
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mapstruct.factory.Mappers;
 
 import java.time.LocalDateTime;
 import java.time.Month;

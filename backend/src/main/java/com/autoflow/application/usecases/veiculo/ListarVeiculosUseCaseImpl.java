@@ -1,8 +1,11 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.input.veiculo.*;
-import com.autoflow.application.output.veiculo.*;
 import com.autoflow.application.gateway.VeiculoGateway;
+import com.autoflow.application.input.veiculo.PageInput;
+import com.autoflow.application.input.veiculo.VeiculoFiltro;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.PageOutput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.port.in.veiculo.ListarVeiculosUseCase;
 import com.autoflow.application.security.ClienteAutenticadoService;
 import lombok.RequiredArgsConstructor;

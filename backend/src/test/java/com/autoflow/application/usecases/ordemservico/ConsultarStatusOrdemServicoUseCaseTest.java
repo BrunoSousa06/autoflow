@@ -1,19 +1,19 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.domain.ordemservico.ClienteOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,9 +22,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ConsultarStatusOrdemServicoUseCaseTest {

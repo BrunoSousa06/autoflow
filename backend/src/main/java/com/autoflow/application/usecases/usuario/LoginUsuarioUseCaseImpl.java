@@ -1,10 +1,10 @@
 package com.autoflow.application.usecases.usuario;
 
-import com.autoflow.application.input.usuario.LoginInput;
-import com.autoflow.application.output.usuario.LoginOutput;
 import com.autoflow.application.gateway.AuthenticationGateway;
 import com.autoflow.application.gateway.TokenGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.input.usuario.LoginInput;
+import com.autoflow.application.output.usuario.LoginOutput;
 import com.autoflow.application.port.in.usuario.LoginUsuarioUseCase;
 import com.autoflow.domain.usuario.Usuario;
 import lombok.RequiredArgsConstructor;

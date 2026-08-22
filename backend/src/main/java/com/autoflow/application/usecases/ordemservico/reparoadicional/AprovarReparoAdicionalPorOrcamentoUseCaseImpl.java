@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
-import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.ConsultarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import lombok.RequiredArgsConstructor;
 
 

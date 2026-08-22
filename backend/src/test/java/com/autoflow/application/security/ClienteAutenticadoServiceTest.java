@@ -1,10 +1,10 @@
 package com.autoflow.application.security;
 
-import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
 import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.domain.usuario.RoleEnum;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,9 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ClienteAutenticadoServiceTest {

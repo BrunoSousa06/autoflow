@@ -1,13 +1,12 @@
 package com.autoflow.domain.ordemservico;
 
-import com.autoflow.domain.veiculo.Veiculo;
-
 import com.autoflow.domain.cliente.Cliente;
+import com.autoflow.domain.veiculo.Veiculo;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

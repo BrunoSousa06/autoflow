@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.output.ordemservico.OrdemServicoDetalheOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrcamentoGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.output.ordemservico.OrdemServicoDetalheOutput;
 import com.autoflow.application.port.in.ordemservico.DetalharOrdemServicoUseCase;
 import com.autoflow.domain.orcamento.StatusOrcamento;
 import com.autoflow.domain.ordemservico.OrdemServico;

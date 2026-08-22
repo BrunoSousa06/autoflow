@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.output.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
+import com.autoflow.application.output.ordemservico.FinalizarDiagnosticoOutput;
 import com.autoflow.application.policy.OrdemServicoAccessPolicy;
 import com.autoflow.application.port.in.ordemservico.FinalizarDiagnosticoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
@@ -13,8 +13,8 @@ import com.autoflow.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Service
 public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseCase {

@@ -1,13 +1,14 @@
 package com.autoflow.application.usecases.usuario;
 
-import com.autoflow.application.output.security.CurrentUser;
-import com.autoflow.application.input.usuario.LoginInput;
-import com.autoflow.application.input.usuario.RegistroInput;
-import com.autoflow.application.output.usuario.UsuarioOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.*;
+import com.autoflow.application.input.usuario.LoginInput;
+import com.autoflow.application.input.usuario.RegistroInput;
 import com.autoflow.application.mapper.UsuarioApplicationMapper;
-import com.autoflow.application.port.in.usuario.*;
+import com.autoflow.application.output.security.CurrentUser;
+import com.autoflow.application.output.usuario.UsuarioOutput;
+import com.autoflow.application.port.in.usuario.CadastrarClienteUseCase;
+import com.autoflow.application.port.in.usuario.CadastrarUsuarioUseCase;
 import com.autoflow.domain.usuario.RoleEnum;
 import com.autoflow.domain.usuario.Usuario;
 import org.junit.jupiter.api.BeforeEach;

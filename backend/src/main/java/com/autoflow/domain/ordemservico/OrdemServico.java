@@ -4,12 +4,7 @@ import com.autoflow.domain.cliente.Cliente;
 import com.autoflow.domain.veiculo.Veiculo;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class OrdemServico {

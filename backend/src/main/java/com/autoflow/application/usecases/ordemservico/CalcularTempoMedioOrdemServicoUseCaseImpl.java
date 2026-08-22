@@ -1,7 +1,7 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.gateway.MetricsGateway;
+import com.autoflow.application.output.ordemservico.TempoMedioOrdemServicoOutput;
 import com.autoflow.application.port.in.ordemservico.CalcularTempoMedioOrdemServicoUseCase;
 import lombok.RequiredArgsConstructor;
 

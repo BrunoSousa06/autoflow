@@ -2,8 +2,8 @@ package com.autoflow.infrastructure.persistence.adapters;
 
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
-import com.autoflow.infrastructure.persistence.repository.reparoadicional.ReparoAdicionalRepository;
 import com.autoflow.infrastructure.persistence.mapper.ordemservico.ReparoAdicionalPersistenceMapper;
+import com.autoflow.infrastructure.persistence.repository.reparoadicional.ReparoAdicionalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

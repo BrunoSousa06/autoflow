@@ -1,8 +1,8 @@
 package com.autoflow.infrastructure.orcamento;
 
+import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import com.autoflow.application.input.notificacao.OrcamentoNotificacao;
-import com.autoflow.application.gateway.NotificacaoGateway;
 import com.autoflow.domain.orcamento.TipoOrcamento;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
