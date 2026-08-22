@@ -321,6 +321,7 @@ Entretanto, algumas etapas são condicionadas especificamente a um push na branc
 
 O fluxo pode ser representado da seguinte forma:
 
+
                          ┌─────────────────────┐
                          │     Pull Request    │
                          │  develop / main     │
