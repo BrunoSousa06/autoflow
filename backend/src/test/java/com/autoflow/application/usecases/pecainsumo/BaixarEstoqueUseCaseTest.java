@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.pecainsumo;
 
+import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.application.gateway.EstoqueGateway;
 import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
-import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -14,13 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BaixarEstoqueUseCaseTest {

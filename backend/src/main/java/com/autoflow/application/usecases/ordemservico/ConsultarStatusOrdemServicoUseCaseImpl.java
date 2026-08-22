@@ -1,10 +1,10 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.output.ordemservico.StatusOrdemServicoOutput;
 import com.autoflow.application.port.in.ordemservico.ConsultarStatusOrdemServicoUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;

@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
+import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import lombok.RequiredArgsConstructor;

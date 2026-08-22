@@ -1,10 +1,10 @@
 package com.autoflow.presentation.servico;
 
+import com.autoflow.application.input.servico.PageInput;
 import com.autoflow.application.input.servico.ServicoInput;
+import com.autoflow.application.output.servico.PageOutput;
 import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.output.servico.TempoMedioServicoMetricaOutput;
-import com.autoflow.application.input.servico.PageInput;
-import com.autoflow.application.output.servico.PageOutput;
 import com.autoflow.application.port.in.servico.*;
 import com.autoflow.presentation.servico.request.ServicoRequest;
 import com.autoflow.presentation.servico.response.ServicoResponse;
@@ -25,8 +25,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)

@@ -22,8 +22,6 @@ public class Notificacao {
 
     private LocalDateTime criadaEm;
 
-    public Notificacao() {
-    }
 
     public static Notificacao pendente(
             Long orcamentoId,

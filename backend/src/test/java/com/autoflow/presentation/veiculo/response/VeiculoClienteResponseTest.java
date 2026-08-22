@@ -1,6 +1,5 @@
 package com.autoflow.presentation.veiculo.response;
 
-import com.autoflow.presentation.veiculo.response.VeiculoClienteResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,11 +1,11 @@
 package com.autoflow.application.usecases.ordemservico;
 
-import com.autoflow.application.input.PageQuery;
-import com.autoflow.application.output.PageResult;
-import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.exception.UsuarioNaoEncontradoException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.output.PageResult;
 import com.autoflow.application.port.in.ordemservico.ListarOrdensServicoUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.usuario.RoleEnum;

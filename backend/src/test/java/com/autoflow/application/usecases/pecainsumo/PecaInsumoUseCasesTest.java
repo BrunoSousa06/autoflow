@@ -1,11 +1,11 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.input.PageQuery;
-import com.autoflow.application.output.PageResult;
-import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
-import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.output.PageResult;
+import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PecaInsumoUseCasesTest {

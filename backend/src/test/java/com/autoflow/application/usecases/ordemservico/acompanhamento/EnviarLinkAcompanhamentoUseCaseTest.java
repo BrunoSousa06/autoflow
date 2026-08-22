@@ -1,8 +1,7 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
-import com.autoflow.application.usecases.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCaseImpl;
+import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import com.autoflow.domain.ordemservico.ClienteOs;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import org.junit.jupiter.api.BeforeEach;

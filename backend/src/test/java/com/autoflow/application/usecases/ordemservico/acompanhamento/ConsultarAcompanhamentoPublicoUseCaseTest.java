@@ -4,7 +4,6 @@ import com.autoflow.application.exception.AcompanhamentoPublicoNaoEncontradoExce
 import com.autoflow.application.exception.TokenAcompanhamentoObrigatorioException;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
-import com.autoflow.application.usecases.ordemservico.acompanhamento.ConsultarAcompanhamentoPublicoUseCaseImpl;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import org.junit.jupiter.api.BeforeEach;

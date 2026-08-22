@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.pecainsumo;
 
-import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.exception.EstoqueItemNaoEncontradoException;
 import com.autoflow.application.gateway.EstoqueGateway;
+import com.autoflow.application.output.pecainsumo.EstoqueItemOutput;
 import com.autoflow.application.port.in.pecainsumo.ConsultarDisponibilidadeEstoqueUseCase;
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;

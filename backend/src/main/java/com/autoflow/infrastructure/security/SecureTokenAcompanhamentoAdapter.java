@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.security;
 
-import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
+import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

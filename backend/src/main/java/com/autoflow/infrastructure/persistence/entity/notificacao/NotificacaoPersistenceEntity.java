@@ -2,14 +2,7 @@ package com.autoflow.infrastructure.persistence.entity.notificacao;
 
 import com.autoflow.domain.notificacao.CanalNotificacao;
 import com.autoflow.domain.notificacao.StatusNotificacao;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
