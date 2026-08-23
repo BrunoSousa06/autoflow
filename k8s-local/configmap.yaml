@@ -4,7 +4,7 @@ metadata:
   name: autoflow-config
 data:
   BACKEND_URL: http://autoflow-backend-service
-  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql-service:5432/autoflow_db
+  SPRING_DATASOURCE_URL: jdbc:postgresql://autoflow-db-0.postgresql-service:5432/autoflow_db
   JWT_EXPIRATION: "3600000"
   MAIL_USERNAME: autoflow.sistema@gmail.com
   POSTGRES_DB: autoflow_db

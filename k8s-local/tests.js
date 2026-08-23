@@ -23,7 +23,7 @@ export default function () {
   };
 
 
-  let res = http.post('http://127.0.0.1:53222/auth/login', payload, params);
+  let res = http.post('http://127.0.0.1:54712/auth/login', payload, params);
 
   check(res, { 'success login': (r) => r.status === 200 });
 
