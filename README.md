@@ -310,7 +310,7 @@ Com o backend rodando:
 | GitHub Actions | Pipeline CI/CD automatizado         |
 
 
-## Fluxo do CI/CD
+## Fluxo do CI/CD 
 
 O pipeline é executado automaticamente em dois cenários:
 
