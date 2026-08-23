@@ -1,0 +1,66 @@
+flowchart LR
+    users["Usuários internos e cliente"] --> browser["Navegador"]
+
+    subgraph delivery["Entrega contínua"]
+        repository["Repositório Git"] --> actions["GitHub Actions"]
+        actions --> quality["Testes e qualidade"]
+        quality --> builds["Build backend e frontend"]
+        builds --> security["Snyk"]
+        security --> publish["Publicação de imagens"]
+        publish --> registry["Docker Hub"]
+        publish --> deploy["deploy-aws"]
+        deploy --> terraform["Terraform"]
+    end
+
+    subgraph aws["AWS - us-east-1"]
+        subgraph network["VPC, subnets, rotas, NAT e security groups"]
+            subgraph eks["EKS e node group"]
+                frontendService["Service frontend<br/>LoadBalancer"]
+                frontendDeployment["Deployment frontend<br/>imagem Docker Hub"]
+                backendService["Service backend<br/>LoadBalancer"]
+                backendDeployment["Deployment backend<br/>imagem Docker Hub"]
+                frontendConfig["ConfigMap frontend"]
+                backendConfig["ConfigMap backend"]
+                backendSecret["Secret backend"]
+                hpa["HPA backend<br/>min 1 / max 3"]
+            end
+        end
+        rds["RDS PostgreSQL<br/>subnets privadas"]
+        stateBucket["S3 state-autoflow-terraform"]
+    end
+
+    smtp["Servidor SMTP"]
+    metrics["Metrics Server<br/>pré-requisito do HPA"]
+    browser --> frontendService
+    frontendService --> frontendDeployment
+    frontendDeployment --> backendService
+    backendService --> backendDeployment
+    frontendConfig --> frontendDeployment
+    backendConfig --> backendDeployment
+    backendSecret --> backendDeployment
+    backendDeployment --> rds
+    backendDeployment --> smtp
+    metrics --> hpa
+    hpa -. " manifesto k8s/hpa.yaml; aplicação manual no cluster provisionado " .-> backendDeployment
+    terraform --> network
+    terraform --> rds
+    terraform --> frontendService
+    terraform --> backendService
+    terraform --> frontendConfig
+    terraform --> backendConfig
+    terraform --> backendSecret
+    terraform --> frontendDeployment
+    terraform --> backendDeployment
+    terraform -. " bucket criado; backend S3 atualmente comentado " .-> stateBucket
+    registry --> frontendDeployment
+    registry --> backendDeployment
+    classDef external fill: #eef2ff, stroke: #4f46e5, color: #1e1b4b
+    classDef deliveryNode fill: #ecfdf5, stroke: #059669, color: #064e3b
+    classDef awsNode fill: #fff7ed, stroke: #ea580c, color: #7c2d12
+    classDef k8sNode fill: #eff6ff, stroke: #2563eb, color: #1e3a8a
+    classDef noteNode fill: #fefce8, stroke: #ca8a04, color: #713f12
+    class users, browser, smtp external
+    class repository, actions, quality, builds, security, publish, registry, deploy, terraform deliveryNode
+    class network, eks, rds, stateBucket awsNode
+    class frontendService, frontendDeployment, backendService, backendDeployment, frontendConfig, backendConfig, backendSecret, hpa k8sNode
+    class metrics noteNode

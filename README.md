@@ -1,6 +1,7 @@
 # AutoFlow
 
-Sistema de gerenciamento de ordens de serviço para oficinas mecânicas. Controla o ciclo completo de atendimento: abertura de OS, diagnóstico, orçamento, execução e encerramento, com controle de acesso por perfil e área do cliente.
+Sistema de gerenciamento de ordens de serviço para oficinas mecânicas. Controla o ciclo completo de atendimento:
+abertura de OS, diagnóstico, orçamento, execução e encerramento, com controle de acesso por perfil e área do cliente.
 
 ---
 
@@ -26,7 +27,8 @@ Este repositório possui três arquivos README, cada um com um objetivo específ
 | `docs/diagramas-sequencia/diagrama-sequencia.md` | Índice dos diagramas de sequência dos principais fluxos do sistema.                                                                           |
 | `docs/fluxo-orcamento-publico.md`                | Fluxo técnico de consulta, download, aprovação e recusa de orçamento por link público.                                                        |
 
-Para uma visão geral da solução, comece por este arquivo. Para detalhes técnicos de cada aplicação, consulte o README correspondente.
+Para uma visão geral da solução, comece por este arquivo. Para detalhes técnicos de cada aplicação, consulte o README
+correspondente.
 
 ---
 
@@ -34,26 +36,26 @@ Para uma visão geral da solução, comece por este arquivo. Para detalhes técn
 
 ### Backend
 
-| Tecnologia               | Detalhe                    |
-|--------------------------|----------------------------|
-| Java 21                  |                            |
-| Spring Boot 3.5.x        | Web, Data JPA, Security, Validation |
-| PostgreSQL               | Banco de dados principal   |
-| SpringDoc OpenAPI        | Documentação Swagger       |
-| Lombok                   |                            |
-| JUnit 5 + Mockito        | Testes unitários e integração |
-| SonarQube + Jacoco       | Qualidade e cobertura      |
-| Docker + GitHub Actions  | Build, CI/CD               |
+| Tecnologia              | Detalhe                             |
+|-------------------------|-------------------------------------|
+| Java 21                 |                                     |
+| Spring Boot 3.5.x       | Web, Data JPA, Security, Validation |
+| PostgreSQL              | Banco de dados principal            |
+| SpringDoc OpenAPI       | Documentação Swagger                |
+| Lombok                  |                                     |
+| JUnit 5 + Mockito       | Testes unitários e integração       |
+| SonarQube + Jacoco      | Qualidade e cobertura               |
+| Docker + GitHub Actions | Build, CI/CD                        |
 
 ### Frontend
 
-| Tecnologia         | Versão  |
-|--------------------|---------|
-| Angular            | 17.3    |
-| Angular Material   | 17.3    |
-| TypeScript         | 5.4     |
-| RxJS               | 7.8     |
-| SCSS               | —       |
+| Tecnologia       | Versão |
+|------------------|--------|
+| Angular          | 17.3   |
+| Angular Material | 17.3   |
+| TypeScript       | 5.4    |
+| RxJS             | 7.8    |
+| SCSS             | —      |
 
 ---
 
@@ -72,7 +74,8 @@ Cada camada tem responsabilidade única:
 - **Repository** — persistência via Spring Data JPA
 - **Domain/Entity** — entidades e relacionamentos
 
-Boas práticas adotadas: SOLID, injeção de dependências, tratamento centralizado de exceções, Bean Validation, análise estática com SonarQube e pipeline CI via GitHub Actions.
+Boas práticas adotadas: SOLID, injeção de dependências, tratamento centralizado de exceções, Bean Validation, análise
+estática com SonarQube e pipeline CI via GitHub Actions.
 
 ### Frontend — Angular Standalone + Signals
 
@@ -103,13 +106,13 @@ Boas práticas adotadas: SOLID, injeção de dependências, tratamento centraliz
 
 Usuários criados pelo seed do banco (senha padrão: `Senha@1234`):
 
-| Email                    | Role       | Acesso                                         |
-|--------------------------|------------|------------------------------------------------|
-| `admin@autoflow.com`     | ADMIN      | Acesso total ao sistema                        |
-| `atendente@autoflow.com` | ATENDENTE  | Clientes, Veículos, OS, Orçamentos             |
-| `mecanico1@autoflow.com` | MECANICO   | Dashboard, OS, Serviços, Peças                 |
-| `mecanico2@autoflow.com` | MECANICO   | Idem                                           |
-| `cliente@autoflow.com`   | CLIENTE    | Minha Conta, Minhas Ordens, Veículos           |
+| Email                    | Role      | Acesso                               |
+|--------------------------|-----------|--------------------------------------|
+| `admin@autoflow.com`     | ADMIN     | Acesso total ao sistema              |
+| `atendente@autoflow.com` | ATENDENTE | Clientes, Veículos, OS, Orçamentos   |
+| `mecanico1@autoflow.com` | MECANICO  | Dashboard, OS, Serviços, Peças       |
+| `mecanico2@autoflow.com` | MECANICO  | Idem                                 |
+| `cliente@autoflow.com`   | CLIENTE   | Minha Conta, Minhas Ordens, Veículos |
 
 ---
 
@@ -178,14 +181,14 @@ Detalhes de endpoints, segurança, configuração e auditoria estão em
 
 ### Pré-requisitos
 
-| Ferramenta   | Versão mínima |
-|--------------|---------------|
-| Java         | 21            |
-| Maven        | 3.5.7         |
-| Node.js      | 20            |
-| npm          | 10            |
-| PostgreSQL   | Qualquer      |
-| Docker       | Opcional      |
+| Ferramenta | Versão mínima |
+|------------|---------------|
+| Java       | 21            |
+| Maven      | 3.5.7         |
+| Node.js    | 20            |
+| npm        | 10            |
+| PostgreSQL | Qualquer      |
+| Docker     | Opcional      |
 
 ### Clonar o repositório
 
@@ -231,6 +234,7 @@ cd frontend
 docker build -t autoflow-frontend .
 docker run -p 4200:80 autoflow-frontend
 ```
+
 ---
 
 ### Somente o backend
@@ -240,12 +244,13 @@ cd backend
 docker build -t autoflow-backend .
 docker run --env-file ../.env -p 8080:8080 autoflow-backend
 ```
----
 
+---
 
 ## Executando localmente com Kubernetes
 
-É necessario ter o minikube/kind ou o Docker Desktop com a opção de kubernetes ativa para conseguir subir os manifestos kubernetes localmente.
+É necessario ter o minikube/kind ou o Docker Desktop com a opção de kubernetes ativa para conseguir subir os manifestos
+kubernetes localmente.
 
 ```bash
 cd k8s-local
@@ -258,9 +263,10 @@ kubectl apply -f .
 kubectl get pods (validar que todos pods subiram com sucesso)
 
 ```
-Observação: respeitar a ordem de subida acima  para evitar erros no deploy dos pods devido dependecias de arquivos.
 
-- Acesso no frontend : http://localhost:30180 
+Observação: respeitar a ordem de subida acima para evitar erros no deploy dos pods devido dependecias de arquivos.
+
+- Acesso no frontend : http://localhost:30180
 - Acesso no backend  : http://localhost:30080
 
 ---
@@ -302,13 +308,12 @@ Com o backend rodando:
 
 ## Qualidade de Código
 
-| Ferramenta     | Finalidade                          |
-|----------------|-------------------------------------|
-| SonarQube      | Code smells, bugs, duplicações      |
-| Jacoco         | Cobertura de testes                 |
-| Snyk           | Vulnerabilidades de dependências    |
-| GitHub Actions | Pipeline CI/CD automatizado         |
-
+| Ferramenta     | Finalidade                       |
+|----------------|----------------------------------|
+| SonarQube      | Code smells, bugs, duplicações   |
+| Jacoco         | Cobertura de testes              |
+| Snyk           | Vulnerabilidades de dependências |
+| GitHub Actions | Pipeline CI/CD automatizado      |
 
 ## Fluxo do CI/CD
 

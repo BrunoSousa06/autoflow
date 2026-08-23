@@ -1,94 +1,46 @@
-# Diagramas de Sequencia - AutoFlow
+# Diagramas de sequência — AutoFlow
 
-Esta documentacao centraliza os principais fluxos de interacao do AutoFlow usando diagramas de sequencia em Mermaid.
+Esta pasta registra os principais fluxos temporais entre usuário, frontend Angular, API Spring Boot, casos de uso,
+adapters e PostgreSQL. Os diagramas complementam o Swagger e não substituem o contrato HTTP.
 
-Os diagramas foram separados em arquivos `.mermaid` para facilitar leitura, manutencao e evolucao independente de cada cenario.
+## Índice
 
-## Indice dos diagramas
+| Fluxo                             | Arquivo                                                                                  | Escopo                                        |
+|-----------------------------------|------------------------------------------------------------------------------------------|-----------------------------------------------|
+| Ciclo principal da OS             | [fluxo_principal.mermaid](fluxo_principal.mermaid)                                       | Abertura, atribuição, diagnóstico e orçamento |
+| Aprovação/recusa autenticada      | [aprovacao_recusa_orcamento.mermaid](aprovacao_recusa_orcamento.mermaid)                 | Decisão do cliente com JWT                    |
+| Aprovação/recusa pública          | [aprovacao_recusa_orcamento_publico.mermaid](aprovacao_recusa_orcamento_publico.mermaid) | Token, consulta e decisão sem login           |
+| Execução e reparo adicional       | [execucao_os_reparo_adicional.mermaid](execucao_os_reparo_adicional.mermaid)             | Estoque, execução e orçamento complementar    |
+| Início de serviço e estoque       | [inicio_servico_baixa_estoque.mermaid](inicio_servico_baixa_estoque.mermaid)             | Disponibilidade e baixa de itens              |
+| Registro de reparo adicional      | [registro_reparo_adicional.mermaid](registro_reparo_adicional.mermaid)                   | Criação, publicação e notificação             |
+| Decisão de orçamento complementar | [decisao_orcamento_complementar.mermaid](decisao_orcamento_complementar.mermaid)         | Aprovação/recusa do reparo vinculado          |
+| Conclusão da OS                   | [conclusao_servico_os.mermaid](conclusao_servico_os.mermaid)                             | Finalização de serviços e status              |
 
-| Fluxo                                | Arquivo                                                                                  | Objetivo                                                                                                                      |
-|--------------------------------------|------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| Ciclo principal da ordem de servico  | [fluxo_principal.mermaid](fluxo_principal.mermaid)                                       | Descrever a abertura da OS, diagnostico, geracao de orcamento e notificacao do cliente.                                       |
-| Aprovacao ou recusa do orcamento     | [aprovacao_recusa_orcamento.mermaid](aprovacao_recusa_orcamento.mermaid)                 | Mostrar a decisao do cliente e as transicoes de status decorrentes.                                                           |
-| Aprovacao ou recusa por link publico | [aprovacao_recusa_orcamento_publico.mermaid](aprovacao_recusa_orcamento_publico.mermaid) | Mostrar a validacao do token, a pagina publica e os efeitos da decisao externa.                                               |
-| Execucao da OS e reparo adicional    | [execucao_os_reparo_adicional.mermaid](execucao_os_reparo_adicional.mermaid)             | Apresentar uma visao resumida da execucao dos servicos, baixa de estoque, reparo adicional e transicao da OS para Finalizada. |
+## Como ler
 
-## 1. Ciclo principal da ordem de servico
+1. O ator interage com o frontend ou com a página pública.
+2. O frontend envia a requisição para o controller correspondente.
+3. Spring Security valida JWT, perfil ou token público quando aplicável.
+4. O controller delega ao caso de uso.
+5. Gateways/adapters acessam PostgreSQL, e-mail, PDF ou publicação de orçamento.
+6. A resposta retorna pelo controller para o frontend.
 
-Este fluxo cobre o processo inicial da ordem de servico, desde a abertura pelo atendente ate a notificacao do cliente sobre o orcamento gerado.
+Os nomes usados nos participantes representam responsabilidades atuais. Classes auxiliares podem mudar sem alterar o
+fluxo, desde que o contrato e os efeitos de negócio sejam preservados.
 
-Principais pontos representados:
+## Regras comuns
 
-- Criacao da ordem de servico.
-- Registro dos dados do cliente e do veiculo.
-- Inicio do diagnostico pelo mecanico.
-- Geracao do orcamento principal.
-- Alteracao do status da OS para aguardando aprovacao.
+- endpoints administrativos exigem autenticação e autorização;
+- endpoints públicos de orçamento validam hash e expiração antes da leitura ou decisão;
+- decisões de orçamento são idempotentes quando repetem o mesmo estado e bloqueiam conflitos;
+- baixa de estoque ocorre antes de iniciar serviço quando houver itens necessários;
+- a OS só é finalizada quando todos os serviços aplicáveis estão concluídos;
+- falhas de negócio são convertidas pelo `GlobalExceptionHandler`.
 
-Arquivo: [fluxo_principal.mermaid](fluxo_principal.mermaid)
+## Visualização e manutenção
 
-## 2. Aprovacao ou recusa do orcamento
+Arquivos `.mermaid` podem ser visualizados no GitHub, GitLab, extensões de IDE ou visualizadores compatíveis. Ao mudar
+um fluxo, atualize o arquivo correspondente e verifique controllers, casos de uso e endpoints no código.
 
-Este fluxo mostra a decisao do cliente sobre o orcamento principal e o impacto dessa acao no ciclo da ordem de servico.
-
-Principais pontos representados:
-
-- Consulta do orcamento pelo cliente.
-- Aprovacao do orcamento e liberacao da OS para execucao.
-- Recusa do orcamento e encerramento ou revisao do atendimento.
-- Atualizacao do status conforme a decisao tomada.
-
-Arquivo: [aprovacao_recusa_orcamento.mermaid](aprovacao_recusa_orcamento.mermaid)
-
-## 2.1 Aprovacao ou recusa por link publico
-
-Este fluxo mostra a decisao sem autenticacao JWT. O cliente acessa uma pagina
-publica protegida por token, e a alteracao de estado somente ocorre nos
-endpoints `POST` de aprovacao ou recusa.
-
-Principais pontos representados:
-
-- Hash e expiracao do token validados antes da consulta e da decisao.
-- Consulta publica sem exposicao de dados sensiveis.
-- Idempotencia da mesma decisao e bloqueio de decisoes conflitantes.
-- Atualizacao da OS principal ou do reparo adicional vinculado.
-
-Arquivo: [aprovacao_recusa_orcamento_publico.mermaid](aprovacao_recusa_orcamento_publico.mermaid)
-
-## 3. Execucao da OS e reparo adicional
-
-Este fluxo cobre a execucao dos servicos aprovados e o tratamento de novas necessidades identificadas durante o reparo.
-
-O diagrama principal foi mantido como uma visao resumida do fluxo completo. Os detalhes foram separados em subdiagramas menores para facilitar leitura e manutencao.
-
-Principais pontos representados:
-
-- Inicio da execucao da ordem de servico aprovada.
-- Baixa de pecas e insumos no estoque.
-- Identificacao e registro de reparo adicional pelo mecanico.
-- Criacao, publicacao e notificacao do orcamento complementar.
-- Aprovacao ou recusa do orcamento complementar pelo cliente.
-- Conclusao do servico e possivel transicao da OS para Finalizada.
-
-Arquivo: [execucao_os_reparo_adicional.mermaid](execucao_os_reparo_adicional.mermaid)
-
-Subdiagramas:
-
-- [inicio_servico_baixa_estoque.mermaid](inicio_servico_baixa_estoque.mermaid): detalha o inicio do servico aprovado, validacao da OS e baixa de estoque.
-- [registro_reparo_adicional.mermaid](registro_reparo_adicional.mermaid): detalha a criacao do reparo adicional, orcamento complementar, publicacao e notificacao ao cliente.
-- [decisao_orcamento_complementar.mermaid](decisao_orcamento_complementar.mermaid): detalha a aprovacao ou recusa do orcamento complementar e a aprovacao ou recusa do reparo adicional vinculado.
-- [conclusao_servico_os.mermaid](conclusao_servico_os.mermaid): detalha a conclusao do servico e a transicao da OS para FINALIZADA quando todos os servicos forem concluidos.
-
-## Como visualizar
-
-Os arquivos `.mermaid` podem ser visualizados em ferramentas compativeis com Mermaid, como extensoes de IDE, GitHub, GitLab ou visualizadores online.
-
-Ao atualizar um fluxo, altere o arquivo `.mermaid` correspondente e mantenha este documento como indice e guia de leitura dos cenarios.
-
-## Observacoes
-
-- Os diagramas representam o comportamento principal do backend Spring Boot e a interacao do frontend Angular com a API REST.
-- A autorizacao por perfil ocorre antes da execucao dos endpoints via Spring Security e anotacoes `@PreAuthorize`.
-- A persistencia central ocorre no PostgreSQL por meio dos repositories Spring Data JPA.
-- Falhas de regra de negocio retornam erro HTTP tratado pelo `GlobalExceptionHandler`.
-- A documentacao da API permanece disponivel via Swagger/OpenAPI; os diagramas complementam essa documentacao com a visao temporal dos fluxos.
+O fluxo público detalhado está em [`../fluxo-orcamento-publico.md`](../fluxo-orcamento-publico.md), e a arquitetura de
+camadas em [`../architecture.md`](../architecture.md).

@@ -1,0 +1,4488 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AutoFlow API",
+    "version": "v1",
+    "description": "Contrato OpenAPI versionado da API AutoFlow. Exportado a partir do contrato SpringDoc da aplicação e complementado com parâmetros de execução, autenticação e exemplos em docs/openapi/README.md."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8081",
+      "description": "API local (backend)"
+    },
+    {
+      "url": "http://localhost:4200/api",
+      "description": "API local pelo proxy do frontend"
+    }
+  ],
+  "tags": [
+    {
+      "name": "autenticação",
+      "description": "Cadastro e login JWT"
+    },
+    {
+      "name": "usuários",
+      "description": "Usuários e perfis"
+    },
+    {
+      "name": "clientes",
+      "description": "Clientes"
+    },
+    {
+      "name": "veículos",
+      "description": "Veículos"
+    },
+    {
+      "name": "serviços",
+      "description": "Catálogo e métricas de serviços"
+    },
+    {
+      "name": "estoque",
+      "description": "Peças e insumos"
+    },
+    {
+      "name": "ordens de serviço",
+      "description": "Abertura, consulta e administração de OS"
+    },
+    {
+      "name": "diagnóstico",
+      "description": "Diagnóstico, laudo e itens necessários"
+    },
+    {
+      "name": "execução",
+      "description": "Execução e entrega da OS"
+    },
+    {
+      "name": "reparos adicionais",
+      "description": "Reparos adicionais"
+    },
+    {
+      "name": "orçamentos",
+      "description": "Orçamentos autenticados"
+    },
+    {
+      "name": "orçamentos públicos",
+      "description": "Consulta e decisão por token público"
+    },
+    {
+      "name": "acompanhamento",
+      "description": "Acompanhamento autenticado"
+    },
+    {
+      "name": "acompanhamento público",
+      "description": "Acompanhamento público por token"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/cadastro": {
+      "post": {
+        "operationId": "cadastrarUsuario",
+        "summary": "Cadastrar usuário",
+        "tags": [
+          "autenticação"
+        ],
+        "description": "Cadastrar usuário",
+        "responses": {
+          "201": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioCadastroResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroRequest"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Autenticar usuário",
+        "tags": [
+          "autenticação"
+        ],
+        "description": "Autenticar usuário",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "atendente@autoflow.com",
+                "senha": "<senha-do-ambiente>"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/usuarios": {
+      "get": {
+        "operationId": "listarUsuariosAuth",
+        "summary": "Listar usuários",
+        "tags": [
+          "autenticação"
+        ],
+        "description": "Listar usuários Permissão: ADMIN.",
+        "responses": {
+          "200": {
+            "description": "Usuários retornados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/auth/mecanicos": {
+      "get": {
+        "operationId": "listarMecanicos",
+        "summary": "Listar mecânicos",
+        "tags": [
+          "autenticação"
+        ],
+        "description": "Listar mecânicos Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "operationId": "listarUsuariosStaff",
+        "summary": "Listar usuários pelo staff",
+        "tags": [
+          "usuários"
+        ],
+        "description": "Listar usuários pelo staff Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "operationId": "cadastrarUsuarioStaff",
+        "summary": "Cadastrar usuário pelo staff",
+        "tags": [
+          "usuários"
+        ],
+        "description": "Cadastrar usuário pelo staff Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "201": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clientes/me": {
+      "get": {
+        "operationId": "meuPerfilCliente",
+        "summary": "Consultar meu perfil",
+        "tags": [
+          "clientes"
+        ],
+        "description": "Consultar meu perfil Permissão: CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClienteResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/clientes": {
+      "post": {
+        "operationId": "cadastrarCliente",
+        "summary": "Cadastrar cliente",
+        "tags": [
+          "clientes"
+        ],
+        "description": "Cadastrar cliente",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClienteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClienteRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listarClientes",
+        "summary": "Listar clientes",
+        "tags": [
+          "clientes"
+        ],
+        "description": "Listar clientes Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClienteResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/clientes/{documento}": {
+      "get": {
+        "operationId": "consultarCliente",
+        "summary": "Consultar cliente",
+        "tags": [
+          "clientes"
+        ],
+        "description": "Consultar cliente Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClienteResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 12345678901
+          }
+        ]
+      }
+    },
+    "/clientes/{id}/atualizacao": {
+      "patch": {
+        "operationId": "atualizarCliente",
+        "summary": "Atualizar cliente",
+        "tags": [
+          "clientes"
+        ],
+        "description": "Atualizar cliente Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClienteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClienteRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clientes/{id}": {
+      "delete": {
+        "operationId": "deletarCliente",
+        "summary": "Excluir cliente",
+        "tags": [
+          "clientes"
+        ],
+        "description": "Excluir cliente Permissão: ADMIN.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "cliente deletado com sucesso"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/clientes/me/ordens-servico": {
+      "get": {
+        "operationId": "listarMinhasOrdensServico",
+        "summary": "Listar minhas ordens de serviço",
+        "tags": [
+          "acompanhamento"
+        ],
+        "description": "Listar minhas ordens de serviço Permissão: ADMIN ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AcompanhamentoOrdemServicoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/veiculos": {
+      "post": {
+        "operationId": "cadastrarVeiculo",
+        "summary": "Cadastrar veículo",
+        "tags": [
+          "veículos"
+        ],
+        "description": "Cadastrar veículo",
+        "responses": {
+          "201": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VeiculoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VeiculoRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listarVeiculos",
+        "summary": "Listar veículos",
+        "tags": [
+          "veículos"
+        ],
+        "description": "Listar veículos Permissão: ADMIN, ATENDENTE ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedModelVeiculoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            },
+            "example": 20
+          },
+          {
+            "name": "placa",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "marca",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ano",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "example": 2020
+          }
+        ]
+      }
+    },
+    "/veiculos/{id}": {
+      "get": {
+        "operationId": "consultarVeiculo",
+        "summary": "Consultar veículo",
+        "tags": [
+          "veículos"
+        ],
+        "description": "Consultar veículo Permissão: ADMIN, ATENDENTE ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VeiculoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deletarVeiculo",
+        "summary": "Excluir veículo",
+        "tags": [
+          "veículos"
+        ],
+        "description": "Excluir veículo Permissão: ADMIN.",
+        "responses": {
+          "204": {
+            "description": "Operação concluída com sucesso."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/veiculos/{id}/atualizacao": {
+      "patch": {
+        "operationId": "atualizarVeiculo",
+        "summary": "Atualizar veículo",
+        "tags": [
+          "veículos"
+        ],
+        "description": "Atualizar veículo Permissão: ADMIN, ATENDENTE ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VeiculoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VeiculoUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/servicos": {
+      "post": {
+        "operationId": "cadastrarServico",
+        "summary": "Cadastrar serviço",
+        "tags": [
+          "serviços"
+        ],
+        "description": "Cadastrar serviço Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "201": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicoRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listarServicos",
+        "summary": "Listar serviços",
+        "tags": [
+          "serviços"
+        ],
+        "description": "Listar serviços Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedModelServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            },
+            "example": 20
+          }
+        ]
+      }
+    },
+    "/servicos/{id}": {
+      "get": {
+        "operationId": "consultarServico",
+        "summary": "Consultar serviço",
+        "tags": [
+          "serviços"
+        ],
+        "description": "Consultar serviço Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "inativarServico",
+        "summary": "Inativar serviço",
+        "tags": [
+          "serviços"
+        ],
+        "description": "Inativar serviço Permissão: ADMIN.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Serviço inativado com sucesso"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/servicos/{id}/atualizacao": {
+      "patch": {
+        "operationId": "atualizarServico",
+        "summary": "Atualizar serviço",
+        "tags": [
+          "serviços"
+        ],
+        "description": "Atualizar serviço Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicoRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/servicos/metricas/tempo-medio": {
+      "get": {
+        "operationId": "listarTempoMedioServicos",
+        "summary": "Consultar tempo médio por serviço",
+        "tags": [
+          "serviços"
+        ],
+        "description": "Consultar tempo médio por serviço Permissão: ADMIN.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TempoMedioServicoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/peca-insumo": {
+      "post": {
+        "operationId": "cadastrarPecaInsumo",
+        "summary": "Cadastrar peça ou insumo",
+        "tags": [
+          "estoque"
+        ],
+        "description": "Cadastrar peça ou insumo Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "201": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PecaInsumoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PecaInsumoRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listarPecasInsumos",
+        "summary": "Listar peças e insumos",
+        "tags": [
+          "estoque"
+        ],
+        "description": "Listar peças e insumos Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedModelPecaInsumoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1
+            },
+            "example": 10
+          },
+          {
+            "name": "nome",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PECA",
+                "INSUMO"
+              ]
+            },
+            "example": "PECA"
+          }
+        ]
+      }
+    },
+    "/peca-insumo/{id}": {
+      "get": {
+        "operationId": "consultarPecaInsumo",
+        "summary": "Consultar peça ou insumo",
+        "tags": [
+          "estoque"
+        ],
+        "description": "Consultar peça ou insumo Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PecaInsumoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deletarPecaInsumo",
+        "summary": "Excluir peça ou insumo",
+        "tags": [
+          "estoque"
+        ],
+        "description": "Excluir peça ou insumo Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "peca/insumo deletado com sucesso"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/peca-insumo/{id}/atualizacao": {
+      "patch": {
+        "operationId": "atualizarPecaInsumo",
+        "summary": "Atualizar peça ou insumo",
+        "tags": [
+          "estoque"
+        ],
+        "description": "Atualizar peça ou insumo Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PecaInsumoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PecaInsumoRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ordens-servico": {
+      "post": {
+        "operationId": "criarOrdemServico",
+        "summary": "Abrir ordem de serviço",
+        "tags": [
+          "ordens de serviço"
+        ],
+        "description": "Abrir ordem de serviço Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "201": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarOrdemServicoRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listarOrdensServico",
+        "summary": "Listar ordens de serviço",
+        "tags": [
+          "ordens de serviço"
+        ],
+        "description": "Listar ordens de serviço Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedModelOrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1
+            },
+            "example": 10
+          },
+          {
+            "name": "cliente",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "numeroOs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RECEBIDA",
+                "EM_DIAGNOSTICO",
+                "AGUARDANDO_APROVACAO",
+                "EM_EXECUCAO",
+                "FINALIZADA",
+                "ENTREGUE"
+              ]
+            },
+            "example": "RECEBIDA"
+          }
+        ]
+      }
+    },
+    "/ordens-servico/{numeroOs}": {
+      "get": {
+        "operationId": "detalharOrdemServico",
+        "summary": "Detalhar ordem de serviço",
+        "tags": [
+          "ordens de serviço"
+        ],
+        "description": "Detalhar ordem de serviço Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoDetalheResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ]
+      }
+    },
+    "/ordens-servico/{numeroOs}/status": {
+      "get": {
+        "operationId": "consultarStatusOrdemServico",
+        "summary": "Consultar status enxuto da OS",
+        "tags": [
+          "ordens de serviço"
+        ],
+        "description": "Consultar status enxuto da OS Permissão: ADMIN, ATENDENTE, MECANICO ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusOrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ]
+      }
+    },
+    "/ordens-servico/metricas/tempo-medio": {
+      "get": {
+        "operationId": "calcularTempoMedioOrdensServico",
+        "summary": "Consultar tempo médio de OS finalizadas",
+        "tags": [
+          "ordens de serviço"
+        ],
+        "description": "Consultar tempo médio de OS finalizadas Permissão: ADMIN.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TempoMedioOrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/ordens-servico/{numeroOs}/servicos": {
+      "post": {
+        "operationId": "incluirServicosOrdemServico",
+        "summary": "Incluir serviços na OS",
+        "tags": [
+          "ordens de serviço"
+        ],
+        "description": "Incluir serviços na OS Permissão: ADMIN, ATENDENTE ou MECANICO.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ServicoSolicitadoRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ordens-servico/{numeroOs}/mecanico": {
+      "patch": {
+        "operationId": "atribuirMecanico",
+        "summary": "Atribuir mecânico à OS",
+        "tags": [
+          "ordens de serviço"
+        ],
+        "description": "Atribuir mecânico à OS Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncluirMecanicoRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ordens-servico/{numeroOs}/diagnostico/iniciar": {
+      "patch": {
+        "operationId": "iniciarDiagnostico",
+        "summary": "Iniciar diagnóstico",
+        "tags": [
+          "diagnóstico"
+        ],
+        "description": "Iniciar diagnóstico Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ]
+      }
+    },
+    "/ordens-servico/{numeroOs}/servicos/{servicoId}/itens-necessarios": {
+      "patch": {
+        "operationId": "registrarItensNecessarios",
+        "summary": "Registrar itens necessários",
+        "tags": [
+          "diagnóstico"
+        ],
+        "description": "Registrar itens necessários Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          },
+          {
+            "name": "servicoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ItensNecessariosRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ordens-servico/{numeroOs}/diagnostico/laudo": {
+      "patch": {
+        "operationId": "registrarLaudo",
+        "summary": "Registrar laudo do diagnóstico",
+        "tags": [
+          "diagnóstico"
+        ],
+        "description": "Registrar laudo do diagnóstico Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarLaudoRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ordens-servico/{numeroOs}/diagnostico/finalizar": {
+      "patch": {
+        "operationId": "finalizarDiagnostico",
+        "summary": "Finalizar diagnóstico e gerar orçamento",
+        "tags": [
+          "diagnóstico"
+        ],
+        "description": "Finalizar diagnóstico e gerar orçamento Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinalizarDiagnosticoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ]
+      }
+    },
+    "/ordens-servico/{numeroOs}/servicos/{servicoId}/iniciar": {
+      "patch": {
+        "operationId": "iniciarServicoOrdemServico",
+        "summary": "Iniciar serviço da OS",
+        "tags": [
+          "execução"
+        ],
+        "description": "Iniciar serviço da OS Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          },
+          {
+            "name": "servicoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/ordens-servico/{numeroOs}/servicos/{servicoId}/finalizar": {
+      "patch": {
+        "operationId": "finalizarServicoOrdemServico",
+        "summary": "Finalizar serviço da OS",
+        "tags": [
+          "execução"
+        ],
+        "description": "Finalizar serviço da OS Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          },
+          {
+            "name": "servicoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/ordens-servico/{numeroOs}/entregar": {
+      "patch": {
+        "operationId": "entregarOrdemServico",
+        "summary": "Entregar veículo ao cliente",
+        "tags": [
+          "execução"
+        ],
+        "description": "Entregar veículo ao cliente Permissão: ADMIN ou ATENDENTE.",
+        "responses": {
+          "202": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdemServicoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ]
+      }
+    },
+    "/ordens-servico/{numeroOs}/reparos-adicionais": {
+      "post": {
+        "operationId": "criarReparoAdicional",
+        "summary": "Criar reparo adicional",
+        "tags": [
+          "reparos adicionais"
+        ],
+        "description": "Criar reparo adicional Permissão: ADMIN ou MECANICO.",
+        "responses": {
+          "201": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CriarReparoAdicionalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "numeroOs",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "OS-2026-0001"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarReparoAdicionalRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orcamentos": {
+      "get": {
+        "operationId": "listarOrcamentos",
+        "summary": "Listar orçamentos acessíveis",
+        "tags": [
+          "orçamentos"
+        ],
+        "description": "Listar orçamentos acessíveis Permissão: ADMIN, ATENDENTE ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrcamentoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "parameters": [
+          {
+            "name": "statusOrcamento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DISPONIVEL",
+                "APROVADO",
+                "REPROVADO",
+                "SUBSTITUIDO"
+              ]
+            },
+            "example": "DISPONIVEL"
+          },
+          {
+            "name": "numeroOs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "placa",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "clienteEmail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          {
+            "name": "clienteDocumento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PRINCIPAL",
+                "COMPLEMENTAR"
+              ]
+            },
+            "example": "PRINCIPAL"
+          }
+        ]
+      }
+    },
+    "/orcamentos/{orcamentoId}": {
+      "get": {
+        "operationId": "consultarOrcamentoAutenticado",
+        "summary": "Consultar orçamento autenticado",
+        "tags": [
+          "orçamentos"
+        ],
+        "description": "Consultar orçamento autenticado Permissão: ADMIN, ATENDENTE ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrcamentoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/orcamentos/{orcamentoId}/aprovar": {
+      "post": {
+        "operationId": "aprovarOrcamentoAutenticado",
+        "summary": "Aprovar orçamento autenticado",
+        "tags": [
+          "orçamentos"
+        ],
+        "description": "Aprovar orçamento autenticado Permissão: ADMIN ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrcamentoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/orcamentos/{orcamentoId}/recusar": {
+      "post": {
+        "operationId": "recusarOrcamentoAutenticado",
+        "summary": "Recusar orçamento autenticado",
+        "tags": [
+          "orçamentos"
+        ],
+        "description": "Recusar orçamento autenticado Permissão: ADMIN ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrcamentoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecusarOrcamentoRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orcamentos/{orcamentoId}/pdf": {
+      "get": {
+        "operationId": "baixarOrcamentoAutenticado",
+        "summary": "Baixar PDF do orçamento autenticado",
+        "tags": [
+          "orçamentos"
+        ],
+        "description": "Baixar PDF do orçamento autenticado Permissão: ADMIN, ATENDENTE ou CLIENTE.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
+      }
+    },
+    "/public/orcamentos/{orcamentoId}": {
+      "get": {
+        "operationId": "consultarOrcamentoPublico",
+        "summary": "Consultar orçamento pelo link público",
+        "tags": [
+          "orçamentos públicos"
+        ],
+        "description": "O token público é obrigatório, não é persistido em claro e deve ser enviado na query string.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrcamentoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<public-token>"
+          }
+        ],
+        "security": []
+      }
+    },
+    "/public/orcamentos/{orcamentoId}/pdf": {
+      "get": {
+        "operationId": "baixarOrcamentoPublico",
+        "summary": "Baixar PDF pelo token público",
+        "tags": [
+          "orçamentos públicos"
+        ],
+        "description": "Baixar PDF pelo token público",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<public-token>"
+          }
+        ],
+        "security": []
+      }
+    },
+    "/public/orcamentos/{orcamentoId}/aprovar": {
+      "post": {
+        "operationId": "aprovarOrcamentoPublico",
+        "summary": "Aprovar orçamento pelo link público",
+        "tags": [
+          "orçamentos públicos"
+        ],
+        "description": "A decisão é idempotente para o mesmo estado e não exige JWT.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrcamentoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<public-token>"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AprovarOrcamentoRequest"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/public/orcamentos/{orcamentoId}/recusar": {
+      "post": {
+        "operationId": "recusarOrcamentoPublico",
+        "summary": "Recusar orçamento pelo link público",
+        "tags": [
+          "orçamentos públicos"
+        ],
+        "description": "A decisão é idempotente para o mesmo estado e não exige JWT.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrcamentoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<public-token>"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecusarOrcamentoRequest"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/public/orcamentos/{orcamentoId}/pdf/acompanhamento": {
+      "get": {
+        "operationId": "baixarOrcamentoAcompanhamento",
+        "summary": "Baixar PDF pelo token de acompanhamento",
+        "tags": [
+          "orçamentos públicos"
+        ],
+        "description": "Baixar PDF pelo token de acompanhamento",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<public-token>"
+          }
+        ],
+        "security": []
+      }
+    },
+    "/public/orcamentos/{orcamentoId}/aprovar/acompanhamento": {
+      "post": {
+        "operationId": "aprovarOrcamentoAcompanhamento",
+        "summary": "Aprovar orçamento pelo acompanhamento",
+        "tags": [
+          "orçamentos públicos"
+        ],
+        "description": "Aprovar orçamento pelo acompanhamento",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrcamentoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "orcamentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<public-token>"
+          }
+        ],
+        "security": []
+      }
+    },
+    "/public/ordens-servico/acompanhamento": {
+      "get": {
+        "operationId": "consultarAcompanhamentoPublico",
+        "summary": "Consultar acompanhamento público da OS",
+        "tags": [
+          "acompanhamento público"
+        ],
+        "description": "Consultar acompanhamento público da OS",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcompanhamentoPublicoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "<public-token>"
+          }
+        ],
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Use o token retornado por POST /auth/login no header Authorization: Bearer <token>."
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Requisição inválida, JSON inválido, validação ou regra de negócio.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "erro": "JSON inválido"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "JWT ausente/inválido ou token público ausente, inválido ou expirado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "erro": "Token inválido ou expirado"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Usuário autenticado sem a role necessária.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "erro": "Acesso negado"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "erro": "Recurso não encontrado"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflito de unicidade ou recurso já cadastrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "erro": "Recurso já cadastrado"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "erro": {
+            "type": "string",
+            "example": "Recurso não encontrado"
+          },
+          "campos": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "atendente@autoflow.com"
+          },
+          "senha": {
+            "type": "string",
+            "format": "password",
+            "example": "<senha-do-ambiente>"
+          }
+        },
+        "required": [
+          "email",
+          "senha"
+        ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "<jwt-issued-at-runtime>"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "RegistroRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "cpfCnpj": {
+            "type": "string",
+            "example": "12345678901"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "11999999999"
+          },
+          "senha": {
+            "type": "string",
+            "format": "password",
+            "example": "<senha-do-ambiente>"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MECANICO",
+              "CLIENTE",
+              "ATENDENTE"
+            ],
+            "default": "CLIENTE",
+            "example": "CLIENTE"
+          }
+        },
+        "required": [
+          "nome",
+          "email",
+          "senha"
+        ]
+      },
+      "UsuarioResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MECANICO",
+              "CLIENTE",
+              "ATENDENTE"
+            ],
+            "example": "CLIENTE"
+          }
+        }
+      },
+      "UsuarioCadastroResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "MECANICO",
+              "CLIENTE",
+              "ATENDENTE"
+            ],
+            "example": "CLIENTE"
+          }
+        }
+      },
+      "ClienteRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "cpfCnpj": {
+            "type": "string",
+            "minLength": 11,
+            "maxLength": 14,
+            "example": "12345678901"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "11999999999"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          }
+        },
+        "required": [
+          "nome",
+          "cpfCnpj",
+          "telefone",
+          "email"
+        ]
+      },
+      "ClienteVeiculoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "cpfCnpj": {
+            "type": "string",
+            "example": "12345678901"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "11999999999"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          }
+        }
+      },
+      "VeiculoClienteResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "marca": {
+            "type": "string",
+            "example": "Toyota"
+          },
+          "ano": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2020
+          },
+          "placa": {
+            "type": "string",
+            "example": "ABC1D23"
+          },
+          "modelo": {
+            "type": "string",
+            "example": "Corolla"
+          }
+        }
+      },
+      "ClienteResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "cpfCnpj": {
+            "type": "string",
+            "example": "12345678901"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "11999999999"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "veiculos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VeiculoClienteResponse"
+            }
+          }
+        }
+      },
+      "VeiculoRequest": {
+        "type": "object",
+        "properties": {
+          "cpfCnpj": {
+            "type": "string",
+            "minLength": 11,
+            "maxLength": 14,
+            "example": "12345678901"
+          },
+          "marca": {
+            "type": "string",
+            "example": "Toyota"
+          },
+          "ano": {
+            "type": "integer",
+            "example": 2020
+          },
+          "placa": {
+            "type": "string",
+            "pattern": "(^[A-Z]{3}\\d{4}$)|(^[A-Z]{3}\\d[A-Z]\\d{2}$)",
+            "example": "ABC1D23"
+          },
+          "modelo": {
+            "type": "string",
+            "example": "Corolla"
+          }
+        },
+        "required": [
+          "marca",
+          "ano",
+          "placa",
+          "modelo"
+        ]
+      },
+      "VeiculoUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "marca": {
+            "type": "string",
+            "example": "Toyota"
+          },
+          "ano": {
+            "type": "integer",
+            "example": 2020
+          },
+          "placa": {
+            "type": "string",
+            "pattern": "(^[A-Z]{3}\\d{4}$)|(^[A-Z]{3}\\d[A-Z]\\d{2}$)",
+            "example": "ABC1D23"
+          },
+          "modelo": {
+            "type": "string",
+            "example": "Corolla"
+          }
+        },
+        "required": [
+          "marca",
+          "ano",
+          "placa",
+          "modelo"
+        ]
+      },
+      "VeiculoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "marca": {
+            "type": "string",
+            "example": "Toyota"
+          },
+          "ano": {
+            "type": "integer",
+            "example": 2020
+          },
+          "placa": {
+            "type": "string",
+            "example": "ABC1D23"
+          },
+          "modelo": {
+            "type": "string",
+            "example": "Corolla"
+          },
+          "cliente": {
+            "$ref": "#/components/schemas/ClienteVeiculoResponse"
+          }
+        }
+      },
+      "ServicoRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Troca de óleo"
+          },
+          "descricao": {
+            "type": "string",
+            "example": "Troca de óleo e filtro"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          }
+        },
+        "required": [
+          "nome",
+          "descricao"
+        ]
+      },
+      "ServicoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Troca de óleo"
+          },
+          "descricao": {
+            "type": "string",
+            "example": "Troca de óleo e filtro"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "ativo": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "PecaInsumoRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Filtro de óleo"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "quantidade": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 10
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "PECA",
+              "INSUMO"
+            ],
+            "example": "PECA"
+          }
+        },
+        "required": [
+          "nome",
+          "tipo"
+        ]
+      },
+      "PecaInsumoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Filtro de óleo"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "quantidade": {
+            "type": "integer",
+            "example": 10
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "PECA",
+              "INSUMO"
+            ],
+            "example": "PECA"
+          }
+        }
+      },
+      "ServicoSolicitadoRequest": {
+        "type": "object",
+        "properties": {
+          "servicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          }
+        },
+        "required": [
+          "servicoId"
+        ]
+      },
+      "VeiculoOrdemServicoRequest": {
+        "type": "object",
+        "properties": {
+          "placa": {
+            "type": "string",
+            "example": "ABC1D23"
+          },
+          "marca": {
+            "type": "string",
+            "example": "Toyota"
+          },
+          "modelo": {
+            "type": "string",
+            "example": "Corolla"
+          },
+          "ano": {
+            "type": "integer",
+            "example": 2020
+          }
+        },
+        "required": [
+          "placa"
+        ]
+      },
+      "CriarOrdemServicoRequest": {
+        "type": "object",
+        "properties": {
+          "cpfCnpj": {
+            "type": "string",
+            "example": "12345678901"
+          },
+          "veiculo": {
+            "$ref": "#/components/schemas/VeiculoOrdemServicoRequest"
+          },
+          "servicosSolicitados": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServicoSolicitadoRequest"
+            }
+          }
+        },
+        "required": [
+          "cpfCnpj",
+          "veiculo",
+          "servicosSolicitados"
+        ]
+      },
+      "IncluirMecanicoRequest": {
+        "type": "object",
+        "properties": {
+          "mecanicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "mecanicoEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "mecanico1@autoflow.com"
+          }
+        }
+      },
+      "ItensNecessariosRequest": {
+        "type": "object",
+        "properties": {
+          "pecaInsumoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "quantidade": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 2
+          }
+        },
+        "required": [
+          "pecaInsumoId",
+          "quantidade"
+        ]
+      },
+      "RegistrarLaudoRequest": {
+        "type": "object",
+        "properties": {
+          "laudo": {
+            "type": "string",
+            "example": "Necessária a substituição do filtro de óleo."
+          }
+        }
+      },
+      "CriarReparoAdicionalRequest": {
+        "type": "object",
+        "properties": {
+          "servicos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServicoReparoAdicionalRequest"
+            }
+          }
+        },
+        "required": [
+          "servicos"
+        ]
+      },
+      "ServicoReparoAdicionalRequest": {
+        "type": "object",
+        "properties": {
+          "servicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "itensNecessarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItensNecessariosRequest"
+            }
+          }
+        },
+        "required": [
+          "servicoId",
+          "itensNecessarios"
+        ]
+      },
+      "AprovarOrcamentoRequest": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 120,
+            "example": "Maria da Silva"
+          }
+        }
+      },
+      "RecusarOrcamentoRequest": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "Valor acima do esperado"
+          },
+          "nome": {
+            "type": "string",
+            "maxLength": 120,
+            "example": "Maria da Silva"
+          }
+        }
+      },
+      "ItemNecessarioResponse": {
+        "type": "object",
+        "properties": {
+          "pecaInsumoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Filtro de óleo"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "PECA",
+              "INSUMO"
+            ],
+            "example": "PECA"
+          },
+          "valorUnitario": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "quantidade": {
+            "type": "integer",
+            "example": 2
+          },
+          "valorTotal": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DISPONIVEL",
+              "PENDENTE",
+              "UTILIZADO",
+              "CANCELADO"
+            ],
+            "example": "DISPONIVEL"
+          },
+          "motivoPendencia": {
+            "type": "string",
+            "enum": [
+              "ESTOQUE_INSUFICIENTE"
+            ],
+            "nullable": true
+          },
+          "quantidadeDisponivel": {
+            "type": "integer",
+            "example": 10
+          },
+          "mensagemStatus": {
+            "type": "string",
+            "example": "Item disponível"
+          }
+        }
+      },
+      "ServicoOsResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "servicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Troca de óleo"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AGUARDANDO",
+              "EM_EXECUCAO",
+              "FINALIZADO",
+              "CANCELADO"
+            ],
+            "example": "AGUARDANDO"
+          },
+          "iniciadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "finalizadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "itensNecessarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemNecessarioResponse"
+            }
+          }
+        }
+      },
+      "OrdemServicoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "numeroOs": {
+            "type": "string",
+            "example": "OS-2026-0001"
+          },
+          "clienteNome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "clienteCpfCnpj": {
+            "type": "string",
+            "example": "12345678901"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEBIDA",
+              "EM_DIAGNOSTICO",
+              "AGUARDANDO_APROVACAO",
+              "EM_EXECUCAO",
+              "FINALIZADA",
+              "ENTREGUE"
+            ],
+            "example": "RECEBIDA"
+          },
+          "dataAbertura": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "execucaoIniciadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "finalizadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "entregueEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "servicos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServicoOsResponse"
+            }
+          },
+          "acompanhamentoUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://localhost:4200/public/ordens-servico/acompanhamento?token=<token>"
+          }
+        }
+      },
+      "ClienteOrdemServicoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Maria da Silva"
+          },
+          "cpfCnpj": {
+            "type": "string",
+            "example": "12345678901"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "maria@example.com"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "11999999999"
+          }
+        }
+      },
+      "VeiculoOrdemServicoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "placa": {
+            "type": "string",
+            "example": "ABC1D23"
+          },
+          "marca": {
+            "type": "string",
+            "example": "Toyota"
+          },
+          "modelo": {
+            "type": "string",
+            "example": "Corolla"
+          },
+          "ano": {
+            "type": "integer",
+            "example": 2020
+          }
+        }
+      },
+      "DiagnosticoDetalheResponse": {
+        "type": "object",
+        "properties": {
+          "mecanicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "mecanicoNome": {
+            "type": "string",
+            "example": "Mecânico"
+          },
+          "mecanicoEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "mecanico1@autoflow.com"
+          },
+          "laudo": {
+            "type": "string",
+            "example": "Diagnóstico concluído."
+          },
+          "iniciadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "concluidoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          }
+        }
+      },
+      "OrcamentoResumoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "PRINCIPAL",
+              "COMPLEMENTAR"
+            ],
+            "example": "PRINCIPAL"
+          },
+          "versao": {
+            "type": "integer",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DISPONIVEL",
+              "APROVADO",
+              "REPROVADO",
+              "SUBSTITUIDO"
+            ],
+            "example": "DISPONIVEL"
+          },
+          "totalServicos": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "totalItens": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "totalGeral": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "disponibilizadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "aprovadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "reprovadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "mensagem": {
+            "type": "string",
+            "example": "Orçamento disponível para aprovação."
+          }
+        }
+      },
+      "OrdemServicoDetalheResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "numeroOs": {
+            "type": "string",
+            "example": "OS-2026-0001"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEBIDA",
+              "EM_DIAGNOSTICO",
+              "AGUARDANDO_APROVACAO",
+              "EM_EXECUCAO",
+              "FINALIZADA",
+              "ENTREGUE"
+            ],
+            "example": "RECEBIDA"
+          },
+          "dataAbertura": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "ultimaAtualizacao": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "execucaoIniciadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "finalizadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "entregueEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "cliente": {
+            "$ref": "#/components/schemas/ClienteOrdemServicoResponse"
+          },
+          "veiculo": {
+            "$ref": "#/components/schemas/VeiculoOrdemServicoResponse"
+          },
+          "servicos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServicoOsResponse"
+            }
+          },
+          "orcamentoAtual": {
+            "$ref": "#/components/schemas/OrcamentoResumoResponse"
+          },
+          "diagnostico": {
+            "$ref": "#/components/schemas/DiagnosticoDetalheResponse"
+          }
+        }
+      },
+      "StatusOrdemServicoResponse": {
+        "type": "object",
+        "properties": {
+          "numeroOs": {
+            "type": "string",
+            "example": "OS-2026-0001"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEBIDA",
+              "EM_DIAGNOSTICO",
+              "AGUARDANDO_APROVACAO",
+              "EM_EXECUCAO",
+              "FINALIZADA",
+              "ENTREGUE"
+            ],
+            "example": "RECEBIDA"
+          },
+          "ultimaAtualizacao": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          }
+        }
+      },
+      "TempoMedioOrdemServicoResponse": {
+        "type": "object",
+        "properties": {
+          "quantidadeOrdensFinalizadas": {
+            "type": "integer",
+            "format": "int64",
+            "example": 10
+          },
+          "tempoMedioSegundos": {
+            "type": "number",
+            "format": "double",
+            "example": 3600
+          },
+          "tempoMedioMinutos": {
+            "type": "number",
+            "format": "double",
+            "example": 60
+          },
+          "tempoMedioHoras": {
+            "type": "number",
+            "format": "double",
+            "example": 1
+          }
+        }
+      },
+      "OrcamentoServicoResponse": {
+        "type": "object",
+        "properties": {
+          "servicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Troca de óleo"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          }
+        }
+      },
+      "OrcamentoItemNecessarioResponse": {
+        "type": "object",
+        "properties": {
+          "pecaInsumoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "servicoOsId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Filtro de óleo"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "PECA",
+              "INSUMO"
+            ],
+            "example": "PECA"
+          },
+          "valorUnitario": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "quantidade": {
+            "type": "integer",
+            "example": 2
+          },
+          "valorTotal": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          }
+        }
+      },
+      "OrcamentoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "ordemServicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "numeroOs": {
+            "type": "string",
+            "example": "OS-2026-0001"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "PRINCIPAL",
+              "COMPLEMENTAR"
+            ],
+            "example": "PRINCIPAL"
+          },
+          "versao": {
+            "type": "integer",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DISPONIVEL",
+              "APROVADO",
+              "REPROVADO",
+              "SUBSTITUIDO"
+            ],
+            "example": "DISPONIVEL"
+          },
+          "totalServicos": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "totalItens": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "totalGeral": {
+            "type": "number",
+            "format": "double",
+            "example": 150
+          },
+          "servicos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrcamentoServicoResponse"
+            }
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrcamentoItemNecessarioResponse"
+            }
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "disponibilizadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          }
+        }
+      },
+      "FinalizarDiagnosticoResponse": {
+        "type": "object",
+        "properties": {
+          "ordemServico": {
+            "$ref": "#/components/schemas/OrdemServicoResponse"
+          },
+          "orcamentoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "publicUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://localhost:4200/public/orcamentos/1?token=<token>"
+          }
+        }
+      },
+      "CriarReparoAdicionalResponse": {
+        "type": "object",
+        "properties": {
+          "reparoAdicionalId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "orcamentoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "publicUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://localhost:4200/public/orcamentos/2?token=<token>"
+          }
+        }
+      },
+      "TempoMedioServicoResponse": {
+        "type": "object",
+        "properties": {
+          "servicoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "nomeServico": {
+            "type": "string",
+            "example": "Troca de óleo"
+          },
+          "quantidadeExecucoes": {
+            "type": "integer",
+            "format": "int64",
+            "example": 10
+          },
+          "tempoMedioSegundos": {
+            "type": "number",
+            "format": "double",
+            "example": 3600
+          },
+          "tempoMedioMinutos": {
+            "type": "number",
+            "format": "double",
+            "example": 60
+          },
+          "tempoMedioHoras": {
+            "type": "number",
+            "format": "double",
+            "example": 1
+          }
+        }
+      },
+      "HistoricoStatusOsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEBIDA",
+              "EM_DIAGNOSTICO",
+              "AGUARDANDO_APROVACAO",
+              "EM_EXECUCAO",
+              "FINALIZADA",
+              "ENTREGUE"
+            ],
+            "example": "RECEBIDA"
+          },
+          "mensagemCliente": {
+            "type": "string",
+            "example": "Recebemos sua ordem de serviço."
+          },
+          "registradoEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          }
+        }
+      },
+      "AcompanhamentoOrdemServicoResponse": {
+        "type": "object",
+        "properties": {
+          "numeroOs": {
+            "type": "string",
+            "example": "OS-2026-0001"
+          },
+          "placa": {
+            "type": "string",
+            "example": "ABC1D23"
+          },
+          "statusAtual": {
+            "type": "string",
+            "enum": [
+              "RECEBIDA",
+              "EM_DIAGNOSTICO",
+              "AGUARDANDO_APROVACAO",
+              "EM_EXECUCAO",
+              "FINALIZADA",
+              "ENTREGUE"
+            ],
+            "example": "RECEBIDA"
+          },
+          "dataAbertura": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "ultimaAtualizacao": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "servicosSolicitados": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServicoOsResponse"
+            }
+          },
+          "orcamentoAtual": {
+            "$ref": "#/components/schemas/OrcamentoResumoResponse"
+          },
+          "situacaoAprovacao": {
+            "type": "string",
+            "enum": [
+              "DISPONIVEL",
+              "APROVADO",
+              "REPROVADO",
+              "SUBSTITUIDO"
+            ],
+            "nullable": true
+          },
+          "mensagemParaCliente": {
+            "type": "string",
+            "example": "Recebemos sua ordem de serviço."
+          },
+          "historicoStatus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricoStatusOsResponse"
+            }
+          }
+        }
+      },
+      "AcompanhamentoPublicoResponse": {
+        "type": "object",
+        "properties": {
+          "numeroOs": {
+            "type": "string",
+            "example": "OS-2026-0001"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEBIDA",
+              "EM_DIAGNOSTICO",
+              "AGUARDANDO_APROVACAO",
+              "EM_EXECUCAO",
+              "FINALIZADA",
+              "ENTREGUE"
+            ],
+            "example": "RECEBIDA"
+          },
+          "dataAbertura": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "execucaoIniciadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "finalizadaEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "entregueEm": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-23T14:30:00"
+          },
+          "orcamentoId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          }
+        }
+      },
+      "PageMetadata": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "integer",
+            "example": 0
+          },
+          "pageSize": {
+            "type": "integer",
+            "example": 20
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "example": 1
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "PagedModelOrdemServicoResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemServicoResponse"
+            }
+          },
+          "pageable": {
+            "type": "object"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "example": 10
+          },
+          "number": {
+            "type": "integer",
+            "example": 0
+          },
+          "first": {
+            "type": "boolean",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "example": true
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "example": 1
+          },
+          "empty": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "PagedModelPecaInsumoResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PecaInsumoResponse"
+            }
+          },
+          "pageable": {
+            "type": "object"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "example": 10
+          },
+          "number": {
+            "type": "integer",
+            "example": 0
+          },
+          "first": {
+            "type": "boolean",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "example": true
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "example": 1
+          },
+          "empty": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "PagedModelServicoResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServicoResponse"
+            }
+          },
+          "pageable": {
+            "type": "object"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "example": 20
+          },
+          "number": {
+            "type": "integer",
+            "example": 0
+          },
+          "first": {
+            "type": "boolean",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "example": true
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "example": 1
+          },
+          "empty": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "PagedModelVeiculoResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VeiculoResponse"
+            }
+          },
+          "pageable": {
+            "type": "object"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "example": 20
+          },
+          "number": {
+            "type": "integer",
+            "example": 0
+          },
+          "first": {
+            "type": "boolean",
+            "example": true
+          },
+          "last": {
+            "type": "boolean",
+            "example": true
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "example": 1
+          },
+          "empty": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      }
+    }
+  }
+}
