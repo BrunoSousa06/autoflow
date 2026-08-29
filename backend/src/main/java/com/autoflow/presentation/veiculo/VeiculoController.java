@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/veiculos")
 @RequiredArgsConstructor
-@Tag(name = "veiculos", description = "Endpoints para gerenciamento de veículos")
+@Tag(name = "veículos", description = "Endpoints para gerenciamento de veículos")
 @SecurityRequirement(name = "bearerAuth")
 public class VeiculoController {
 

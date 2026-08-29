@@ -12,6 +12,9 @@ import com.autoflow.presentation.ordemservico.response.OrdemServicoDetalheRespon
 import com.autoflow.presentation.ordemservico.response.OrdemServicoResponse;
 import com.autoflow.presentation.ordemservico.response.StatusOrdemServicoResponse;
 import com.autoflow.presentation.ordemservico.response.TempoMedioOrdemServicoResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/ordens-servico")
+@Tag(name = "ordens de serviço", description = "Endpoints para consulta, criação e administração de ordens de serviço")
+@SecurityRequirement(name = "bearerAuth")
 public class OrdemServicoConsultaController {
 
     private final CalcularTempoMedioOrdemServicoUseCase calcularTempoMedio;
@@ -44,6 +49,8 @@ public class OrdemServicoConsultaController {
         this.consultarStatus = consultarStatus;
     }
 
+    @Operation(summary = "Listar ordens de serviço",
+            description = "Lista as ordens de serviço acessíveis ao usuário autenticado com filtros opcionais")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO')")
     public Page<OrdemServicoResponse> listar(
@@ -59,6 +66,8 @@ public class OrdemServicoConsultaController {
                 PageRequest.of(page, size), resultado.totalElements());
     }
 
+    @Operation(summary = "Detalhar ordem de serviço",
+            description = "Retorna os detalhes de uma ordem de serviço pelo número da OS")
     @GetMapping("/{numeroOs}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO')")
     public OrdemServicoDetalheResponse detalhar(@PathVariable String numeroOs) {
@@ -66,6 +75,8 @@ public class OrdemServicoConsultaController {
         return OrdemServicoDetalheResponse.fromDomain(detalhe.ordemServico(), detalhe.orcamentoAtual());
     }
 
+    @Operation(summary = "Consultar status da ordem de serviço",
+            description = "Retorna o status atual da ordem de serviço para o usuário autenticado")
     @GetMapping("/{numeroOs}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'ATENDENTE', 'MECANICO', 'CLIENTE')")
     public StatusOrdemServicoResponse status(
@@ -74,6 +85,8 @@ public class OrdemServicoConsultaController {
         return StatusOrdemServicoResponse.from(consultarStatus.execute(numeroOs, userDetails.getUsername()));
     }
 
+    @Operation(summary = "Consultar tempo médio de ordens de serviço",
+            description = "Retorna o tempo médio das ordens de serviço finalizadas")
     @GetMapping("/metricas/tempo-medio")
     @PreAuthorize("hasRole('ADMIN')")
     public TempoMedioOrdemServicoResponse tempoMedio() {

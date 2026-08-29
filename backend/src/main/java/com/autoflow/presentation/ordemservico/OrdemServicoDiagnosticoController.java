@@ -8,6 +8,9 @@ import com.autoflow.presentation.ordemservico.request.ItensNecessariosRequest;
 import com.autoflow.presentation.ordemservico.request.RegistrarLaudoRequest;
 import com.autoflow.presentation.ordemservico.response.FinalizarDiagnosticoResponse;
 import com.autoflow.presentation.ordemservico.response.OrdemServicoResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +27,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ordens-servico")
+@Tag(name = "diagnóstico", description = "Endpoints para diagnóstico das ordens de serviço")
+@SecurityRequirement(name = "bearerAuth")
 public class OrdemServicoDiagnosticoController {
 
     private final IniciarDiagnosticoUseCase iniciarDiagnostico;
@@ -45,6 +50,8 @@ public class OrdemServicoDiagnosticoController {
         this.itensMapper = itensMapper;
     }
 
+    @Operation(summary = "Iniciar diagnóstico",
+            description = "Inicia o diagnóstico da ordem de serviço")
     @PatchMapping("/{numeroOs}/diagnostico/iniciar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
@@ -52,6 +59,8 @@ public class OrdemServicoDiagnosticoController {
         return OrdemServicoResponse.fromDomain(iniciarDiagnostico.execute(numeroOs, userDetails.getUsername()));
     }
 
+    @Operation(summary = "Registrar itens necessários",
+            description = "Registra os itens necessários para um serviço da ordem de serviço")
     @PatchMapping("/{numeroOs}/servicos/{servicoId}/itens-necessarios")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
@@ -64,6 +73,8 @@ public class OrdemServicoDiagnosticoController {
                 numeroOs, servicoId, userDetails.getUsername(), itensMapper.mapToEntities(request)));
     }
 
+    @Operation(summary = "Registrar laudo do diagnóstico",
+            description = "Registra o laudo do diagnóstico da ordem de serviço")
     @PatchMapping("/{numeroOs}/diagnostico/laudo")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")
@@ -74,6 +85,8 @@ public class OrdemServicoDiagnosticoController {
         return OrdemServicoResponse.fromDomain(registrarLaudo.execute(numeroOs, userDetails.getUsername(), request.laudo()));
     }
 
+    @Operation(summary = "Finalizar diagnóstico e gerar orçamento",
+            description = "Finaliza o diagnóstico e gera o orçamento da ordem de serviço")
     @PatchMapping("/{numeroOs}/diagnostico/finalizar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICO')")

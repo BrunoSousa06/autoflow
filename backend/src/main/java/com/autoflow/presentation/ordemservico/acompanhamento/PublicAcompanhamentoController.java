@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/public/ordens-servico")
 @RequiredArgsConstructor
 @Tag(
-        name = "Acompanhamento público",
-        description = "Acompanhamento público de ordens de serviço"
+        name = "acompanhamento público",
+        description = "Consulta pública do acompanhamento de ordens de serviço"
 )
 public class PublicAcompanhamentoController {
 

@@ -28,7 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/orcamentos")
 @RequiredArgsConstructor
-@Tag(name = "orçamentos", description = "Endpoints para gerenciamento de orçamentos")
+@Tag(name = "orçamentos", description = "Endpoints para gerenciamento de orçamentos autenticados")
 @SecurityRequirement(name = "bearerAuth")
 public class OrcamentoController {
 

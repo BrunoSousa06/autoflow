@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
-@Tag(name = "usuarios", description = "Endpoints para gerenciamento de usuários do sistema")
+@Tag(name = "usuários", description = "Endpoints para gerenciamento de usuários do sistema")
 @SecurityRequirement(name = "bearerAuth")
 public class UsuarioAdminController {
 

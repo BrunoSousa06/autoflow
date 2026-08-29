@@ -29,7 +29,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "autenticação", description = "Endpoints para gerenciamento de autenticação dos usuarios")
+@Tag(name = "autenticação", description = "Endpoints para gerenciamento da autenticação dos usuários")
 public class UsuarioController {
 
     private final CadastrarUsuarioPublicoUseCase cadastrarUsuarioPublicoUseCase;

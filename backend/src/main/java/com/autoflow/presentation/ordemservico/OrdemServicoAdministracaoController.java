@@ -12,6 +12,9 @@ import com.autoflow.presentation.ordemservico.request.CriarOrdemServicoRequest;
 import com.autoflow.presentation.ordemservico.request.IncluirMecanicoRequest;
 import com.autoflow.presentation.ordemservico.request.ServicoSolicitadoRequest;
 import com.autoflow.presentation.ordemservico.response.OrdemServicoResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +32,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ordens-servico")
+@Tag(name = "ordens de serviço", description = "Endpoints para consulta, criação e administração de ordens de serviço")
+@SecurityRequirement(name = "bearerAuth")
 public class OrdemServicoAdministracaoController {
 
     private final CriarOrdemServicoUseCase criarOrdemServico;
@@ -50,6 +55,8 @@ public class OrdemServicoAdministracaoController {
         this.acompanhamentoUrl = acompanhamentoUrl;
     }
 
+    @Operation(summary = "Abrir ordem de serviço",
+            description = "Cria uma nova ordem de serviço para o cliente informado")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
@@ -62,6 +69,8 @@ public class OrdemServicoAdministracaoController {
         return OrdemServicoResponse.fromDomain(criada, acompanhamentoUrl.gerar(criada.tokenAcompanhamento()));
     }
 
+    @Operation(summary = "Incluir serviços na ordem de serviço",
+            description = "Adiciona serviços solicitados a uma ordem de serviço existente")
     @PostMapping("/{numeroOs}/servicos")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN', 'MECANICO')")
@@ -73,6 +82,8 @@ public class OrdemServicoAdministracaoController {
         return OrdemServicoResponse.fromDomain(incluirServicos.execute(numeroOs, servicos, userDetails.getUsername()));
     }
 
+    @Operation(summary = "Atribuir mecânico à ordem de serviço",
+            description = "Atribui um mecânico à ordem de serviço informada")
     @PatchMapping("/{numeroOs}/mecanico")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")

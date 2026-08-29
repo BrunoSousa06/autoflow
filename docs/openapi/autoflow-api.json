@@ -29,6 +29,10 @@
       "description": "Clientes"
     },
     {
+      "name": "ordens de serviço do cliente",
+      "description": "Ordens de serviço do cliente autenticado"
+    },
+    {
       "name": "veículos",
       "description": "Veículos"
     },
@@ -37,7 +41,7 @@
       "description": "Catálogo e métricas de serviços"
     },
     {
-      "name": "estoque",
+      "name": "peças e insumos",
       "description": "Peças e insumos"
     },
     {
@@ -63,10 +67,6 @@
     {
       "name": "orçamentos públicos",
       "description": "Consulta e decisão por token público"
-    },
-    {
-      "name": "acompanhamento",
-      "description": "Acompanhamento autenticado"
     },
     {
       "name": "acompanhamento público",
@@ -545,7 +545,7 @@
         "operationId": "listarMinhasOrdensServico",
         "summary": "Listar minhas ordens de serviço",
         "tags": [
-          "acompanhamento"
+          "ordens de serviço do cliente"
         ],
         "description": "Listar minhas ordens de serviço Permissão: ADMIN ou CLIENTE.",
         "responses": {
@@ -1102,7 +1102,7 @@
         "operationId": "cadastrarPecaInsumo",
         "summary": "Cadastrar peça ou insumo",
         "tags": [
-          "estoque"
+          "peças e insumos"
         ],
         "description": "Cadastrar peça ou insumo Permissão: ADMIN, ATENDENTE ou MECANICO.",
         "responses": {
@@ -1141,7 +1141,7 @@
         "operationId": "listarPecasInsumos",
         "summary": "Listar peças e insumos",
         "tags": [
-          "estoque"
+          "peças e insumos"
         ],
         "description": "Listar peças e insumos Permissão: ADMIN, ATENDENTE ou MECANICO.",
         "responses": {
@@ -1214,7 +1214,7 @@
         "operationId": "consultarPecaInsumo",
         "summary": "Consultar peça ou insumo",
         "tags": [
-          "estoque"
+          "peças e insumos"
         ],
         "description": "Consultar peça ou insumo Permissão: ADMIN, ATENDENTE ou MECANICO.",
         "responses": {
@@ -1255,7 +1255,7 @@
         "operationId": "deletarPecaInsumo",
         "summary": "Excluir peça ou insumo",
         "tags": [
-          "estoque"
+          "peças e insumos"
         ],
         "description": "Excluir peça ou insumo Permissão: ADMIN ou ATENDENTE.",
         "responses": {
@@ -1299,7 +1299,7 @@
         "operationId": "atualizarPecaInsumo",
         "summary": "Atualizar peça ou insumo",
         "tags": [
-          "estoque"
+          "peças e insumos"
         ],
         "description": "Atualizar peça ou insumo Permissão: ADMIN, ATENDENTE ou MECANICO.",
         "responses": {
