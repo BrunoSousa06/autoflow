@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/public/orcamentos")
 @RequiredArgsConstructor
-@Tag(name = "orçamentos", description = "Endpoints para gerenciamento de orçamentos")
+@Tag(name = "orçamentos públicos", description = "Endpoints para consulta e decisão de orçamentos pelo link público")
 public class PublicOrcamentoController {
 
 
@@ -97,6 +97,8 @@ public class PublicOrcamentoController {
                 decidirOrcamentoUseCase.recusarComoToken(orcamentoId, token, motivo, nome));
     }
 
+    @Operation(summary = "Baixar o PDF do orçamento pelo acompanhamento",
+            description = "Retorna o PDF do orçamento usando o token de acompanhamento público")
     @GetMapping(value = "/{orcamentoId}/pdf/acompanhamento", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> baixarPdfPorAcompanhamento(
             @PathVariable Long orcamentoId,
@@ -109,6 +111,8 @@ public class PublicOrcamentoController {
                 .body(orcamentoDocumentoGateway.gerarPdf(orcamento));
     }
 
+    @Operation(summary = "Aprovar orçamento pelo acompanhamento",
+            description = "Registra a aprovação do orçamento usando o token de acompanhamento público")
     @PostMapping("/{orcamentoId}/aprovar/acompanhamento")
     public OrcamentoResponse aprovarPorAcompanhamento(
             @PathVariable Long orcamentoId,
