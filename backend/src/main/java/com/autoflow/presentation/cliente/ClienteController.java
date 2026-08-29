@@ -69,10 +69,10 @@ public class ClienteController {
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @GetMapping("/{documento}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public ResponseEntity<ClienteResponse> listar(@PathVariable Long documento) {
-        ClienteOutput output = listarClienteUseCase.execute(documento);
+    public ResponseEntity<ClienteResponse> listar(@PathVariable Long id) {
+        ClienteOutput output = listarClienteUseCase.execute(id);
         ClienteResponse response = clienteMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }

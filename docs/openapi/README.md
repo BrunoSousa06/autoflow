@@ -91,7 +91,7 @@ descrição e respostas próprias no JSON.
 | GET, POST   | `/usuarios`                                                         | ADMIN, ATENDENTE                             |
 | GET         | `/clientes/me`                                                      | CLIENTE                                      |
 | GET, POST   | `/clientes`                                                         | ADMIN, ATENDENTE; autenticado                |
-| GET         | `/clientes/{documento}`                                             | ADMIN, ATENDENTE                             |
+| GET         | `/clientes/{id}`                                                    | ADMIN, ATENDENTE                             |
 | PATCH       | `/clientes/{id}/atualizacao`                                        | ADMIN, ATENDENTE                             |
 | DELETE      | `/clientes/{id}`                                                    | ADMIN                                        |
 | GET         | `/clientes/me/ordens-servico`                                       | ADMIN, CLIENTE                               |
