@@ -438,6 +438,48 @@
             "example": 12345678901
           }
         ]
+      },
+      "delete": {
+        "operationId": "deletarCliente",
+        "summary": "Excluir cliente",
+        "tags": [
+          "clientes"
+        ],
+        "description": "Excluir cliente Permissão: ADMIN.",
+        "responses": {
+          "200": {
+            "description": "Operação concluída com sucesso.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "cliente deletado com sucesso"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ]
       }
     },
     "/clientes/{id}/atualizacao": {
@@ -494,50 +536,6 @@
             }
           }
         }
-      }
-    },
-    "/clientes/{id}": {
-      "delete": {
-        "operationId": "deletarCliente",
-        "summary": "Excluir cliente",
-        "tags": [
-          "clientes"
-        ],
-        "description": "Excluir cliente Permissão: ADMIN.",
-        "responses": {
-          "200": {
-            "description": "Operação concluída com sucesso.",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string",
-                  "example": "cliente deletado com sucesso"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "example": 1
-          }
-        ]
       }
     },
     "/clientes/me/ordens-servico": {
