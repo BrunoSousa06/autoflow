@@ -61,21 +61,15 @@ correspondente.
 
 ## Arquitetura
 
-### Backend — Arquitetura em Camadas
+### Backend — Clean Architecture
 
-```
-Controller  →  Service  →  Repository  →  Database
-```
+O AutoFlow é um monólito Spring Boot organizado segundo a Clean Architecture. O backend possui as camadas
+`presentation`, `application`, `domain`, `infrastructure` e `config`.
 
-Cada camada tem responsabilidade única:
+A direção principal das dependências é `presentation → application → domain`. A camada `infrastructure` implementa
+detalhes técnicos e as portas definidas pela `application`, enquanto `config` realiza a composição da aplicação.
 
-- **Controller** — expõe endpoints REST, valida e converte requisições
-- **Service** — implementa regras de negócio, valida domínio, controla transações
-- **Repository** — persistência via Spring Data JPA
-- **Domain/Entity** — entidades e relacionamentos
-
-Boas práticas adotadas: SOLID, injeção de dependências, tratamento centralizado de exceções, Bean Validation, análise
-estática com SonarQube e pipeline CI via GitHub Actions.
+Os detalhes da organização e das regras arquiteturais estão em [`docs/architecture.md`](docs/architecture.md).
 
 ### Frontend — Angular Standalone + Signals
 
