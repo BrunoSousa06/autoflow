@@ -397,7 +397,7 @@
         }
       }
     },
-    "/clientes/{documento}": {
+    "/clientes/{id}": {
       "get": {
         "operationId": "consultarCliente",
         "summary": "Consultar cliente",
@@ -428,7 +428,7 @@
         },
         "parameters": [
           {
-            "name": "documento",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
