@@ -67,6 +67,9 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"
@@ -86,6 +89,10 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
+            "karmaConfig": "karma.conf.js",
+            "codeCoverage": true,
+            "browsers": "ChromeHeadlessCI",
+            "watch": false,
             "polyfills": [
               "zone.js",
               "zone.js/testing"
@@ -100,7 +107,12 @@
               "@angular/material/prebuilt-themes/indigo-pink.css",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "src/app/**/*.model.ts",
+              "src/environments/**"
+            ]
           }
         }
       }

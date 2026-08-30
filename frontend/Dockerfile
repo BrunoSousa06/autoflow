@@ -1,20 +1,31 @@
-# Stage 1: Build
 FROM node:22-alpine AS build
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+RUN chown node:node /app
+
+USER node
+
+COPY --chown=node:node package.json package-lock.json ./
+
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
+
 RUN npm run build -- --configuration=production
 
-# Stage 2: Serve
-FROM nginx:1.27-alpine
 
-COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 
-EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+
+COPY --from=build \
+     --chown=nginx:nginx \
+     /app/dist/frontend/browser \
+     /usr/share/nginx/html
+
+COPY --chown=nginx:nginx \
+     nginx.conf.template \
+     /etc/nginx/templates/default.conf.template
+
+EXPOSE 8080

@@ -1,0 +1,45 @@
+package com.autoflow.application.usecases.ordemservico;
+
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.policy.OrdemServicoAccessPolicy;
+import com.autoflow.application.port.in.ordemservico.IniciarDiagnosticoUseCase;
+import com.autoflow.application.transaction.TransactionalUseCase;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.usuario.RoleEnum;
+import com.autoflow.domain.usuario.Usuario;
+import lombok.RequiredArgsConstructor;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+
+
+@RequiredArgsConstructor
+public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase {
+    private final OrdemServicoGateway ordemServicoGateway;
+    private final UsuarioGateway usuarioGateway;
+    private final RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+    private final OrdemServicoAccessPolicy accessPolicy;
+    private final Clock clock;
+
+    @TransactionalUseCase
+    @Override
+    public OrdemServico execute(String numeroOs, String emailUsuarioLogado) {
+        OrdemServico ordemServico = buscar(numeroOs);
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
+        if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
+            accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);
+        }
+        ordemServico.iniciarDiagnostico(LocalDateTime.now(clock));
+        OrdemServico salva = ordemServicoGateway.save(ordemServico);
+        registrarHistoricoStatusOs.registrar(salva);
+        return salva;
+    }
+
+    private OrdemServico buscar(String numeroOs) {
+        return ordemServicoGateway.findByNumeroOs(numeroOs)
+                .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
+    }
+}

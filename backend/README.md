@@ -1,272 +1,137 @@
-# AutoFlow
+# AutoFlow Backend
 
-Sistema para gerenciamento de ordens de serviço de manutenção automotiva.
+API REST do AutoFlow, responsável pelas regras de negócio, autenticação, persistência, métricas e notificações por
+e-mail.
 
-## Sobre o Projeto
+## Stack
 
-O AutoFlow é um sistema desenvolvido em Java para controlar o ciclo completo de atendimento de oficinas mecânicas, por meio de ordens de serviço permitindo o gerenciamento de clientes, veículos, serviços, ordens de serviços e itens necessários.
+- Java 21 e Spring Boot 3.5;
+- Spring Web, Validation, Security e Data JPA;
+- PostgreSQL e Flyway;
+- SpringDoc OpenAPI;
+- JUnit 5, Mockito, Testcontainers, ArchUnit e JaCoCo.
 
-O objetivo do sistema é centralizar o processo operacional da oficina, permitindo um melhor controle de atendimento com priorizações corretas e atendimentos mais eficientes
+## Executar
 
----
+Pela raiz do projeto, a forma mais simples de subir backend, frontend e banco é:
 
-## Tecnologias Utilizadas
-
-* Java 21
-* Spring Boot 3.5.x
-* Spring Web
-* Spring Data JPA
-* Spring Security
-* Spring Validation
-* SpringDoc OpenAPI (Swagger)
-* PostgreSQL
-* Lombok
-* JUnit 5
-* Mockito
-* SonarQube
-* Docker
-* GitHub Actions
-
-
-## Decisões Arquiteturais
-
-### Arquitetura em Camadas
-
-O AutoFlow foi desenvolvido utilizando a arquitetura em camadas (Layered Architecture), devido a facilidade de manutenção, escalabilidade e baixo acoplamento entre os componentes, fazendo com que a evolução do projeto tenham um menor impacto em partes ja existentes no sistema. Devido a cada camada ter as suas responsabilidades definidas isso tambem faz com que as regras de negocio sejam validadas com os testes unitarios e testes integrados de forma mais simples e direta.
-Como essa arquitetura é uma arquitetura padrão do mercado isso faz com que a aprendizagem não seja um impediditivo para o desenvolvimento.
-
-Estrutura simplificada:
-
-```text
-Controller
-    ↓
-Service
-    ↓
-Repository
-    ↓
-Database
+```bash
+docker compose up -d --build
 ```
 
-#### Camadas da Aplicação
+Para executar apenas a API, instale Java 21, Maven e PostgreSQL, configure as variáveis e rode:
 
-##### Controller
+```bash
+cd backend
+mvn spring-boot:run
+```
 
-Responsável por:
+A API usa a porta `8081`.
 
-* Expor os endpoints REST.
-* Receber e validar requisições.
-* Converter dados de entrada e saída.
-* Delegar regras de negócio para a camada de serviço.
+Para construir uma imagem isolada:
 
-##### Service
+```bash
+docker build -t autoflow-backend .
+docker run --rm --env-file ../.env -p 8081:8081 autoflow-backend
+```
 
-Responsável por:
+## Configuração
 
-* Implementar as regras de negócio.
-* Realizar validações de domínio.
-* Coordenar operações transacionais.
-* Orquestrar o fluxo da aplicação.
+Forneça credenciais por ambiente ou por `.env` local. Não coloque valores reais no código, em exemplos ou na
+documentação.
 
-##### Repository
+| Variável                                                       | Uso                                       |
+|----------------------------------------------------------------|-------------------------------------------|
+| `SPRING_DATASOURCE_URL`                                        | URL JDBC do PostgreSQL                    |
+| `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD`    | Acesso ao banco                           |
+| `JWT_SECRET` / `JWT_EXPIRATION`                                | Assinatura e validade do JWT              |
+| `MAIL_USERNAME` / `MAIL_PASSWORD`                              | Envio de e-mails                          |
+| `APP_PUBLIC_BASE_URL`                                          | URL pública da API nos links de orçamento |
+| `APP_PUBLIC_TOKEN_SECRET` / `APP_PUBLIC_TOKEN_EXPIRATION_DAYS` | Token público de orçamento                |
+| `FRONTEND_PUBLIC_BASE_URL`                                     | URL pública do frontend                   |
+| `CORS_ALLOWED_ORIGINS`                                         | Origens permitidas pelo CORS              |
 
-Responsável por:
+Os defaults e a porta estão em [`application.properties`](src/main/resources/application.properties). As migrações
+Flyway ficam em `src/main/resources/db/migration`.
 
-* Persistência dos dados.
-* Consultas ao banco de dados.
-* Abstração da comunicação com o banco utilizando Spring Data JPA.
+## Arquitetura
 
-##### Domain/Entity
+O backend é um monólito organizado em `domain`, `application`, `infrastructure` e `presentation`:
 
-Responsável por:
+```text
+presentation → application → domain
+                    ↑
+             infrastructure
+```
 
-* Representar as entidades do negócio.
-* Definir relacionamentos e regras de persistência.
+Controllers e mappers REST adaptam HTTP; a aplicação concentra portas, casos de uso, políticas e modelos internos; o
+domínio mantém regras; a infraestrutura implementa persistência, segurança e integrações. O detalhamento está em [
+`docs/architecture.md`](../docs/architecture.md) e [`package-convention.md`](../docs/conventions/package-convention.md).
 
----
+## Funcionalidades e métricas
 
-### Banco de Dados PostgreSQL
+- usuários, clientes, veículos, serviços, peças e insumos;
+- ordens de serviço, diagnóstico, estoque, execução e entrega;
+- orçamentos principais e complementares, PDF, aprovação e recusa;
+- acompanhamento autenticado e público por token;
+- métricas de tempo médio em:
+  - `GET /ordens-servico/metricas/tempo-medio`;
+  - `GET /servicos/metricas/tempo-medio`.
 
-O PostgreSQL foi escolhido como sistema gerenciador de banco de dados por sua confiabilidade e facilidade de uso e integração com o Spring Boot
+As métricas são calculadas por adapters de persistência e expostas por casos de uso, sem expor projections do banco ao
+contrato REST.
 
-#### Motivos da escolha
+## API e documentação
 
-##### Confiabilidade
+- Swagger UI: <http://localhost:8081/swagger-ui.html>;
+- OpenAPI: <http://localhost:8081/v3/api-docs>;
+- [OpenAPI versionado](../docs/openapi/autoflow-api.json);
+- [Guia de execução da API](../docs/openapi/README.md);
+- [Diagramas de sequência](../docs/diagramas-sequencia/diagrama-sequencia.md);
+- [Fluxo público de orçamento](../docs/fluxo-orcamento-publico.md).
 
-O PostgreSQL possui alta estabilidade e mecanismos avançados de integridade de dados, garantindo segurança nas operações transacionais
+Endpoints públicos de orçamento não exigem JWT, mas exigem `token` na query string:
 
-##### Integração com Spring Data JPA
+| Método | Rota                              | Ação                |
+|--------|-----------------------------------|---------------------|
+| `GET`  | `/public/orcamentos/{id}`         | Consultar orçamento |
+| `GET`  | `/public/orcamentos/{id}/pdf`     | Baixar PDF          |
+| `POST` | `/public/orcamentos/{id}/aprovar` | Aprovar             |
+| `POST` | `/public/orcamentos/{id}/recusar` | Recusar             |
 
-PostgreSQL possui uma boa integração com SPring Data JPA facilitando o desenvolvimento e manutenção
+Os detalhes de validade, auditoria e efeitos na OS estão em [
+`fluxo-orcamento-publico.md`](../docs/fluxo-orcamento-publico.md).
 
----
+## Contas do seed
 
-### Boas Práticas Aplicadas
+Para a demonstracao local da pos-graduacao, o seed cria contas com a senha `Senha@1234`:
 
-Durante o desenvolvimento foram adotadas práticas visando qualidade, segurança e manutenibilidade:
+| E-mail                   | Perfil      |
+|--------------------------|-------------|
+| `admin@autoflow.com`     | `ADMIN`     |
+| `atendente@autoflow.com` | `ATENDENTE` |
+| `mecanico1@autoflow.com` | `MECANICO`  |
+| `mecanico2@autoflow.com` | `MECANICO`  |
+| `cliente@autoflow.com`   | `CLIENTE`   |
 
-* Princípios SOLID.
-* Injeção de dependências.
-* Tratamento centralizado de exceções.
-* Validações utilizando Jakarta Bean Validation.
-* Documentação automática com OpenAPI/Swagger.
-* Testes unitários e de integração.
-* Análise estática de código com SonarQube.
-* Pipeline de integração contínua utilizando GitHub Actions.
-* Controle transacional através do Spring Transaction Management.
+As migracoes `V36` e `V40` tambem criam contas complementares; a lista completa esta
+no [README principal](../README.md). Sao credenciais de demonstracao local e nao devem ser usadas em producao.
 
----
+## Validações e testes
 
-## Funcionalidades
+As validações incluem campos obrigatórios, CPF/CNPJ, placa, unicidade e regras de domínio. Execute:
 
-### Usuários
+```bash
+mvn clean verify
+```
 
-* Cadastro de usuários
-* Autenticação
-* Controle de perfis de acesso
-* Validação de e-mail único
-
-### Clientes
-
-* Cadastro de clientes
-* Atualização de dados
-* Exclusão lógica
-* Consulta por identificador
-* Validação de CPF/CNPJ
-
-### Veículos
-
-* Cadastro de veículos
-* Associação com clientes
-* Consulta por proprietário
-
-### Serviços
-
-* Cadastro de serviços
-* Atualização de informações
-* Exclusão lógica
-* Consulta de serviços cadastrados
-
-### Ordens de Serviço
-
-* Abertura de ordem de serviço
-* Associação de cliente e veículo
-* Inclusão de serviços solicitados
-* Inclusão de itens necessários
-* Controle de status
-* Consulta detalhada
-
----
+O comando executa testes unitários, testes de integração `*IT`, ArchUnit, Flyway/Testcontainers quando aplicável e o
+check JaCoCo configurado no Maven. Os detalhes estão em [`testing-and-quality.md`](../docs/testing-and-quality.md).
 
 ## Segurança
 
-A API utiliza Spring Security para proteção dos endpoints.
-
-Funcionalidades implementadas:
-
-* Autenticação baseada em token
-* Controle de autorização por perfil
-* Endpoints públicos e privados
-* Senhas armazenadas de forma criptografada
-
----
-
-## Validações
-
-Validações implementadas utilizando Jakarta Validation:
-
-* Campos obrigatórios
-* Tamanho mínimo e máximo
-* Formatos específicos
-* CPF válido
-* CNPJ válido
-* CPF/CNPJ único
-* Email unico
-
----
-
-## Documentação Complementar
-
-A documentação funcional e técnica de apoio está organizada na pasta [`docs`](docs):
-
-* [Requisitos funcionais](docs/requisitos-funcionais.md): descreve os fluxos esperados do sistema, atores, critérios de aceite e regras de negócio.
-* [Requisitos não funcionais](docs/requisitos-nao-funcionais.md): consolida requisitos de arquitetura, segurança, qualidade, infraestrutura e operação local.
-* [Diagramas de sequência](docs/diagrama-sequencia.md): centraliza os principais fluxos de interação da aplicação e aponta para os arquivos Mermaid separados por cenário.
-
-Os diagramas foram separados em arquivos `.mermaid` para facilitar manutenção, versionamento e visualização individual dos fluxos.
-
----
-
-## Documentação da API via Swagger
-
-Após iniciar a aplicação:
-
-Swagger UI:
-
-http://localhost:8080/swagger-ui.html
-
-OpenAPI:
-
-http://localhost:8080/v3/api-docs
-
----
-
-## Executando Localmente
-
-### Pré-requisitos
-
-* Java 21
-* Maven 3.5.7
-* Docker (opcional)
-* PostgreSQL
-
-### Clonar o projeto
-
-```bash
-git clone https://github.com/seu-usuario/autoflow.git
-cd autoflow
-```
-
----
-
-## Executando com Docker
-
-
-```bash
-docker-compose up -d 
-```
----
-
-
-
-## Qualidade de Código
-
-O projeto utiliza:
-
-* SonarQube
-* Jacoco
-* GitHub Actions
-* Snyk
-
-Análises realizadas:
-
-* Cobertura de testes
-* Code Smells
-* Vulnerabilidades
-* Vulnerabilidade de dependência
-* Bugs
-* Duplicação de código
-
----
-
-## Pipeline CI/CD
-
-Fluxo automatizado:
-
-1. Build da aplicação
-2. Execução dos testes
-3. Geração de cobertura
-4. Análise SonarQube
-5. Verificações de segurança com Snyk
-
-
-
+- endpoints privados usam JWT e `@PreAuthorize`;
+- endpoints públicos são separados dos fluxos autenticados;
+- tokens públicos são aleatórios, expiráveis e persistidos como hash;
+- senhas e segredos devem ser injetados por ambiente ou Secret;
+- tokens e credenciais não devem ser registrados em logs.

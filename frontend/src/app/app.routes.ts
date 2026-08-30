@@ -1,6 +1,6 @@
-import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
-import { roleGuard } from './core/guards/role.guard';
+import {Routes} from '@angular/router';
+import {authGuard} from './core/guards/auth.guard';
+import {roleGuard} from './core/guards/role.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -16,6 +16,11 @@ export const routes: Routes = [
     path: 'public/acompanhamento',
     loadComponent: () =>
       import('./features/public/acompanhamento/acompanhamento.component').then(m => m.AcompanhamentoComponent)
+  },
+  {
+    path: 'public/orcamentos/:id',
+    loadComponent: () =>
+      import('./features/public/orcamento-publico.component').then(m => m.OrcamentoPublicoComponent)
   },
 
   // Rotas autenticadas — dentro do Shell (sidenav)

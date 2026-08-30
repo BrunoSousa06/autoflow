@@ -1,0 +1,110 @@
+package com.autoflow.application.usecases.orcamento;
+
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.OrcamentoGateway;
+import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
+import com.autoflow.application.usecases.ordemservico.RegistrarHistoricoStatusOsService;
+import com.autoflow.domain.orcamento.Orcamento;
+import com.autoflow.domain.orcamento.StatusOrcamento;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class AprovarOrcamentoUseCaseTest {
+    @Mock OrcamentoGateway orcamentoGateway;
+    @Mock OrdemServicoGateway ordemServicoGateway;
+    @Mock AprovarReparoAdicionalPorOrcamentoUseCase reparoUseCase;
+    @Mock RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+    @org.mockito.Spy Clock clock = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
+    @InjectMocks AprovarOrcamentoUseCaseImpl useCase;
+
+    @Test
+    void deveAprovarEIniciarOsQuandoNaoHaReparoAdicional() {
+        Orcamento orcamento = orcamentoDisponivel();
+        OrdemServico os = osAguardandoAprovacao();
+        when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(reparoUseCase.executeSeExistir(10L)).thenReturn(false);
+        when(ordemServicoGateway.findById(1L)).thenReturn(Optional.of(os));
+
+        Orcamento resultado = useCase.execute(orcamento, "Maria");
+
+        assertSame(orcamento, resultado);
+        assertEquals(StatusOrcamento.APROVADO, resultado.getStatus());
+        assertEquals("Maria", resultado.getAssinaturaNome());
+        assertNotNull(resultado.getAprovadoEm());
+        assertEquals(StatusOrdemServico.EM_EXECUCAO, os.getStatus());
+        verify(ordemServicoGateway).save(os);
+    }
+
+    @Test
+    void naoDeveIniciarOsQuandoAprovacaoForDeReparoAdicional() {
+        Orcamento orcamento = orcamentoDisponivel();
+        when(orcamentoGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(reparoUseCase.executeSeExistir(10L)).thenReturn(true);
+
+        useCase.execute(orcamento, "Maria");
+
+        verifyNoInteractions(ordemServicoGateway);
+    }
+
+    @Test
+    void deveFalharParaStatusNaoDisponivel() {
+        Orcamento orcamento = orcamentoDisponivel();
+        orcamento.setStatus(StatusOrcamento.SUBSTITUIDO);
+
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute(orcamento, "Maria"));
+
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
+    }
+
+    @Test
+    void deveSerIdempotenteQuandoOrcamentoJaEstiverAprovado() {
+        Orcamento orcamento = orcamentoDisponivel();
+        orcamento.setStatus(StatusOrcamento.APROVADO);
+
+        assertSame(orcamento, useCase.execute(orcamento, "Maria"));
+
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
+    }
+
+    @Test
+    void deveBloquearAprovacaoConflitanteDepoisDaRecusa() {
+        Orcamento orcamento = orcamentoDisponivel();
+        orcamento.setStatus(StatusOrcamento.REPROVADO);
+
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute(orcamento, "Maria"));
+
+        assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
+        verifyNoInteractions(orcamentoGateway, ordemServicoGateway, reparoUseCase);
+    }
+
+    private Orcamento orcamentoDisponivel() {
+        Orcamento orcamento = new Orcamento();
+        orcamento.setId(10L); orcamento.setOrdemServicoId(1L); orcamento.setStatus(StatusOrcamento.DISPONIVEL);
+        return orcamento;
+    }
+
+    private OrdemServico osAguardandoAprovacao() {
+        OrdemServico os = new OrdemServico();
+        os.setId(1L); os.setStatus(StatusOrdemServico.AGUARDANDO_APROVACAO);
+        return os;
+    }
+}

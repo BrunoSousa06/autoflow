@@ -12,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { PecaInsumoService } from './peca-insumo.service';
 import {
   CATEGORIAS_PECA_INSUMO,
+  CATEGORIA_PECA_INSUMO_LABEL,
   CategoriaPecaInsumo,
   PecaInsumoRequest,
   PecaInsumoResponse,
@@ -58,6 +59,10 @@ export class PecaInsumoFormDialogComponent {
   });
 
   get f() { return this.form.controls; }
+
+  tipoLabel(tipo: CategoriaPecaInsumo): string {
+    return CATEGORIA_PECA_INSUMO_LABEL[tipo] ?? tipo;
+  }
 
   constructor() {
     if (this.data.item) {
@@ -145,7 +150,7 @@ export class PecaInsumoFormDialogComponent {
       }
     }
     if (!temErroCampo) {
-      this.erroBackend.set('Erro ao processar a requisicao.');
+      this.erroBackend.set('Erro ao processar a requisição.');
     }
   }
 

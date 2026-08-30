@@ -1,0 +1,270 @@
+name: Pipeline
+
+on:
+  push:
+    branches: ["develop", "main"]
+
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: ["develop", "main"]
+
+jobs:
+
+  backend-test-sonar:
+    name: Backend Tests & SonarQube Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Verify Docker for Testcontainers
+        run: docker info
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Maven packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('backend/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build and analyze
+        working-directory: backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
+
+      - name: Upload Backend Coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/target/site/jacoco
+          if-no-files-found: ignore
+
+      - name: Upload Backend Integration Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-integration-reports
+          path: backend/target/failsafe-reports
+          if-no-files-found: ignore
+
+  backend-build:
+    name: Backend Build
+    runs-on: ubuntu-latest
+    needs: backend-test-sonar
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build Backend
+        working-directory: backend
+        run: mvn package -DskipTests
+
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Frontend Tests
+        working-directory: frontend
+        run: npm run test:ci
+
+      - name: Upload Frontend Coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/frontend
+          if-no-files-found: ignore
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    needs: frontend-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build
+  snyk-scan:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Setup Java
+        uses: actions/setup-java@master
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Run Snyk Open Source Scan
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --sarif-file-output=snyk.sarif
+
+      - name: Build Docker Image for Scan
+        working-directory: backend
+        run: docker build -t autoflow-app:latest -f Dockerfile .
+
+      - name: Run Snyk Container Scan
+        continue-on-error: true
+        working-directory: backend
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk container test autoflow-app:latest --file=Dockerfile
+
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs:  [backend-build, frontend-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker Login
+        uses: docker/login-action@v3.0.0
+        with:
+          username: 'brunosousa06'
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: brunosousa06/autoflow-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: brunosousa06/autoflow-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+  deploy-aws:
+    name: Deploy AWS with Terraform
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    env:
+      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
+      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Validação de S3 Bucket
+        run: |
+          if aws s3api head-bucket --bucket state-autoflow-terraform 2>/dev/null; then
+            echo "Terraform state bucket already exists."
+          else
+            echo "Creating Terraform state bucket..."
+            aws s3api create-bucket \
+              --bucket state-autoflow-terraform \
+              --region us-east-1
+          fi
+
+      - name: Habilitar versionamento do S3
+        run: |
+          aws s3api put-bucket-versioning \
+            --bucket state-autoflow-terraform \
+            --versioning-configuration Status=Enabled
+
+      - name: Terraform Init
+        working-directory: ./infra
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ./infra
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ./infra
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: ./infra
+        run: terraform apply -auto-approve
+

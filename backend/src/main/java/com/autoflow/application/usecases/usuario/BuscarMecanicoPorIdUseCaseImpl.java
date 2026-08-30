@@ -1,0 +1,31 @@
+package com.autoflow.application.usecases.usuario;
+
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.UsuarioGateway;
+import com.autoflow.application.port.in.usuario.BuscarMecanicoPorIdUseCase;
+import com.autoflow.domain.usuario.RoleEnum;
+import com.autoflow.domain.usuario.Usuario;
+import lombok.RequiredArgsConstructor;
+
+
+@RequiredArgsConstructor
+public class BuscarMecanicoPorIdUseCaseImpl implements BuscarMecanicoPorIdUseCase {
+
+    private final UsuarioGateway usuarioGateway;
+
+    @Override
+    public Usuario execute(Long mecanicoId) {
+
+        Usuario usuario = usuarioGateway.findById(mecanicoId)
+                .orElseThrow(() -> ApplicationException.notFound(
+                        "Mecânico não encontrado."));
+
+        if (!RoleEnum.MECANICO.equals(usuario.getRole())) {
+            throw ApplicationException.badRequest(
+                    "Usuário informado não é um mecânico."
+            );
+        }
+
+        return usuario;
+    }
+}

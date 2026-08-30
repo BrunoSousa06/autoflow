@@ -165,7 +165,7 @@
                 @for (item of srv.itensNecessarios; track item.pecaInsumoId) {
                   <div class="item-linha">
                     <span class="item-nome">{{ item.nome }}</span>
-                    <span class="item-tipo">{{ item.tipo }}</span>
+                    <span class="item-tipo">{{ labelTipoItem(item.tipo) }}</span>
                     <span class="item-qtd">{{ item.quantidade }}x</span>
                     <span class="item-valor">{{ item.valorTotal | currency:'BRL' }}</span>
                     <mat-chip [class]="'status-item-' + item.status" class="chip-xs">
@@ -302,7 +302,7 @@
             </button>
 
             <!-- Execução de serviços -->
-            @if (os()!.status === 'AGUARDANDO_APROVACAO' || os()!.status === 'EM_EXECUCAO') {
+            @if (os()!.status === 'EM_EXECUCAO') {
               <div class="secao-itens">
                 <p class="secao-label">Execução de serviços</p>
                 @for (srv of os()!.servicos; track srv.id) {

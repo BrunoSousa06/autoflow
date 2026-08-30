@@ -1,0 +1,75 @@
+package com.autoflow.application.usecases.ordemservico;
+
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class EntregarOrdemServicoUseCaseTest {
+
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
+
+    @Mock
+    private OrdemServicoGateway ordemServicoGateway;
+
+    @Mock
+    private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+
+    @Test
+    void deveEntregarOsERegistrarHistorico() {
+        var os = ordemFinalizada();
+        when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
+        when(ordemServicoGateway.save(os)).thenReturn(os);
+
+        var resultado = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK)
+                .execute("OS-1");
+
+        assertEquals(StatusOrdemServico.ENTREGUE, resultado.getStatus());
+        verify(registrarHistoricoStatusOs).registrar(os);
+    }
+
+    @Test
+    void deveRetornar404QuandoOsNaoExiste() {
+        when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.empty());
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK);
+
+        var exception = assertThrows(ApplicationException.class,
+                () -> useCase.execute("OS-1"));
+
+        assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
+    }
+
+    @Test
+    void deveRejeitarEntregaForaDoStatusFinalizado() {
+        var os = ordemFinalizada();
+        os.setStatus(StatusOrdemServico.EM_EXECUCAO);
+        when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
+        var useCase = new EntregarOrdemServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK);
+
+        assertThrows(IllegalStateException.class,
+                () -> useCase.execute("OS-1"));
+    }
+
+    private OrdemServico ordemFinalizada() {
+        var os = new OrdemServico();
+        os.setId(1L);
+        os.setNumeroOs("OS-1");
+        os.setStatus(StatusOrdemServico.FINALIZADA);
+        return os;
+    }
+}

@@ -1,0 +1,101 @@
+<div class="page">
+  <header aria-label="AutoFlow" class="brand">
+    <span class="brand-icon"><mat-icon>directions_car</mat-icon></span>
+    <span>AutoFlow</span>
+  </header>
+
+  <main>
+    @if (carregando) {
+      <mat-card aria-live="polite" class="card state">
+        <mat-spinner diameter="44"></mat-spinner>
+        <div><h1>Carregando seu orçamento</h1>
+          <p>Isso deve levar apenas alguns segundos.</p></div>
+      </mat-card>
+    } @else if (erro) {
+      <mat-card class="card state error" role="alert">
+        <span class="state-icon"><mat-icon>link_off</mat-icon></span>
+        <div><h1>Não foi possível abrir o orçamento</h1>
+          <p>{{ erro }}</p></div>
+        <div class="state-actions">
+          <button (click)="consultar()" color="primary" mat-flat-button>
+            <mat-icon>refresh</mat-icon>
+            Tentar novamente
+          </button>
+          <button (click)="irParaLogin()" color="primary" mat-stroked-button>Acessar minha conta</button>
+        </div>
+      </mat-card>
+    } @else if (orcamento) {
+      <mat-card class="card">
+        <section class="hero">
+          <div>
+            <span
+              class="eyebrow">ORÇAMENTO {{ orcamento.tipo === 'COMPLEMENTAR' ? 'COMPLEMENTAR' : 'PRINCIPAL' }}</span>
+            <h1>Orçamento da OS {{ orcamento.numeroOs }}</h1>
+            <p>Versão {{ orcamento.versao }} · Disponibilizado
+              em {{ orcamento.disponibilizadoEm | date:'dd/MM/yyyy, HH:mm' }}</p>
+          </div>
+          <span class="status"><span class="status-dot"></span>{{ statusLabel(orcamento.status) }}</span>
+        </section>
+
+        <section aria-label="Resumo de valores" class="amounts">
+          <div><span>Serviços</span><strong>{{ orcamento.totalServicos | currency:'BRL' }}</strong></div>
+          <div><span>Peças e insumos</span><strong>{{ orcamento.totalItens | currency:'BRL' }}</strong></div>
+          <div class="total"><span>Total do orçamento</span><strong>{{ orcamento.totalGeral | currency:'BRL' }}</strong>
+          </div>
+        </section>
+
+        @if (orcamento.status === 'DISPONIVEL') {
+          <section aria-labelledby="decision-title" class="decision">
+            <div class="decision-heading">
+              <span class="approval-icon"><mat-icon>task_alt</mat-icon></span>
+              <div><h2 id="decision-title">Sua decisão</h2>
+                <p>Confira o PDF e escolha aprovar ou recusar o orçamento.</p></div>
+            </div>
+            <div class="fields">
+              <mat-form-field appearance="outline">
+                <mat-label>Seu nome (opcional)</mat-label>
+                <input [(ngModel)]="nome" autocomplete="name" matInput maxlength="120">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Motivo da recusa (opcional)</mat-label>
+                <textarea [(ngModel)]="motivo" matInput maxlength="500" rows="3"></textarea>
+              </mat-form-field>
+            </div>
+            <div class="actions">
+              <button (click)="baixarPdf()" [disabled]="processando" color="primary" mat-stroked-button>
+                <mat-icon>download</mat-icon>
+                Baixar PDF
+              </button>
+              <button (click)="recusar()" [disabled]="processando" color="warn" mat-stroked-button>
+                <mat-icon>close</mat-icon>
+                Recusar
+              </button>
+              <button (click)="aprovar()" [disabled]="processando" color="primary" mat-flat-button>
+                @if (processando) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                } @else {
+                  <mat-icon>check</mat-icon>
+                }
+                Aprovar orçamento
+              </button>
+            </div>
+          </section>
+        } @else {
+          <section [class.rejected]="orcamento.status === 'REPROVADO'" class="result">
+            <mat-icon>{{ orcamento.status === 'APROVADO' ? 'check_circle' : 'info' }}</mat-icon>
+            <div><h2>{{ statusLabel(orcamento.status) }}</h2>
+              <p>Sua decisão já foi registrada. Você ainda pode baixar o PDF deste orçamento.</p></div>
+            <button (click)="baixarPdf()" color="primary" mat-stroked-button>
+              <mat-icon>download</mat-icon>
+              Baixar PDF
+            </button>
+          </section>
+        }
+
+        <footer class="footer">
+          <mat-icon>lock</mat-icon>
+          <span>Este link é seguro e temporário. Não o compartilhe com terceiros.</span></footer>
+      </mat-card>
+    }
+  </main>
+</div>

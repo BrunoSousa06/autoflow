@@ -1,8 +1,9 @@
 package com.autoflow.config.security.service;
 
 import com.autoflow.domain.usuario.RoleEnum;
-import com.autoflow.domain.usuario.UsuarioEntity;
-import com.autoflow.repository.usuario.UsuarioRepository;
+import com.autoflow.infrastructure.persistence.entity.usuario.UsuarioEntity;
+import com.autoflow.infrastructure.persistence.repository.UsuarioRepository;
+import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,8 +16,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +68,7 @@ class CustomUserDetailsServiceTest {
                         .stream()
                         .anyMatch(authority ->
                                 authority.getAuthority()
-                                        .equals("ADMIN"))
+                                        .equals("ROLE_ADMIN"))
         );
 
         verify(usuarioRepository)

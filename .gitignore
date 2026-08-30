@@ -14,6 +14,7 @@ backend/.mvn/wrapper/maven-wrapper.jar
 .springBeans
 .sts4-cache
 
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -32,3 +33,13 @@ build/
 
 ### VS Code ###
 .vscode/
+/docs/trello
+backend/.m2
+
+###Terraform###
+*.terraform
+*.terraform*
+*.terraform/
+*terraform/
+*/terraform*
+!docs/terraform.md

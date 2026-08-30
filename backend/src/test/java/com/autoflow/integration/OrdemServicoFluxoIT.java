@@ -206,12 +206,20 @@ class OrdemServicoFluxoIT extends AbstractIT {
     @Order(9)
     @DisplayName("9 - deve iniciar execução do serviço")
     void deveIniciarServico() {
+        int estoqueAntes = jdbcTemplate.queryForObject(
+                "SELECT quantidade FROM pecas_insumos WHERE id = ?", Integer.class, pecaId);
+
         ResponseEntity<String> response = patch(
                 "/ordens-servico/" + numeroOs + "/servicos/" + servicoSolicitadoId + "/iniciar", null, mecanicoToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         JsonNode servico = parseJson(response.getBody()).get("servicos").get(0);
         assertThat(servico.get("status").asText()).isEqualTo("EM_EXECUCAO");
+        assertThat(servico.get("itensNecessarios").get(0).get("status").asText())
+                .isEqualTo("UTILIZADO");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT quantidade FROM pecas_insumos WHERE id = ?", Integer.class, pecaId))
+                .isEqualTo(estoqueAntes - 2);
     }
 
     @Test
@@ -236,11 +244,20 @@ class OrdemServicoFluxoIT extends AbstractIT {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         assertThat(parseJson(response.getBody()).get("status").asText()).isEqualTo("ENTREGUE");
+
+        Long ordemServicoId = jdbcTemplate.queryForObject(
+                "SELECT id FROM ordem_servico WHERE numero_os = ?", Long.class, numeroOs);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*)
+                FROM ordem_servico_status_historico
+                WHERE ordem_servico_id = ? AND status = 'ENTREGUE'
+                """, Integer.class, ordemServicoId))
+                .isEqualTo(1);
     }
 
     @Test
     @Order(12)
-    @DisplayName("12 - deve listar OS e encontrar a OS criada")
+    @DisplayName("12 - deve listar somente OS operacionais e manter a OS entregue persistida")
     void deveListarOrdens() {
         ResponseEntity<String> response = get("/ordens-servico", adminToken);
 
@@ -248,14 +265,14 @@ class OrdemServicoFluxoIT extends AbstractIT {
         JsonNode json = parseJson(response.getBody());
         JsonNode content = json.get("content");
         assertThat(content.isArray()).isTrue();
-        boolean encontrou = false;
-        for (JsonNode os : content) {
-            if (os.get("numeroOs").asText().equals(numeroOs)) {
-                encontrou = true;
-                break;
-            }
-        }
-        assertThat(encontrou).as("OS '%s' deve estar na listagem", numeroOs).isTrue();
+        assertThat(content).allSatisfy(os -> assertThat(os.get("status").asText())
+                .isIn("EM_EXECUCAO", "AGUARDANDO_APROVACAO", "EM_DIAGNOSTICO", "RECEBIDA"));
+        assertThat(content.findValuesAsText("numeroOs")).doesNotContain(numeroOs);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM ordem_servico WHERE numero_os = ? AND status = 'ENTREGUE'",
+                Integer.class,
+                numeroOs
+        )).isEqualTo(1);
     }
 
     @Test
@@ -331,6 +348,57 @@ class OrdemServicoFluxoIT extends AbstractIT {
         ResponseEntity<String> response = restTemplate.getForEntity("/ordens-servico", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @Order(55)
+    @DisplayName("N9 - não deve iniciar serviço antes da aprovação do orçamento")
+    void deveImpedirIniciarServicoAntesDaAprovacaoDoOrcamento() {
+        JsonNode os = parseJson(post("/ordens-servico", Map.of(
+                "cpfCnpj", TestUtils.CPF_CLIENTE,
+                "veiculo", Map.of(
+                        "placa", TestUtils.placaUnica(),
+                        "marca", "Honda",
+                        "modelo", "City",
+                        "ano", 2023
+                ),
+                "servicosSolicitados", List.of(Map.of("servicoId", servicoId))
+        ), adminToken).getBody());
+        String novaOs = os.get("numeroOs").asText();
+        Long novoServicoId = os.get("servicos").get(0).get("servicoId").asLong();
+
+        ResponseEntity<String> response = patch(
+                "/ordens-servico/" + novaOs + "/servicos/" + novoServicoId + "/iniciar",
+                null,
+                mecanicoToken
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parseJson(response.getBody()).get("erro").asText())
+                .isEqualTo("O serviço só pode ser iniciado após a aprovação do orçamento.");
+    }
+
+    @Test
+    @Order(56)
+    @DisplayName("N10 - não deve entregar OS que ainda não foi finalizada")
+    void deveImpedirEntregaAntesDaFinalizacao() {
+        JsonNode os = parseJson(post("/ordens-servico", Map.of(
+                "cpfCnpj", TestUtils.CPF_CLIENTE,
+                "veiculo", Map.of(
+                        "placa", TestUtils.placaUnica(),
+                        "marca", "Honda",
+                        "modelo", "Fit",
+                        "ano", 2022
+                ),
+                "servicosSolicitados", List.of(Map.of("servicoId", servicoId))
+        ), adminToken).getBody());
+        String novaOs = os.get("numeroOs").asText();
+
+        ResponseEntity<String> response = patch("/ordens-servico/" + novaOs + "/entregar", null, adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parseJson(response.getBody()).get("erro").asText())
+                .contains("Transicao invalida");
     }
 
     @Test
@@ -410,7 +478,9 @@ class OrdemServicoFluxoIT extends AbstractIT {
         ResponseEntity<String> response = post(
                 "/ordens-servico/" + numeroOs + "/reparos-adicionais", reparoRequest, mecanicoToken);
 
-        assertThat(response.getStatusCode().is2xxSuccessful()).isFalse();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parseJson(response.getBody()).get("erro").asText())
+                .isEqualTo("Não é possível registrar reparo adicional em uma OS finalizada.");
     }
 
     @Test

@@ -1,0 +1,74 @@
+package com.autoflow.application.usecases.ordemservico;
+
+import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.domain.ordemservico.OrdemServico;
+import com.autoflow.domain.ordemservico.ServicoSolicitado;
+import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class FinalizarServicoUseCaseTest {
+
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-08-18T15:30:00Z"), ZoneOffset.UTC);
+
+    @Mock
+    private OrdemServicoGateway ordemServicoGateway;
+
+    @Mock
+    private RegistrarHistoricoStatusOsService registrarHistoricoStatusOs;
+
+    @Test
+    void deveFinalizarOsERegistrarHistoricoQuandoUltimoServicoForFinalizado() {
+        var os = ordemComServicos(servicoEmExecucao(1L));
+        when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
+        when(ordemServicoGateway.save(os)).thenReturn(os);
+
+        var resultado = new FinalizarServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK)
+                .execute("OS-1", 1L);
+
+        assertEquals(StatusOrdemServico.FINALIZADA, resultado.getStatus());
+        verify(registrarHistoricoStatusOs).registrar(any());
+    }
+
+    @Test
+    void deveManterOsEmExecucaoQuandoHouverOutroServicoPendente() {
+        var os = ordemComServicos(servicoEmExecucao(1L), ServicoSolicitado.criar(2L, "Pendente", BigDecimal.TEN));
+        when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
+        when(ordemServicoGateway.save(os)).thenReturn(os);
+
+        new FinalizarServicoUseCaseImpl(ordemServicoGateway, registrarHistoricoStatusOs, CLOCK)
+                .execute("OS-1", 1L);
+
+        assertEquals(StatusOrdemServico.EM_EXECUCAO, os.getStatus());
+        verify(registrarHistoricoStatusOs, never()).registrar(any());
+    }
+
+    private OrdemServico ordemComServicos(ServicoSolicitado... servicos) {
+        var os = new OrdemServico();
+        os.setId(1L);
+        os.setNumeroOs("OS-1");
+        os.setStatus(StatusOrdemServico.EM_EXECUCAO);
+        os.adicionarServicosSolicitados(List.of(servicos));
+        return os;
+    }
+
+    private ServicoSolicitado servicoEmExecucao(Long id) {
+        var servico = ServicoSolicitado.criar(id, "Servico", BigDecimal.TEN);
+        servico.iniciar(List.of(), CLOCK.instant().atOffset(ZoneOffset.UTC).toLocalDateTime());
+        return servico;
+    }
+}

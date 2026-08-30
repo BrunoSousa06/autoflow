@@ -1,165 +1,98 @@
-# AutoFlow — Frontend
+# AutoFlow Frontend
 
-Sistema de gerenciamento de oficina mecânica. Desenvolvido com Angular 17 (standalone components) e Angular Material.
-
----
+SPA Angular para operação da oficina e acompanhamento do cliente.
 
 ## Stack
 
-| Tecnologia         | Versão  |
-|--------------------|---------|
-| Angular            | 17.3    |
-| Angular Material   | 17.3    |
-| TypeScript         | 5.4     |
-| RxJS               | 7.8     |
-| SCSS               | —       |
+- Angular 17 e Angular Material 17;
+- TypeScript 5.4 e RxJS 7.8;
+- Node.js 20+ e npm 10+;
+- Nginx unprivileged na imagem de produção.
 
----
-
-## Estrutura de pastas
-
-```
-src/
-├── app/
-│   ├── core/
-│   │   ├── interceptors/       # JWT e tratamento global de erros
-│   │   ├── guards/             # authGuard, roleGuard
-│   │   └── services/           # AuthService
-│   ├── layout/
-│   │   └── shell/              # ShellComponent (sidenav + roteador)
-│   ├── features/
-│   │   ├── auth/               # Login
-│   │   ├── dashboard/          # Métricas gerais
-│   │   ├── clientes/           # CRUD de clientes
-│   │   ├── usuarios/           # Cadastro de usuários (mecânicos/atendentes)
-│   │   ├── veiculos/           # CRUD de veículos
-│   │   ├── servicos/           # Catálogo de serviços
-│   │   ├── peca-insumo/        # Catálogo de peças e insumos
-│   │   ├── ordens-servico/     # Criação, diagnóstico, execução de OS
-│   │   ├── orcamentos/         # Visualização e aprovação de orçamentos
-│   │   ├── reparos-adicionais/ # Reparos solicitados durante execução
-│   │   ├── minha-conta/        # Área do cliente (perfil, OS próprias)
-│   │   └── public/             # Telas sem autenticação
-│   ├── app.config.ts           # Providers globais (HTTP, roteamento, locale)
-│   └── app.routes.ts           # Rotas da aplicação
-└── environments/
-    ├── environment.ts           # Desenvolvimento (localhost:8080)
-    └── environment.prod.ts      # Produção (configurar apiUrl)
-```
-
----
-
-## Como rodar localmente
-
-**Pré-requisitos:** Node 20+, npm 10+
+## Executar localmente
 
 ```bash
-npm install
+npm ci
 npm start
 ```
 
-Acesse: **http://localhost:4200**
+Acesse <http://localhost:4200>. O servidor de desenvolvimento encaminha `/api` para `http://localhost:8081` por [`proxy.conf.json`](proxy.conf.json); o backend precisa estar ativo.
 
-O backend deve estar rodando em **http://localhost:8080**.
-
----
-
-## Como rodar com Docker
+## Build, testes e Docker
 
 ```bash
-# Build da imagem
+npm run test:ci
+npm run build
+```
+
+O build é gerado em `dist/frontend`. Pela raiz do projeto, a solução completa pode ser iniciada com:
+
+```bash
+docker compose up -d --build frontend
+```
+
+Para uma imagem isolada:
+
+```bash
 docker build -t autoflow-frontend .
-
-# Rodar o container (porta 4200 no host → porta 80 no container)
-docker run -p 4200:80 autoflow-frontend
+docker run --rm -p 4200:8080 -e BACKEND_URL=<url-do-backend> autoflow-frontend
 ```
 
-Acesse: **http://localhost:4200**
+O Nginx serve a aplicação na porta `8080` do container e encaminha `/api` para `BACKEND_URL`.
 
----
+## Estrutura
 
-## Como configurar a URL da API
+| Diretório          | Responsabilidade                                      |
+|--------------------|-------------------------------------------------------|
+| `src/app/core`     | autenticação, guards, interceptors e serviços globais |
+| `src/app/features` | telas de negócio e fluxos públicos                    |
+| `src/app/layout`   | shell, navegação e filtros por perfil                 |
+| `src/environments` | configurações de desenvolvimento e produção           |
 
-### Desenvolvimento (`src/environments/environment.ts`)
+Os componentes são standalone e as rotas usam lazy loading.
 
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8080'
-};
-```
+## Rotas
 
-### Produção (`src/environments/environment.prod.ts`)
+| Rota                        | Perfis                     | Finalidade                                |
+|-----------------------------|----------------------------|-------------------------------------------|
+| `/login`                    | Público                    | Autenticação                              |
+| `/public/acompanhamento`    | Público                    | Acompanhamento por token                  |
+| `/public/orcamentos/:id`    | Público                    | Consulta e decisão de orçamento por token |
+| `/dashboard`                | ADMIN, ATENDENTE, MECANICO | Métricas e atalhos                        |
+| `/clientes`, `/usuarios`    | ADMIN, ATENDENTE           | Cadastros administrativos                 |
+| `/veiculos`                 | ADMIN, ATENDENTE, CLIENTE  | Veículos                                  |
+| `/servicos`, `/peca-insumo` | ADMIN, ATENDENTE, MECANICO | Catálogos e estoque                       |
+| `/ordens-servico`           | ADMIN, ATENDENTE, MECANICO | Lista e execução de OS                    |
+| `/ordens-servico/nova`      | ADMIN, ATENDENTE           | Abertura de OS                            |
+| `/ordens-servico/:numeroOs` | ADMIN, ATENDENTE, MECANICO | Detalhe e ações da OS                     |
+| `/orcamentos`               | ADMIN, ATENDENTE           | Lista de orçamentos                       |
+| `/orcamentos/:id`           | ADMIN, ATENDENTE, CLIENTE  | Detalhe, PDF e decisão                    |
+| `/reparos-adicionais`       | ADMIN, ATENDENTE           | Reparos complementares                    |
+| `/minha-conta/**`           | CLIENTE                    | Perfil e ordens próprias                  |
 
-```typescript
-export const environment = {
-  production: true,
-  apiUrl: 'http://localhost:8080'
-};
-```
+As autorizações são aplicadas por `authGuard` e `roleGuard`. Os fluxos públicos não exigem login, mas exigem token quando definido pelo backend.
 
-O build de produção substitui automaticamente o arquivo via `fileReplacements` no `angular.json`.
+## Login de demonstracao
 
----
+O seed do backend disponibiliza estas contas para a avaliacao local. A senha de todas e `Senha@1234`:
 
-## Usuários e roles
+| E-mail                   | Perfil      |
+|--------------------------|-------------|
+| `admin@autoflow.com`     | `ADMIN`     |
+| `atendente@autoflow.com` | `ATENDENTE` |
+| `mecanico1@autoflow.com` | `MECANICO`  |
+| `mecanico2@autoflow.com` | `MECANICO`  |
+| `cliente@autoflow.com`   | `CLIENTE`   |
 
-Todos os usuários abaixo são criados pelo seed do banco (senha padrão: `Senha@1234`).
+Sao credenciais destinadas somente a demonstracao do trabalho de pos-graduacao; nao as use em producao. A lista completa esta no [README principal](../README.md).
 
-| Email                       | Role       | Acesso                                           |
-|-----------------------------|------------|--------------------------------------------------|
-| `admin@autoflow.com`        | ADMIN      | Acesso total ao sistema                          |
-| `atendente@autoflow.com`    | ATENDENTE  | Clientes, Veículos, OS, Orçamentos               |
-| `mecanico1@autoflow.com`    | MECANICO   | Dashboard, Ordens de Serviço, Serviços, Peças    |
-| `mecanico2@autoflow.com`    | MECANICO   | Idem                                             |
-| `cliente@autoflow.com`      | CLIENTE    | Minha Conta, Minhas Ordens, Veículos             |
+## Configuração da API
 
----
+Os ambientes versionados usam o prefixo `/api`. Em desenvolvimento, o proxy aponta para `localhost:8081`. Na imagem Docker, `BACKEND_URL` é lido pelo template do Nginx em tempo de execução.
 
-## Principais rotas
+## Fluxos e documentação
 
-| Rota                                    | Roles permitidas            | Descrição                          |
-|-----------------------------------------|-----------------------------|------------------------------------|
-| `/login`                                | Público                     | Autenticação                       |
-| `/dashboard`                            | ADMIN, ATENDENTE, MECANICO  | Métricas e indicadores             |
-| `/clientes`                             | ADMIN, ATENDENTE            | Lista e cadastro de clientes       |
-| `/usuarios`                             | ADMIN, ATENDENTE            | Cadastro de mecânicos/atendentes   |
-| `/veiculos`                             | ADMIN, ATENDENTE, CLIENTE   | Lista de veículos                  |
-| `/ordens-servico`                       | ADMIN, ATENDENTE, MECANICO  | Lista de ordens de serviço         |
-| `/ordens-servico/:numeroOs`             | ADMIN, ATENDENTE, MECANICO  | Detalhe e ações da OS              |
-| `/orcamentos`                           | ADMIN, ATENDENTE            | Lista de orçamentos                |
-| `/orcamentos/:id`                       | ADMIN, ATENDENTE, CLIENTE   | Detalhe do orçamento + PDF         |
-| `/reparos-adicionais`                   | ADMIN, ATENDENTE            | Lista de orçamentos adicionais     |
-| `/servicos`                             | ADMIN, ATENDENTE, MECANICO  | Catálogo de serviços               |
-| `/peca-insumo`                          | ADMIN, ATENDENTE, MECANICO  | Catálogo de peças e insumos        |
-| `/minha-conta`                          | CLIENTE                     | Perfil do cliente                  |
-| `/minha-conta/minhas-ordens`            | CLIENTE                     | OS do cliente logado               |
-| `/minha-conta/minhas-ordens/:numeroOs`  | CLIENTE                     | Detalhe da OS + aprovar orçamento  |
-| `/public/acompanhamento`                | Público                     | Informa que login é necessário     |
-
----
-
-## Principais fluxos demonstráveis
-
-### Fluxo completo de OS
-
-1. Login como **atendente** → cria cliente + veículo + abre OS
-2. Login como **mecânico** → inicia diagnóstico, adiciona serviços → finaliza diagnóstico (gera orçamento)
-3. Login como **cliente** → acessa "Minhas Ordens" → aprova ou recusa o orçamento
-4. Login como **mecânico** → inicia e finaliza cada serviço da OS
-5. Login como **atendente** → entrega a os
-
-### Download do orçamento em PDF
-
-1. Login como ADMIN, ATENDENTE ou CLIENTE
-2. Acesse `/orcamentos/:id` ou o detalhe da OS
-3. Clique em **Baixar PDF** — o arquivo é gerado pelo backend e baixado no navegador
-
-### Reparo adicional
-
-1. Login como **mecânico** → abra uma OS em status `EM_EXECUCAO`
-2. No painel do mecânico, clique em **"Identificar reparo adicional"**
-3. Selecione o serviço e as peças/insumos necessários → clique em **"Criar e enviar para aprovação"**
-4. O backend gera um orçamento do tipo ADICIONAL e envia e-mail ao cliente
-5. Login como **cliente** → acesse "Minhas Ordens" → OS → aprove ou recuse o orçamento adicional
-6. Login como **ADMIN ou ATENDENTE** → `/reparos-adicionais` lista todos os orçamentos adicionais com filtro por status
+- [README principal](../README.md);
+- [README do backend](../backend/README.md);
+- [Diagramas de sequência](../docs/diagramas-sequencia/diagrama-sequencia.md);
+- [Fluxo público de orçamento](../docs/fluxo-orcamento-publico.md).
