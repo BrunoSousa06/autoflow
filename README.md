@@ -267,7 +267,19 @@ Observação: respeitar a ordem de subida acima  para evitar erros no deploy dos
 
 ## Executando via Terraform na AWS
 
-Necessario ter o terraform configurado com sua conta AWS.
+O Terraform ira provisionar os seguintes recursos :
+
+* bucket S3
+* Cluster EKS e Node Group
+* Security Group
+* RDS Postgres
+* Subnets
+* Route Tables
+* VPC
+* internet Gateway
+* Manifestos Kubernetes
+
+OBS: Necessario ter o terraform configurado com sua conta AWS.
 
 ```bash
 cd infra
