@@ -235,23 +235,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Validação de S3 Bucket
-        run: |
-          if aws s3api head-bucket --bucket state-autoflow-terraform 2>/dev/null; then
-            echo "Terraform state bucket already exists."
-          else
-            echo "Creating Terraform state bucket..."
-            aws s3api create-bucket \
-              --bucket state-autoflow-terraform \
-              --region us-east-1
-          fi
-
-      - name: Habilitar versionamento do S3
-        run: |
-          aws s3api put-bucket-versioning \
-            --bucket state-autoflow-terraform \
-            --versioning-configuration Status=Enabled
-
       - name: Terraform Init
         working-directory: ./infra
         run: terraform init
