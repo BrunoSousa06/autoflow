@@ -1,14 +1,13 @@
 
 data "aws_eks_cluster" "autoflow" {
-  name = aws_eks_cluster.autoflow.name
+  name = "eks-autoflow"
 }
 
 data "aws_eks_cluster_auth" "auth" {
-  name = aws_eks_cluster.autoflow.name
+  name = "eks-autoflow"
 }
 
 data "kubernetes_service_v1" "backend_lb" {
-  depends_on = [time_sleep.wait_seconds]
 
   metadata {
     name      = "autoflow-backend-service"
