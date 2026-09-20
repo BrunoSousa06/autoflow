@@ -14,3 +14,13 @@ data "kubernetes_service_v1" "backend_lb" {
     namespace = "default"
   }
 }
+
+data "terraform_remote_state" "database" {
+  backend = "s3"
+
+  config = {
+    bucket = "state-autoflow-terraform"
+    key    = "rds/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
