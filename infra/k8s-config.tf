@@ -1,6 +1,6 @@
 resource "kubectl_manifest" "autoflow_config" {
   yaml_body = templatefile("${path.module}/../k8s/configmap.yaml", {
-    rds_address = data.terraform_remote_state.database.outputs.rds_address
+    rds_address = data.terraform_remote_state.database.outputs.postgres_endpoint
   })
 
   depends_on = [kubectl_manifest.backend_service]
@@ -19,5 +19,6 @@ resource "kubectl_manifest" "frontend_config" {
     backend_service_address = data.kubernetes_service_v1.backend_lb.status[0].load_balancer[0].ingress[0].hostname
   })
 
-  depends_on = [kubectl_manifest.backend_service]
+  depends_on = [time_sleep.wait_seconds, kubectl_manifest.backend_service,
+  ]
 }
