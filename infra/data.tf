@@ -16,12 +16,6 @@ data "kubernetes_service_v1" "backend_lb" {
   }
 }
 
-data "terraform_remote_state" "database" {
-  backend = "s3"
-
-  config = {
-    bucket = "state-autoflow-terraform"
-    key    = "rds/terraform.tfstate"
-    region = "us-east-1"
-  }
+data "aws_db_instance" "autoflow" {
+  db_instance_identifier = "autoflow-db"
 }
