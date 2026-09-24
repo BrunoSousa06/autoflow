@@ -9,12 +9,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Cliente - Testes de Integração")
 class ClienteIT extends AbstractIT {
 
     private String adminToken;
+    private String atendenteToken;
     private String mecanicoToken;
     private String clienteToken;
 
@@ -22,6 +25,7 @@ class ClienteIT extends AbstractIT {
     void configurar() {
         limparBancoDeDados();
         adminToken    = registrarELogar(TestUtils.EMAIL_ADMIN,    TestUtils.CPF_ATENDENTE, "ADMIN");
+        atendenteToken = registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_ATENDENTE, "ATENDENTE");
         mecanicoToken = registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO,  "MECANICO");
 
         registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
@@ -45,6 +49,7 @@ class ClienteIT extends AbstractIT {
         JsonNode json = parseJson(response.getBody());
         assertThat(json.get("nome").asText()).isEqualTo("Ana Lima");
         assertThat(json.get("cpfCnpj").asText()).isEqualTo(TestUtils.CPF_CLIENTE_2);
+        assertThat(json.get("status").asText()).isEqualTo("ATIVO");
         assertThat(json.get("email").asText()).isEqualTo("ana@test.com");
     }
 
@@ -97,6 +102,108 @@ class ClienteIT extends AbstractIT {
         assertThat(usuario)
                 .containsEntry("usuario_nome", "Usuario Atualizado")
                 .containsEntry("usuario_email", "usuario.atualizado@test.com");
+    }
+
+    @Test
+    @DisplayName("deve alterar o status e bloquear login e token anterior do cliente inativo")
+    void deveAlterarStatusEBloquearClienteInativo() {
+        Long clienteId = parseJson(get("/clientes/me", clienteToken).getBody()).get("id").asLong();
+
+        ResponseEntity<String> inativado = patch(
+                "/clientes/" + clienteId + "/status",
+                Map.of("status", "INATIVO"),
+                adminToken);
+
+        assertThat(inativado.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parseJson(inativado.getBody()).get("status").asText()).isEqualTo("INATIVO");
+        assertThat(get("/clientes/me", clienteToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(restTemplate.postForEntity(
+                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class)
+                .getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("deve permitir ao ADMIN reativar cliente")
+    void deveReativarCliente() {
+        Long clienteId = parseJson(get("/clientes/me", clienteToken).getBody()).get("id").asLong();
+        patch("/clientes/" + clienteId + "/status", Map.of("status", "INATIVO"), adminToken);
+
+        ResponseEntity<String> reativado = patch(
+                "/clientes/" + clienteId + "/status",
+                Map.of("status", "ATIVO"),
+                adminToken);
+
+        assertThat(reativado.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parseJson(reativado.getBody()).get("status").asText()).isEqualTo("ATIVO");
+        assertThat(restTemplate.postForEntity(
+                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class)
+                .getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    @DisplayName("deve permitir consulta do status ao ATENDENTE e negar sua alteração")
+    void devePermitirConsultaENegarAlteracaoAoAtendente() {
+        Long clienteId = parseJson(get("/clientes/me", clienteToken).getBody()).get("id").asLong();
+
+        ResponseEntity<String> consulta = get("/clientes/" + clienteId, atendenteToken);
+        assertThat(consulta.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parseJson(consulta.getBody()).get("status").asText()).isEqualTo("ATIVO");
+
+        ResponseEntity<String> alteracao = patch(
+                "/clientes/" + clienteId + "/status",
+                Map.of("status", "INATIVO"),
+                atendenteToken);
+        assertThat(alteracao.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("deve rejeitar status inválido")
+    void deveRejeitarStatusInvalido() {
+        Long clienteId = parseJson(get("/clientes/me", clienteToken).getBody()).get("id").asLong();
+
+        ResponseEntity<String> response = patch(
+                "/clientes/" + clienteId + "/status",
+                Map.of("status", "BLOQUEADO"),
+                adminToken);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("deve preservar status na edição cadastral")
+    void devePreservarStatusNaEdicaoCadastral() {
+        Long clienteId = parseJson(get("/clientes/me", clienteToken).getBody()).get("id").asLong();
+        patch("/clientes/" + clienteId + "/status", Map.of("status", "INATIVO"), adminToken);
+
+        ResponseEntity<String> atualizacao = patch(
+                "/clientes/" + clienteId + "/atualizacao",
+                TestUtils.clienteRequest("Nome Atualizado", TestUtils.CPF_CLIENTE, TestUtils.EMAIL_CLIENTE),
+                adminToken);
+
+        assertThat(atualizacao.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parseJson(atualizacao.getBody()).get("status").asText()).isEqualTo("INATIVO");
+    }
+
+    @Test
+    @DisplayName("deve aplicar default, nulidade e constraint do status no PostgreSQL")
+    void deveValidarPersistenciaDoStatus() {
+        jdbcTemplate.update("""
+                INSERT INTO clientes (nome, cpf_cnpj, telefone, email)
+                VALUES ('Legado', '52998224725', '11999999999', 'legado@test.com')
+                """);
+
+        Map<String, Object> coluna = jdbcTemplate.queryForMap("""
+                SELECT column_name, is_nullable, column_default
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'clientes' AND column_name = 'status'
+                """);
+        assertThat(coluna.get("column_name")).isEqualTo("status");
+        assertThat(coluna.get("is_nullable")).isEqualTo("NO");
+        assertThat(coluna.get("column_default").toString()).contains("ATIVO");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbcTemplate.update(
+                "UPDATE clientes SET status = 'BLOQUEADO' WHERE email = 'legado@test.com'"))
+                .isInstanceOf(org.springframework.dao.DataAccessException.class);
     }
 
     @Test

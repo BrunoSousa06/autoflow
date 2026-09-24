@@ -1,5 +1,6 @@
 package com.autoflow.config.security;
 
+import com.autoflow.application.policy.ClienteAtivoPolicy;
 import com.autoflow.infrastructure.security.JwtFilter;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
@@ -36,6 +37,9 @@ class JwtFilterTest {
     private CustomUserDetailsService userDetailsService;
 
     @Mock
+    private ClienteAtivoPolicy clienteAtivoPolicy;
+
+    @Mock
     private FilterChain filterChain;
 
     @InjectMocks
@@ -59,6 +63,8 @@ class JwtFilterTest {
                 "123456",
                 List.of()
         );
+
+        lenient().when(clienteAtivoPolicy.podeAutenticar(anyString(), anyBoolean())).thenReturn(true);
     }
 
     @Test
@@ -252,6 +258,27 @@ class JwtFilterTest {
         assertFalse(auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
         verify(jwtService, never()).extrairRole(token);
+    }
+
+    @Test
+    void naoDeveAutenticarQuandoClienteFoiInativado() throws Exception {
+        String token = "jwt-token";
+        request.addHeader("Authorization", "Bearer " + token);
+
+        UserDetails cliente = User.withUsername("teste@email.com")
+                .password("123456")
+                .roles("CLIENTE")
+                .build();
+        when(jwtService.tokenValido(token)).thenReturn(true);
+        when(jwtService.extrairEmail(token)).thenReturn("teste@email.com");
+        when(userDetailsService.loadUserByUsername("teste@email.com")).thenReturn(cliente);
+        when(clienteAtivoPolicy.podeAutenticar("teste@email.com", true)).thenReturn(false);
+
+        executarFiltro();
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertEquals(403, response.getStatus());
+        verify(filterChain, never()).doFilter(request, response);
     }
 
     @ParameterizedTest(name = "Deve ignorar o filtro JWT para a rota: {0}")
