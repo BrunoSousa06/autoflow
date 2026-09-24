@@ -1,10 +1,10 @@
 package com.autoflow.application.security;
 
-import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.application.exception.ClienteAutenticadoNaoEncontradoException;
 import com.autoflow.application.exception.UsuarioNaoAutenticadoException;
 import com.autoflow.application.gateway.CurrentUserGateway;
 import com.autoflow.application.gateway.VeiculoClienteGateway;
+import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.domain.usuario.RoleEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

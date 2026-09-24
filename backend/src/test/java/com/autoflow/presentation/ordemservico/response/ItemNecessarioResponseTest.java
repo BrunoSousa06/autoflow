@@ -2,8 +2,8 @@ package com.autoflow.presentation.ordemservico.response;
 
 import com.autoflow.domain.ordemservico.ItemNecessario;
 import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
-import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.ordemservico.SituacaoEstoque;
+import com.autoflow.domain.ordemservico.StatusItemNecessario;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
 import org.junit.jupiter.api.Test;
 

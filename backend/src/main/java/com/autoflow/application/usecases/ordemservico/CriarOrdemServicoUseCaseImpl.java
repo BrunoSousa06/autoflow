@@ -1,22 +1,22 @@
 package com.autoflow.application.usecases.ordemservico;
 
+import com.autoflow.application.exception.ApplicationException;
+import com.autoflow.application.gateway.NumeroOrdemServicoGateway;
+import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
+import com.autoflow.application.mapper.ServicoApplicationMapper;
 import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.application.output.ordemservico.OrdemServicoCriadaOutput;
 import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.output.servico.ServicoOutput;
-import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
-import com.autoflow.application.exception.ApplicationException;
-import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.gateway.NumeroOrdemServicoGateway;
-import com.autoflow.application.gateway.ServicoGateway;
-import com.autoflow.application.mapper.ServicoApplicationMapper;
+import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
+import com.autoflow.application.port.in.ordemservico.CriarOrdemServicoUseCase;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.EnviarLinkAcompanhamentoUseCase;
 import com.autoflow.application.port.in.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCase;
-import com.autoflow.application.port.in.ordemservico.CriarOrdemServicoUseCase;
 import com.autoflow.application.port.in.veiculo.BuscarOuCadastrarVeiculoUseCase;
 import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
 import com.autoflow.domain.cliente.Cliente;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
@@ -24,9 +24,9 @@ import com.autoflow.domain.veiculo.Veiculo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 

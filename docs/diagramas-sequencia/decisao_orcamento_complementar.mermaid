@@ -2,79 +2,34 @@ sequenceDiagram
     autonumber
 
     actor Cliente
-
-    box Aplicação Cliente
-        participant Frontend as Frontend Angular
-    end
-
-    box API Spring Boot
-        participant Security as JWT / Spring Security
-        participant OrcamentoController as OrcamentoController
-        participant OrcamentoService as OrcamentoService
-        participant ReparoUseCase as Caso de uso por orcamento
-    end
-
+    participant Frontend as Frontend Angular
+    participant Security as JWT / Spring Security
+    participant Controller as OrcamentoController
+    participant Decidir as DecidirOrcamentoUseCase
+    participant Reparo as Casos de uso de reparo adicional
     participant DB as PostgreSQL
+    Note over Cliente, DB: Aprovacao ou recusa de orcamento complementar
+    Cliente ->> Frontend: Escolhe aprovar ou recusar
+    Frontend ->> Security: POST /orcamentos/{orcamentoId}/aprovar ou /recusar + JWT
+    Security ->> Security: Valida autenticacao e acesso
+    Security ->> Controller: Encaminha requisicao autorizada
 
-    Note over Cliente,DB: Decisao do cliente sobre o orcamento complementar
-
-    Cliente->>Frontend: Aprova ou recusa orcamento complementar
-    Frontend->>Security: POST /orcamentos/{orcamentoId}/aprovar ou /recusar + Bearer JWT
-
-    activate Security
-    Security->>Security: Valida autenticacao e acesso do cliente
-    Security->>OrcamentoController: Encaminha requisição autorizada
-    deactivate Security
-
-    activate OrcamentoController
-
-    alt Cliente aprova orcamento complementar
-        OrcamentoController->>OrcamentoService: aprovar(orcamentoId, emailUsuario)
-
-        activate OrcamentoService
-        OrcamentoService->>DB: Busca orcamento e valida acesso
-        DB-->>OrcamentoService: OrcamentoEntity
-
-        OrcamentoService->>DB: Atualiza orcamento para APROVADO
-        DB-->>OrcamentoService: Orcamento aprovado
-
-        OrcamentoService->>ReparoUseCase: executeSeExistir(orcamentoId)
-        activate ReparoUseCase
-
-        ReparoUseCase->>DB: Atualiza reparo adicional para APROVADO
-        DB-->>ReparoUseCase: Reparo adicional aprovado
-
-        ReparoUseCase-->>OrcamentoService: true quando encontrou o reparo
-        deactivate ReparoUseCase
-
-        OrcamentoService-->>OrcamentoController: OrcamentoEntity aprovado
-        deactivate OrcamentoService
-
-        OrcamentoController-->>Frontend: 200 OK + OrcamentoResponse
-
-    else Cliente recusa orcamento complementar
-        OrcamentoController->>OrcamentoService: recusar(orcamentoId, motivo, emailUsuario)
-
-        activate OrcamentoService
-        OrcamentoService->>DB: Busca orcamento e valida acesso
-        DB-->>OrcamentoService: OrcamentoEntity
-
-        OrcamentoService->>DB: Atualiza orcamento para RECUSADO e salva motivo
-        DB-->>OrcamentoService: Orcamento recusado
-
-        OrcamentoService->>ReparoUseCase: executeSeExistir(orcamentoId, motivo)
-        activate ReparoUseCase
-
-        ReparoUseCase->>DB: Atualiza reparo adicional para RECUSADO
-        DB-->>ReparoUseCase: Reparo adicional recusado
-
-        ReparoUseCase-->>OrcamentoService: true quando encontrou o reparo
-        deactivate ReparoUseCase
-
-        OrcamentoService-->>OrcamentoController: OrcamentoEntity recusado
-        deactivate OrcamentoService
-
-        OrcamentoController-->>Frontend: 200 OK + OrcamentoResponse
+    alt Aprovacao
+        Controller ->> Decidir: Aprova orcamento
+        Decidir ->> DB: Busca e bloqueia orcamento para decisao
+        DB -->> Decidir: Orcamento valido
+        Decidir ->> DB: Grava APROVADO e assinatura
+        Decidir ->> Reparo: Aprova reparo adicional vinculado
+        Reparo ->> DB: Atualiza reparo adicional
+        Decidir -->> Controller: OrcamentoResponse aprovado
+        Controller -->> Frontend: 200 OK
+    else Recusa
+        Controller ->> Decidir: Recusa orcamento com motivo
+        Decidir ->> DB: Busca e bloqueia orcamento para decisao
+        DB -->> Decidir: Orcamento valido
+        Decidir ->> DB: Grava RECUSADO, assinatura e motivo
+        Decidir ->> Reparo: Recusa reparo adicional vinculado
+        Reparo ->> DB: Atualiza reparo adicional
+        Decidir -->> Controller: OrcamentoResponse recusado
+        Controller -->> Frontend: 200 OK
     end
-
-    deactivate OrcamentoController

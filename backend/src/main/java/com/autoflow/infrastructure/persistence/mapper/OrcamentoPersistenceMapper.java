@@ -1,15 +1,7 @@
 package com.autoflow.infrastructure.persistence.mapper;
 
-import com.autoflow.domain.orcamento.ClienteOrcamentoSnapshot;
-import com.autoflow.domain.orcamento.Orcamento;
-import com.autoflow.domain.orcamento.OrcamentoItemNecessario;
-import com.autoflow.domain.orcamento.OrcamentoServico;
-import com.autoflow.domain.orcamento.VeiculoOrcamentoSnapshot;
-import com.autoflow.infrastructure.persistence.entity.orcamento.ClienteOrcamentoSnapshotPersistenceEntity;
-import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoItemNecessarioPersistenceEntity;
-import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoPersistenceEntity;
-import com.autoflow.infrastructure.persistence.entity.orcamento.OrcamentoServicoPersistenceEntity;
-import com.autoflow.infrastructure.persistence.entity.orcamento.VeiculoOrcamentoSnapshotPersistenceEntity;
+import com.autoflow.domain.orcamento.*;
+import com.autoflow.infrastructure.persistence.entity.orcamento.*;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

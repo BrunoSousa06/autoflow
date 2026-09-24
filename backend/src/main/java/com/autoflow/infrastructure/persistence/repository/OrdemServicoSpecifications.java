@@ -1,8 +1,8 @@
 package com.autoflow.infrastructure.persistence.repository;
 
 import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
-import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
+import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
 import jakarta.persistence.criteria.Expression;
 import org.springframework.data.jpa.domain.Specification;
 

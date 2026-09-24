@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.notificacao;
 
-import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import com.autoflow.application.gateway.NotificacaoGateway;
+import com.autoflow.application.input.notificacao.MensagemNotificacao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;

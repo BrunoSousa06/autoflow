@@ -1,9 +1,9 @@
 package com.autoflow.infrastructure.persistence.adapters;
 
-import com.autoflow.application.input.PageQuery;
-import com.autoflow.application.output.PageResult;
-import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
 import com.autoflow.application.gateway.OrdemServicoGateway;
+import com.autoflow.application.input.PageQuery;
+import com.autoflow.application.input.ordemservico.OrdemServicoFiltroInput;
+import com.autoflow.application.output.PageResult;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.infrastructure.persistence.entity.ordemservico.OrdemServicoEntity;
 import com.autoflow.infrastructure.persistence.mapper.ordemservico.OrdemServicoPersistenceMapper;

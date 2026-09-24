@@ -2,8 +2,8 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.application.port.in.ordemservico.FinalizarServicoUseCase;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import lombok.RequiredArgsConstructor;

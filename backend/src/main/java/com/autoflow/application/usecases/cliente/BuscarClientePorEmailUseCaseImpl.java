@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.cliente;
 
-import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.gateway.ClienteGateway;
+import com.autoflow.application.output.cliente.ClienteOutput;
 import com.autoflow.application.port.in.cliente.BuscarClientePorEmailUseCase;
 import lombok.RequiredArgsConstructor;
 

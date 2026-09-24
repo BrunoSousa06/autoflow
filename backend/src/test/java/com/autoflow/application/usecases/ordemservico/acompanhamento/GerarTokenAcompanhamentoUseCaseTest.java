@@ -1,9 +1,8 @@
 package com.autoflow.application.usecases.ordemservico.acompanhamento;
 
-import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
-import com.autoflow.application.usecases.ordemservico.acompanhamento.GerarTokenAcompanhamentoUseCaseImpl;
+import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

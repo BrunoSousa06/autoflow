@@ -2,9 +2,9 @@ package com.autoflow.application.gateway;
 
 
 import com.autoflow.application.input.PageQuery;
-import com.autoflow.application.output.PageResult;
 import com.autoflow.application.input.pecainsumo.PecaInsumoFiltro;
 import com.autoflow.application.input.pecainsumo.PecaInsumoInput;
+import com.autoflow.application.output.PageResult;
 import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 
 import java.util.List;

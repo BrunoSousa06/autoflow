@@ -1,9 +1,9 @@
 package com.autoflow.application.usecases.servico;
 
-import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.mapper.ServicoApplicationMapper;
+import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.port.in.servico.BuscarServicoPorIdUseCase;
 import lombok.RequiredArgsConstructor;
 

@@ -2,22 +2,10 @@ package com.autoflow.application.usecases.ordemservico.reparoadicional;
 
 import com.autoflow.application.gateway.OrdemServicoGateway;
 import com.autoflow.application.gateway.ReparoAdicionalGateway;
-import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.AprovarReparoAdicionalUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.ConsultarReparoAdicionalPorOrcamentoUseCase;
 import com.autoflow.application.port.in.ordemservico.reparoadicional.RecusarReparoAdicionalUseCase;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalPorOrcamentoUseCaseImpl;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.AprovarReparoAdicionalUseCaseImpl;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.ConsultarReparoAdicionalPorOrcamentoUseCaseImpl;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalPorOrcamentoUseCaseImpl;
-import com.autoflow.application.usecases.ordemservico.reparoadicional.RecusarReparoAdicionalUseCaseImpl;
-import com.autoflow.domain.ordemservico.ItemNecessario;
-import com.autoflow.domain.ordemservico.MotivoPendenciaItem;
-import com.autoflow.domain.ordemservico.OrdemServico;
-import com.autoflow.domain.ordemservico.ServicoSolicitado;
-import com.autoflow.domain.ordemservico.SituacaoEstoque;
-import com.autoflow.domain.ordemservico.StatusItemNecessario;
-import com.autoflow.domain.ordemservico.StatusServicoOs;
+import com.autoflow.domain.ordemservico.*;
 import com.autoflow.domain.ordemservico.reparoadicional.ReparoAdicional;
 import com.autoflow.domain.ordemservico.reparoadicional.StatusReparoAdicional;
 import com.autoflow.domain.pecainsumo.CategoriaPecaInsumo;
@@ -30,18 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReparoAdicionalEstadoUseCasesTest {

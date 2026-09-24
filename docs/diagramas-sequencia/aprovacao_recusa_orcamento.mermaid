@@ -2,119 +2,41 @@ sequenceDiagram
     autonumber
 
     actor Cliente
-
-    box Aplicação Cliente
-        participant Frontend as Frontend Angular
-    end
-
-    box API Spring Boot
-        participant Security as JWT / Spring Security
-        participant OrcamentoController as OrcamentoController
-        participant OrcamentoService as OrcamentoService
-        participant ReparoService as ReparoAdicionalService
-    end
-
+    participant Frontend as Frontend Angular
+    participant Security as JWT / Spring Security
+    participant Controller as OrcamentoController
+    participant Decidir as Casos de uso de decisao de orcamento
+    participant Reparo as Casos de uso de reparo adicional
     participant DB as PostgreSQL
+    Note over Cliente, DB: Decisao autenticada sobre orcamento
+    Cliente ->> Frontend: Abre o detalhe do orcamento
+    Frontend ->> Security: GET /orcamentos/{orcamentoId} + JWT
+    Security ->> Security: Valida token e acesso do cliente
+    Security ->> Controller: Encaminha requisicao autorizada
+    Controller ->> Decidir: Consulta orcamento autenticado
+    Decidir ->> DB: Busca orcamento e valida titularidade
+    DB -->> Decidir: OrcamentoResponse
+    Decidir -->> Controller: OrcamentoResponse
+    Controller -->> Frontend: 200 OK
 
-    Note over Cliente,DB: 1. Consulta do orçamento autenticado
-
-    Cliente->>Frontend: Acessa detalhe do orçamento
-    Frontend->>Security: GET /orcamentos/{orcamentoId} + Bearer JWT
-
-    activate Security
-    Security->>Security: Valida token, autenticação e permissões
-    Security->>OrcamentoController: Encaminha requisição autorizada
-    deactivate Security
-
-    activate OrcamentoController
-    OrcamentoController->>OrcamentoService: consultarAutenticado(orcamentoId, emailUsuario)
-
-    activate OrcamentoService
-    OrcamentoService->>DB: Busca orçamento por ID
-    DB-->>OrcamentoService: OrcamentoEntity
-
-    OrcamentoService->>OrcamentoService: Valida acesso do cliente ao orçamento
-    OrcamentoService-->>OrcamentoController: OrcamentoEntity
-    deactivate OrcamentoService
-
-    OrcamentoController-->>Frontend: 200 OK + OrcamentoResponse
-    deactivate OrcamentoController
-
-    Note over Cliente,DB: 2. Decisão do cliente sobre o orçamento
-
-    alt Cliente aprova o orçamento
-        Cliente->>Frontend: Confirma aprovação
-        Frontend->>Security: POST /orcamentos/{orcamentoId}/aprovar + Bearer JWT
-
-        activate Security
-        Security->>Security: Valida cliente autenticado
-        Security->>OrcamentoController: Encaminha requisição autorizada
-        deactivate Security
-
-        activate OrcamentoController
-        OrcamentoController->>OrcamentoService: aprovar(orcamentoId, emailUsuario)
-
-        activate OrcamentoService
-        OrcamentoService->>DB: Busca orçamento e valida acesso
-        DB-->>OrcamentoService: OrcamentoEntity
-
-        OrcamentoService->>DB: Atualiza status para APROVADO
-        DB-->>OrcamentoService: Orçamento aprovado
-
-        OrcamentoService->>ReparoService: existePorOrcamentoId(orcamentoId)
-
-        alt Orçamento principal
-            OrcamentoService->>DB: Busca OS vinculada ao orçamento
-            DB-->>OrcamentoService: OrdemServicoEntity
-
-            OrcamentoService->>DB: Atualiza OS para EM_EXECUCAO e registra histórico
-            DB-->>OrcamentoService: OS atualizada
-        else Orçamento de reparo adicional
-            OrcamentoService->>ReparoService: aprovarSeExistirPorOrcamentoId(orcamentoId)
-            ReparoService-->>OrcamentoService: Reparo adicional aprovado
-        end
-
-        OrcamentoService-->>OrcamentoController: OrcamentoEntity aprovado
-        deactivate OrcamentoService
-
-        OrcamentoController-->>Frontend: 200 OK + OrcamentoResponse
-        deactivate OrcamentoController
-
-    else Cliente recusa o orçamento
+    alt Cliente aprova
+        Cliente ->> Frontend: Confirma aprovacao
+        Frontend ->> Security: POST /orcamentos/{orcamentoId}/aprovar + JWT
+        Security ->> Controller: Encaminha requisicao autorizada
+        Controller ->> Decidir: Aprova orcamento
+        Decidir ->> DB: Atualiza status para APROVADO
+        Decidir ->> Reparo: Aprova reparo adicional vinculado, se existir
+        Reparo ->> DB: Atualiza reparo adicional
+        Decidir -->> Controller: OrcamentoResponse aprovado
+        Controller -->> Frontend: 200 OK
+    else Cliente recusa
         Cliente->>Frontend: Informa motivo da recusa
-        Frontend->>Security: POST /orcamentos/{orcamentoId}/recusar + Bearer JWT
-
-        activate Security
-        Security->>Security: Valida cliente autenticado
-        Security->>OrcamentoController: Encaminha requisição autorizada
-        deactivate Security
-
-        activate OrcamentoController
-        OrcamentoController->>OrcamentoService: recusar(orcamentoId, motivo, emailUsuario)
-
-        activate OrcamentoService
-        OrcamentoService->>DB: Busca orçamento e valida acesso
-        DB-->>OrcamentoService: OrcamentoEntity
-
-        OrcamentoService->>DB: Atualiza orçamento para RECUSADO e salva motivo
-        DB-->>OrcamentoService: Orçamento recusado
-
-        OrcamentoService->>ReparoService: existePorOrcamentoId(orcamentoId)
-
-        alt Orçamento principal
-            OrcamentoService->>DB: Busca OS vinculada ao orçamento
-            DB-->>OrcamentoService: OrdemServicoEntity
-
-            OrcamentoService->>DB: Finaliza OS por orçamento recusado e registra histórico
-            DB-->>OrcamentoService: OS finalizada
-        else Orçamento complementar
-            OrcamentoService->>ReparoService: recusarSeExistirPorOrcamentoId(orcamentoId, motivo)
-            ReparoService-->>OrcamentoService: Reparo adicional recusado
-        end
-
-        OrcamentoService-->>OrcamentoController: OrcamentoEntity recusado
-        deactivate OrcamentoService
-
-        OrcamentoController-->>Frontend: 200 OK + OrcamentoResponse
-        deactivate OrcamentoController
+        Frontend ->> Security: POST /orcamentos/{orcamentoId}/recusar + JWT
+        Security ->> Controller: Encaminha requisicao autorizada
+        Controller ->> Decidir: Recusa orcamento com motivo
+        Decidir ->> DB: Atualiza status para RECUSADO e salva motivo
+        Decidir ->> Reparo: Recusa reparo adicional vinculado, se existir
+        Reparo ->> DB: Atualiza reparo adicional
+        Decidir -->> Controller: OrcamentoResponse recusado
+        Controller -->> Frontend: 200 OK
     end

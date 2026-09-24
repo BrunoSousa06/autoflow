@@ -1,10 +1,9 @@
 resource "kubectl_manifest" "autoflow_config" {
   yaml_body = templatefile("${path.module}/../k8s/configmap.yaml", {
-    rds_address = aws_db_instance.autoflow_rds.address
+    rds_address = data.terraform_remote_state.database.outputs.postgres_endpoint
   })
 
-  depends_on = [aws_eks_cluster.autoflow, aws_db_instance.autoflow_rds, kubectl_manifest.backend_service
-  ]
+  depends_on = [kubectl_manifest.backend_service]
 }
 
 resource "kubectl_manifest" "autoflow_secrets" {

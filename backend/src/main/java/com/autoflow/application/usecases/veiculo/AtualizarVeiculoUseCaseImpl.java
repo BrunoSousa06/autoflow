@@ -1,12 +1,12 @@
 package com.autoflow.application.usecases.veiculo;
 
-import com.autoflow.application.input.veiculo.VeiculoInput;
-import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.exception.VeiculoDuplicadoException;
 import com.autoflow.application.exception.VeiculoNaoEncontradoException;
 import com.autoflow.application.gateway.VeiculoGateway;
-import com.autoflow.application.port.in.veiculo.AtualizarVeiculoUseCase;
+import com.autoflow.application.input.veiculo.VeiculoInput;
+import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.policy.PlacaPolicy;
+import com.autoflow.application.port.in.veiculo.AtualizarVeiculoUseCase;
 import com.autoflow.application.security.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 

@@ -6,7 +6,6 @@ import com.autoflow.application.gateway.AcompanhamentoPublicoGateway;
 import com.autoflow.application.gateway.TokenAcompanhamentoGateway;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoDaOsUseCase;
 import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
-import com.autoflow.application.usecases.ordemservico.acompanhamento.AcessarOrcamentoAcompanhamentoUseCaseImpl;
 import com.autoflow.domain.orcamento.Orcamento;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
 import com.autoflow.domain.ordemservico.acompanhamento.AcessoAcompanhamento;

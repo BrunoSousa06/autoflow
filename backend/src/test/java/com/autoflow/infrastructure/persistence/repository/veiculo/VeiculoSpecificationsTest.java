@@ -1,8 +1,8 @@
 package com.autoflow.infrastructure.persistence.repository.veiculo;
 
+import com.autoflow.application.input.veiculo.VeiculoFiltro;
 import com.autoflow.infrastructure.persistence.entity.veiculo.VeiculoEntity;
 import com.autoflow.infrastructure.persistence.repository.VeiculoSpecifications;
-import com.autoflow.application.input.veiculo.VeiculoFiltro;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

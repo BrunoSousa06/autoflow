@@ -1,7 +1,7 @@
 package com.autoflow.infrastructure.security;
 
-import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.application.gateway.CurrentUserGateway;
+import com.autoflow.application.output.security.CurrentUser;
 import com.autoflow.domain.usuario.RoleEnum;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

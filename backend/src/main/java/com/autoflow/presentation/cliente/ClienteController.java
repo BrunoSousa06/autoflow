@@ -3,12 +3,7 @@ package com.autoflow.presentation.cliente;
 
 import com.autoflow.application.input.cliente.ClienteInput;
 import com.autoflow.application.output.cliente.ClienteOutput;
-import com.autoflow.application.port.in.cliente.AtualizarClienteUseCase;
-import com.autoflow.application.port.in.cliente.BuscarClientePorEmailUseCase;
-import com.autoflow.application.port.in.cliente.CriarClienteUseCase;
-import com.autoflow.application.port.in.cliente.DeletarClienteUseCase;
-import com.autoflow.application.port.in.cliente.ListarClienteUseCase;
-import com.autoflow.application.port.in.cliente.ListarTodosClientesUseCase;
+import com.autoflow.application.port.in.cliente.*;
 import com.autoflow.presentation.cliente.mapper.ClienteControllerMapper;
 import com.autoflow.presentation.cliente.request.ClienteRequest;
 import com.autoflow.presentation.cliente.response.ClienteResponse;
@@ -74,10 +69,10 @@ public class ClienteController {
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão para executar a operação")
-    @GetMapping("/{documento}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ATENDENTE', 'ADMIN')")
-    public ResponseEntity<ClienteResponse> listar(@PathVariable Long documento) {
-        ClienteOutput output = listarClienteUseCase.execute(documento);
+    public ResponseEntity<ClienteResponse> listar(@PathVariable Long id) {
+        ClienteOutput output = listarClienteUseCase.execute(id);
         ClienteResponse response = clienteMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }

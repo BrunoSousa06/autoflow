@@ -2,51 +2,31 @@ sequenceDiagram
     autonumber
 
     actor Mecanico
-
-    box Aplicação Cliente
-        participant Frontend as Frontend Angular
-    end
-
-    box API Spring Boot
-        participant Security as JWT / Spring Security
-        participant OSController as OrdemServicoController
-        participant OSService as OrdemServicoService
-    end
-
+    participant Frontend as Frontend Angular
+    participant Security as JWT / Spring Security
+    participant Controller as OrdemServicoExecucaoController
+    participant Finalizar as FinalizarServicoUseCase
     participant DB as PostgreSQL
-
-    Note over Mecanico,DB: Conclusao do servico e possivel transicao da OS para Finalizada
+    Note over Mecanico, DB: Conclusao de um servico da ordem de servico
 
     Mecanico->>Frontend: Conclui servico em execucao
-    Frontend->>Security: PATCH /ordens-servico/{numeroOs}/servicos/{servicoId}/finalizar + Bearer JWT
-
-    activate Security
-    Security->>Security: Valida autenticacao e permissao do mecanico
-    Security->>OSController: Encaminha requisição autorizada
-    deactivate Security
-
-    activate OSController
-    OSController->>OSService: finalizarServico(numeroOs, servicoId, emailMecanico)
-
-    activate OSService
-    OSService->>DB: Busca OS e servico em execucao
-    DB-->>OSService: OS encontrada
-
-    OSService->>DB: Atualiza servico para CONCLUIDO e registra historico
-    DB-->>OSService: Servico concluido
-
-    OSService->>OSService: Verifica se todos os servicos foram concluidos
+    Frontend ->> Security: PATCH /ordens-servico/{numeroOs}/servicos/{servicoId}/finalizar + JWT
+    Security ->> Security: Valida autenticacao e permissao
+    Security ->> Controller: Encaminha requisicao autorizada
+    Controller ->> Finalizar: Executa numeroOs, servicoId e usuario
+    Finalizar ->> DB: Busca OS e servico em execucao
+    DB -->> Finalizar: Dados da OS
+    Finalizar ->> DB: Atualiza servico para CONCLUIDO e registra historico
+    DB -->> Finalizar: Servico concluido
+    Finalizar ->> Finalizar: Verifica se todos os servicos foram concluidos
 
     alt Todos os servicos concluidos
-        OSService->>DB: Atualiza OS para FINALIZADA e registra historico
-        DB-->>OSService: OS finalizada
-    else Ainda existem servicos pendentes ou em execucao
-        OSService->>DB: Mantem OS em EM_EXECUCAO
-        DB-->>OSService: OS mantida em execucao
+        Finalizar ->> DB: Atualiza OS para FINALIZADA
+        DB -->> Finalizar: OS finalizada
+    else Existem servicos pendentes
+        Finalizar ->> DB: Mantem OS em EM_EXECUCAO
+        DB -->> Finalizar: OS mantida em execucao
     end
 
-    OSService-->>OSController: OrdemServicoEntity
-    deactivate OSService
-
-    OSController-->>Frontend: 202 Accepted + OrdemServicoResponse
-    deactivate OSController
+    Finalizar -->> Controller: OrdemServicoResponse
+    Controller -->> Frontend: 202 Accepted + resposta da OS

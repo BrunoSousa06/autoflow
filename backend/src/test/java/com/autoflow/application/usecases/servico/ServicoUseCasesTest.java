@@ -1,12 +1,12 @@
 package com.autoflow.application.usecases.servico;
 
-import com.autoflow.application.input.servico.PageInput;
-import com.autoflow.application.output.servico.PageOutput;
-import com.autoflow.application.input.servico.ServicoInput;
-import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.MetricsGateway;
 import com.autoflow.application.gateway.ServicoGateway;
+import com.autoflow.application.input.servico.PageInput;
+import com.autoflow.application.input.servico.ServicoInput;
+import com.autoflow.application.output.servico.PageOutput;
+import com.autoflow.application.output.servico.ServicoOutput;
 import com.autoflow.domain.servico.Servico;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,80 +1,71 @@
-# Checklist SOLID para revisão de PRs de refatoração
+# Checklist SOLID para revisão de código
 
-Use este checklist ao revisar qualquer card de refatoração do backlog de Clean Architecture.
+Use este checklist em mudanças de domínio, casos de uso, adapters, controllers e componentes frontend. Problemas
+preexistentes devem ser registrados separadamente; a revisão deve bloquear apenas violações introduzidas pelo change.
 
-## S — Single Responsibility Principle
+## S — Single Responsibility
 
-- [ ] A classe tem uma única razão para mudar?
-- [ ] Um controller faz somente conversão de entrada/saída e delegação ao use case?
-- [ ] Um use case orquestra uma única operação do ponto de vista do domínio?
-- [ ] Um repository ou adapter é responsável por uma única entidade ou agregado?
-- [ ] Não há métodos `criarOuAtualizar`, `buscarEProcessar` ou similares que misturam operações distintas?
+- [ ] A classe tem uma razão principal para mudar?
+- [ ] O controller apenas valida/adapta HTTP e delega?
+- [ ] O use case coordena uma operação coesa?
+- [ ] O adapter trata uma integração, persistência ou conversão específica?
+- [ ] A classe não mistura regra de negócio, persistência, notificação e apresentação?
 
-**Sinais de violação no AutoFlow:**
-- `OrdemServicoService` com dezenas de métodos que cobrem abertura, diagnóstico, orçamento, execução e entrega ao mesmo tempo.
-- Controllers que chamam múltiplos services para montar uma única resposta.
+Sinais de atenção no AutoFlow: use cases de OS que acumulam vários fluxos, controllers que montam regras e adapters que
+fazem validação de domínio.
 
----
+## O — Open/Closed
 
-## O — Open/Closed Principle
+- [ ] Novo comportamento pode ser adicionado por uma porta, estratégia ou composição adequada?
+- [ ] Condicionais por tipo ou perfil não cresceram sem necessidade?
+- [ ] Extensões não exigem alterar uma classe base estável?
 
-- [ ] Novos comportamentos podem ser adicionados sem modificar código existente?
-- [ ] Condicionais do tipo `if (tipo == X) ... else if (tipo == Y)` foram substituídas por polimorfismo quando aplicável?
-- [ ] Extensões de comportamento usam interfaces ou abstrações em vez de modificar a classe base?
+Não substitua polimorfismo simples por uma hierarquia excessiva. A solução deve continuar compatível com os estados e
+perfis existentes.
 
-**Sinais de violação no AutoFlow:**
-- Lógica de notificação hardcoded dentro do service de OS em vez de delegar a um `NotificacaoGateway`.
-- Lógica de geração de PDF acoplada ao service de orçamento em vez de ser uma estratégia substituível.
+## L — Liskov Substitution
 
----
+- [ ] Implementações respeitam o contrato de suas interfaces?
+- [ ] Adapters mantêm os mesmos significados de ausência, erro e transação?
+- [ ] A implementação não adiciona pré-condições que o contrato não informa?
+- [ ] Retornos e exceções permanecem compatíveis com os consumidores?
 
-## L — Liskov Substitution Principle
+## I — Interface Segregation
 
-- [ ] Implementações concretas honram o contrato definido pela interface ou classe base?
-- [ ] Uma implementação concreta nunca lança exceção onde a interface promete sucesso?
-- [ ] Um subtipo não restringe pré-condições além do que o contrato estabelece?
+- [ ] Cada gateway expõe somente operações usadas pelos consumidores?
+- [ ] Portas de leitura e escrita estão separadas quando houver responsabilidades distintas?
+- [ ] Um use case não depende de métodos que não utiliza?
 
-**Sinais de violação no AutoFlow:**
-- Implementações de `OrdemServicoService` que adicionam pré-condições de segurança não documentadas na interface.
-- Adapters que retornam `Optional.empty()` onde o gateway declara retorno obrigatório.
+No backend, prefira portas em `application/port/in` e `application/gateway` a fachadas com dezenas de operações.
 
----
+## D — Dependency Inversion
 
-## I — Interface Segregation Principle
+- [ ] Use cases dependem de gateways, e não de repositories Spring Data?
+- [ ] O domínio permanece livre de Spring, JPA, HTTP, Lombok e infraestrutura?
+- [ ] Presentation não acessa adapters ou entidades JPA diretamente?
+- [ ] Infrastructure implementa portas definidas internamente?
+- [ ] Nenhum caso de uso instancia client, repository ou serviço externo?
 
-- [ ] Interfaces de gateway têm somente os métodos que o use case realmente usa?
-- [ ] Nenhum use case é forçado a depender de métodos que nunca chama?
-- [ ] Interfaces de leitura e escrita estão separadas quando os consumidores são distintos?
+## Compatibilidade e segurança
 
-**Sinais de violação no AutoFlow:**
-- `OrdemServicoService` (interface) expõe ~20 métodos; use cases individuais precisariam de apenas 2-3.
-- Repositories com métodos de busca complexa sendo injetados em use cases que só precisam de `salvar()`.
+- [ ] Endpoints, payloads, status HTTP, autorização e mensagens foram preservados ou documentados?
+- [ ] Fluxos públicos por token continuam protegidos contra token inválido, expirado ou conflitante?
+- [ ] Transações, concorrência, auditoria e migrations permanecem corretas?
+- [ ] Nenhum segredo, token ou dado pessoal foi adicionado a logs, testes ou documentação?
 
----
+## Testes e arquitetura
 
-## D — Dependency Inversion Principle
-
-- [ ] Use cases dependem de interfaces (gateways/ports), não de classes concretas de infraestrutura?
-- [ ] O domínio não importa Spring, JPA, ou qualquer framework?
-- [ ] As dependências entre módulos apontam de fora para dentro (infraestrutura → aplicação → domínio)?
-- [ ] Nenhum use case instancia diretamente um repositório, client HTTP ou serviço externo?
-
-**Sinais de violação no AutoFlow:**
-- `OrdemServicoService` injeta `ServicoRepository` (Spring Data) diretamente.
-- `OrdemServicoEntity` importa `ResponseStatusException` do Spring Web.
-- Services conhecem tipos de `controller/` (request e response REST).
-
----
-
-## Como aplicar durante a revisão
-
-1. Para cada classe nova ou modificada no PR, marque cada item relevante.
-2. Violações encontradas em código PREEXISTENTE ao escopo do card → registrar no backlog, não bloquear o PR.
-3. Violações INTRODUZIDAS pelo PR → exigir correção antes de aprovação.
-4. Em caso de dúvida, prefira a solução mais simples compatível com os princípios em vez de sobre-engenharia.
+- [ ] Há testes de sucesso, falha, autorização e limites para o comportamento alterado?
+- [ ] A suíte de apresentação valida contrato HTTP quando aplicável?
+- [ ] A suíte de integração cobre persistência e migrations quando aplicável?
+- [ ] O teste [
+  `ArchitectureBoundaryTest`](../../backend/src/test/java/com/autoflow/architecture/ArchitectureBoundaryTest.java)
+  continua passando?
+- [ ] `mvn clean verify` ou `npm run test:ci` foi executado conforme a camada alterada?
 
 ## Referências
 
-- [ADR-001 — Sequência de migração para Clean Architecture](../adr/ADR-001-sequencia-migracao-clean-architecture.md)
+- [Arquitetura](../architecture.md)
 - [Convenção de pacotes](../conventions/package-convention.md)
-- [ArchitectureBoundaryTest](../../backend/src/test/java/com/autoflow/architecture/ArchitectureBoundaryTest.java)
+- [ADR-001](../adr/ADR-001-sequencia-migracao-clean-architecture.md)
+- [Testes e qualidade](../testing-and-quality.md)

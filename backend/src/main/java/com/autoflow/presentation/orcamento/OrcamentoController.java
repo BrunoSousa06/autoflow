@@ -1,7 +1,7 @@
 package com.autoflow.presentation.orcamento;
 
-import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.application.gateway.OrcamentoDocumentoGateway;
+import com.autoflow.application.input.orcamento.OrcamentoFiltro;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentoAutenticadoUseCase;
 import com.autoflow.application.port.in.orcamento.ConsultarOrcamentosUseCase;
 import com.autoflow.application.port.in.orcamento.DecidirOrcamentoUseCase;
@@ -28,7 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/orcamentos")
 @RequiredArgsConstructor
-@Tag(name = "orçamentos", description = "Endpoints para gerenciamento de orçamentos")
+@Tag(name = "orçamentos", description = "Endpoints para gerenciamento de orçamentos autenticados")
 @SecurityRequirement(name = "bearerAuth")
 public class OrcamentoController {
 

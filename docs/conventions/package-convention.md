@@ -1,82 +1,77 @@
 # Convenção de pacotes — Clean Architecture
 
-Referência: [ADR-001](../adr/ADR-001-sequencia-migracao-clean-architecture.md)
+Esta convenção descreve a estrutura atual do backend e complementa [`architecture.md`](../architecture.md) e [
+`ADR-001`](../adr/ADR-001-sequencia-migracao-clean-architecture.md).
 
-## Estrutura alvo
+## Estrutura atual
 
-```
+```text
 com.autoflow
-├── domain
-│   └── <componente>          # Entidades, value objects, enums, exceções de domínio
-│                             # Regra: sem Spring, JPA, HTTP ou DTO REST
-│
+├── domain/<componente>                  # regras e modelos de negócio puros
 ├── application
-│   └── <componente>          # Use cases, commands, queries, DTOs internos
-│   └── gateway               # Interfaces de acesso a dados e serviços externos
-│                             # Regra: depende apenas de domain e de abstrações
-│
+│   ├── input/<componente>               # comandos, filtros e entradas internas
+│   ├── output/<componente>              # saídas internas
+│   ├── port/in/<componente>             # portas de entrada/use cases
+│   ├── gateway                         # portas de saída
+│   ├── usecases/<componente>            # implementações dos use cases
+│   ├── policy, security, transaction    # políticas e serviços transversais
+│   └── exception                        # erros da aplicação
 ├── infrastructure
-│   └── persistence
-│       └── <componente>      # Entities JPA, adapters de repositório
-│       └── repository        # Spring Data repositories concretos
-│   └── security              # JwtFilter, SecurityConfig, CustomUserDetailsService
-│   └── notification          # Adapters de e-mail, PDF
-│
-└── presentation
-    └── rest
-        └── <componente>      # Controllers, requests, responses REST
-                              # Regra: converte entrada/saída, sem lógica de negócio
+│   ├── persistence/entity/<componente>  # entidades JPA
+│   ├── persistence/repository           # Spring Data
+│   ├── persistence/mapper               # mapeamento de persistência
+│   ├── persistence/adapters             # adapters dos gateways
+│   ├── security                          # JWT e identidade
+│   ├── notificacao, orcamento             # integrações externas
+│   └── configuration                      # propriedades e adapters técnicos
+├── presentation/<componente>            # controllers, requests e responses
+└── config                                # composição de beans e OpenAPI
 ```
 
-## Estado atual (julho 2026)
-
-O código ainda usa a estrutura técnica legada. A migração ocorre por componente, conforme ADR-001.
-
-| Pacote legado | Camada alvo | Status |
-|---|---|---|
-| `com.autoflow.controller` | `presentation.rest` | Legado — migrar por componente |
-| `com.autoflow.service` | `application` | Legado — migrar por componente |
-| `com.autoflow.repository` | `infrastructure.persistence.repository` | Legado — migrar por componente |
-| `com.autoflow.domain` | `domain` (puro, sem JPA) | Legado — entidades ainda têm `@Entity` |
-| `com.autoflow.mapper` | `infrastructure.persistence` ou `presentation.rest` | Legado |
-| `com.autoflow.handler` | `presentation.rest` | Legado |
-| `com.autoflow.config.security` | `infrastructure.security` | Legado |
+O agrupamento por componente é permitido dentro das camadas. Não crie módulos ou microserviços separados para cada
+componente.
 
 ## Regras de dependência
 
-| Camada | Pode depender de | Não pode depender de |
-|---|---|---|
-| `domain` | Nada externo ao domínio | Spring, JPA, HTTP, mensageria, DTO REST |
-| `application` | `domain`, interfaces de `gateway` | Adapters concretos de `infrastructure` |
-| `infrastructure` | `domain`, `application.gateway`, Spring, JPA | `presentation` |
-| `presentation.rest` | `application`, `domain` (apenas leitura) | `infrastructure` diretamente |
+| Pacote           | Pode depender de                                           | Deve evitar                                                          |
+|------------------|------------------------------------------------------------|----------------------------------------------------------------------|
+| `domain`         | Java e outros tipos do domínio                             | Spring, JPA, HTTP, Lombok, DTO REST e infraestrutura                 |
+| `application`    | `domain` e portas internas                                 | `presentation`, `infrastructure`, JPA, HTTP e repositories concretos |
+| `infrastructure` | `domain`, `application` e frameworks                       | `presentation`                                                       |
+| `presentation`   | `application` e tipos de domínio necessários ao mapeamento | JPA, repositories e adapters concretos                               |
+| `config`         | composição do framework                                    | regras de negócio                                                    |
 
-## Violações conhecidas (rastreadas pelo ArchUnit)
+Algumas classes da aplicação ainda usam anotações de composição do Spring, Lombok ou validação interna. Essa dependência
+residual deve permanecer limitada e não justifica introduzir detalhes de persistência, HTTP ou segurança técnica nos
+casos de uso.
 
-| Violação | Arquivo | Gravidade | Card de correção |
-|---|---|---|---|
-| `OrdemServicoEntity` importa `ResponseStatusException` (Spring Web) | `domain/ordemservico/OrdemServicoEntity.java` | Alta | A criar — migração de OS |
-| Entidades de domínio usam `@Entity`, `@Table` etc. (JPA no domínio) | Todos os `*Entity.java` em `domain/` | Alta | Cada card de componente |
-| `OrdemServicoService` (interface) importa tipos de `controller/` | `service/ordemservico/OrdemServicoService.java` | Alta | A criar — migração de OS |
+## Convenções de nomes
 
-## Critério de entrada para mover um componente
+| Artefato                  | Convenção                    | Exemplo                    |
+|---------------------------|------------------------------|----------------------------|
+| Porta de entrada          | verbo + `UseCase`            | `CriarClienteUseCase`      |
+| Implementação de use case | mesmo nome + `Impl`          | `CriarClienteUseCaseImpl`  |
+| Porta de saída            | responsabilidade + `Gateway` | `ClienteGateway`           |
+| Adapter                   | responsabilidade + `Adapter` | `ClienteRepositoryAdapter` |
+| Entidade JPA              | responsabilidade + `Entity`  | `ClienteEntity`            |
+| Controller                | recurso + `Controller`       | `OrcamentoController`      |
+| Request REST              | finalidade + `Request`       | `RecusarOrcamentoRequest`  |
+| Response REST             | finalidade + `Response`      | `OrcamentoResponse`        |
 
-Antes de mover fisicamente qualquer classe, o componente deve ter:
+Classes auxiliares `*Service` podem existir na aplicação quando encapsulam uma operação coesa, mas não devem virar
+fachadas com regras de vários componentes.
 
-1. Contrato REST caracterizado por testes de integração existentes;
-2. Testes cobrindo sucesso e falhas relevantes;
-3. Dependências mapeadas;
-4. Decisão explícita de package registrada (este documento ou ADR);
-5. Nenhuma alteração de contrato REST como efeito colateral.
+## Critérios para novas movimentações
 
-## Convenção de nomes
+Antes de mover uma classe ou componente:
 
-| Artefato | Sufixo | Exemplo |
-|---|---|---|
-| Use case | `UseCase` | `CriarServicoUseCase` |
-| Gateway (interface) | `Gateway` | `ServicoGateway` |
-| Adapter de persistência | `PersistenceAdapter` | `ServicoPersistenceAdapter` |
-| Entity JPA | `JpaEntity` ou `Entity` (legado) | `ServicoJpaEntity` |
-| Controller REST | `Controller` | `ServicoController` |
-| Request REST | `Request` | `ServicoRequest` |
-| Response REST | `Response` | `ServicoResponse` |
+1. preserve endpoints, payloads, status HTTP e autorização;
+2. mapeie dependências e defina a camada de destino;
+3. adicione ou confirme testes de sucesso, falha e contrato;
+4. mantenha persistência e transações funcionando;
+5. execute o teste arquitetural e a suíte afetada;
+6. registre a decisão quando a movimentação não seguir esta convenção.
+
+O teste [
+`ArchitectureBoundaryTest`](../../backend/src/test/java/com/autoflow/architecture/ArchitectureBoundaryTest.java) é a
+validação executável das fronteiras principais.

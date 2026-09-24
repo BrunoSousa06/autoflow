@@ -1,8 +1,8 @@
 package com.autoflow.application.usecases.pecainsumo;
 
 import com.autoflow.application.exception.ApplicationException;
-import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.gateway.PecaInsumoGateway;
+import com.autoflow.application.output.pecainsumo.PecaInsumoOutput;
 import com.autoflow.application.port.in.pecainsumo.BuscarEAtualizarPecaInsumoPorIdUseCase;
 import lombok.RequiredArgsConstructor;
 

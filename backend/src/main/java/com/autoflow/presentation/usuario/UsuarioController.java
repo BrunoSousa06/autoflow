@@ -1,8 +1,8 @@
 package com.autoflow.presentation.usuario;
 
 import com.autoflow.application.input.usuario.LoginInput;
-import com.autoflow.application.output.usuario.LoginOutput;
 import com.autoflow.application.input.usuario.RegistroInput;
+import com.autoflow.application.output.usuario.LoginOutput;
 import com.autoflow.application.output.usuario.UsuarioOutput;
 import com.autoflow.application.port.in.usuario.BuscarMecanicosUseCase;
 import com.autoflow.application.port.in.usuario.CadastrarUsuarioPublicoUseCase;
@@ -29,7 +29,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "autenticação", description = "Endpoints para gerenciamento de autenticação dos usuarios")
+@Tag(name = "autenticação", description = "Endpoints para gerenciamento da autenticação dos usuários")
 public class UsuarioController {
 
     private final CadastrarUsuarioPublicoUseCase cadastrarUsuarioPublicoUseCase;

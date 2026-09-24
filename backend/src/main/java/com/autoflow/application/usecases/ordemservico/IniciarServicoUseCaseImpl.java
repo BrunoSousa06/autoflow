@@ -2,9 +2,9 @@ package com.autoflow.application.usecases.ordemservico;
 
 import com.autoflow.application.exception.ApplicationException;
 import com.autoflow.application.gateway.OrdemServicoGateway;
-import com.autoflow.application.transaction.TransactionalUseCase;
-import com.autoflow.application.port.in.pecainsumo.BaixarEstoqueUseCase;
 import com.autoflow.application.port.in.ordemservico.IniciarServicoUseCase;
+import com.autoflow.application.port.in.pecainsumo.BaixarEstoqueUseCase;
+import com.autoflow.application.transaction.TransactionalUseCase;
 import com.autoflow.domain.ordemservico.OrdemServico;
 import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import com.autoflow.domain.ordemservico.StatusOrdemServico;
