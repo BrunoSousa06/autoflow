@@ -19,15 +19,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UsuarioRepository usuarioRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email)
+    public UserDetails loadUserByUsername(String cpfCnpj)
             throws UsernameNotFoundException {
 
-        UsuarioEntity usuarioEntity = usuarioRepository.findByEmail(email)
+        UsuarioEntity usuarioEntity = usuarioRepository.findByCpfCnpj(cpfCnpj)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("Usuário não encontrado"));
 
         return new User(
-                usuarioEntity.getEmail(),
+                usuarioEntity.getCpfCnpj(),
                 usuarioEntity.getSenha(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + usuarioEntity.getRole().name()))
         );

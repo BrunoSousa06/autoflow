@@ -20,6 +20,8 @@ public class UsuarioEntity {
     @Column(unique = true, nullable = false)
     private String email;
 
+    private String cpfCnpj;
+
     private String senha;
 
     @Enumerated(EnumType.STRING)
