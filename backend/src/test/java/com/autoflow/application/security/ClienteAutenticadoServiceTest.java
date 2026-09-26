@@ -40,19 +40,19 @@ class ClienteAutenticadoServiceTest {
     @Test
     void deveRetornarIdDoClienteAutenticado() {
         when(currentUserGateway.getCurrentUser())
-                .thenReturn(Optional.of(new CurrentUser("cliente@test.com", RoleEnum.CLIENTE)));
-        when(clienteGateway.findIdByUsuarioEmail("cliente@test.com"))
+                .thenReturn(Optional.of(new CurrentUser("12345678901", RoleEnum.CLIENTE)));
+        when(clienteGateway.findIdByCpfCnpj("12345678901"))
                 .thenReturn(Optional.of(10L));
 
         assertEquals(Optional.of(10L), service.getClienteId());
-        verify(clienteGateway).findIdByUsuarioEmail("cliente@test.com");
+        verify(clienteGateway).findIdByCpfCnpj("12345678901");
     }
 
     @Test
     void deveRetornar403QuandoClienteNaoEstiverVinculado() {
         when(currentUserGateway.getCurrentUser())
-                .thenReturn(Optional.of(new CurrentUser("cliente@test.com", RoleEnum.CLIENTE)));
-        when(clienteGateway.findIdByUsuarioEmail("cliente@test.com"))
+                .thenReturn(Optional.of(new CurrentUser("12345678901", RoleEnum.CLIENTE)));
+        when(clienteGateway.findIdByCpfCnpj("12345678901"))
                 .thenReturn(Optional.empty());
 
         ClienteAutenticadoNaoEncontradoException exception = assertThrows(

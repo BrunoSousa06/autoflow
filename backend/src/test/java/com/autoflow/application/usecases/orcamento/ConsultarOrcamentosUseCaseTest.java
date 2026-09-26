@@ -28,28 +28,31 @@ class ConsultarOrcamentosUseCaseTest {
     void deveForcarEmailDoClienteNoFiltro() {
         Usuario usuario = usuario("cliente@exemplo.com", RoleEnum.CLIENTE);
         OrcamentoFiltro esperado = new OrcamentoFiltro(null, null, null, "cliente@exemplo.com", null, null);
-        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
         when(orcamentoGateway.findAll(esperado)).thenReturn(List.of());
 
-        assertTrue(useCase.execute(usuario.getEmail(), null).isEmpty());
+        assertTrue(useCase.execute(usuario.getCpfCnpj(), null).isEmpty());
         verify(orcamentoGateway).findAll(esperado);
     }
 
     @Test
     void deveNegarFiltroDeOutroCliente() {
         Usuario usuario = usuario("cliente@exemplo.com", RoleEnum.CLIENTE);
-        var email = usuario.getEmail();
-        when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
+        var cpfCnpj = usuario.getCpfCnpj();
+        when(usuarioGateway.findByCpfCnpj(cpfCnpj)).thenReturn(Optional.of(usuario));
         OrcamentoFiltro filtro = new OrcamentoFiltro(null, null, null, "outro@exemplo.com", null, null);
 
         ApplicationException exception = assertThrows(ApplicationException.class,
-                () -> useCase.execute(email, filtro));
+                () -> useCase.execute(cpfCnpj, filtro));
         assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
         verifyNoInteractions(orcamentoGateway);
     }
 
     private Usuario usuario(String email, RoleEnum role) {
         Usuario usuario = new Usuario();
-        usuario.setEmail(email); usuario.setRole(role); return usuario;
+        usuario.setEmail(email);
+        usuario.setCpfCnpj("12345678901");
+        usuario.setRole(role);
+        return usuario;
     }
 }

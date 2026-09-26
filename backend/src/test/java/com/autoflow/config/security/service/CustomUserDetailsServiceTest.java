@@ -36,6 +36,7 @@ class CustomUserDetailsServiceTest {
         usuario = new UsuarioEntity();
         usuario.setId(1L);
         usuario.setEmail("admin@email.com");
+        usuario.setCpfCnpj("12345678980");
         usuario.setSenha("senhaCriptografada");
         usuario.setRole(RoleEnum.ADMIN);
     }
@@ -43,18 +44,18 @@ class CustomUserDetailsServiceTest {
     @Test
     void deveCarregarUsuarioPorEmail() {
 
-        when(usuarioRepository.findByEmail("admin@email.com"))
+        when(usuarioRepository.findByCpfCnpj("12345678980"))
                 .thenReturn(Optional.of(usuario));
 
         UserDetails resultado =
                 customUserDetailsService.loadUserByUsername(
-                        "admin@email.com"
+                        "12345678980"
                 );
 
         assertNotNull(resultado);
 
         assertEquals(
-                "admin@email.com",
+                "12345678980",
                 resultado.getUsername()
         );
 
@@ -72,13 +73,13 @@ class CustomUserDetailsServiceTest {
         );
 
         verify(usuarioRepository)
-                .findByEmail("admin@email.com");
+                .findByCpfCnpj("12345678980");
     }
 
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoEncontrado() {
 
-        when(usuarioRepository.findByEmail("inexistente@email.com"))
+        when(usuarioRepository.findByCpfCnpj("12345678980"))
                 .thenReturn(Optional.empty());
 
         UsernameNotFoundException exception =
@@ -86,7 +87,7 @@ class CustomUserDetailsServiceTest {
                         UsernameNotFoundException.class,
                         () -> customUserDetailsService
                                 .loadUserByUsername(
-                                        "inexistente@email.com"
+                                        "12345678980"
                                 )
                 );
 
@@ -96,6 +97,6 @@ class CustomUserDetailsServiceTest {
         );
 
         verify(usuarioRepository)
-                .findByEmail("inexistente@email.com");
+                .findByCpfCnpj("12345678980");
     }
 }

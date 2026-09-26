@@ -18,7 +18,7 @@ public class ConsultarStatusOrdemServicoUseCaseImpl implements ConsultarStatusOr
     private final VeiculoClienteGateway clienteGateway;
 
     @Override
-    public StatusOrdemServicoOutput execute(String numeroOs, String emailUsuarioAutenticado) {
+        public StatusOrdemServicoOutput execute(String numeroOs, String cpfCnpjUsuarioAutenticado) {
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Ordem de serviço não encontrada."
@@ -30,7 +30,7 @@ public class ConsultarStatusOrdemServicoUseCaseImpl implements ConsultarStatusOr
                 ));
 
         if (RoleEnum.CLIENTE.equals(currentUser.role())) {
-            validarTitularidade(ordemServico, emailUsuarioAutenticado);
+            validarTitularidade(ordemServico, cpfCnpjUsuarioAutenticado);
         }
 
         return new StatusOrdemServicoOutput(
@@ -39,8 +39,8 @@ public class ConsultarStatusOrdemServicoUseCaseImpl implements ConsultarStatusOr
                 ordemServico.getUltimaAtualizacao());
     }
 
-    private void validarTitularidade(OrdemServico ordemServico, String email) {
-        Long clienteId = clienteGateway.findIdByUsuarioEmail(email)
+        private void validarTitularidade(OrdemServico ordemServico, String cpfCnpj) {
+                Long clienteId = clienteGateway.findIdByCpfCnpj(cpfCnpj)
                 .orElseThrow(() -> ApplicationException.forbidden(
                         "Você não tem permissão para acessar esta ordem de serviço."
                 ));

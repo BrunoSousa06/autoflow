@@ -27,7 +27,7 @@ public class ClienteAutenticadoService {
             return Optional.empty();
         }
 
-        Long clienteId = clienteGateway.findIdByUsuarioEmail(currentUser.email())
+        Long clienteId = clienteGateway.findIdByCpfCnpj(currentUser.cpfCnpj())
                 .orElseThrow(() -> new ClienteAutenticadoNaoEncontradoException(
                         "Cliente não encontrado para o usuário autenticado"));
 

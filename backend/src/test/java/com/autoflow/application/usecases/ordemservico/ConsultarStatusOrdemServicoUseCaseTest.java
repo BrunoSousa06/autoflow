@@ -41,9 +41,9 @@ class ConsultarStatusOrdemServicoUseCaseTest {
         OrdemServico ordemServico = criarOrdemServico(status, ultimaAtualizacao, 10L);
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(currentUserGateway.getCurrentUser())
-                .thenReturn(Optional.of(new CurrentUser("atendente@autoflow.com", RoleEnum.ATENDENTE)));
+                .thenReturn(Optional.of(new CurrentUser("52998224725", RoleEnum.ATENDENTE)));
 
-        StatusOrdemServicoOutput output = novoUseCase().execute("OS-123", "atendente@autoflow.com");
+        StatusOrdemServicoOutput output = novoUseCase().execute("OS-123", "52998224725");
 
         assertEquals("OS-123", output.numeroOs());
         assertEquals(status, output.status());
@@ -59,14 +59,14 @@ class ConsultarStatusOrdemServicoUseCaseTest {
                 10L);
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(currentUserGateway.getCurrentUser())
-                .thenReturn(Optional.of(new CurrentUser("cliente@autoflow.com", RoleEnum.CLIENTE)));
-        when(clienteGateway.findIdByUsuarioEmail("cliente@autoflow.com"))
+                .thenReturn(Optional.of(new CurrentUser("11144477735", RoleEnum.CLIENTE)));
+        when(clienteGateway.findIdByCpfCnpj("11144477735"))
                 .thenReturn(Optional.of(10L));
 
-        StatusOrdemServicoOutput output = novoUseCase().execute("OS-123", "cliente@autoflow.com");
+        StatusOrdemServicoOutput output = novoUseCase().execute("OS-123", "11144477735");
 
         assertEquals(StatusOrdemServico.EM_EXECUCAO, output.status());
-        verify(clienteGateway).findIdByUsuarioEmail("cliente@autoflow.com");
+        verify(clienteGateway).findIdByCpfCnpj("11144477735");
     }
 
     @Test
@@ -77,13 +77,13 @@ class ConsultarStatusOrdemServicoUseCaseTest {
                 10L);
         when(ordemServicoGateway.findByNumeroOs("OS-123")).thenReturn(Optional.of(ordemServico));
         when(currentUserGateway.getCurrentUser())
-                .thenReturn(Optional.of(new CurrentUser("outro@autoflow.com", RoleEnum.CLIENTE)));
-        when(clienteGateway.findIdByUsuarioEmail("outro@autoflow.com"))
+                .thenReturn(Optional.of(new CurrentUser("98765432100", RoleEnum.CLIENTE)));
+        when(clienteGateway.findIdByCpfCnpj("98765432100"))
                 .thenReturn(Optional.of(20L));
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
-                () -> novoUseCase().execute("OS-123", "outro@autoflow.com"));
+                () -> novoUseCase().execute("OS-123", "98765432100"));
 
         assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
         assertEquals("Você não tem permissão para acessar esta ordem de serviço.", exception.getMessage());
@@ -95,7 +95,7 @@ class ConsultarStatusOrdemServicoUseCaseTest {
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
-                () -> novoUseCase().execute("OS-404", "atendente@autoflow.com"));
+                () -> novoUseCase().execute("OS-404", "52998224725"));
 
         assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
         assertEquals("Ordem de serviço não encontrada.", exception.getMessage());

@@ -23,12 +23,12 @@ public class ListarOrdensServicoUseCaseImpl implements ListarOrdensServicoUseCas
     public PageResult<OrdemServico> execute(
             OrdemServicoFiltroInput filtro,
             PageQuery pageQuery,
-            String emailUsuarioLogado
+            String cpfCnpjUsuarioLogado
     ) {
-        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuarioLogado)
                 .orElseThrow(UsuarioNaoEncontradoException::new);
         String emailMecanico = RoleEnum.MECANICO.equals(usuario.getRole())
-                ? emailUsuarioLogado
+                ? usuario.getEmail()
                 : null;
         return ordemServicoGateway.findAll(filtro, emailMecanico, pageQuery);
     }

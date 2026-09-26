@@ -46,7 +46,7 @@ class IniciarDiagnosticoUseCaseTest {
 
         var resultado = new IniciarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, registrarHistoricoStatusOs, accessPolicy, CLOCK
-        ).execute("OS-1", "admin@autoflow.com");
+        ).execute("OS-1", "52998224725");
 
         assertEquals(StatusOrdemServico.EM_DIAGNOSTICO, resultado.getStatus());
         verify(accessPolicy, never()).validarPodeAlterarDiagnostico(any(), any());
@@ -61,14 +61,14 @@ class IniciarDiagnosticoUseCaseTest {
 
         new IniciarDiagnosticoUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, registrarHistoricoStatusOs, accessPolicy, CLOCK
-        ).execute("OS-1", "mecanico@autoflow.com");
+        ).execute("OS-1", "12345678909");
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
 
     private void configurarBusca(OrdemServico os, Usuario usuario) {
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
         when(ordemServicoGateway.save(os)).thenReturn(os);
     }
 
@@ -83,6 +83,7 @@ class IniciarDiagnosticoUseCaseTest {
     private Usuario usuario(RoleEnum role) {
         var usuario = new Usuario();
         usuario.setEmail(role == RoleEnum.ADMIN ? "admin@autoflow.com" : "mecanico@autoflow.com");
+        usuario.setCpfCnpj(role == RoleEnum.ADMIN ? "52998224725" : "12345678909");
         usuario.setRole(role);
         return usuario;
     }

@@ -43,7 +43,7 @@ public class ReparoAdicionalValidationService {
     private void validarCommand(CriarReparoAdicionalCommand command) {
         if (command == null) throw new IllegalArgumentException("Comando de criação do reparo adicional é obrigatório.");
         if (command.numeroOs() == null || command.numeroOs().isBlank()) throw new IllegalArgumentException("Número da ordem de serviço é obrigatório.");
-        if (command.emailMecanico() == null || command.emailMecanico().isBlank()) throw new IllegalArgumentException("E-mail do mecânico é obrigatório.");
+        if (command.cpfCnpjMecanico() == null || command.cpfCnpjMecanico().isBlank()) throw new IllegalArgumentException("CPF/CNPJ do mecânico é obrigatório.");
         if (command.servicos() == null || command.servicos().isEmpty()) throw new IllegalArgumentException("Reparo adicional deve ter ao menos um servico.");
     }
 

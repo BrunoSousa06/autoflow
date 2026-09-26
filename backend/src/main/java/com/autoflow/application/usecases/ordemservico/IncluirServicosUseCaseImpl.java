@@ -30,11 +30,11 @@ public class IncluirServicosUseCaseImpl implements IncluirServicosUseCase {
     @TransactionalUseCase
     @Override
     public OrdemServico execute(String numeroOs, List<ServicoSolicitado> servicos,
-                                      String emailUsuarioLogado) {
+                                      String cpfCnpjUsuarioLogado) {
         OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
         if (StatusOrdemServico.EM_DIAGNOSTICO.equals(os.getStatus())) {
-            Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
+            Usuario usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuarioLogado)
                     .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
             if (!RoleEnum.ADMIN.equals(usuario.getRole())) accessPolicy.validarPodeAlterarDiagnostico(os, usuario);
         }

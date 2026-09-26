@@ -50,7 +50,7 @@ class AcompanharOrdemServicoUseCaseTest {
                 .thenReturn(Optional.of(orcamento));
         when(historicoStatusOsGateway.findByNumeroOsOrderByRegistradoEmAsc("OS001"))
                 .thenReturn(List.of(historico));
-        var resultado = useCase.execute("cliente@email.com");
+        var resultado = useCase.execute("11144477735");
 
         assertEquals(1, resultado.size());
         assertEquals("OS001", resultado.get(0).numeroOs());
@@ -70,7 +70,7 @@ class AcompanharOrdemServicoUseCaseTest {
                 .thenReturn(Optional.of(ultimaVersao));
         when(historicoStatusOsGateway.findByNumeroOsOrderByRegistradoEmAsc("OS001"))
                 .thenReturn(Collections.emptyList());
-        var resultado = useCase.execute("cliente@email.com");
+        var resultado = useCase.execute("11144477735");
 
         assertEquals(1, resultado.size());
         assertEquals(StatusOrcamento.DISPONIVEL, resultado.get(0).situacaoAprovacao());
@@ -86,7 +86,7 @@ class AcompanharOrdemServicoUseCaseTest {
                 .thenReturn(Optional.empty());
         when(historicoStatusOsGateway.findByNumeroOsOrderByRegistradoEmAsc("OS001"))
                 .thenReturn(Collections.emptyList());
-        var resultado = useCase.execute("cliente@email.com");
+        var resultado = useCase.execute("11144477735");
 
         assertEquals(1, resultado.size());
         assertNull(resultado.get(0).orcamentoAtual());
@@ -94,10 +94,10 @@ class AcompanharOrdemServicoUseCaseTest {
 
     @Test
     void deveLancarExcecaoQuandoClienteNaoForEncontrado() {
-        when(clienteGateway.findIdByUsuarioEmail("ausente@email.com")).thenReturn(Optional.empty());
+        when(clienteGateway.findIdByCpfCnpj("98765432100")).thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class,
-                () -> useCase.execute("ausente@email.com"));
+                () -> useCase.execute("98765432100"));
 
         assertEquals(ApplicationException.ErrorType.NOT_FOUND, exception.type());
         verifyNoInteractions(ordemServicoGateway, orcamentoGateway,
@@ -106,16 +106,16 @@ class AcompanharOrdemServicoUseCaseTest {
 
     @Test
     void deveRetornarListaVaziaQuandoClienteNaoPossuirOrdensServico() {
-        when(clienteGateway.findIdByUsuarioEmail("cliente@email.com")).thenReturn(Optional.of(1L));
+        when(clienteGateway.findIdByCpfCnpj("11144477735")).thenReturn(Optional.of(1L));
         when(ordemServicoGateway.findByClienteIdOrderByDataAberturaDesc(1L))
                 .thenReturn(Collections.emptyList());
 
-        assertTrue(useCase.execute("cliente@email.com").isEmpty());
+        assertTrue(useCase.execute("11144477735").isEmpty());
         verifyNoInteractions(orcamentoGateway, historicoStatusOsGateway);
     }
 
     private void configurarClienteComOs(OrdemServico ordemServico) {
-        when(clienteGateway.findIdByUsuarioEmail("cliente@email.com")).thenReturn(Optional.of(1L));
+        when(clienteGateway.findIdByCpfCnpj("11144477735")).thenReturn(Optional.of(1L));
         when(ordemServicoGateway.findByClienteIdOrderByDataAberturaDesc(1L))
                 .thenReturn(List.of(ordemServico));
     }

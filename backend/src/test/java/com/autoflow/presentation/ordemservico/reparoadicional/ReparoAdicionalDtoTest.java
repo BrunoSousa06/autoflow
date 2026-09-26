@@ -36,10 +36,10 @@ class ReparoAdicionalDtoTest {
         var servico = new ServicoReparoAdicionalRequest(10L, List.of(item));
         var request = new CriarReparoAdicionalRequest(List.of(servico));
 
-        var command = mapper.toCommand("OS-123", "mecanico@autoflow.com", request);
+        var command = mapper.toCommand("OS-123", "12345678909", request);
 
         assertEquals("OS-123", command.numeroOs());
-        assertEquals("mecanico@autoflow.com", command.emailMecanico());
+        assertEquals("12345678909", command.cpfCnpjMecanico());
         assertEquals(10L, command.servicos().getFirst().servicoId());
         assertEquals(7L, command.servicos().getFirst().itensNecessarios().getFirst().pecaInsumoId());
         assertEquals(2, command.servicos().getFirst().itensNecessarios().getFirst().quantidade());

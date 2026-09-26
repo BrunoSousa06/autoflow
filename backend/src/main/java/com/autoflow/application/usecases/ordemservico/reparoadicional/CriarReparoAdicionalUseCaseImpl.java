@@ -81,7 +81,7 @@ public class CriarReparoAdicionalUseCaseImpl implements CriarReparoAdicionalUseC
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOsForUpdate(command.numeroOs())
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
         validator.validarOrdem(command, ordemServico);
-        Usuario usuario = usuarioGateway.findByEmail(command.emailMecanico())
+        Usuario usuario = usuarioGateway.findByCpfCnpj(command.cpfCnpjMecanico())
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         validator.validarAutorizacaoPara(ordemServico, usuario);
 

@@ -9,6 +9,6 @@ public interface RegistrarItensNecessariosUseCase {
     OrdemServico execute(
             String numeroOs,
             Long servicoId,
-            String emailUsuarioLogado,
+            String cpfCnpjUsuarioLogado,
             List<ItemNecessario> itensNecessarios);
 }

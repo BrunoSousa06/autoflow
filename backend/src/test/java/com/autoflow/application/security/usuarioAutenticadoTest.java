@@ -28,11 +28,11 @@ class UsuarioAutenticadoServiceTest {
     }
 
     @Test
-    void deveRetornarEmailDoUsuarioAutenticado() {
+    void deveRetornarCpfCnpjDoUsuarioAutenticado() {
         when(currentUserGateway.getCurrentUser())
-                .thenReturn(Optional.of(new CurrentUser("teste@email.com", RoleEnum.CLIENTE)));
+                .thenReturn(Optional.of(new CurrentUser("12345678901", RoleEnum.CLIENTE)));
 
-        assertEquals("teste@email.com", service.getEmail());
+        assertEquals("12345678901", service.getCpfCnpj());
     }
 
     @Test

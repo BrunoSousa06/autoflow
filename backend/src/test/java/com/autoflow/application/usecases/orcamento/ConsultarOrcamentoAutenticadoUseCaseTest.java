@@ -35,21 +35,21 @@ class ConsultarOrcamentoAutenticadoUseCaseTest {
         var orcamento = orcamentoDoCliente("cliente@autoflow.com");
         var usuario = usuario(RoleEnum.CLIENTE, "cliente@autoflow.com");
         when(orcamentoGateway.findById(1L)).thenReturn(Optional.of(orcamento));
-        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
 
-        assertSame(orcamento, useCase.execute(1L, usuario.getEmail()));
+        assertSame(orcamento, useCase.execute(1L, usuario.getCpfCnpj()));
     }
 
     @Test
     void deveNegarClienteConsultarOrcamentoDeOutroCliente() {
         var orcamento = orcamentoDoCliente("outro@autoflow.com");
         var usuario = usuario(RoleEnum.CLIENTE, "cliente@autoflow.com");
-        var email = usuario.getEmail();
+        var cpfCnpj = usuario.getCpfCnpj();
         when(orcamentoGateway.findById(1L)).thenReturn(Optional.of(orcamento));
-        when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByCpfCnpj(cpfCnpj)).thenReturn(Optional.of(usuario));
 
         var exception = assertThrows(ApplicationException.class,
-                () -> useCase.execute(1L, email));
+            () -> useCase.execute(1L, cpfCnpj));
 
         assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
     }
@@ -59,9 +59,9 @@ class ConsultarOrcamentoAutenticadoUseCaseTest {
         var orcamento = orcamentoDoCliente("cliente@autoflow.com");
         var usuario = usuario(RoleEnum.ATENDENTE, "atendente@autoflow.com");
         when(orcamentoGateway.findById(1L)).thenReturn(Optional.of(orcamento));
-        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
 
-        assertSame(orcamento, useCase.execute(1L, usuario.getEmail()));
+        assertSame(orcamento, useCase.execute(1L, usuario.getCpfCnpj()));
     }
 
     @Test
@@ -84,6 +84,7 @@ class ConsultarOrcamentoAutenticadoUseCaseTest {
         var usuario = new Usuario();
         usuario.setRole(role);
         usuario.setEmail(email);
+        usuario.setCpfCnpj("12345678901");
         return usuario;
     }
 }

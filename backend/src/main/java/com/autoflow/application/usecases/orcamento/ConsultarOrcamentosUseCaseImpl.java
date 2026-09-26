@@ -18,8 +18,8 @@ public class ConsultarOrcamentosUseCaseImpl implements ConsultarOrcamentosUseCas
     private final UsuarioGateway usuarioGateway;
 
     @Override
-    public List<Orcamento> execute(String emailUsuario, OrcamentoFiltro filtro) {
-        var usuario = usuarioGateway.findByEmail(emailUsuario)
+    public List<Orcamento> execute(String cpfCnpjUsuario, OrcamentoFiltro filtro) {
+        var usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuario)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado"));
         OrcamentoFiltro filtroEfetivo = normalizar(filtro);
         if (usuario.getRole() == RoleEnum.CLIENTE) {

@@ -9,5 +9,5 @@ public interface ListarOrdensServicoUseCase {
     PageResult<OrdemServico> execute(
             OrdemServicoFiltroInput filtro,
             PageQuery pageQuery,
-            String emailUsuarioLogado);
+            String cpfCnpjUsuarioLogado);
 }

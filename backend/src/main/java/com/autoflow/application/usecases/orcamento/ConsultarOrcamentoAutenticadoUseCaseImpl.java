@@ -15,12 +15,13 @@ public class ConsultarOrcamentoAutenticadoUseCaseImpl implements ConsultarOrcame
     private final UsuarioGateway usuarioGateway;
 
     @Override
-    public Orcamento execute(Long id, String email) {
+    public Orcamento execute(Long id, String cpfCnpj) {
         Orcamento orcamento = orcamentoGateway.findById(id)
                 .orElseThrow(() -> ApplicationException.notFound("Orçamento não encontrado"));
-        var usuario = usuarioGateway.findByEmail(email)
+        var usuario = usuarioGateway.findByCpfCnpj(cpfCnpj)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado"));
-        if (usuario.getRole() == RoleEnum.CLIENTE && !email.equals(orcamento.getCliente().getEmail())) {
+        if (usuario.getRole() == RoleEnum.CLIENTE
+            && !usuario.getEmail().equalsIgnoreCase(orcamento.getCliente().getEmail())) {
             throw ApplicationException.forbidden();
         }
         return orcamento;

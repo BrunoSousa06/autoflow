@@ -16,12 +16,12 @@ class ReparoAdicionalDtoInternoTest {
 
         CriarReparoAdicionalCommand command = new CriarReparoAdicionalCommand(
                 "OS-123",
-                "mecanico@autoflow.com",
+                "12345678909",
                 List.of(servico)
         );
 
         assertEquals("OS-123", command.numeroOs());
-        assertEquals("mecanico@autoflow.com", command.emailMecanico());
+        assertEquals("12345678909", command.cpfCnpjMecanico());
         assertEquals(10L, command.servicos().getFirst().servicoId());
         assertEquals(7L, command.servicos().getFirst().itensNecessarios().getFirst().pecaInsumoId());
         assertEquals(2, command.servicos().getFirst().itensNecessarios().getFirst().quantidade());

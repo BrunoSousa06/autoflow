@@ -6,5 +6,5 @@ import com.autoflow.domain.ordemservico.ServicoSolicitado;
 import java.util.List;
 
 public interface IncluirServicosUseCase {
-    OrdemServico execute(String numeroOs, List<ServicoSolicitado> servicos, String emailUsuarioLogado);
+    OrdemServico execute(String numeroOs, List<ServicoSolicitado> servicos, String cpfCnpjUsuarioLogado);
 }

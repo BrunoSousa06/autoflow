@@ -83,7 +83,7 @@ class CriarReparoAdicionalUseCaseTest {
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
 
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido));
         when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
@@ -263,7 +263,7 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setId(21L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         var command = command(5L, 7L, 2);
 
         var erro = assertThrows(ApplicationException.class,
@@ -284,7 +284,7 @@ class CriarReparoAdicionalUseCaseTest {
         admin.setId(1L);
         admin.setRole(RoleEnum.ADMIN);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(admin));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(admin));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido(7L, 2)));
 
@@ -310,7 +310,7 @@ class CriarReparoAdicionalUseCaseTest {
         usuario.setId(30L);
         usuario.setRole(RoleEnum.ATENDENTE);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(usuario));
         var command = command(5L, 7L, 2);
 
         var erro = assertThrows(ApplicationException.class,
@@ -328,7 +328,7 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         var command = command(5L, 7L, 2);
 
         var erro = assertThrows(ApplicationException.class,
@@ -347,7 +347,7 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
 
         ApplicationException erro = assertThrows(ApplicationException.class,
                 () -> useCase.execute(command(5L, 7L, 2)));
@@ -366,7 +366,7 @@ class CriarReparoAdicionalUseCaseTest {
                 List.of(new ItemReparoAdicionalCommand(7L, 1)));
 
         var command = new CriarReparoAdicionalCommand(
-                "OS-123", "mecanico@autoflow.com", List.of(servico1, servico2));
+                "OS-123", "12345678909", List.of(servico1, servico2));
 
         var erro = assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
 
@@ -381,10 +381,10 @@ class CriarReparoAdicionalUseCaseTest {
         var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         var command = new CriarReparoAdicionalCommand(
                 "OS-123",
-                "mecanico@autoflow.com",
+                "12345678909",
                 List.of(new ServicoReparoAdicionalCommand(5L, List.of()))
         );
 
@@ -401,7 +401,7 @@ class CriarReparoAdicionalUseCaseTest {
         var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
         var command = command(5L, 7L, 0);
 
@@ -422,7 +422,7 @@ class CriarReparoAdicionalUseCaseTest {
         mecanico.setRole(RoleEnum.MECANICO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123"))
                 .thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
 
         List<ItemReparoAdicionalCommand> itemNulo =
@@ -432,16 +432,16 @@ class CriarReparoAdicionalUseCaseTest {
         List<ItemReparoAdicionalCommand> quantidadeNula =
                 List.of(new ItemReparoAdicionalCommand(7L, null));
         CriarReparoAdicionalCommand itensNulos = new CriarReparoAdicionalCommand(
-                "OS-123", "mecanico@autoflow.com",
+                "OS-123", "12345678909",
                 List.of(new ServicoReparoAdicionalCommand(5L, null)));
         CriarReparoAdicionalCommand itemNuloCommand = new CriarReparoAdicionalCommand(
-                "OS-123", "mecanico@autoflow.com",
+                "OS-123", "12345678909",
                 List.of(new ServicoReparoAdicionalCommand(5L, itemNulo)));
         CriarReparoAdicionalCommand pecaNulaCommand = new CriarReparoAdicionalCommand(
-                "OS-123", "mecanico@autoflow.com",
+                "OS-123", "12345678909",
                 List.of(new ServicoReparoAdicionalCommand(5L, pecaNula)));
         CriarReparoAdicionalCommand quantidadeNulaCommand = new CriarReparoAdicionalCommand(
-                "OS-123", "mecanico@autoflow.com",
+                "OS-123", "12345678909",
                 List.of(new ServicoReparoAdicionalCommand(5L, quantidadeNula)));
 
         assertAll(
@@ -462,14 +462,14 @@ class CriarReparoAdicionalUseCaseTest {
 
         var ordemServico = ordemServico(StatusOrdemServico.EM_EXECUCAO);
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.empty());
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.empty());
         var erroUsuario = assertThrows(ApplicationException.class, () -> useCase.execute(command));
         assertEquals(ApplicationException.ErrorType.NOT_FOUND, erroUsuario.type());
 
         var mecanico = new Usuario();
         mecanico.setId(20L);
         mecanico.setRole(RoleEnum.MECANICO);
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
         var erroServico = assertThrows(ApplicationException.class, () -> useCase.execute(command));
         assertEquals(ApplicationException.ErrorType.NOT_FOUND, erroServico.type());
@@ -485,7 +485,7 @@ class CriarReparoAdicionalUseCaseTest {
         orcamento.setId(30L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
         when(ordemServicoGateway.findByNumeroOsForUpdate("OS-123")).thenReturn(Optional.of(ordemServico));
-        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(servicoCatalogo(5L)));
         when(disponibilidadeEstoqueUseCase.execute(any())).thenReturn(List.of(itemEnriquecido(7L, 2)));
         when(reparoAdicionalGateway.save(any())).thenAnswer(invocation -> {
@@ -509,7 +509,7 @@ class CriarReparoAdicionalUseCaseTest {
     private CriarReparoAdicionalCommand command(Long servicoId, Long itemId, int quantidade) {
         return new CriarReparoAdicionalCommand(
                 "OS-123",
-                "mecanico@autoflow.com",
+                "12345678909",
                 List.of(new ServicoReparoAdicionalCommand(
                         servicoId,
                         List.of(new ItemReparoAdicionalCommand(itemId, quantidade))

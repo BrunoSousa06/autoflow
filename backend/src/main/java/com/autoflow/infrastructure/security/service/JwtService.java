@@ -35,10 +35,6 @@ public class JwtService {
                 .compact();
     }
 
-    public String extrairEmail(String token) {
-        return extrairClaims(token).getSubject();
-    }
-
     public String extrairCpfCnpj(String token) {
         return extrairClaims(token).getSubject();
     }

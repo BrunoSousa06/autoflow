@@ -36,10 +36,10 @@ class DecidirOrcamentoUseCaseTest {
     void deveAprovarAposAutorizarUsuario() {
         Orcamento orcamento = orcamento();
         when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
-        when(usuarioGateway.findByEmail("cliente@exemplo.com")).thenReturn(Optional.of(usuario("Maria", RoleEnum.CLIENTE)));
+        when(usuarioGateway.findByCpfCnpj("12345678901")).thenReturn(Optional.of(usuario("Maria", RoleEnum.CLIENTE)));
         when(aprovarOrcamentoUseCase.execute(orcamento, "Maria")).thenReturn(orcamento);
 
-        assertSame(orcamento, useCase.aprovarComoUsuario(10L, "cliente@exemplo.com"));
+        assertSame(orcamento, useCase.aprovarComoUsuario(10L, "12345678901"));
 
         verify(aprovarOrcamentoUseCase).execute(orcamento, "Maria");
     }
@@ -48,10 +48,10 @@ class DecidirOrcamentoUseCaseTest {
     void deveRecusarAposAutorizarUsuario() {
         Orcamento orcamento = orcamento();
         when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
-        when(usuarioGateway.findByEmail("cliente@exemplo.com")).thenReturn(Optional.of(usuario("Maria", RoleEnum.CLIENTE)));
+        when(usuarioGateway.findByCpfCnpj("12345678901")).thenReturn(Optional.of(usuario("Maria", RoleEnum.CLIENTE)));
         when(recusarOrcamentoUseCase.execute(orcamento, "Não quero", "Maria")).thenReturn(orcamento);
 
-        assertSame(orcamento, useCase.recusarComoUsuario(10L, "Não quero", "cliente@exemplo.com"));
+        assertSame(orcamento, useCase.recusarComoUsuario(10L, "Não quero", "12345678901"));
 
         verify(recusarOrcamentoUseCase).execute(orcamento, "Não quero", "Maria");
     }
@@ -60,10 +60,10 @@ class DecidirOrcamentoUseCaseTest {
     void deveNegarDecisaoDeClienteSobreOrcamentoDeOutroCliente() {
         Orcamento orcamento = orcamento();
         when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
-        when(usuarioGateway.findByEmail("outro@exemplo.com")).thenReturn(Optional.of(usuario("Outro", RoleEnum.CLIENTE)));
+        when(usuarioGateway.findByCpfCnpj("98765432100")).thenReturn(Optional.of(usuario("Outro", RoleEnum.CLIENTE)));
 
         ApplicationException exception = assertThrows(ApplicationException.class,
-                () -> useCase.aprovarComoUsuario(10L, "outro@exemplo.com"));
+                () -> useCase.aprovarComoUsuario(10L, "98765432100"));
 
         assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
     }
@@ -72,11 +72,11 @@ class DecidirOrcamentoUseCaseTest {
     void deveNegarDecisaoDeMecanicoMesmoQuandoOrcamentoExiste() {
         Orcamento orcamento = orcamento();
         when(orcamentoGateway.findByIdForUpdate(10L)).thenReturn(Optional.of(orcamento));
-        when(usuarioGateway.findByEmail("mecanico@exemplo.com"))
+        when(usuarioGateway.findByCpfCnpj("11144477735"))
                 .thenReturn(Optional.of(usuario("Mecânico", RoleEnum.MECANICO)));
 
         ApplicationException exception = assertThrows(ApplicationException.class,
-                () -> useCase.aprovarComoUsuario(10L, "mecanico@exemplo.com"));
+                () -> useCase.aprovarComoUsuario(10L, "11144477735"));
 
         assertEquals(ApplicationException.ErrorType.FORBIDDEN, exception.type());
     }
@@ -141,6 +141,16 @@ class DecidirOrcamentoUseCaseTest {
         Usuario usuario = new Usuario();
         usuario.setNome(nome);
         usuario.setRole(role);
+        usuario.setCpfCnpj(switch (nome) {
+            case "Maria" -> "12345678901";
+            case "Outro" -> "98765432100";
+            default -> "11144477735";
+        });
+        usuario.setEmail(switch (nome) {
+            case "Maria" -> "cliente@exemplo.com";
+            case "Outro" -> "outro@exemplo.com";
+            default -> "mecanico@exemplo.com";
+        });
         return usuario;
     }
 }

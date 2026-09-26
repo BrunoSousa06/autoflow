@@ -4,7 +4,7 @@ import java.util.List;
 
 public record CriarReparoAdicionalCommand(
         String numeroOs,
-        String emailMecanico,
+        String cpfCnpjMecanico,
         List<ServicoReparoAdicionalCommand> servicos
 ) {
 }

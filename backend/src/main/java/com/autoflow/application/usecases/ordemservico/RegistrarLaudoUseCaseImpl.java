@@ -23,10 +23,10 @@ public class RegistrarLaudoUseCaseImpl implements RegistrarLaudoUseCase {
 
     @TransactionalUseCase
     @Override
-    public OrdemServico execute(String numeroOs, String emailUsuarioLogado, String laudo) {
+    public OrdemServico execute(String numeroOs, String cpfCnpjUsuarioLogado, String laudo) {
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
-        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);
         ordemServico.registrarLaudo(laudo, LocalDateTime.now(clock));
