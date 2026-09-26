@@ -51,7 +51,7 @@ public class CriarOrdemServicoUseCaseImpl implements CriarOrdemServicoUseCase {
         VeiculoOutput veiculo = buscarOuCadastrarVeiculo.execute(cliente.id(), command.veiculo());
         LocalDateTime agora = LocalDateTime.now(clock);
         OrdemServico os = OrdemServico.criar(
-                Cliente.reconstituir(cliente.id(), cliente.nome(), cliente.cpfCnpj(), cliente.telefone(), cliente.email()),
+                Cliente.reconstituir(cliente.id(), cliente.nome(), cliente.cpfCnpj(), cliente.telefone(), cliente.email(), cliente.status()),
                 new Veiculo(veiculo.id(), veiculo.placa(), veiculo.marca(), veiculo.modelo(), veiculo.ano()),
                 numeroOrdemServicoGateway.gerar(), agora);
         os.adicionarServicosSolicitados(command.servicoIds().stream()
