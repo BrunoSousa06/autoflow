@@ -30,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                         new UsernameNotFoundException("Usuário não encontrado"));
 
         boolean clienteAtivo = clienteAtivoPolicy.podeAutenticar(
-                usuarioEntity.getEmail(),
+                usuarioEntity.getCpfCnpj(),
                 RoleEnum.CLIENTE.equals(usuarioEntity.getRole()));
 
         return User.withUsername(usuarioEntity.getCpfCnpj())

@@ -27,6 +27,8 @@ public interface ClienteGateway {
 
     Optional<ClienteOutput> findByUsuarioEmail(String usuarioEmail);
 
+    Optional<ClienteOutput> findByUsuarioCpfCnpj(String usuarioCpfCnpj);
+
 
     List<ClienteOutput> findAll();
 

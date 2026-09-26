@@ -57,7 +57,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 boolean usuarioCliente = userDetails.getAuthorities().stream()
                         .anyMatch(authority -> "ROLE_CLIENTE".equals(authority.getAuthority()));
-                if (!clienteAtivoPolicy.podeAutenticar(email, usuarioCliente)
+                if (!clienteAtivoPolicy.podeAutenticar(cpfCnpj, usuarioCliente)
                         || !userDetails.isEnabled()) {
                     response.sendError(HttpServletResponse.SC_FORBIDDEN);
                     return;

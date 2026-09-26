@@ -85,11 +85,12 @@ class CustomUserDetailsServiceTest {
     @Test
     void deveCarregarClienteAtivoHabilitado() {
         usuario.setEmail("cliente@email.com");
+        usuario.setCpfCnpj("12345678980");
         usuario.setRole(RoleEnum.CLIENTE);
-        when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
-        when(clienteAtivoPolicy.podeAutenticar(usuario.getEmail(), true)).thenReturn(true);
+        when(usuarioRepository.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
+        when(clienteAtivoPolicy.podeAutenticar(usuario.getCpfCnpj(), true)).thenReturn(true);
 
-        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getEmail());
+        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getCpfCnpj());
 
         assertTrue(resultado.isEnabled());
     }
@@ -97,11 +98,12 @@ class CustomUserDetailsServiceTest {
     @Test
     void deveCarregarClienteInativoDesabilitado() {
         usuario.setEmail("cliente@email.com");
+        usuario.setCpfCnpj("12345678980");
         usuario.setRole(RoleEnum.CLIENTE);
-        when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
-        when(clienteAtivoPolicy.podeAutenticar(usuario.getEmail(), true)).thenReturn(false);
+        when(usuarioRepository.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
+        when(clienteAtivoPolicy.podeAutenticar(usuario.getCpfCnpj(), true)).thenReturn(false);
 
-        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getEmail());
+        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getCpfCnpj());
 
         assertFalse(resultado.isEnabled());
     }

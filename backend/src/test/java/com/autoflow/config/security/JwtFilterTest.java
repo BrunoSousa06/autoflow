@@ -282,14 +282,14 @@ class JwtFilterTest {
         String token = "jwt-token";
         request.addHeader("Authorization", "Bearer " + token);
 
-        UserDetails cliente = User.withUsername("teste@email.com")
+        UserDetails cliente = User.withUsername("12345678980")
                 .password("123456")
                 .roles("CLIENTE")
                 .build();
         when(jwtService.tokenValido(token)).thenReturn(true);
-        when(jwtService.extrairEmail(token)).thenReturn("teste@email.com");
-        when(userDetailsService.loadUserByUsername("teste@email.com")).thenReturn(cliente);
-        when(clienteAtivoPolicy.podeAutenticar("teste@email.com", true)).thenReturn(false);
+        when(jwtService.extrairCpfCnpj(token)).thenReturn("12345678980");
+        when(userDetailsService.loadUserByUsername("12345678980")).thenReturn(cliente);
+        when(clienteAtivoPolicy.podeAutenticar("12345678980", true)).thenReturn(false);
 
         executarFiltro();
 

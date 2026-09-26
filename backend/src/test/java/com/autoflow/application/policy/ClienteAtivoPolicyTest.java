@@ -24,34 +24,34 @@ class ClienteAtivoPolicyTest {
     void deveManterPerfisNaoClienteInalterados() {
         var policy = new ClienteAtivoPolicy(clienteGateway);
 
-        assertTrue(policy.podeAutenticar("admin@email.com", false));
+        assertTrue(policy.podeAutenticar("52998224725", false));
         verifyNoInteractions(clienteGateway);
     }
 
     @Test
     void devePermitirClienteAtivo() {
         var policy = new ClienteAtivoPolicy(clienteGateway);
-        when(clienteGateway.findByUsuarioEmail("cliente@email.com"))
+        when(clienteGateway.findByUsuarioCpfCnpj("11144477735"))
                 .thenReturn(Optional.of(ClienteOutput.builder().status(ClienteStatus.ATIVO).build()));
 
-        assertTrue(policy.podeAutenticar("cliente@email.com", true));
+        assertTrue(policy.podeAutenticar("11144477735", true));
     }
 
     @Test
     void deveBloquearClienteInativo() {
         var policy = new ClienteAtivoPolicy(clienteGateway);
-        when(clienteGateway.findByUsuarioEmail("cliente@email.com"))
+        when(clienteGateway.findByUsuarioCpfCnpj("11144477735"))
                 .thenReturn(Optional.of(ClienteOutput.builder().status(ClienteStatus.INATIVO).build()));
 
-        assertFalse(policy.podeAutenticar("cliente@email.com", true));
+        assertFalse(policy.podeAutenticar("11144477735", true));
     }
 
     @Test
     void devePermitirUsuarioClienteSemVinculo() {
         var policy = new ClienteAtivoPolicy(clienteGateway);
-        when(clienteGateway.findByUsuarioEmail("sem-vinculo@email.com"))
+        when(clienteGateway.findByUsuarioCpfCnpj("98765432100"))
                 .thenReturn(Optional.empty());
 
-        assertTrue(policy.podeAutenticar("sem-vinculo@email.com", true));
+        assertTrue(policy.podeAutenticar("98765432100", true));
     }
 }
