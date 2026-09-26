@@ -33,6 +33,10 @@ class AuthIT extends AbstractIT {
         JsonNode body = parseJson(response.getBody());
         assertThat(body.get("email").asText()).isEqualTo(TestUtils.EMAIL_CLIENTE);
         assertThat(body.get("role").asText()).isEqualTo("CLIENTE");
+
+        ResponseEntity<String> login = restTemplate.postForEntity(
+                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class);
+        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test

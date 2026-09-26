@@ -1,5 +1,6 @@
 package com.autoflow.infrastructure.security;
 
+import com.autoflow.application.policy.ClienteAtivoPolicy;
 import com.autoflow.infrastructure.security.service.CustomUserDetailsService;
 import com.autoflow.infrastructure.security.service.JwtService;
 import jakarta.servlet.FilterChain;
@@ -23,6 +24,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final ClienteAtivoPolicy clienteAtivoPolicy;
 
     @Override
     public void doFilterInternal(
@@ -52,6 +54,14 @@ public class JwtFilter extends OncePerRequestFilter {
                                         filterChain.doFilter(request, response);
                                         return;
                                 }
+
+                boolean usuarioCliente = userDetails.getAuthorities().stream()
+                        .anyMatch(authority -> "ROLE_CLIENTE".equals(authority.getAuthority()));
+                if (!clienteAtivoPolicy.podeAutenticar(email, usuarioCliente)
+                        || !userDetails.isEnabled()) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(

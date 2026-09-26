@@ -2,6 +2,7 @@ package com.autoflow.application.gateway;
 
 import com.autoflow.application.input.cliente.ClienteInput;
 import com.autoflow.application.output.cliente.ClienteOutput;
+import com.autoflow.domain.cliente.ClienteStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,8 @@ public interface ClienteGateway {
     ClienteOutput save(ClienteInput input);
 
     ClienteOutput update(Long id, ClienteInput input);
+
+    ClienteOutput updateStatus(Long id, ClienteStatus status);
 
     Optional<ClienteOutput> findById(Long id);
 

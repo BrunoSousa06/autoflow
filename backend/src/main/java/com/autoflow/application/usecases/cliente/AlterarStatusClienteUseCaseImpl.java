@@ -1,22 +1,21 @@
 package com.autoflow.application.usecases.cliente;
 
-import com.autoflow.application.exception.ClienteDuplicadoException;
 import com.autoflow.application.exception.ClienteNaoEncontradoException;
 import com.autoflow.application.gateway.ClienteGateway;
-import com.autoflow.application.input.cliente.ClienteInput;
+import com.autoflow.application.input.cliente.ClienteStatusInput;
 import com.autoflow.application.output.cliente.ClienteOutput;
-import com.autoflow.application.port.in.cliente.AtualizarClienteUseCase;
+import com.autoflow.application.port.in.cliente.AlterarStatusClienteUseCase;
 import com.autoflow.domain.cliente.Cliente;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AtualizarClienteUseCaseImpl implements AtualizarClienteUseCase {
+public class AlterarStatusClienteUseCaseImpl implements AlterarStatusClienteUseCase {
 
     private final ClienteGateway clienteGateway;
 
     @Override
-    public ClienteOutput execute(Long id, ClienteInput input) {
-        var atual = clienteGateway.findById(id)
+    public ClienteOutput execute(Long id, ClienteStatusInput input) {
+        ClienteOutput atual = clienteGateway.findById(id)
                 .orElseThrow(() -> new ClienteNaoEncontradoException(
                         "Cliente não encontrado com o ID: " + id));
 
@@ -27,12 +26,8 @@ public class AtualizarClienteUseCaseImpl implements AtualizarClienteUseCase {
                 atual.telefone(),
                 atual.email(),
                 atual.status()
-        ).atualizar(input.nome(), input.cpfCnpj(), input.telefone(), input.email());
+        ).alterarStatus(input.status());
 
-        if (clienteGateway.existsByCpfCnpjAndIdNot(input.cpfCnpj(), id)) {
-            throw new ClienteDuplicadoException("CPF/CNPJ já cadastrado");
-        }
-
-        return clienteGateway.update(id, input);
+        return clienteGateway.updateStatus(id, input.status());
     }
 }

@@ -6,6 +6,7 @@ import com.autoflow.application.gateway.ServicoGateway;
 import com.autoflow.application.input.ordemservico.CriarOrdemServicoCommand;
 import com.autoflow.application.input.veiculo.VeiculoInput;
 import com.autoflow.application.output.cliente.ClienteOutput;
+import com.autoflow.domain.cliente.ClienteStatus;
 import com.autoflow.application.output.ordemservico.acompanhamento.TokenAcompanhamentoOutput;
 import com.autoflow.application.output.veiculo.VeiculoOutput;
 import com.autoflow.application.port.in.cliente.BuscarClientePorCpfCnpjUseCase;
@@ -48,7 +49,7 @@ class CriarOrdemServicoUseCaseTest {
     void deveCriarOsComCommandNumeroEDataResolvidosForaDoDominio() {
         ClienteOutput cliente = ClienteOutput.builder()
                 .id(1L).nome("Cliente").cpfCnpj("123").telefone("11999999999")
-                .email("cliente@email.com").build();
+                .email("cliente@email.com").status(ClienteStatus.ATIVO).build();
         VeiculoOutput veiculo = new VeiculoOutput(2L, "ABC1D23", "Honda", "Civic", 2020, 1L);
         Servico servico = new Servico(10L, "Revisao", "Descricao", BigDecimal.TEN, true);
 
