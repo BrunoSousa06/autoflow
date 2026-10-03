@@ -17,8 +17,8 @@ public class UsuarioAutenticadoService {
         return currentUserGateway.getCurrentUser();
     }
 
-    public String getCpfCnpj() {
-        return getRequiredUser().cpfCnpj();
+    public String getEmail() {
+        return getRequiredUser().email();
     }
 
     public boolean isCliente() {

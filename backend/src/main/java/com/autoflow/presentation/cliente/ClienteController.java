@@ -30,7 +30,7 @@ import java.util.List;
 public class ClienteController {
 
     private final CriarClienteUseCase criarClienteUseCase;
-    private final BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
+    private final BuscarClientePorEmailUseCase buscarClientePorEmailUseCase;
     private final ListarTodosClientesUseCase listarTodosClientesUseCase;
     private final AtualizarClienteUseCase atualizarClienteUseCase;
     private final DeletarClienteUseCase deletarClienteUseCase;
@@ -47,7 +47,7 @@ public class ClienteController {
     @GetMapping("/me")
     @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<ClienteResponse> meuPerfil(@AuthenticationPrincipal UserDetails userDetails) {
-        ClienteOutput output = buscarClientePorCpfCnpjUseCase.execute(userDetails.getUsername());
+        ClienteOutput output = buscarClientePorEmailUseCase.execute(userDetails.getUsername());
         ClienteResponse response = clienteMapper.toResponse(output);
         return ResponseEntity.ok(response);
     }

@@ -67,14 +67,14 @@ class IncluirServicosUseCaseTest {
         Servico catalogo = servico(5L);
         Usuario admin = usuario(RoleEnum.ADMIN, 1L);
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(ordem));
-        when(usuarioGateway.findByCpfCnpj("52998224725"))
+        when(usuarioGateway.findByEmail("admin@autoflow.com"))
                 .thenReturn(Optional.of(admin));
         when(servicoGateway.findById(5L)).thenReturn(Optional.of(catalogo));
         when(ordemServicoGateway.save(ordem)).thenReturn(ordem);
 
         var resultado = new IncluirServicosUseCaseImpl(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-1",
-                List.of(new ServicoSolicitado(5L)), "52998224725");
+                List.of(new ServicoSolicitado(5L)), "admin@autoflow.com");
 
         assertEquals(1, resultado.getServicosSolicitados().size());
         assertEquals("Troca de oleo", resultado.getServicosSolicitados().get(0).getNome());
@@ -94,7 +94,7 @@ class IncluirServicosUseCaseTest {
         Usuario mecanico = usuario(RoleEnum.MECANICO, 2L);
         Servico catalogo = servico(6L);
         when(ordemServicoGateway.findByNumeroOs("OS-2")).thenReturn(Optional.of(ordem));
-        when(usuarioGateway.findByCpfCnpj("12345678909"))
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com"))
                 .thenReturn(Optional.of(mecanico));
         when(servicoGateway.findById(6L)).thenReturn(Optional.of(catalogo));
         when(servicoGateway.findById(7L)).thenReturn(Optional.of(servico(7L)));
@@ -102,15 +102,15 @@ class IncluirServicosUseCaseTest {
 
         new IncluirServicosUseCaseImpl(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-2",
-                List.of(new ServicoSolicitado(6L)), "12345678909");
+                List.of(new ServicoSolicitado(6L)), "mecanico@autoflow.com");
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(ordem, mecanico);
 
         ordem.setStatus(StatusOrdemServico.RECEBIDA);
         new IncluirServicosUseCaseImpl(ordemServicoGateway, servicoGateway,
                 usuarioGateway, accessPolicy).execute("OS-2",
-                List.of(new ServicoSolicitado(7L)), "98765432100");
-        verify(usuarioGateway, never()).findByCpfCnpj("98765432100");
+                List.of(new ServicoSolicitado(7L)), "nao-consulta@email.com");
+        verify(usuarioGateway, never()).findByEmail("nao-consulta@email.com");
     }
 
     @Test
@@ -126,12 +126,12 @@ class IncluirServicosUseCaseTest {
                 () -> incluir("OS-3", List.of(), "admin"));
 
         ordem.setStatus(StatusOrdemServico.EM_DIAGNOSTICO);
-        when(usuarioGateway.findByCpfCnpj("ausente"))
+        when(usuarioGateway.findByEmail("ausente"))
                 .thenReturn(Optional.empty());
         assertType(ApplicationException.ErrorType.NOT_FOUND,
                 () -> incluir("OS-3", List.of(new ServicoSolicitado(5L)), "ausente"));
 
-        when(usuarioGateway.findByCpfCnpj("atendente"))
+        when(usuarioGateway.findByEmail("atendente"))
                 .thenReturn(Optional.of(usuario(RoleEnum.ATENDENTE, 3L)));
         when(servicoGateway.findById(5L)).thenReturn(Optional.empty());
         assertType(ApplicationException.ErrorType.NOT_FOUND,

@@ -29,17 +29,17 @@ public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
 
     @TransactionalUseCase
     @Override
-    public Orcamento aprovarComoUsuario(Long orcamentoId, String cpfCnpjUsuario) {
+    public Orcamento aprovarComoUsuario(Long orcamentoId, String emailUsuario) {
         Orcamento orcamento = buscarOrcamento(orcamentoId);
-        Usuario usuario = validarAcesso(orcamento, cpfCnpjUsuario);
+        Usuario usuario = validarAcesso(orcamento, emailUsuario);
         return aprovarOrcamentoUseCase.execute(orcamento, usuario.getNome());
     }
 
     @TransactionalUseCase
     @Override
-    public Orcamento recusarComoUsuario(Long orcamentoId, String motivo, String cpfCnpjUsuario) {
+    public Orcamento recusarComoUsuario(Long orcamentoId, String motivo, String emailUsuario) {
         Orcamento orcamento = buscarOrcamento(orcamentoId);
-        Usuario usuario = validarAcesso(orcamento, cpfCnpjUsuario);
+        Usuario usuario = validarAcesso(orcamento, emailUsuario);
         return recusarOrcamentoUseCase.execute(orcamento, motivo, usuario.getNome());
     }
 
@@ -96,8 +96,8 @@ public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
         return assinatura;
     }
 
-    private Usuario validarAcesso(Orcamento orcamento, String cpfCnpjUsuario) {
-        Usuario usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuario)
+    private Usuario validarAcesso(Orcamento orcamento, String emailUsuario) {
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuario)
                 .orElseThrow(() -> ApplicationException.notFound(
                         "Usuário autenticado não encontrado"));
         if (!RoleEnum.ADMIN.equals(usuario.getRole()) && !RoleEnum.CLIENTE.equals(usuario.getRole())) {
@@ -105,7 +105,7 @@ public class DecidirOrcamentoUseCaseImpl implements DecidirOrcamentoUseCase {
                     "Somente cliente ou administrador pode decidir o orçamento.");
         }
         if (RoleEnum.CLIENTE.equals(usuario.getRole())
-            && !usuario.getEmail().equalsIgnoreCase(orcamento.getCliente().getEmail())) {
+            && !emailUsuario.equalsIgnoreCase(orcamento.getCliente().getEmail())) {
             throw ApplicationException.forbidden();
         }
         return usuario;

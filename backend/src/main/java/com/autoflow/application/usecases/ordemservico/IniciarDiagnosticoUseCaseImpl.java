@@ -25,9 +25,9 @@ public class IniciarDiagnosticoUseCaseImpl implements IniciarDiagnosticoUseCase 
 
     @TransactionalUseCase
     @Override
-    public OrdemServico execute(String numeroOs, String cpfCnpjUsuarioLogado) {
+    public OrdemServico execute(String numeroOs, String emailUsuarioLogado) {
         OrdemServico ordemServico = buscar(numeroOs);
-        Usuario usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
             accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);

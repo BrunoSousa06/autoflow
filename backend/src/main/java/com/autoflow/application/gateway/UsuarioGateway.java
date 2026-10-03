@@ -16,8 +16,6 @@ public interface UsuarioGateway {
 
     Optional<Usuario> findByEmail(String email);
 
-    Optional<Usuario> findByCpfCnpj(String cpfCnpj);
-
     boolean existsByEmail(String email);
 
     Usuario save(Usuario usuario);

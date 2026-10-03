@@ -33,7 +33,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 usuarioEntity.getCpfCnpj(),
                 RoleEnum.CLIENTE.equals(usuarioEntity.getRole()));
 
-        return User.withUsername(usuarioEntity.getCpfCnpj())
+        return User.withUsername(usuarioEntity.getEmail())
                 .password(usuarioEntity.getSenha())
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + usuarioEntity.getRole().name())))
                 .disabled(!clienteAtivo)

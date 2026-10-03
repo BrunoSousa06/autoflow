@@ -60,7 +60,7 @@ class JwtFilterTest {
         SecurityContextHolder.clearContext();
 
         userDetails = new User(
-                "12345678980",
+                "usuario@email.com",
                 "123456",
                 List.of()
         );
@@ -127,7 +127,7 @@ class JwtFilterTest {
         );
 
         assertEquals(
-                "12345678980",
+                "usuario@email.com",
                 SecurityContextHolder
                         .getContext()
                         .getAuthentication()
@@ -256,7 +256,7 @@ class JwtFilterTest {
         );
 
         UserDetails usuarioComRoleAtualizada = new User(
-                "12345678980",
+                "cliente@email.com",
                 "123456",
                 List.of(() -> "ROLE_CLIENTE")
         );
@@ -270,6 +270,7 @@ class JwtFilterTest {
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(auth);
+        assertEquals("cliente@email.com", auth.getName());
         assertTrue(auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE")));
         assertFalse(auth.getAuthorities().stream()
@@ -282,7 +283,7 @@ class JwtFilterTest {
         String token = "jwt-token";
         request.addHeader("Authorization", "Bearer " + token);
 
-        UserDetails cliente = User.withUsername("12345678980")
+        UserDetails cliente = User.withUsername("cliente@email.com")
                 .password("123456")
                 .roles("CLIENTE")
                 .build();

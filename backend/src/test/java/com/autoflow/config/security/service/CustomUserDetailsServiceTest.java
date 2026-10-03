@@ -61,7 +61,7 @@ class CustomUserDetailsServiceTest {
         assertNotNull(resultado);
 
         assertEquals(
-                "12345678980",
+                    "admin@email.com",
                 resultado.getUsername()
         );
 

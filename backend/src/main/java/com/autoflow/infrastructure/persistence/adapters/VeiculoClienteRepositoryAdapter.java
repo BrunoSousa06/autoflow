@@ -18,4 +18,9 @@ public class VeiculoClienteRepositoryAdapter implements VeiculoClienteGateway {
         return clienteRepository.findByCpfCnpj(cpfCnpj).map(cliente -> cliente.getId());
     }
 
+    @Override
+    public Optional<Long> findIdByUsuarioEmail(String email) {
+        return clienteRepository.findByUsuarioEmail(email).map(cliente -> cliente.getId());
+    }
+
 }

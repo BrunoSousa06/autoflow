@@ -71,10 +71,10 @@ public class FinalizarDiagnosticoUseCaseImpl implements FinalizarDiagnosticoUseC
 
     @TransactionalUseCase
     @Override
-    public FinalizarDiagnosticoOutput execute(String numeroOs, String cpfCnpjUsuarioLogado) {
+    public FinalizarDiagnosticoOutput execute(String numeroOs, String emailUsuarioLogado) {
         OrdemServico os = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
-        Usuario usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) accessPolicy.validarPodeAlterarDiagnostico(os, usuario);
 

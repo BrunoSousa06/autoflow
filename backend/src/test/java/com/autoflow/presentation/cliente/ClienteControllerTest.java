@@ -44,7 +44,7 @@ class ClienteControllerTest {
     private CriarClienteUseCase criarClienteUseCase;
 
     @Mock
-        private BuscarClientePorCpfCnpjUseCase buscarClientePorCpfCnpjUseCase;
+        private BuscarClientePorEmailUseCase buscarClientePorEmailUseCase;
 
     @Mock
     private BuscarClientePorIdUseCase buscarClientePorIdUseCase;
@@ -78,7 +78,7 @@ class ClienteControllerTest {
 
         clienteController = new ClienteController(
                 criarClienteUseCase,
-                buscarClientePorCpfCnpjUseCase,
+                buscarClientePorEmailUseCase,
                 listarTodosClientesUseCase,
                 atualizarClienteUseCase,
                 deletarClienteUseCase,
@@ -112,10 +112,10 @@ class ClienteControllerTest {
     @Test
     void deveBuscarMeuPerfil() throws Exception {
 
-        when(buscarClientePorCpfCnpjUseCase.execute("52998224725"))
+        when(buscarClientePorEmailUseCase.execute("bruno@hotmail.com"))
                 .thenReturn(clienteOutput);
 
-        var userDetails = User.withUsername("52998224725")
+        var userDetails = User.withUsername("bruno@hotmail.com")
                 .password("")
                 .roles("CLIENTE")
                 .build();
@@ -139,8 +139,8 @@ class ClienteControllerTest {
                     .andExpect(jsonPath("$.email").value("bruno@hotmail.com"))
                     .andExpect(jsonPath("$.status").value("ATIVO"));
 
-            verify(buscarClientePorCpfCnpjUseCase)
-                    .execute("52998224725");
+            verify(buscarClientePorEmailUseCase)
+                    .execute("bruno@hotmail.com");
 
         } finally {
             SecurityContextHolder.clearContext();

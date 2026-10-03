@@ -49,7 +49,7 @@ class FinalizarDiagnosticoUseCaseTest {
         var admin = usuario(RoleEnum.ADMIN);
         configurarFluxo(os, admin);
 
-        var resultado = novoCasoDeUso().execute("OS-1", admin.getCpfCnpj());
+        var resultado = novoCasoDeUso().execute("OS-1", admin.getEmail());
 
         assertEquals(StatusOrdemServico.AGUARDANDO_APROVACAO, resultado.ordemServico().getStatus());
         verify(accessPolicy, never()).validarPodeAlterarDiagnostico(any(), any());
@@ -61,7 +61,7 @@ class FinalizarDiagnosticoUseCaseTest {
         var mecanico = usuario(RoleEnum.MECANICO);
         configurarFluxo(os, mecanico);
 
-        novoCasoDeUso().execute("OS-1", mecanico.getCpfCnpj());
+        novoCasoDeUso().execute("OS-1", mecanico.getEmail());
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, mecanico);
     }
@@ -79,7 +79,7 @@ class FinalizarDiagnosticoUseCaseTest {
         orcamento.setId(10L);
         orcamento.setCliente(new ClienteOrcamentoSnapshot("Cliente", "123", "cliente@autoflow.com", null));
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        when(usuarioGateway.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(versioningGateway.proximaVersaoPorNumeroOs("OS-1", TipoOrcamento.PRINCIPAL)).thenReturn(1);
         when(orcamentoFactory.criarPrincipalDisponivel(eq(os), eq(1), any(LocalDateTime.class)))
                 .thenReturn(orcamento);

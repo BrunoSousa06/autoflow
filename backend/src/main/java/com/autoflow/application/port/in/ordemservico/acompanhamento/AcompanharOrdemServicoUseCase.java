@@ -5,5 +5,5 @@ import com.autoflow.application.output.ordemservico.acompanhamento.Acompanhament
 import java.util.List;
 
 public interface AcompanharOrdemServicoUseCase {
-    List<AcompanhamentoOrdemServicoOutput> execute(String cpfCnpjCliente);
+    List<AcompanhamentoOrdemServicoOutput> execute(String emailCliente);
 }

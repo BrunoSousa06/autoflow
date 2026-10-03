@@ -15,11 +15,11 @@ import org.mapstruct.Mapping;
 public interface ReparoAdicionalRestMapper {
 
     @Mapping(target = "numeroOs", source = "numeroOs")
-    @Mapping(target = "cpfCnpjMecanico", source = "cpfCnpjMecanico")
+    @Mapping(target = "emailMecanico", source = "emailMecanico")
     @Mapping(target = "servicos", source = "request.servicos")
     CriarReparoAdicionalCommand toCommand(
             String numeroOs,
-            String cpfCnpjMecanico,
+            String emailMecanico,
             CriarReparoAdicionalRequest request
     );
 

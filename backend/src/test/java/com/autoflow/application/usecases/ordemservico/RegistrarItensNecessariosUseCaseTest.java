@@ -45,13 +45,13 @@ class RegistrarItensNecessariosUseCaseTest {
         var usuario = usuario(RoleEnum.ADMIN, "admin@autoflow.com");
         var itens = List.of(itemSolicitado());
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        when(usuarioGateway.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(disponibilidadeEstoque.execute(itens)).thenReturn(itens);
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
         var resultado = new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque)
-                .execute("OS-1", 10L, usuario.getCpfCnpj(), itens);
+                .execute("OS-1", 10L, usuario.getEmail(), itens);
 
         assertEquals(itens, resultado.buscarServicoSolicitado(10L).getItensNecessarios());
         verify(accessPolicy, never()).validarPodeAlterarDiagnostico(os, usuario);
@@ -64,13 +64,13 @@ class RegistrarItensNecessariosUseCaseTest {
         var usuario = usuario(RoleEnum.MECANICO, "mecanico@autoflow.com");
         var itens = List.of(itemSolicitado());
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        when(usuarioGateway.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(disponibilidadeEstoque.execute(itens)).thenReturn(itens);
         when(ordemServicoGateway.save(os)).thenReturn(os);
 
         new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque)
-                .execute("OS-1", 10L, usuario.getCpfCnpj(), itens);
+                .execute("OS-1", 10L, usuario.getEmail(), itens);
 
         verify(accessPolicy).validarPodeAlterarDiagnostico(os, usuario);
     }
@@ -81,14 +81,14 @@ class RegistrarItensNecessariosUseCaseTest {
         os.setStatus(StatusOrdemServico.RECEBIDA);
         var usuario = usuario(RoleEnum.ADMIN, "admin@autoflow.com");
         var itens = List.of(itemSolicitado());
-        var cpfCnpj = usuario.getCpfCnpj();
+        var email = usuario.getEmail();
         when(ordemServicoGateway.findByNumeroOs("OS-1")).thenReturn(Optional.of(os));
-        when(usuarioGateway.findByCpfCnpj(cpfCnpj)).thenReturn(Optional.of(usuario));
+        when(usuarioGateway.findByEmail(email)).thenReturn(Optional.of(usuario));
         var useCase = new RegistrarItensNecessariosUseCaseImpl(
                 ordemServicoGateway, usuarioGateway, accessPolicy, disponibilidadeEstoque);
 
         var exception = assertThrows(ApplicationException.class,
-                () -> useCase.execute("OS-1", 10L, cpfCnpj, itens));
+                () -> useCase.execute("OS-1", 10L, email, itens));
 
         assertEquals(ApplicationException.ErrorType.BAD_REQUEST, exception.type());
         verify(disponibilidadeEstoque, never()).execute(itens);

@@ -65,7 +65,7 @@ class ReparoAdicionalControllerTest {
     private ClienteAtivoPolicy clienteAtivoPolicy;
 
     @Test
-    @WithMockUser(username = "12345678909", roles = "MECANICO")
+    @WithMockUser(username = "mecanico@autoflow.com", roles = "MECANICO")
     void deveCriarReparoAdicionalComoMecanico() throws Exception {
         when(criarReparoAdicionalUseCase.execute(any())).thenReturn(new CriarReparoAdicionalOutput(
                 5L,
@@ -83,7 +83,7 @@ class ReparoAdicionalControllerTest {
         verify(criarReparoAdicionalUseCase).execute(captor.capture());
         CriarReparoAdicionalCommand command = captor.getValue();
         assertEquals("OS-123", command.numeroOs());
-        assertEquals("12345678909", command.cpfCnpjMecanico());
+        assertEquals("mecanico@autoflow.com", command.emailMecanico());
         assertEquals(10L, command.servicos().getFirst().servicoId());
         assertEquals(7L, command.servicos().getFirst().itensNecessarios().getFirst().pecaInsumoId());
         assertEquals(2, command.servicos().getFirst().itensNecessarios().getFirst().quantidade());

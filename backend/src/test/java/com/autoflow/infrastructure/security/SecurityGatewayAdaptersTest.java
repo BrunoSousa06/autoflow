@@ -70,7 +70,7 @@ class SecurityGatewayAdaptersTest {
     @Test
     void deveResolverUsuarioAtualAPartirDaRoleDoContexto() {
         var authentication = new UsernamePasswordAuthenticationToken(
-            User.withUsername("12345678901")
+            User.withUsername("cliente@email.com")
                         .password("ignored")
                         .roles("CLIENTE")
                         .build(),
@@ -83,7 +83,7 @@ class SecurityGatewayAdaptersTest {
                 .getCurrentUser()
                 .orElseThrow();
 
-        assertEquals("12345678901", currentUser.cpfCnpj());
+        assertEquals("cliente@email.com", currentUser.email());
         assertTrue(currentUser.hasRole(RoleEnum.CLIENTE));
     }
 

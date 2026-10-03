@@ -39,12 +39,12 @@ class ListarOrdensServicoUseCaseTest {
         mecanico.setCpfCnpj("12345678909");
         PageQuery pageQuery = new PageQuery(0, 10);
         PageResult<OrdemServico> esperado = new PageResult<>(List.of(), 0, 0, 10);
-        when(usuarioGateway.findByCpfCnpj("12345678909")).thenReturn(Optional.of(mecanico));
+        when(usuarioGateway.findByEmail("mecanico@autoflow.com")).thenReturn(Optional.of(mecanico));
         when(ordemServicoGateway.findAll(any(), eq("mecanico@autoflow.com"), eq(pageQuery)))
                 .thenReturn(esperado);
 
         PageResult<OrdemServico> resultado = new ListarOrdensServicoUseCaseImpl(ordemServicoGateway, usuarioGateway)
-                .execute(new OrdemServicoFiltroInput(null, null, null), pageQuery, "12345678909");
+                .execute(new OrdemServicoFiltroInput(null, null, null), pageQuery, "mecanico@autoflow.com");
 
         assertSame(esperado, resultado);
         verify(ordemServicoGateway).findAll(any(), eq("mecanico@autoflow.com"), eq(pageQuery));
@@ -55,9 +55,9 @@ class ListarOrdensServicoUseCaseTest {
         var useCase = new ListarOrdensServicoUseCaseImpl(ordemServicoGateway, usuarioGateway);
         var filtro = new OrdemServicoFiltroInput(null, null, null);
         var pageQuery = new PageQuery(0, 10);
-        var cpfCnpj = "98765432100";
-        when(usuarioGateway.findByCpfCnpj(cpfCnpj)).thenReturn(Optional.empty());
+        var email = "ausente@autoflow.com";
+        when(usuarioGateway.findByEmail(email)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> useCase.execute(filtro, pageQuery, cpfCnpj));
+        assertThrows(RuntimeException.class, () -> useCase.execute(filtro, pageQuery, email));
     }
 }

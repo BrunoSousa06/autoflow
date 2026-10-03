@@ -27,11 +27,11 @@ public class RegistrarItensNecessariosUseCaseImpl implements RegistrarItensNeces
 
     @TransactionalUseCase
     @Override
-    public OrdemServico execute(String numeroOs, Long servicoId, String cpfCnpjUsuarioLogado,
+    public OrdemServico execute(String numeroOs, Long servicoId, String emailUsuarioLogado,
                                 List<ItemNecessario> itensNecessarios) {
         OrdemServico ordemServico = ordemServicoGateway.findByNumeroOs(numeroOs)
                 .orElseThrow(() -> ApplicationException.notFound("Ordem de serviço não encontrada."));
-        Usuario usuario = usuarioGateway.findByCpfCnpj(cpfCnpjUsuarioLogado)
+        Usuario usuario = usuarioGateway.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> ApplicationException.notFound("Usuário autenticado não encontrado."));
         if (!RoleEnum.ADMIN.equals(usuario.getRole())) {
             accessPolicy.validarPodeAlterarDiagnostico(ordemServico, usuario);
