@@ -23,11 +23,11 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String gerarToken(String email, String role) {
+    public String gerarToken(String cpfCnpj, String role) {
 
         Instant agora = Instant.now();
         return Jwts.builder()
-                .subject(email)
+                .subject(cpfCnpj)
                 .claim("role", role)
                 .issuedAt(Date.from(agora))
                 .expiration(Date.from(agora.plusMillis(expiration)))
@@ -35,7 +35,7 @@ public class JwtService {
                 .compact();
     }
 
-    public String extrairEmail(String token) {
+    public String extrairCpfCnpj(String token) {
         return extrairClaims(token).getSubject();
     }
 

@@ -82,6 +82,12 @@ public class ClienteRepositoryAdapter implements ClienteGateway {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<ClienteOutput> findByUsuarioCpfCnpj(String usuarioCpfCnpj) {
+        return clienteRepository.findByUsuarioCpfCnpj(usuarioCpfCnpj).map(clienteMapper::mapToOutput);
+    }
+
+    @Override
     public List<ClienteOutput> findAll() {
         return clienteMapper.mapToListOutput(clienteRepository.findAll());
     }

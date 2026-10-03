@@ -70,7 +70,7 @@ class SecurityGatewayAdaptersTest {
     @Test
     void deveResolverUsuarioAtualAPartirDaRoleDoContexto() {
         var authentication = new UsernamePasswordAuthenticationToken(
-                User.withUsername("cliente@email.com")
+            User.withUsername("cliente@email.com")
                         .password("ignored")
                         .roles("CLIENTE")
                         .build(),

@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.io.IOException;
 import java.util.List;
@@ -59,7 +60,7 @@ class JwtFilterTest {
         SecurityContextHolder.clearContext();
 
         userDetails = new User(
-                "teste@email.com",
+                "usuario@email.com",
                 "123456",
                 List.of()
         );
@@ -111,10 +112,10 @@ class JwtFilterTest {
         when(jwtService.tokenValido(token))
                 .thenReturn(true);
 
-        when(jwtService.extrairEmail(token))
-                .thenReturn("teste@email.com");
+        when(jwtService.extrairCpfCnpj(token))
+                .thenReturn("12345678980");
 
-        when(userDetailsService.loadUserByUsername("teste@email.com"))
+        when(userDetailsService.loadUserByUsername("12345678980"))
                 .thenReturn(userDetails);
 
         assertDoesNotThrow(this::executarFiltro);
@@ -126,7 +127,7 @@ class JwtFilterTest {
         );
 
         assertEquals(
-                "teste@email.com",
+                "usuario@email.com",
                 SecurityContextHolder
                         .getContext()
                         .getAuthentication()
@@ -134,19 +135,19 @@ class JwtFilterTest {
         );
 
         verify(jwtService)
-                .extrairEmail(token);
+                .extrairCpfCnpj(token);
 
         verify(jwtService)
                 .tokenValido(token);
 
         verify(userDetailsService)
-                .loadUserByUsername("teste@email.com");
+                .loadUserByUsername("12345678980");
 
         assertDoesNotThrow(this::verificarFiltroContinuou);
     }
 
     @Test
-    void naoDeveAutenticarQuandoEmailForNulo() {
+        void naoDeveAutenticarQuandoCpfCnpjForNulo() {
 
         String token = "jwt-token";
 
@@ -156,7 +157,7 @@ class JwtFilterTest {
         );
 
         when(jwtService.tokenValido(token)).thenReturn(true);
-        when(jwtService.extrairEmail(token)).thenReturn(null);
+        when(jwtService.extrairCpfCnpj(token)).thenReturn(null);
 
         assertDoesNotThrow(this::executarFiltro);
 
@@ -167,12 +168,28 @@ class JwtFilterTest {
         );
 
         verify(jwtService)
-                .extrairEmail(token);
+                .extrairCpfCnpj(token);
 
         verifyNoInteractions(userDetailsService);
 
         assertDoesNotThrow(this::verificarFiltroContinuou);
     }
+
+        @Test
+        void naoDeveAutenticarQuandoSubjectNaoForCpfCnpjCadastrado() {
+                String token = "jwt-token";
+                String subjectEmailLegado = "usuario@email.com";
+                request.addHeader("Authorization", "Bearer " + token);
+                when(jwtService.tokenValido(token)).thenReturn(true);
+                when(jwtService.extrairCpfCnpj(token)).thenReturn(subjectEmailLegado);
+                when(userDetailsService.loadUserByUsername(subjectEmailLegado))
+                                .thenThrow(new UsernameNotFoundException("Usuário não encontrado"));
+
+                assertDoesNotThrow(this::executarFiltro);
+                assertNull(SecurityContextHolder.getContext().getAuthentication());
+                verify(userDetailsService).loadUserByUsername(subjectEmailLegado);
+                assertDoesNotThrow(this::verificarFiltroContinuou);
+        }
 
     @Test
     void naoDeveAutenticarQuandoTokenForInvalido() {
@@ -195,7 +212,7 @@ class JwtFilterTest {
                         .getAuthentication()
         );
 
-        verify(jwtService, never()).extrairEmail(token);
+        verify(jwtService, never()).extrairCpfCnpj(token);
         verifyNoInteractions(userDetailsService);
 
         assertDoesNotThrow(this::verificarFiltroContinuou);
@@ -239,13 +256,13 @@ class JwtFilterTest {
         );
 
         UserDetails usuarioComRoleAtualizada = new User(
-                "teste@email.com",
+                "cliente@email.com",
                 "123456",
                 List.of(() -> "ROLE_CLIENTE")
         );
 
-        when(jwtService.extrairEmail(token)).thenReturn("teste@email.com");
-        when(userDetailsService.loadUserByUsername("teste@email.com"))
+        when(jwtService.extrairCpfCnpj(token)).thenReturn("12345678980");
+        when(userDetailsService.loadUserByUsername("12345678980"))
                 .thenReturn(usuarioComRoleAtualizada);
         when(jwtService.tokenValido(token)).thenReturn(true);
 
@@ -253,6 +270,7 @@ class JwtFilterTest {
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(auth);
+        assertEquals("cliente@email.com", auth.getName());
         assertTrue(auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE")));
         assertFalse(auth.getAuthorities().stream()
@@ -265,14 +283,14 @@ class JwtFilterTest {
         String token = "jwt-token";
         request.addHeader("Authorization", "Bearer " + token);
 
-        UserDetails cliente = User.withUsername("teste@email.com")
+        UserDetails cliente = User.withUsername("cliente@email.com")
                 .password("123456")
                 .roles("CLIENTE")
                 .build();
         when(jwtService.tokenValido(token)).thenReturn(true);
-        when(jwtService.extrairEmail(token)).thenReturn("teste@email.com");
-        when(userDetailsService.loadUserByUsername("teste@email.com")).thenReturn(cliente);
-        when(clienteAtivoPolicy.podeAutenticar("teste@email.com", true)).thenReturn(false);
+        when(jwtService.extrairCpfCnpj(token)).thenReturn("12345678980");
+        when(userDetailsService.loadUserByUsername("12345678980")).thenReturn(cliente);
+        when(clienteAtivoPolicy.podeAutenticar("12345678980", true)).thenReturn(false);
 
         executarFiltro();
 

@@ -25,17 +25,10 @@ class ClienteIT extends AbstractIT {
     void configurar() {
         limparBancoDeDados();
         adminToken    = registrarELogar(TestUtils.EMAIL_ADMIN,    TestUtils.CPF_ATENDENTE, "ADMIN");
-        atendenteToken = registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_ATENDENTE, "ATENDENTE");
+        atendenteToken = registrarELogar(TestUtils.EMAIL_ATENDENTE, TestUtils.CPF_ATENDENTE_2, "ATENDENTE");
         mecanicoToken = registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO,  "MECANICO");
 
-        registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
-        clienteToken  = logar(TestUtils.EMAIL_CLIENTE);
-    }
-
-    private String logar(String email) {
-        var resp = restTemplate.postForEntity("/auth/login",
-                jsonEntity(TestUtils.loginRequest(email)), String.class);
-        return extrairCampo(resp.getBody(), "token");
+        clienteToken = registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
     }
 
     @Test
@@ -117,9 +110,8 @@ class ClienteIT extends AbstractIT {
         assertThat(inativado.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(parseJson(inativado.getBody()).get("status").asText()).isEqualTo("INATIVO");
         assertThat(get("/clientes/me", clienteToken).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(restTemplate.postForEntity(
-                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class)
-                .getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(get("/clientes/me", gerarToken(TestUtils.CPF_CLIENTE, "CLIENTE")).getStatusCode())
+            .isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
@@ -135,9 +127,8 @@ class ClienteIT extends AbstractIT {
 
         assertThat(reativado.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(parseJson(reativado.getBody()).get("status").asText()).isEqualTo("ATIVO");
-        assertThat(restTemplate.postForEntity(
-                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class)
-                .getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(get("/clientes/me", gerarToken(TestUtils.CPF_CLIENTE, "CLIENTE")).getStatusCode())
+            .isEqualTo(HttpStatus.OK);
     }
 
     @Test
@@ -277,7 +268,7 @@ class ClienteIT extends AbstractIT {
     void deveRetornar404QuandoClienteSemCadastro() {
         String emailSemCadastro = TestUtils.emailUnico();
         registrarELogar(emailSemCadastro, TestUtils.CPF_CLIENTE_2, "CLIENTE");
-        String semCadastroToken = logar(emailSemCadastro);
+        String semCadastroToken = gerarToken(TestUtils.CPF_CLIENTE_2, "CLIENTE");
         jdbcTemplate.update("DELETE FROM clientes WHERE cpf_cnpj = ?", TestUtils.CPF_CLIENTE_2);
 
         // Não criamos ClienteEntity para este usuário

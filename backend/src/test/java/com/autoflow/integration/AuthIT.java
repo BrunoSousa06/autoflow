@@ -34,32 +34,29 @@ class AuthIT extends AbstractIT {
         assertThat(body.get("email").asText()).isEqualTo(TestUtils.EMAIL_CLIENTE);
         assertThat(body.get("role").asText()).isEqualTo("CLIENTE");
 
-        ResponseEntity<String> login = restTemplate.postForEntity(
-                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class);
-        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
-    @DisplayName("deve fazer login e retornar token JWT")
-    void deveFazerLoginERetornarToken() {
+    @DisplayName("deve autenticar rota protegida com subject CPF/CNPJ")
+    void deveAutenticarComCpfCnpjNoSubject() {
         restTemplate.postForEntity("/auth/cadastro", jsonEntity(
                 TestUtils.registroRequest("Maria", TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE")
         ), String.class);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "/auth/login", jsonEntity(TestUtils.loginRequest(TestUtils.EMAIL_CLIENTE)), String.class);
+        String token = gerarToken(TestUtils.CPF_CLIENTE, "CLIENTE");
+        ResponseEntity<String> response = get("/clientes/me", token);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode body = parseJson(response.getBody());
-        assertThat(body.get("token").asText()).isNotBlank();
+        assertThat(body.get("email").asText()).isEqualTo(TestUtils.EMAIL_CLIENTE);
     }
 
     @Test
-    @DisplayName("deve retornar 403 com credenciais inválidas (AuthenticationException interceptada pelo Spring Security)")
-    void deveRetornar403ComCredenciaisInvalidas() {
-        Map<String, Object> login = Map.of("email", "inexistente@test.com", "senha", "Senha@1234");
+    @DisplayName("deve rejeitar token legado com email no subject")
+    void deveRejeitarTokenLegadoComEmailNoSubject() {
+        String token = gerarToken("inexistente@test.com", "CLIENTE");
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/auth/login", jsonEntity(login), String.class);
+        ResponseEntity<String> response = get("/clientes/me", token);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }

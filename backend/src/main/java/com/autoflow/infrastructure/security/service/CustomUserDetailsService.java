@@ -22,15 +22,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final ClienteAtivoPolicy clienteAtivoPolicy;
 
     @Override
-    public UserDetails loadUserByUsername(String email)
+    public UserDetails loadUserByUsername(String cpfCnpj)
             throws UsernameNotFoundException {
 
-        UsuarioEntity usuarioEntity = usuarioRepository.findByEmail(email)
+        UsuarioEntity usuarioEntity = usuarioRepository.findByCpfCnpj(cpfCnpj)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("Usuário não encontrado"));
 
         boolean clienteAtivo = clienteAtivoPolicy.podeAutenticar(
-                usuarioEntity.getEmail(),
+                usuarioEntity.getCpfCnpj(),
                 RoleEnum.CLIENTE.equals(usuarioEntity.getRole()));
 
         return User.withUsername(usuarioEntity.getEmail())

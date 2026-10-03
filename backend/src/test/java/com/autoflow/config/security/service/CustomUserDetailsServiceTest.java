@@ -42,6 +42,7 @@ class CustomUserDetailsServiceTest {
         usuario = new UsuarioEntity();
         usuario.setId(1L);
         usuario.setEmail("admin@email.com");
+        usuario.setCpfCnpj("12345678980");
         usuario.setSenha("senhaCriptografada");
         usuario.setRole(RoleEnum.ADMIN);
     }
@@ -49,18 +50,18 @@ class CustomUserDetailsServiceTest {
     @Test
     void deveCarregarUsuarioPorEmail() {
 
-        when(usuarioRepository.findByEmail("admin@email.com"))
+        when(usuarioRepository.findByCpfCnpj("12345678980"))
                 .thenReturn(Optional.of(usuario));
 
         UserDetails resultado =
                 customUserDetailsService.loadUserByUsername(
-                        "admin@email.com"
+                        "12345678980"
                 );
 
         assertNotNull(resultado);
 
         assertEquals(
-                "admin@email.com",
+                    "admin@email.com",
                 resultado.getUsername()
         );
 
@@ -78,17 +79,18 @@ class CustomUserDetailsServiceTest {
         );
 
         verify(usuarioRepository)
-                .findByEmail("admin@email.com");
+                .findByCpfCnpj("12345678980");
     }
 
     @Test
     void deveCarregarClienteAtivoHabilitado() {
         usuario.setEmail("cliente@email.com");
+        usuario.setCpfCnpj("12345678980");
         usuario.setRole(RoleEnum.CLIENTE);
-        when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
-        when(clienteAtivoPolicy.podeAutenticar(usuario.getEmail(), true)).thenReturn(true);
+        when(usuarioRepository.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
+        when(clienteAtivoPolicy.podeAutenticar(usuario.getCpfCnpj(), true)).thenReturn(true);
 
-        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getEmail());
+        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getCpfCnpj());
 
         assertTrue(resultado.isEnabled());
     }
@@ -96,11 +98,12 @@ class CustomUserDetailsServiceTest {
     @Test
     void deveCarregarClienteInativoDesabilitado() {
         usuario.setEmail("cliente@email.com");
+        usuario.setCpfCnpj("12345678980");
         usuario.setRole(RoleEnum.CLIENTE);
-        when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
-        when(clienteAtivoPolicy.podeAutenticar(usuario.getEmail(), true)).thenReturn(false);
+        when(usuarioRepository.findByCpfCnpj(usuario.getCpfCnpj())).thenReturn(Optional.of(usuario));
+        when(clienteAtivoPolicy.podeAutenticar(usuario.getCpfCnpj(), true)).thenReturn(false);
 
-        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getEmail());
+        UserDetails resultado = customUserDetailsService.loadUserByUsername(usuario.getCpfCnpj());
 
         assertFalse(resultado.isEnabled());
     }
@@ -108,7 +111,7 @@ class CustomUserDetailsServiceTest {
     @Test
     void deveLancarExcecaoQuandoUsuarioNaoEncontrado() {
 
-        when(usuarioRepository.findByEmail("inexistente@email.com"))
+        when(usuarioRepository.findByCpfCnpj("12345678980"))
                 .thenReturn(Optional.empty());
 
         UsernameNotFoundException exception =
@@ -116,7 +119,7 @@ class CustomUserDetailsServiceTest {
                         UsernameNotFoundException.class,
                         () -> customUserDetailsService
                                 .loadUserByUsername(
-                                        "inexistente@email.com"
+                                        "12345678980"
                                 )
                 );
 
@@ -126,6 +129,6 @@ class CustomUserDetailsServiceTest {
         );
 
         verify(usuarioRepository)
-                .findByEmail("inexistente@email.com");
+                .findByCpfCnpj("12345678980");
     }
 }

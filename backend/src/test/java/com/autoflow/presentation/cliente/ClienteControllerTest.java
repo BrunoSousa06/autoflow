@@ -44,7 +44,7 @@ class ClienteControllerTest {
     private CriarClienteUseCase criarClienteUseCase;
 
     @Mock
-    private BuscarClientePorEmailUseCase buscarClientePorEmailUseCase;
+        private BuscarClientePorEmailUseCase buscarClientePorEmailUseCase;
 
     @Mock
     private BuscarClientePorIdUseCase buscarClientePorIdUseCase;

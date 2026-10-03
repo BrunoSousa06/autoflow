@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -43,15 +44,20 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (SecurityContextHolder.getContext().getAuthentication() == null
                 && jwtService.tokenValido(token)) {
-            String email = jwtService.extrairEmail(token);
+            String cpfCnpj = jwtService.extrairCpfCnpj(token);
 
-            if (email != null) {
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(email);
+            if (cpfCnpj != null) {
+                                UserDetails userDetails;
+                                try {
+                                        userDetails = userDetailsService.loadUserByUsername(cpfCnpj);
+                                } catch (UsernameNotFoundException exception) {
+                                        filterChain.doFilter(request, response);
+                                        return;
+                                }
 
                 boolean usuarioCliente = userDetails.getAuthorities().stream()
                         .anyMatch(authority -> "ROLE_CLIENTE".equals(authority.getAuthority()));
-                if (!clienteAtivoPolicy.podeAutenticar(email, usuarioCliente)
+                if (!clienteAtivoPolicy.podeAutenticar(cpfCnpj, usuarioCliente)
                         || !userDetails.isEnabled()) {
                     response.sendError(HttpServletResponse.SC_FORBIDDEN);
                     return;
