@@ -43,3 +43,6 @@ backend/.m2
 *terraform/
 */terraform*
 !docs/terraform.md
+
+/docs/*
+.agent/*
