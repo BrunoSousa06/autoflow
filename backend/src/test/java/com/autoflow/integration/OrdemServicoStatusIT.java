@@ -140,7 +140,7 @@ class OrdemServicoStatusIT extends AbstractIT {
     void deveBloquearVeiculoDeOutroClienteNaCriacaoDaOs() {
         ResponseEntity<String> response = post(
                 "/ordens-servico",
-                TestUtils.criarOsRequest("52998224725", "STT1234", List.of(servicoId)),
+                TestUtils.criarOsRequest(TestUtils.CPF_CLIENTE_2, "STT1234", List.of(servicoId)),
                 adminToken);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
