@@ -33,7 +33,7 @@ class OrdemServicoStatusIT extends AbstractIT {
         mecanicoToken = registrarELogar(TestUtils.EMAIL_MECANICO, TestUtils.CPF_MECANICO, "MECANICO");
         titularToken = registrarELogar(TestUtils.EMAIL_CLIENTE, TestUtils.CPF_CLIENTE, "CLIENTE");
         outroClienteToken = registrarELogar(
-                "outro.cliente@autoflow.test", "52998224725", "CLIENTE");
+                "outro.cliente@autoflow.test", TestUtils.CPF_CLIENTE_2, "CLIENTE");
 
         mecanicoId = jdbcTemplate.queryForObject(
                 "SELECT id FROM usuarios WHERE email = ?",
