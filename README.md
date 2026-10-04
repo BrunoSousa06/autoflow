@@ -241,7 +241,7 @@ builds do backend e frontend, criação e publicação de imagens Docker e deplo
 
 ---
 
-## Entrega — Tech Challenge Fase 2
+## Entrega — Tech Challenge Fase 2 
 
 ### Objetivos da Fase 2
 
