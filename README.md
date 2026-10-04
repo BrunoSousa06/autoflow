@@ -232,10 +232,10 @@ builds do backend e frontend, criação e publicação de imagens Docker e deplo
                                │
                                ▼
                      ┌────────────────────┐
-                     │    AWS / EKS       │
+                     │       AWS          │
                      │                    │
                      │                    │
-                     │ Kubernetes         │
+                     │     Kubernetes     │
                      └────────────────────┘
 ```
 
@@ -269,7 +269,7 @@ flowchart TD
     F -->|Sim| H
 
     H --> I["Terraform Deploy<br/>init · validate · plan · apply"]
-    I --> J["AWS / EKS<br/>Infraestrutura e recursos Kubernetes"]
+    I --> J["AWS / EKS<br/>recursos Kubernetes"]
 ```
 
 Consulte a [fonte Mermaid do diagrama](docs/diagramas-arquitetura/arquitetura-deploy-fase-2.mermaid) e a [documentação
