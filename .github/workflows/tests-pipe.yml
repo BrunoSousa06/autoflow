@@ -46,13 +46,7 @@ jobs:
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          mvn -B verify \
-            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=BrunoSousa06_autoflow \
-            -Dsonar.qualitygate.wait=true \
-            -Dsonar.sources=src/main/java \
-            -Dsonar.tests=src/test/java
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
 
       - name: Upload Backend Coverage
         uses: actions/upload-artifact@v4
