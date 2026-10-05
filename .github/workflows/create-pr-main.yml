@@ -1,9 +1,9 @@
-name: PR automatico para main 
+name: PR automatico para main  
 
 on:
   push:
     branches:
-      - homolog
+      - develop
 
 permissions:
   contents: read
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   create-pr:
-    name: Create PR to Main
+    name: Create PR to main
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,7 @@ jobs:
         run: |
           gh pr create \
             --base main \
-            --head homolog \
+            --head develop \
             --title "Criação de PR automatico para main" \
             --body "Um Pull request automatico foi criado para a branch main." \
             || echo "PR ja existe e não sera criado."
