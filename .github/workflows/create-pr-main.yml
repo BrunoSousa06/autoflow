@@ -1,4 +1,4 @@
-name: Create Main PR
+name: PR automatico para main 
 
 on:
   push:
@@ -22,6 +22,6 @@ jobs:
           gh pr create \
             --base main \
             --head homolog \
-            --title "Promote homolog to main" \
-            --body "Automatic PR created from homolog to main." \
-            || echo "PR already exists or could not be created."
+            --title "Criação de PR automatico para main" \
+            --body "Um Pull request automatico foi criado para a branch main." \
+            || echo "PR ja existe e não sera criado."
