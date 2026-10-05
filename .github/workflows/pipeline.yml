@@ -177,7 +177,7 @@ jobs:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs:  [backend-build, frontend-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/homolog' || github.ref == 'refs/heads/main')
 
     steps:
       - uses: actions/checkout@v4
@@ -215,7 +215,7 @@ jobs:
     name: Deploy AWS with Terraform
     runs-on: ubuntu-latest
     needs: docker-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/homolog' || github.ref == 'refs/heads/main')
     env:
       TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
       TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
