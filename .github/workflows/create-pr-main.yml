@@ -1,0 +1,27 @@
+name: Create Main PR
+
+on:
+  push:
+    branches:
+      - homolog
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    name: Create PR to Main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head homolog \
+            --title "Promote homolog to main" \
+            --body "Automatic PR created from homolog to main." \
+            || echo "PR already exists or could not be created."
