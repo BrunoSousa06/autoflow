@@ -113,7 +113,7 @@ Na raiz do repositório, suba a stack completa com:
 docker-compose up -d
 ```
 
-## Kubernetes local
+## Kubernetes local 
 
 Os [manifestos Kubernetes da entrega](k8s/) e o perfil local em [k8s-local/](k8s-local/) estão versionados no
 repositório. É necessário ter Minikube, Kind ou Kubernetes habilitado no Docker Desktop.
