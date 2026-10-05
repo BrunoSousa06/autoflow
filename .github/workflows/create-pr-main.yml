@@ -1,0 +1,27 @@
+name: PR automatico para main  
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    name: Create PR to main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head develop \
+            --title "Criação de PR automatico para main" \
+            --body "Um Pull request automatico foi criado para a branch main." \
+            || echo "PR ja existe e não sera criado."
