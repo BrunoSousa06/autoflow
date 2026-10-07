@@ -65,13 +65,13 @@ orçamentos com PDF e aprovação autenticada ou pública; reparos adicionais; n
 
 Para a demonstração local da pós-graduação, o seed cria as contas abaixo. Todas usam a senha de exemplo `Senha@1234`:
 
-| E-mail                   | Perfil      |
-|--------------------------|-------------|
-| `admin@autoflow.com`     | `ADMIN`     |
-| `atendente@autoflow.com` | `ATENDENTE` |
-| `mecanico1@autoflow.com` | `MECANICO`  |
-| `mecanico2@autoflow.com` | `MECANICO`  |
-| `cliente@autoflow.com`   | `CLIENTE`   |
+| CPF/CNPJ      | E-mail                   | Perfil      |
+|---------------|--------------------------|-------------|
+| `52998224725` | `admin@autoflow.com`     | `ADMIN`     |
+| `16899535009` | `atendente@autoflow.com` | `ATENDENTE` |
+| `93541134780` | `mecanico1@autoflow.com` | `MECANICO`  |
+| `15350946056` | `mecanico2@autoflow.com` | `MECANICO`  |
+| `11144477735` | `cliente@autoflow.com`   | `CLIENTE`   |
 
 São credenciais de demonstração acadêmica/local e não devem ser usadas em produção.
 
@@ -147,6 +147,10 @@ terraform apply
 ---
 
 ## API e OpenAPI
+
+Para demonstrar o login serverless por CPF/CNPJ e o uso do token em rota protegida, consulte a
+[demonstração ponta a ponta](docs/openapi/README.md#demonstração-ponta-a-ponta-da-autenticação-serverless) e importe a
+[coleção Postman](backend/postman/autoflow-serverless-auth.postman_collection.json).
 
 O [contrato OpenAPI versionado](docs/openapi/autoflow-api.json) é o artefato distribuível da API; a [documentação da
 API](docs/openapi/README.md) detalha seu uso. Com o backend em execução, acesse [`http://localhost:8081/swagger-ui.html`](http://localhost:8081/swagger-ui.html)

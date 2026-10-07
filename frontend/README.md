@@ -72,17 +72,27 @@ Os componentes são standalone e as rotas usam lazy loading.
 
 As autorizações são aplicadas por `authGuard` e `roleGuard`. Os fluxos públicos não exigem login, mas exigem token quando definido pelo backend.
 
-## Login de demonstracao
+## Login por CPF/CNPJ
+
+O frontend usa a autenticação serverless para todos os perfis. A tela de login envia `cpf_cnpj` e `senha` para
+`POST <serverlessAuthUrl>/auth/login`; a URL é o output `api_gateway_invoke_url` do Terraform, sem o sufixo
+`/auth/login`. O JWT retornado é enviado automaticamente nas chamadas ao backend por `Authorization: Bearer`.
+
+Configure `serverlessAuthUrl` em `src/environments/environment.ts` e `environment.prod.ts` antes do build. O
+`JWT_SECRET` da Lambda deve ser exatamente o mesmo usado pelo backend. A senha continua sendo a credencial secreta;
+o CPF/CNPJ substitui o e-mail apenas como identificador de login.
+
+O seed do backend disponibiliza estas contas para a avaliação local. A senha de todas é `Senha@1234`:
 
 O seed do backend disponibiliza estas contas para a avaliacao local. A senha de todas e `Senha@1234`:
 
-| E-mail                   | Perfil      |
-|--------------------------|-------------|
-| `admin@autoflow.com`     | `ADMIN`     |
-| `atendente@autoflow.com` | `ATENDENTE` |
-| `mecanico1@autoflow.com` | `MECANICO`  |
-| `mecanico2@autoflow.com` | `MECANICO`  |
-| `cliente@autoflow.com`   | `CLIENTE`   |
+| CPF/CNPJ      | E-mail                   | Perfil      |
+|---------------|--------------------------|-------------|
+| `52998224725` | `admin@autoflow.com`     | `ADMIN`     |
+| `16899535009` | `atendente@autoflow.com` | `ATENDENTE` |
+| `93541134780` | `mecanico1@autoflow.com` | `MECANICO`  |
+| `15350946056` | `mecanico2@autoflow.com` | `MECANICO`  |
+| `11144477735` | `cliente@autoflow.com`   | `CLIENTE`   |
 
 Sao credenciais destinadas somente a demonstracao do trabalho de pos-graduacao; nao as use em producao. A lista completa esta no [README principal](../README.md).
 
