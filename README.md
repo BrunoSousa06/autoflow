@@ -113,7 +113,7 @@ Na raiz do repositório, suba a stack completa com:
 docker-compose up -d
 ```
 
-## Kubernetes local
+## Kubernetes local 
 
 Os [manifestos Kubernetes da entrega](k8s/) e o perfil local em [k8s-local/](k8s-local/) estão versionados no
 repositório. É necessário ter Minikube, Kind ou Kubernetes habilitado no Docker Desktop.
@@ -136,6 +136,7 @@ O frontend fica disponível em `http://localhost:30180` e o backend em `http://l
 ## Terraform na AWS
 
 O código está em [infra/](infra/). Com o Terraform e as credenciais da AWS configurados fora do repositório, execute:
+Observação:  apenas a parte de infra referente aos manifestos kubernetes esta neste repositorio, a infraestrutura AWS completa esta no repositorio: https://github.com/BrunoSousa06/autoflow-infra
 
 ```bash
 cd infra
@@ -236,16 +237,16 @@ builds do backend e frontend, criação e publicação de imagens Docker e deplo
                                │
                                ▼
                      ┌────────────────────┐
-                     │    AWS / EKS       │
+                     │       AWS          │
                      │                    │
-                     │ Infrastructure +   │
-                     │ Kubernetes         │
+                     │                    │
+                     │     Kubernetes     │
                      └────────────────────┘
 ```
 
 ---
 
-## Entrega — Tech Challenge Fase 2
+## Entrega — Tech Challenge Fase 2  
 
 ### Objetivos da Fase 2
 
@@ -254,7 +255,7 @@ deploy em Kubernetes e escalabilidade automática.
 
 ### Arquitetura de deploy
 
-O deploy combina GitHub Actions, Docker Hub, Terraform, AWS EKS, RDS PostgreSQL, ConfigMaps, Secrets e HPA. O HPA do
+O deploy combina GitHub Actions, Docker Hub, Terraform, ConfigMaps, Secrets e HPA. O HPA do
 backend foi aplicado manualmente em produção para a demonstração, conforme o [manifesto k8s/hpa.yaml](k8s/hpa.yaml).
 
 ```mermaid
@@ -273,7 +274,7 @@ flowchart TD
     F -->|Sim| H
 
     H --> I["Terraform Deploy<br/>init · validate · plan · apply"]
-    I --> J["AWS / EKS<br/>Infraestrutura e recursos Kubernetes"]
+    I --> J["AWS / EKS<br/>recursos Kubernetes"]
 ```
 
 Consulte a [fonte Mermaid do diagrama](docs/diagramas-arquitetura/arquitetura-deploy-fase-2.mermaid) e a [documentação
