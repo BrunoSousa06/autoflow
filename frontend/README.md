@@ -74,27 +74,11 @@ As autorizações são aplicadas por `authGuard` e `roleGuard`. Os fluxos públi
 
 ## Login por CPF/CNPJ
 
-O frontend usa a autenticação serverless para todos os perfis. A tela de login envia `cpf_cnpj` e `senha` para
-`POST <serverlessAuthUrl>/auth/login`; a URL é o output `api_gateway_invoke_url` do Terraform, sem o sufixo
-`/auth/login`. O JWT retornado é enviado automaticamente nas chamadas ao backend por `Authorization: Bearer`.
+O frontend envia `cpf_cnpj` e `senha` para `POST /auth/login` no host atual. A chamada relativa está configurada para passar pelo Kong quando esse gateway for disponibilizado; os manifests e a configuração local preparam o encaminhamento à Lambda, mas o tráfego em AWS e o contrato do plugin ainda não foram validados. O Terraform de `autoflow-lambda` também mantém a API Gateway HTTP legada.
 
-Configure `serverlessAuthUrl` em `src/environments/environment.ts` e `environment.prod.ts` antes do build. O
-`JWT_SECRET` da Lambda deve ser exatamente o mesmo usado pelo backend. A senha continua sendo a credencial secreta;
-o CPF/CNPJ substitui o e-mail apenas como identificador de login.
+As APIs de negócio usam o prefixo relativo `/api`. O JWT retornado é enviado nas chamadas ao backend por `Authorization: Bearer`. O backend e a Lambda precisam usar o mesmo `JWT_SECRET`, provisionado fora do frontend. A senha continua sendo credencial secreta; CPF/CNPJ é o identificador de login.
 
-O seed do backend disponibiliza estas contas para a avaliação local. A senha de todas é `Senha@1234`:
-
-O seed do backend disponibiliza estas contas para a avaliacao local. A senha de todas e `Senha@1234`:
-
-| CPF/CNPJ      | E-mail                   | Perfil      |
-|---------------|--------------------------|-------------|
-| `52998224725` | `admin@autoflow.com`     | `ADMIN`     |
-| `16899535009` | `atendente@autoflow.com` | `ATENDENTE` |
-| `93541134780` | `mecanico1@autoflow.com` | `MECANICO`  |
-| `15350946056` | `mecanico2@autoflow.com` | `MECANICO`  |
-| `11144477735` | `cliente@autoflow.com`   | `CLIENTE`   |
-
-Sao credenciais destinadas somente a demonstracao do trabalho de pos-graduacao; nao as use em producao. A lista completa esta no [README principal](../README.md).
+O seed disponibiliza contas de demonstração local. Consulte as migrations e a configuração local para dados de teste; não use contas ou senhas de demonstração em produção e não copie documentos pessoais para documentação pública.
 
 ## Configuração da API
 
