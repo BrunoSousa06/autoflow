@@ -1,0 +1,114 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: autoflow-reserved-paths
+  annotations:
+    konghq.com/plugins: autoflow-reserved-paths-404
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /actuator
+            pathType: Prefix
+            backend: &frontend
+              service:
+                name: autoflow-frontend-internal
+                port:
+                  number: 80
+          - path: /api/actuator
+            pathType: Prefix
+            backend: *frontend
+          - path: /v3/api-docs
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/v3/api-docs
+            pathType: Prefix
+            backend: *frontend
+          - path: /swagger-ui
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/swagger-ui
+            pathType: Prefix
+            backend: *frontend
+          - path: /swagger-ui.html
+            pathType: Exact
+            backend: *frontend
+          - path: /api/swagger-ui.html
+            pathType: Exact
+            backend: *frontend
+          - path: /swagger-resources
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/swagger-resources
+            pathType: Prefix
+            backend: *frontend
+          - path: /webjars
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/webjars
+            pathType: Prefix
+            backend: *frontend
+          - path: /metrics
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/metrics
+            pathType: Prefix
+            backend: *frontend
+          - path: /admin
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/admin
+            pathType: Prefix
+            backend: *frontend
+          - path: /kong
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/kong
+            pathType: Prefix
+            backend: *frontend
+          - path: /services
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/services
+            pathType: Prefix
+            backend: *frontend
+          - path: /routes
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/routes
+            pathType: Prefix
+            backend: *frontend
+          - path: /plugins
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/plugins
+            pathType: Prefix
+            backend: *frontend
+          - path: /consumers
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/consumers
+            pathType: Prefix
+            backend: *frontend
+          - path: /upstreams
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/upstreams
+            pathType: Prefix
+            backend: *frontend
+          - path: /certificates
+            pathType: Prefix
+            backend: *frontend
+          - path: /api/certificates
+            pathType: Prefix
+            backend: *frontend
+          - path: /status
+            pathType: Exact
+            backend: *frontend
+          - path: /api/status
+            pathType: Exact
+            backend: *frontend
+          - path: /api/auth/login
+            pathType: Exact
+            backend: *frontend

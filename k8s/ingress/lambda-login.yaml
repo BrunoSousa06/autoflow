@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: autoflow-lambda-login
+  annotations:
+    konghq.com/plugins: autoflow-lambda-login
+    konghq.com/methods: "POST"
+    konghq.com/retries: "0"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /auth/login
+            pathType: Exact
+            backend:
+              service:
+                name: autoflow-frontend-internal
+                port:
+                  number: 80

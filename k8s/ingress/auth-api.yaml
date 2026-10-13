@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: autoflow-auth-api
+  annotations:
+    konghq.com/regex-priority: "100"
+    konghq.com/rewrite: "/$1"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /~/api/(auth/(cadastro|usuarios|mecanicos)(/.*)?)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: autoflow-backend-internal
+                port:
+                  number: 80

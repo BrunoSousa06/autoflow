@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: autoflow-unknown-api
+  annotations:
+    konghq.com/plugins: autoflow-reserved-paths-404
+    konghq.com/regex-priority: "1"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /~/api(/.*)?
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: autoflow-frontend-internal
+                port:
+                  number: 80

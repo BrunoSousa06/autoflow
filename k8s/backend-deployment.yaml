@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: autoflow-backend-container
-          image: brunosousa06/autoflow-backend:latest
+          image: ${dockerhub_username}/autoflow-backend:${image_tag}
           imagePullPolicy: Always 
           resources:
             requests:

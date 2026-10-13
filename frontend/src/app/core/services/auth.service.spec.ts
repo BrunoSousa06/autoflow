@@ -3,7 +3,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from './auth.service';
-import { environment } from '../../../environments/environment';
 
 function criarTokenJwt(payload: object): string {
   const encoded = btoa(JSON.stringify(payload))
@@ -20,7 +19,6 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    environment.serverlessAuthUrl = 'https://auth.example.test/homolog';
 
     TestBed.configureTestingModule({
       providers: [
@@ -38,7 +36,6 @@ describe('AuthService', () => {
   afterEach(() => {
     httpTesting.verify();
     localStorage.clear();
-    environment.serverlessAuthUrl = '';
   });
 
   it('deve criar o servico', () => {
@@ -61,12 +58,12 @@ describe('AuthService', () => {
     expect(service.getUsuarioLogado()).toBeNull();
   });
 
-  it('login deve chamar a API Gateway com CPF/CNPJ e armazenar o token recebido', () => {
+  it('login deve chamar o endpoint same-origin do Kong com CPF/CNPJ e armazenar o token', () => {
     const token = criarTokenJwt({ sub: '52998224725', role: 'ADMIN', iat: 0, exp: 9999999999 });
 
     service.login('52998224725', 'senha123').subscribe();
 
-    const req = httpTesting.expectOne(`${environment.serverlessAuthUrl}/auth/login`);
+    const req = httpTesting.expectOne('/auth/login');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ cpf_cnpj: '52998224725', senha: 'senha123' });
     req.flush({ token });
@@ -78,7 +75,7 @@ describe('AuthService', () => {
     const token = criarTokenJwt({ sub: '12345678909', role: 'MECANICO', iat: 0, exp: 9999999999 });
 
     service.login('12345678909', 'senha').subscribe();
-    httpTesting.expectOne(`${environment.serverlessAuthUrl}/auth/login`).flush({ token });
+    httpTesting.expectOne('/auth/login').flush({ token });
 
     expect(service.isLoggedIn()).toBeTrue();
   });
@@ -88,7 +85,7 @@ describe('AuthService', () => {
 
     service.loginPorCpf('529.982.247-25', 'senha').subscribe();
 
-    const req = httpTesting.expectOne(`${environment.serverlessAuthUrl}/auth/login`);
+    const req = httpTesting.expectOne('/auth/login');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ cpf_cnpj: '529.982.247-25', senha: 'senha' });
     req.flush({ token, tokenType: 'Bearer', expiresIn: 3600 });
@@ -100,7 +97,7 @@ describe('AuthService', () => {
     const token = criarTokenJwt({ sub: '16899535009', role: 'ATENDENTE', iat: 0, exp: 9999999999 });
 
     service.login('16899535009', 'senha').subscribe();
-    httpTesting.expectOne(`${environment.serverlessAuthUrl}/auth/login`).flush({ token });
+    httpTesting.expectOne('/auth/login').flush({ token });
 
     const usuario = service.getUsuarioLogado();
     expect(usuario?.email).toBe('16899535009');
@@ -111,7 +108,7 @@ describe('AuthService', () => {
     const token = criarTokenJwt({ sub: '52998224725', role: 'ADMIN', iat: 0, exp: 9999999999 });
 
     service.login('52998224725', 'senha').subscribe();
-    httpTesting.expectOne(`${environment.serverlessAuthUrl}/auth/login`).flush({ token });
+    httpTesting.expectOne('/auth/login').flush({ token });
 
     expect(service.getRole()).toBe('ADMIN');
   });
@@ -121,7 +118,7 @@ describe('AuthService', () => {
     const navigateSpy = spyOn(router, 'navigate');
 
     service.login('52998224725', 'senha').subscribe();
-    httpTesting.expectOne(`${environment.serverlessAuthUrl}/auth/login`).flush({ token });
+    httpTesting.expectOne('/auth/login').flush({ token });
 
     service.logout();
 
@@ -135,7 +132,7 @@ describe('AuthService', () => {
     const navigateSpy = spyOn(router, 'navigate');
 
     service.login('52998224725', 'senha').subscribe();
-    httpTesting.expectOne(`${environment.serverlessAuthUrl}/auth/login`).flush({ token: tokenExpirado });
+    httpTesting.expectOne('/auth/login').flush({ token: tokenExpirado });
 
     const usuario = service.getUsuarioLogado();
     expect(usuario).toBeNull();

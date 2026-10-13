@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: autoflow-frontend-container
-          image: brunosousa06/autoflow-frontend:latest
+          image: ${dockerhub_username}/autoflow-frontend:${image_tag}
           imagePullPolicy: Always
           resources:
             requests:
@@ -27,9 +27,6 @@ spec:
               cpu: "500m"
           ports:
             - containerPort: 8080
-          envFrom:
-            - configMapRef:
-                name: frontend-config
           readinessProbe:
             httpGet:
               path: /

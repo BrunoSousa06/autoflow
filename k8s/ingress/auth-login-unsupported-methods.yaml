@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: autoflow-auth-login-unsupported-methods
+  annotations:
+    konghq.com/plugins: autoflow-reserved-paths-404
+    konghq.com/methods: "GET,PUT,PATCH,DELETE,OPTIONS,HEAD,CONNECT,TRACE"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /auth/login
+            pathType: Exact
+            backend:
+              service:
+                name: autoflow-frontend-internal
+                port:
+                  number: 80

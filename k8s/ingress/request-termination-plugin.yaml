@@ -1,0 +1,8 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: autoflow-reserved-paths-404
+plugin: request-termination
+config:
+  status_code: 404
+  message: Not Found

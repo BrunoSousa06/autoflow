@@ -1,8 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, map, tap, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 
 interface LoginResponse {
   token: string;
@@ -41,11 +40,7 @@ export class AuthService {
   }
 
   loginPorCpf(cpfCnpj: string, senha: string): Observable<void> {
-    if (!environment.serverlessAuthUrl) {
-      return throwError(() => new Error('A URL da autenticação serverless não foi configurada.'));
-    }
-
-    return this.autenticar(`${environment.serverlessAuthUrl}/auth/login`, {
+    return this.autenticar('/auth/login', {
       cpf_cnpj: cpfCnpj,
       senha,
     });
