@@ -74,7 +74,7 @@ As autorizações são aplicadas por `authGuard` e `roleGuard`. Os fluxos públi
 
 ## Login por CPF/CNPJ
 
-O frontend envia `cpf_cnpj` e `senha` para `POST /auth/login` no host atual. A chamada relativa está configurada para passar pelo Kong quando esse gateway for disponibilizado; os manifests e a configuração local preparam o encaminhamento à Lambda, mas o tráfego em AWS e o contrato do plugin ainda não foram validados. O Terraform de `autoflow-lambda` também mantém a API Gateway HTTP legada.
+O frontend envia `cpf_cnpj` e `senha` para `POST /auth/login` no host atual. Em homologação, o host é o endpoint HTTPS do Amazon API Gateway HTTP API, que invoca a Lambda nativamente. As chamadas de negócio e os assets usam a mesma origem.
 
 As APIs de negócio usam o prefixo relativo `/api`. O JWT retornado é enviado nas chamadas ao backend por `Authorization: Bearer`. O backend e a Lambda precisam usar o mesmo `JWT_SECRET`, provisionado fora do frontend. A senha continua sendo credencial secreta; CPF/CNPJ é o identificador de login.
 

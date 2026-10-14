@@ -56,6 +56,8 @@ backend/.m2
 backend.*.hcl
 *.tfplan*
 *.plan*
+__pycache__/
+*.py[cod]
 crash.log
 crash.*.log
 .terraform.tfstate.lock.info

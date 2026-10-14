@@ -110,11 +110,7 @@ exceto os arquivos Secret, que são ignorados pelo Git. É necessário ter Minik
 Docker Desktop. Para o perfil local, mantenha `k8s-local/secret.yaml` apenas na máquina e preencha-o com os valores
 locais requeridos pelo PostgreSQL e pela aplicação, sem adicioná-lo ao Git.
 
-Asserções locais de regressão das rotas e plugins Kong podem ser executadas sem acesso ao cluster:
-
-```bash
-bash ./infra/test-kong-manifests.sh
-```
+Os manifests de `k8s-local/` são para desenvolvimento local. O acesso AWS de homologação usa os serviços NodePort privados alcançáveis somente pelo ALB interno provisionado pelo API Gateway.
 
 ```bash
 cd k8s-local
@@ -133,19 +129,16 @@ O frontend fica disponível em `http://localhost:30180` e o backend em `http://l
 
 ## Terraform na AWS
 
-O código Terraform de deploy da aplicação está em [infra/](infra/). A plataforma EKS, Kong OSS/KIC, IAM e recursos
-compartilhados pertencem ao repositório [autoflow-infra](https://github.com/BrunoSousa06/autoflow-infra); os
-Deployments, Services, Ingresses e KongPlugins da aplicação continuam neste repositório.
+O código Terraform de deploy da aplicação está em [infra/](infra/). A plataforma EKS, o API Gateway HTTP, o VPC Link,
+o ALB interno, IAM e os recursos compartilhados pertencem ao repositório
+[autoflow-infra](https://github.com/BrunoSousa06/autoflow-infra). Este repositório gerencia Deployments, Services
+internos/NodePort privados e a configuração Nginx do frontend.
 
-O state do root `infra/` usa a key S3 exclusiva `application/autoflow/terraform.tfstate`. O owner ainda precisa
-confirmar a localização/ownership do state anterior e preparar migração ou importação antes de inicializar esse
-backend. O workflow exige a variável de repositório `AUTOFLOW_TF_STATE_READY=true` e verifica que o objeto remoto
-existe antes de rodar Terraform. Não execute `terraform init`, `plan` ou `apply` enquanto esse gate estiver fechado.
-
-O roteamento Kong permanece desativado por padrão. Após a plataforma Kong/KIC/CRDs estar pronta, habilite
-`KONG_INGRESS_ENABLED` e configure `KONG_LAMBDA_FUNCTION_NAME` no ambiente GitHub correspondente. O pipeline verifica
-CRD, IngressClass e disponibilidade do Kong antes de aplicar os Ingresses/KongPlugins. Veja
-[operações do Kong](docs/kong-gateway-operations.md) para a ordem e os gates.
+O state do root `infra/` usa a key S3 `application/autoflow/terraform.tfstate`. Configure o bucket e a key aprovados
+por variáveis do ambiente; o workflow confirma que o objeto remoto existe antes do Terraform. O backend exige
+`AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY`, `AWS_RDS_STATE_KEY`, `API_GATEWAY_ORIGIN` e
+`API_GATEWAY_CORS_ORIGINS`. A API de negócio e o frontend são publicados na mesma origem HTTPS do API Gateway; não há
+Ingress, plugin ou upstream Kong na arquitetura de aplicação.
 
 ## Segredos Kubernetes da aplicação
 
@@ -199,7 +192,7 @@ ou [`http://localhost:8081/v3/api-docs`](http://localhost:8081/v3/api-docs).
 
 ## Segurança
 
-O acesso às APIs de negócio é controlado por JWT e perfis (`ADMIN`, `ATENDENTE`, `MECANICO` e `CLIENTE`), com endpoints públicos e privados segregados. As rotas de login, gateways e fluxo de autorização dependem da configuração do ambiente; a presença local de manifests Kong não comprova implantação. Não são mantidos credenciais, tokens ou valores reais de ambiente neste README.
+O acesso às APIs de negócio é controlado por JWT e perfis (`ADMIN`, `ATENDENTE`, `MECANICO` e `CLIENTE`), com endpoints públicos e privados segregados. O frontend envia login ao API Gateway, que invoca a Lambda nativamente; as rotas de negócio seguem pelo VPC Link e ALB interno até o backend no EKS. Não são mantidos credenciais, tokens ou valores reais de ambiente neste README.
 
 ---
 

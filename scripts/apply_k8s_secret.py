@@ -5,6 +5,8 @@ import json
 import os
 import subprocess
 import sys
+import base64
+import binascii
 
 
 SECRET_NAME = "autoflow-secrets"
@@ -32,11 +34,39 @@ def main() -> int:
         "stringData": {key: os.environ[env_name] for key, env_name in SECRET_KEYS.items()},
     }
     payload = json.dumps(manifest, ensure_ascii=False).encode("utf-8")
-    subprocess.run(
+    applied = subprocess.run(
         ["kubectl", "apply", "--namespace", NAMESPACE, "--filename", "-"],
         input=payload,
-        check=True,
+        capture_output=True,
+        check=False,
     )
+    if applied.returncode:
+        print("Falha ao aplicar o Secret Kubernetes; detalhes omitidos para evitar vazamento.", file=sys.stderr)
+        return 1
+
+    verified = subprocess.run(
+        ["kubectl", "get", "secret", SECRET_NAME, "--namespace", NAMESPACE, "--output", "json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if verified.returncode:
+        print("Falha ao verificar o Secret Kubernetes; detalhes omitidos para evitar vazamento.", file=sys.stderr)
+        return 1
+
+    try:
+        stored = json.loads(verified.stdout).get("data", {})
+        valid = all(
+            base64.b64decode(stored[key], validate=True) == os.environ[env_name].encode("utf-8")
+            for key, env_name in SECRET_KEYS.items()
+        )
+    except (KeyError, TypeError, ValueError, binascii.Error, json.JSONDecodeError):
+        valid = False
+    if not valid:
+        print("O Secret Kubernetes nao corresponde as chaves esperadas; valores omitidos.", file=sys.stderr)
+        return 1
+
+    print("Secret Kubernetes verificado; todas as chaves esperadas estao presentes.")
     return 0
 
 

@@ -58,7 +58,7 @@ describe('AuthService', () => {
     expect(service.getUsuarioLogado()).toBeNull();
   });
 
-  it('login deve chamar o endpoint same-origin do Kong com CPF/CNPJ e armazenar o token', () => {
+  it('login deve chamar o endpoint same-origin do API Gateway com CPF/CNPJ e armazenar o token', () => {
     const token = criarTokenJwt({ sub: '52998224725', role: 'ADMIN', iat: 0, exp: 9999999999 });
 
     service.login('52998224725', 'senha123').subscribe();

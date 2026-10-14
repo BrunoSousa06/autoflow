@@ -8,16 +8,22 @@ on:
     types: [opened, synchronize, reopened]
     branches: ["develop", "main"]
 
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Aplicar o plan de homolog apos aprovacao"
+        type: boolean
+        default: false
+      allow_destructive:
+        description: "Autorizar exclusoes somente apos revisar o plan"
+        type: boolean
+        default: false
+      publish_images:
+        description: "Publicar imagens aprovadas no Docker Hub"
+        type: boolean
+        default: false
+
 jobs:
-
-  kong-manifest-tests:
-    name: Kong Manifest Regression Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Validate application Kong manifests
-        run: bash ./infra/test-kong-manifests.sh
 
   backend-test-sonar:
     name: Backend Tests & SonarQube Analysis
@@ -52,11 +58,16 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('backend/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build and analyze
+      - name: Build and test backend, incluindo integracao Flyway
+        working-directory: backend
+        run: mvn -B verify
+
+      - name: SonarQube analysis
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
+        run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=BrunoSousa06_autoflow -Dsonar.qualitygate.wait=true -Dsonar.sources=src/main/java -Dsonar.tests=src/test/java
 
       - name: Upload Backend Coverage
         uses: actions/upload-artifact@v4
@@ -145,6 +156,13 @@ jobs:
       - name: Build Frontend
         working-directory: frontend
         run: npm run build
+
+      - name: Testar Nginx, bundles e deep links do gateway
+        run: python -m unittest discover -s scripts -p "test_gateway_frontend.py" -v
+
+      - name: Testar aplicacao segura do Secret Kubernetes
+        run: python -m unittest discover -s scripts -p "test_apply_k8s_secret.py" -v
+
   snyk-scan:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
@@ -152,21 +170,20 @@ jobs:
       actions: read
       contents: read
       security-events: write
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop' && inputs.publish_images)
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@master
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
 
       - name: Install Snyk CLI
-        uses: snyk/actions/setup@master
+        uses: snyk/actions/setup@11b673cfb4b0dc0d860a1323caa199d54950dcce
 
       - name: Run Snyk Open Source Scan
-        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test --sarif-file-output=snyk.sarif
@@ -176,22 +193,50 @@ jobs:
         run: docker build -t autoflow-app:latest -f Dockerfile .
 
       - name: Run Snyk Container Scan
-        continue-on-error: true
         working-directory: backend
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk container test autoflow-app:latest --file=Dockerfile
 
-  docker-build:
-    name: Build Docker Images
+  docker-build-ci:
+    name: Build Docker Images (sem publicar)
     runs-on: ubuntu-latest
-    needs:  [backend-build, frontend-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    environment: homolog
+    needs: [backend-build, frontend-build]
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'))
 
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
+      - name: Build Backend Docker Image without push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: autoflow-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend Docker Image without push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: autoflow-frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  docker-publish:
+    name: Publicar imagens apos merge e despacho manual
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build, snyk-scan]
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop' && inputs.publish_images
+    environment: homolog
+    steps:
+      - uses: actions/checkout@v4
       - name: Docker Login
         uses: docker/login-action@v3.0.0
         with:
@@ -199,8 +244,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Build Backend Docker Image
+      - name: Publish Backend Docker Image
         uses: docker/build-push-action@v6
         with:
           context: ./backend
@@ -209,8 +253,7 @@ jobs:
           tags: ${{ vars.DOCKERHUB_USERNAME }}/autoflow-backend:${{ vars.BACKEND_IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Build Frontend Docker Image
+      - name: Publish Frontend Docker Image
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
@@ -222,27 +265,28 @@ jobs:
 
 
   deploy-aws:
-    name: Deploy AWS with Terraform
+    name: Planear e implantar homolog sob aprovacao
     runs-on: ubuntu-latest
-    needs: docker-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && vars.AUTOFLOW_TF_STATE_READY == 'true'
+    needs: docker-publish
+    if: always() && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop' && vars.AUTOFLOW_TF_STATE_READY == 'true' && inputs.deploy && ((inputs.publish_images && needs.docker-publish.result == 'success') || (!inputs.publish_images && needs.docker-publish.result == 'skipped'))
     environment: homolog
     concurrency:
       group: autoflow-application-homolog
       cancel-in-progress: false
     env:
-      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
       TF_STATE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
       TF_STATE_KEY: ${{ vars.AWS_TF_STATE_KEY }}
       TF_VAR_aws_allowed_account_ids: '["${{ vars.AWS_EXPECTED_ACCOUNT_ID }}"]'
-      TF_VAR_region_default: ${{ vars.AWS_REGION || 'us-east-1' }}
+      TF_VAR_region_default: ${{ vars.AWS_REGION }}
       TF_VAR_terraform_state_bucket: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
       TF_VAR_rds_state_key: ${{ vars.AWS_RDS_STATE_KEY }}
-      TF_VAR_enable_kong_ingress: ${{ vars.KONG_INGRESS_ENABLED == 'true' }}
-      TF_VAR_kong_lambda_function_name: ${{ vars.KONG_LAMBDA_FUNCTION_NAME }}
       TF_VAR_dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
       TF_VAR_backend_image_tag: ${{ vars.BACKEND_IMAGE_TAG }}
       TF_VAR_frontend_image_tag: ${{ vars.FRONTEND_IMAGE_TAG }}
+      TF_VAR_gateway_public_origin: ${{ vars.API_GATEWAY_ORIGIN }}
+      TF_VAR_gateway_cors_origins: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+      TF_VAR_cluster_name: ${{ vars.EKS_CLUSTER_NAME }}
 
     steps:
       - name: Checkout code
@@ -251,18 +295,42 @@ jobs:
       - name: Test AWS account identity guard
         run: python -m unittest discover -s scripts -p "test_verify_aws_account.py" -v
 
+      - name: Exigir credenciais temporarias e configuracao explicita
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+          API_GATEWAY_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
+          API_GATEWAY_CORS_ORIGINS: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$AWS_ACCESS_KEY_ID"
+          test -n "$AWS_SECRET_ACCESS_KEY"
+          test -n "$AWS_SESSION_TOKEN"
+          test -n "$AWS_REGION"
+          test -n "$AWS_EXPECTED_ACCOUNT_ID"
+          test -n "$API_GATEWAY_ORIGIN"
+          test -n "$API_GATEWAY_CORS_ORIGINS"
+          python -c 'import json,os,sys; value=json.loads(os.environ["API_GATEWAY_CORS_ORIGINS"]); sys.exit(not isinstance(value,list))'
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Verify expected AWS account
         env:
           AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
         run: python scripts/verify_aws_account.py
+
+      - name: Confirmar regiao AWS efetiva
+        shell: bash
+        run: test "$(aws ec2 describe-availability-zones --region "$AWS_REGION" --query 'AvailabilityZones[0].RegionName' --output text)" = "$AWS_REGION"
 
       - name: Confirmar bucket e state Terraform previamente configurados
         env:
@@ -273,30 +341,28 @@ jobs:
           test -n "$TF_STATE_BUCKET"
           test -n "$TF_STATE_KEY"
           test -n "$RDS_STATE_KEY"
+          test -n "$AWS_REGION"
           aws s3api head-bucket --bucket "$TF_STATE_BUCKET"
           aws s3api head-object --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" > /dev/null
+          aws s3api head-object --bucket "$TF_STATE_BUCKET" --key "$RDS_STATE_KEY" > /dev/null
 
       - name: Configure EKS access
-        run: aws eks update-kubeconfig --name eks-autoflow --region "$AWS_REGION"
+        run: aws eks update-kubeconfig --name "$TF_VAR_cluster_name" --region "$AWS_REGION"
 
-      - name: Criar ou atualizar Secret da aplicação
+      - name: EKS preflight obrigatório antes de qualquer alteração
         env:
-          AUTOFLOW_DB_USERNAME: ${{ secrets.AUTOFLOW_DB_USERNAME }}
-          AUTOFLOW_DB_PASSWORD: ${{ secrets.AUTOFLOW_DB_PASSWORD }}
-          AUTOFLOW_JWT_SECRET: ${{ secrets.AUTOFLOW_JWT_SECRET }}
-          AUTOFLOW_MAIL_PASSWORD: ${{ secrets.AUTOFLOW_MAIL_PASSWORD }}
-          AUTOFLOW_PUBLIC_TOKEN_SECRET: ${{ secrets.AUTOFLOW_PUBLIC_TOKEN_SECRET }}
-        run: python scripts/apply_k8s_secret.py
-
-      - name: Verificar Kong Gateway, KIC e CRDs
-        if: vars.KONG_INGRESS_ENABLED == 'true'
-        run: |
-          kubectl wait --for=condition=Established --timeout=180s crd/kongplugins.configuration.konghq.com
-          kubectl get ingressclass kong
-          kubectl wait --for=condition=Ready --timeout=300s pod -l app.kubernetes.io/instance=kong -n kong
+          AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+          EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+          EKS_NODEGROUP_NAME: ${{ vars.EKS_NODEGROUP_NAME }}
+          EKS_PREFLIGHT_TIMEOUT_SECONDS: ${{ vars.EKS_PREFLIGHT_TIMEOUT_SECONDS || '600' }}
+          EKS_PREFLIGHT_POLL_INTERVAL_SECONDS: ${{ vars.EKS_PREFLIGHT_POLL_INTERVAL_SECONDS || '15' }}
+        run: python scripts/eks_preflight.py
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
 
       - name: Terraform Init
         working-directory: ./infra
@@ -306,19 +372,79 @@ jobs:
         working-directory: ./infra
         run: terraform validate
 
+      - name: Terraform fmt
+        working-directory: ./infra
+        run: terraform fmt -check -recursive
+
+      - name: Verificar formatação Terraform
+        working-directory: ./infra
+        run: terraform fmt -check api-gateway.tf k8s-config.tf k8s-deployment.tf providers.tf
+
       - name: Terraform Plan
         working-directory: ./infra
-        run: terraform plan -input=false
+        run: terraform plan -input=false -out=application.tfplan
 
-      - name: Terraform Apply
+      - name: Bloquear exclusões e substituições não aprovadas
+        id: destroy-gate
         working-directory: ./infra
-        run: terraform apply -input=false -auto-approve
-  
+        env:
+          ALLOW_DESTRUCTIVE: ${{ inputs.allow_destructive }}
+        run: |
+          terraform show -json application.tfplan > application-plan.json
+          python - <<'PY'
+          import json, os, sys
+          plan = json.load(open("application-plan.json", encoding="utf-8"))
+          changes = [item["address"] for item in plan.get("resource_changes", []) if "delete" in item["change"]["actions"]]
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"has_deletions={str(bool(changes)).lower()}\n")
+          print("Resources with delete/replacement actions:", changes)
+          sys.exit(bool(changes) and os.environ["ALLOW_DESTRUCTIVE"] != "true")
+          PY
+
+      - name: Exigir protecao de aprovacao configurada no environment
+        if: inputs.deploy && vars.TERRAFORM_APPLY_APPROVAL_CONFIGURED != 'true'
+        run: |
+          echo "Configure required reviewers no environment homolog e defina TERRAFORM_APPLY_APPROVAL_CONFIGURED=true." >&2
+          exit 1
+
+      - name: Aplicar plan apos aprovacao manual efetiva
+        if: inputs.deploy && vars.TERRAFORM_APPLY_APPROVAL_CONFIGURED == 'true' && (steps.destroy-gate.outputs.has_deletions != 'true' || inputs.allow_destructive)
+        working-directory: ./infra
+        run: terraform apply -input=false application.tfplan
+
+      - name: Criar ou atualizar Secret Kubernetes com verificacao
+        if: inputs.deploy
+        env:
+          AUTOFLOW_DB_USERNAME: ${{ secrets.AUTOFLOW_DB_USERNAME }}
+          AUTOFLOW_DB_PASSWORD: ${{ secrets.AUTOFLOW_DB_PASSWORD }}
+          AUTOFLOW_JWT_SECRET: ${{ secrets.AUTOFLOW_JWT_SECRET }}
+          AUTOFLOW_MAIL_PASSWORD: ${{ secrets.AUTOFLOW_MAIL_PASSWORD }}
+          AUTOFLOW_PUBLIC_TOKEN_SECRET: ${{ secrets.AUTOFLOW_PUBLIC_TOKEN_SECRET }}
+        run: python scripts/apply_k8s_secret.py
+
+      - name: Aguardar rollout do backend
+        if: inputs.deploy
+        run: kubectl rollout status deployment/autoflow-backend -n default --timeout="${{ vars.K8S_ROLLOUT_TIMEOUT || '300s' }}"
+
+      - name: Aguardar rollout do frontend
+        if: inputs.deploy
+        run: kubectl rollout status deployment/autoflow-frontend -n default --timeout="${{ vars.K8S_ROLLOUT_TIMEOUT || '300s' }}"
+
+      - name: Homologar HTTP API e frontend
+        if: inputs.deploy
+        env:
+          AUTOFLOW_TEST_CPF_CNPJ: ${{ secrets.AUTOFLOW_TEST_CPF_CNPJ }}
+          AUTOFLOW_TEST_PASSWORD: ${{ secrets.AUTOFLOW_TEST_PASSWORD }}
+        run: python scripts/smoke_api_gateway.py "$TF_VAR_gateway_public_origin" --require-authenticated
+
   create-pr:
     name: Create PR to main
     needs: deploy-aws
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout repository
