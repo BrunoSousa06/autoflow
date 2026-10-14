@@ -1,5 +1,7 @@
 # Operação de CI/CD AWS
 
+O inventário por nome de secrets, variables, inputs Terraform e configuração da aplicação está no [catálogo deste repositório](../docs/variables-and-secrets.md), com [histórico](../docs/variables-changelog.md). Esta página permanece como referência operacional dos fluxos.
+
 ## Fluxo de branches e ambientes
 
 CI executa automaticamente em Pull Requests e pushes para `develop` e `main`, incluindo testes, builds, análise de segurança e validações estáticas. Esses eventos não publicam imagens, não executam Terraform Apply/Destroy e não fazem deploy. Planos que acessam AWS e podem conter dados sensíveis permanecem em jobs de `workflow_dispatch`.

@@ -108,7 +108,7 @@ Os detalhes de validade, auditoria e efeitos na OS estão em [
 
 ## Contas do seed
 
-Para a demonstracao local da pos-graduacao, o seed cria contas com a senha `Senha@1234`:
+Para a demonstracao local da pos-graduacao, o seed cria contas com uma senha definida nas migrations. Consulte a configuracao local aprovada para obter credenciais de teste; nao mantenha senhas literais nesta documentacao:
 
 | CPF/CNPJ      | E-mail                   | Perfil      |
 |---------------|--------------------------|-------------|

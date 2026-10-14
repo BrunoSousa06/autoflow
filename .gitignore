@@ -45,6 +45,8 @@ backend/.m2
 !docs/terraform.md
 
 /docs/*
+!/docs/variables-and-secrets.md
+!/docs/variables-changelog.md
 !/docs/validacao-autenticacao-serverless.md
 !/docs/manual-configuracao-aws-ci-cd.md
 !/docs/kong-gateway-operations.md

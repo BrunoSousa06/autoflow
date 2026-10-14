@@ -140,6 +140,8 @@ por variáveis do ambiente; o workflow confirma que o objeto remoto existe antes
 `API_GATEWAY_CORS_ORIGINS`. A API de negócio e o frontend são publicados na mesma origem HTTPS do API Gateway; não há
 Ingress, plugin ou upstream Kong na arquitetura de aplicação.
 
+Para a configuração por nome de GitHub Actions, Terraform, runtime e Kubernetes, consulte o [catálogo de variables e secrets](docs/variables-and-secrets.md) e o [histórico](docs/variables-changelog.md). Esta seção descreve a operação do Secret Kubernetes; a documentação operacional do pipeline permanece em [CI-CD-AWS.md](.github/CI-CD-AWS.md).
+
 ## Segredos Kubernetes da aplicação
 
 O Secret Kubernetes chama-se `autoflow-secrets`, no namespace `default`, e é consumido somente pelo Deployment
@@ -152,8 +154,10 @@ Para homologação, a fonte de verdade dos cinco valores é o GitHub Environment
 `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD` e
 `AUTOFLOW_PUBLIC_TOKEN_SECRET`. O workflow injeta-os apenas no processo que aplica o Secret, usando stdin para
 `kubectl`; os valores não entram em argumentos, logs ou artefatos. O Secret é aplicado antes do Terraform, que então
-cria/atualiza os Deployments. O deploy continua condicionado ao push em `develop`, à aprovação/configuração do
-Environment e a `AUTOFLOW_TF_STATE_READY=true`.
+cria/atualiza os Deployments. O CD é iniciado somente por `workflow_dispatch` em `develop`, direcionado ao Environment
+`homolog`, e depende de `AUTOFLOW_TF_STATE_READY=true`, inputs explícitos, validação de state/conta e revisão do plan.
+O guard de aprovação do workflow não comprova Required reviewers efetivamente configurados no GitHub; essa configuração
+e qualquer execução pelo GitHub Actions não foram verificadas. Não há produção implantada declarada.
 
 Para aplicar localmente em um contexto Kubernetes autorizado, forneça essas cinco variáveis no ambiente do processo
 a partir de um gerenciador seguro (sem incluí-las em comandos registrados ou arquivos versionados) e execute:
@@ -202,19 +206,19 @@ Testes automatizados e análises de qualidade e segurança usam JUnit, SonarQube
 
 ## Fluxo do CI/CD
 
-O [workflow do GitHub Actions](.github/workflows/pipeline.yml) é acionado em Pull Requests e pushes para `develop` e `main`. O deploy Terraform está restrito a push em `develop` e depende de `AUTOFLOW_TF_STATE_READY=true`. A definição do workflow não comprova que tenha sido executado nem que recursos tenham sido implantados.
+O [workflow do GitHub Actions](.github/workflows/pipeline.yml) executa CI em Pull Requests e pushes para `develop` e `main`. O CD só é iniciado por `workflow_dispatch` em `develop`, com Environment `homolog`; publicação de imagens e deploy exigem inputs explícitos, gates de segurança, validação do state/conta e Terraform Plan. O Apply depende de autorização explícita, revisão de destruições e do guard `TERRAFORM_APPLY_APPROVAL_CONFIGURED`. Não há evidência neste checkout sobre Required reviewers efetivamente configurados no GitHub, nem sobre execução do workflow. Veja também [Operação de CI/CD](.github/CI-CD-AWS.md).
 
 ```mermaid
 flowchart TD
-  A[Pull Request ou push em develop/main] --> B[Testes e análise do backend]
-  A --> C[Testes e build do frontend]
-  A --> D[Build do backend]
-  A --> E{Push em develop?}
-  E -->|Sim| F[Análise de segurança e publicação de imagens]
-  F --> G{AUTOFLOW_TF_STATE_READY = true?}
-  G -->|Sim| H[Terraform da aplicação]
-  G -->|Não| I[Deploy não executado]
-  H --> J[AWS / EKS conforme configuração e autorização]
+  A[PR ou push em develop/main] --> B[CI: testes, builds e análises]
+  A --> E{workflow_dispatch em develop?}
+  E -->|Sim| F[Jobs de homolog com Environment homolog]
+  F --> G[Plan Terraform e gates]
+  G --> H{Apply solicitado e guards satisfeitos?}
+  H -->|Sim| I[Apply após revisão/aprovação aplicável]
+  H -->|Não| J[Somente validação/plan]
+  I --> K[AWS homolog; execução não comprovada pelo workflow versionado]
+  E -->|Não| L[Sem CD]
 ```
 
 ---
