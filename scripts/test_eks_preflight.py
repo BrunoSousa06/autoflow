@@ -78,13 +78,26 @@ class PreflightTests(unittest.TestCase):
             with self.assertRaisesRegex(eks_preflight.PreflightError, "Contexto kubectl incorreto"):
                 eks_preflight.main()
 
-    def test_pipeline_blocks_every_mutation_behind_preflight(self):
+    def test_pipeline_blocks_terraform_and_kubectl_on_hosted_runner(self):
         from pathlib import Path
         workflow = Path(__file__).parents[1] / ".github" / "workflows" / "pipeline.yml"
         content = workflow.read_text(encoding="utf-8")
-        preflight = content.index("run: python scripts/eks_preflight.py")
-        mutations = [content.index("run: python scripts/apply_k8s_secret.py"), content.index("run: terraform init"), content.index("run: terraform apply")]
-        self.assertTrue(all(preflight < mutation for mutation in mutations))
+        blocked_job = content.split("  deployment-blocked-private-eks:", 1)[1]
+        self.assertIn("runs-on: ubuntu-latest", blocked_job)
+        self.assertIn("exit 1", blocked_job)
+        self.assertNotRegex(content, r"(?m)^\s+run:.*terraform\s+(?:plan|apply)")
+        self.assertNotRegex(content, r"(?m)^\s+run:.*kubectl\s")
+
+    def test_images_are_published_only_from_develop_push_with_commit_sha(self):
+        from pathlib import Path
+        workflow = Path(__file__).parents[1] / ".github" / "workflows" / "pipeline.yml"
+        content = workflow.read_text(encoding="utf-8")
+        publish = content.split("  docker-publish:", 1)[1].split("  deployment-blocked-private-eks:", 1)[0]
+        self.assertIn("github.event_name == 'push'", publish)
+        self.assertIn("refs/heads/develop", publish)
+        self.assertIn("${{ github.sha }}", publish)
+        self.assertNotIn("pull_request", publish)
+        self.assertNotIn(":latest", content)
 
 
 if __name__ == "__main__":

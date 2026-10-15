@@ -4,9 +4,15 @@ O inventário por nome de secrets, variables, inputs Terraform e configuração 
 
 ## Fluxo de branches e ambientes
 
-CI executa automaticamente em Pull Requests e pushes para `develop` e `main`, incluindo testes, builds, análise de segurança e validações estáticas. Esses eventos não publicam imagens, não executam Terraform Apply/Destroy e não fazem deploy. Planos que acessam AWS e podem conter dados sensíveis permanecem em jobs de `workflow_dispatch`.
+CI executa em Pull Requests e pushes para `develop` e `main`, incluindo testes, builds, análise de segurança e validações estáticas. Pull Requests não publicam imagens. Push aprovado em `develop` publica backend e frontend no Docker Hub com a tag imutável do SHA do commit. O workflow encerra intencionalmente o caminho de deploy em um guard bloqueante antes de qualquer acesso Kubernetes/Terraform.
 
-O CD atualmente habilitado é somente `develop` → `homolog`, disparado por `workflow_dispatch`. Os jobs de homolog usam esse GitHub Environment, variáveis/secrets de homolog e states identificados pelas keys configuradas para a homologação. O Apply exige ainda os guards de conta, state e destruições.
+O deploy de homolog está bloqueado. O endpoint Kubernetes do EKS `eks-autoflow` não tem conectividade validada a partir de `ubuntu-latest`; `aws eks update-kubeconfig` configura autenticação, mas não cria rota de rede. O provider Terraform `kubernetes` e o provider `kubectl` consultam a API durante operações Terraform, inclusive no Plan. Não executar Plan/Apply ou `kubectl` em runner hospedado, nem abrir o endpoint a `0.0.0.0/0`.
+
+### Arquitetura de acesso privado proposta
+
+Usar um runner GitHub Actions efêmero em sub-rede privada da VPC já existente, criado por uma solução de runner-controller/scale-set com ciclo de vida por job. A instância/pod deve ter saída HTTPS controlada para GitHub, Docker Hub e endpoints AWS necessários (preferencialmente via VPC endpoints/NAT já aprovado), sem IP público e sem exposição do endpoint EKS. Conceder IAM mínimo via role associada ao runner (sem access keys estáticas), com `eks:DescribeCluster`, acesso ao state S3/lock e permissões AWS requeridas pelo root. O mapeamento de acesso EKS/RBAC deve ser explícito e limitado aos recursos Kubernetes geridos pela aplicação. Validar em sessão de teste: sub-rede/VPC e DNS, conectividade TCP/TLS ao endpoint privado EKS, identidade AWS, `kubectl get nodes`, leitura dos states, `terraform init/validate/plan` sem apply e limpeza do runner após o job.
+
+Essa solução exige recursos/configuração no repositório de infraestrutura e autorização do owner da VPC; não está implementada nem validada neste repositório. SSM em instância existente não é adotado: não há instância/SSM documentados e um comando SSM remoto não fornece de forma segura/operável o ciclo de artifacts/plan/aprovação e execução idempotente necessário. Não habilitar apply até existir runner privado validado. Após isso, planejar no push de `develop`, guardar plan binário fora de logs/artifacts públicos com acesso restrito e hash SHA-256, revalidar hash no job aprovado pelo Environment `homolog`, e aplicar somente o mesmo plan após required reviewers efetivos. Plano Terraform pode conter dados sensíveis; proteger retenção, acesso e descarte.
 
 **Produção permanece desabilitada.** Os roots atuais não demonstram isolamento completo de produção: há nomes fixos de recursos, um único conjunto de keys/variáveis de RDS e workloads Kubernetes com nomes/namespace compartilhados. Não habilitar despacho em `main` nem criar o Environment `production` para esses workflows até concluir o plano de segregação abaixo, implementar roots/estados independentes e validar os planos sem aplicar.
 
@@ -36,13 +42,10 @@ Configurar por repositório e Environment `homolog`; criar segredos independente
 
 | Secret | Uso |
 | --- | --- |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Credenciais temporarias da mesma sessao Learner Lab |
-| `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET` | Terraform do RDS/Lambda |
-| `DOCKERHUB_PASSWORD` | Publicacao autenticada das imagens |
-| `SONAR_TOKEN`, `SNYK_TOKEN` | Analise de qualidade e seguranca |
-| `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD`, `AUTOFLOW_PUBLIC_TOKEN_SECRET` | Secret do workload Kubernetes |
-| `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Smoke autenticado com usuario sintetico de homologacao |
-| `AUTOFLOW_READ_TOKEN` | Leitura do repositório da aplicacao no teste de contrato do gateway, se necessaria |
+| `DOCKERHUB_PASSWORD` | Repository secret usado na publicação automática de imagens em push `develop` |
+| `SONAR_TOKEN`, `SNYK_TOKEN` | Análises existentes de qualidade e segurança |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Não consumidos pelo workflow atualmente bloqueado; credenciais temporárias Learner Lab podem ser necessárias apenas na transição enquanto runner privado/IAM role não for autorizado. Nunca usar após migração para role |
+| `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD`, `AUTOFLOW_PUBLIC_TOKEN_SECRET`, `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Segredos runtime/smoke, necessários somente ao habilitar o fluxo privado e pós-deploy |
 
 ## GitHub Variables
 
@@ -50,20 +53,14 @@ Configurar por Environment; não depender de defaults para conta, região ou sta
 
 | Variable | Uso |
 | --- | --- |
-| `AWS_REGION`, `AWS_EXPECTED_ACCOUNT_ID` | Regiao explicita e conta AWS esperada |
-| `AWS_TERRAFORM_STATE_BUCKET` | Bucket S3 preexistente |
-| `AWS_TF_STATE_KEY_INFRA`, `AWS_TF_STATE_KEY`, `AWS_INFRA_STATE_KEY`, `AWS_RDS_STATE_KEY`, `AWS_TF_STATE_KEY_GATEWAY` | Keys exclusivas de cada state |
-| `AWS_EKS_CLUSTER_ROLE_ARN`, `AWS_EKS_NODE_ROLE_ARN`, `AWS_EKS_OPERATOR_ACCESS_ROLE_ARN` | Roles EKS do ambiente |
-| `AWS_LAMBDA_EXECUTION_ROLE_ARN`, `AWS_LAMBDA_FUNCTION_NAME` | Role e funcao Lambda |
-| `EKS_CLUSTER_NAME`, `EKS_NODEGROUP_NAME` | Cluster e node group |
-| `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Origem HTTPS e CORS JSON explicitos por ambiente; usar `[]` para same-origin ou lista exata de origens |
-| `DOCKERHUB_USERNAME`, `BACKEND_IMAGE_TAG`, `FRONTEND_IMAGE_TAG` | Namespace e tags aprovadas das imagens |
-| `AUTOFLOW_TF_STATE_READY` | Confirma bootstrap do state da aplicacao |
-| `AUTOFLOW_REPOSITORY`, `AUTOFLOW_CONTRACT_REF` | Repositorio/ref para o teste de contrato do gateway |
-| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | `true` somente depois de configurar revisores obrigatorios no environment `homolog` |
+| `DOCKERHUB_USERNAME` | Namespace Docker Hub, obrigatório para publicação SHA |
+| `AWS_REGION`, `AWS_EXPECTED_ACCOUNT_ID` | Futuro job privado; `us-east-1` e conta Learner Lab explicitamente conferidos |
+| `AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY`, `AWS_RDS_STATE_KEY` | Futuro job privado; usar bucket informado e keys `application/autoflow/terraform.tfstate` e `rds/terraform.tfstate` |
+| `EKS_CLUSTER_NAME`, `EKS_NODEGROUP_NAME`, `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Futuro preflight e validação de homolog |
+| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | Guard adicional futuro; não substitui required reviewers reais do Environment |
 
 ## AWS Academy Learner Lab
 
-Nao presumir OIDC ou access keys permanentes. Atualizar manualmente os tres Secrets AWS, juntos, a partir da sessao temporaria Learner Lab antes de cada despacho. O GitHub Actions nao renova as credenciais; se expirarem, iniciar nova sessao e gerar novo plan. Nao registrar credenciais, valores de Secret Kubernetes ou planos Terraform em logs/artifacts.
+Não presumir OIDC ou access keys permanentes no Learner Lab. O workflow atual não chama AWS nem executa Terraform porque a conectividade privada não está disponível. Antes de habilitar CD, priorizar role IAM no runner privado; caso o modelo Learner Lab obrigue credenciais temporárias, atualizar os três valores juntos antes do Plan. Não registrar credenciais, valores de Secret Kubernetes ou planos Terraform em logs/artifacts. Hash SHA-256 sozinho não protege confidencialidade: o plano precisa de armazenamento e acesso restritos.
 
 O updater do Secret Kubernetes envia os valores por stdin, captura a saida de `kubectl`, relê o objeto e compara chaves/valores em memoria sem imprimir os valores.

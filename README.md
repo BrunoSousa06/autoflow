@@ -150,14 +150,10 @@ O Secret Kubernetes chama-se `autoflow-secrets`, no namespace `default`, e é co
 consome esse Secret. Os manifests `k8s/secret.yaml` e `k8s-local/secret.yaml` ficam ignorados pelo Git; não os force
 para o repositório.
 
-Para homologação, a fonte de verdade dos cinco valores é o GitHub Environment `homolog`, nos Secrets obrigatórios
-`AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD` e
-`AUTOFLOW_PUBLIC_TOKEN_SECRET`. O workflow injeta-os apenas no processo que aplica o Secret, usando stdin para
-`kubectl`; os valores não entram em argumentos, logs ou artefatos. O Secret é aplicado antes do Terraform, que então
-cria/atualiza os Deployments. O CD é iniciado somente por `workflow_dispatch` em `develop`, direcionado ao Environment
-`homolog`, e depende de `AUTOFLOW_TF_STATE_READY=true`, inputs explícitos, validação de state/conta e revisão do plan.
-O guard de aprovação do workflow não comprova Required reviewers efetivamente configurados no GitHub; essa configuração
-e qualquer execução pelo GitHub Actions não foram verificadas. Não há produção implantada declarada.
+Os Secrets `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD` e
+`AUTOFLOW_PUBLIC_TOKEN_SECRET` são os valores planejados para atualizar o Secret do workload quando o deploy privado
+for habilitado. O workflow atual não os consome: deployment e `kubectl` estão bloqueados porque o runner hospedado não
+tem conectividade autorizada/validada à API Kubernetes do EKS. Não há produção implantada declarada.
 
 Para aplicar localmente em um contexto Kubernetes autorizado, forneça essas cinco variáveis no ambiente do processo
 a partir de um gerenciador seguro (sem incluí-las em comandos registrados ou arquivos versionados) e execute:
@@ -206,19 +202,16 @@ Testes automatizados e análises de qualidade e segurança usam JUnit, SonarQube
 
 ## Fluxo do CI/CD
 
-O [workflow do GitHub Actions](.github/workflows/pipeline.yml) executa CI em Pull Requests e pushes para `develop` e `main`. O CD só é iniciado por `workflow_dispatch` em `develop`, com Environment `homolog`; publicação de imagens e deploy exigem inputs explícitos, gates de segurança, validação do state/conta e Terraform Plan. O Apply depende de autorização explícita, revisão de destruições e do guard `TERRAFORM_APPLY_APPROVAL_CONFIGURED`. Não há evidência neste checkout sobre Required reviewers efetivamente configurados no GitHub, nem sobre execução do workflow. Veja também [Operação de CI/CD](.github/CI-CD-AWS.md).
+O [workflow do GitHub Actions](.github/workflows/pipeline.yml) executa CI em Pull Requests e pushes para `develop` e `main`; apenas push em `develop` publica as imagens usando o SHA do commit. O deployment está bloqueado antes de Terraform/Kubernetes até ser provisionado e validado runner efêmero dentro da VPC. `update-kubeconfig` não fornece conectividade de rede. Veja [Operação de CI/CD](.github/CI-CD-AWS.md) para arquitetura proposta e critérios de habilitação.
 
 ```mermaid
 flowchart TD
-  A[PR ou push em develop/main] --> B[CI: testes, builds e análises]
-  A --> E{workflow_dispatch em develop?}
-  E -->|Sim| F[Jobs de homolog com Environment homolog]
-  F --> G[Plan Terraform e gates]
-  G --> H{Apply solicitado e guards satisfeitos?}
-  H -->|Sim| I[Apply após revisão/aprovação aplicável]
-  H -->|Não| J[Somente validação/plan]
-  I --> K[AWS homolog; execução não comprovada pelo workflow versionado]
-  E -->|Não| L[Sem CD]
+  A[PR ou push em develop/main] --> B[CI: testes, builds, análises e Terraform estático]
+  A --> C{Push em develop?}
+  C -->|Sim| D[Publicação Docker Hub com tags SHA]
+  D --> E[Guard bloqueia Terraform e kubectl]
+  C -->|Não| F[Sem publicação/deploy]
+  E --> G[Habilitar somente após runner privado validado]
 ```
 
 ---

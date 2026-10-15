@@ -1,10 +1,10 @@
 # Variables e secrets
 
-Catálogo observado no código e configuração deste repositório. O único ambiente de deploy implementado nos workflows é `homolog`; produção é planejada para outra branch e não integra este catálogo de deploy.
+Catálogo observado no código e configuração deste repositório. A publicação de imagens ocorre em push para `develop`; o deploy permanece bloqueado até haver runner privado com acesso validado ao EKS. Produção não integra este catálogo.
 
 ## GitHub Actions
 
-Os jobs CI de push/PR não requerem credenciais. `SONAR_TOKEN` e `SNYK_TOKEN` são usados pelos respectivos scans condicionais. Os jobs de CD declaram `environment: homolog`; cadastre seus valores como Environment secrets/variables. O workflow não comprova que o Environment ou suas proteções existam no GitHub.
+Os jobs de PR não publicam imagens. Push em `develop` requer acesso ao Docker Hub para publicar tags SHA. `SONAR_TOKEN` e `SNYK_TOKEN` são usados pelos scans. Nenhum secret AWS ou de runtime é consumido no momento, pois o deployment está bloqueado antes do acesso à AWS/Kubernetes.
 
 ### Secrets
 
@@ -12,7 +12,7 @@ Os jobs CI de push/PR não requerem credenciais. `SONAR_TOKEN` e `SNYK_TOKEN` s�
 |---|---|---|---|---|---|
 | `SONAR_TOKEN` | Secret; autenticação SonarQube | GitHub Repository secret; token emitido pelo SonarQube | CI condicional | Não aplicável | `.github/workflows/pipeline.yml`; step não roda em PR de fork, mas quando roda sem token a análise pode falhar. |
 | `SNYK_TOKEN` | Secret; autenticação Snyk | GitHub Repository secret; token Snyk | CI condicional | Não aplicável | `pipeline.yml`; scan em push `develop` ou dispatch com `publish_images=true`; sem valor, scan falha. |
-| `DOCKERHUB_PASSWORD` | Secret; autenticação para publicar imagem | Environment `homolog`; token Docker Hub de publicação | CD | Não aplicável | `pipeline.yml`; obrigatório se `publish_images=true`; sem default. |
+| `DOCKERHUB_PASSWORD` | Secret; autenticação para publicar imagem | GitHub Repository secret; token Docker Hub de publicação | Push `develop` | Não aplicável | `pipeline.yml`; obrigatório no job de publicação. |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Secrets; credenciais temporárias AWS da mesma sessão | Environment `homolog`; sessão AWS Academy Learner Lab | CD | Não aplicável | `pipeline.yml`; obrigatórios nos jobs AWS; sem defaults. Renovar juntos para cada despacho conforme validade da sessão. |
 | `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD` | Secrets; credenciais de banco do Secret Kubernetes | Environment `homolog`; credenciais do banco de homolog | CD | Não aplicável | `pipeline.yml` → `scripts/apply_k8s_secret.py`; requeridos no deploy; sem defaults. |
 | `AUTOFLOW_JWT_SECRET` | Secret; assinatura JWT da aplicação | Environment `homolog`; segredo compatível com autenticação da aplicação | CD | Não aplicável | Mesmo workflow/script; requerido no deploy; sem default. |
@@ -29,7 +29,7 @@ Os jobs CI de push/PR não requerem credenciais. `SONAR_TOKEN` e `SNYK_TOKEN` s�
 | `AWS_EXPECTED_ACCOUNT_ID` | Variable; conta permitida pelo guard | Environment `homolog`; ID da conta alvo | CD | `123456789012` | Workflow/script guard; obrigatória, sem default. |
 | `AWS_TERRAFORM_STATE_BUCKET` | Variable; bucket S3 preexistente | Environment `homolog`; bucket aprovado | CD | `autoflow-tfstate-homolog-exemplo` | Workflow/Terraform; obrigatória, sem default. |
 | `AWS_TF_STATE_KEY`, `AWS_RDS_STATE_KEY` | Variables; states de aplicação e RDS | Environment `homolog`; keys existentes | CD | `homolog/app/terraform.tfstate` | Workflow/Terraform; obrigatórias, sem default. |
-| `DOCKERHUB_USERNAME`, `BACKEND_IMAGE_TAG`, `FRONTEND_IMAGE_TAG` | Variables; namespace e tags publicadas | Environment `homolog`; namespace/tag aprovada | CD; namespace também para publish | `usuario-exemplo`, `homolog-2026-10-14` | Workflow e Terraform; sem defaults. |
+| `DOCKERHUB_USERNAME` | Variable; namespace Docker Hub | GitHub Repository variable | Push `develop` | `usuario-exemplo` | Namespace das imagens; sem default. Tags são sempre `${{ github.sha }}`. |
 | `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Variables; origem e CORS do gateway | Environment `homolog`; URL e lista JSON exatas | CD | `https://api.example.invalid`, `[]` | Workflow/Terraform/smoke; obrigatórias, sem defaults; CORS deve ser array JSON. |
 | `EKS_CLUSTER_NAME`, `EKS_NODEGROUP_NAME` | Variables; identificação e preflight do EKS | Environment `homolog`; nomes reais do ambiente | CD | `autoflow-homolog`, `autoflow-nodes` | Workflow; sem defaults. |
 | `AUTOFLOW_TF_STATE_READY` | Variable; gate de bootstrap do state | Environment `homolog`; definir `true` após confirmação operacional | CD | `true` | Condição do job; ausência/valor diferente impede deploy. |
@@ -63,4 +63,6 @@ Os inputs são passados por `TF_VAR_*` no processo Terraform, não são GitHub V
 
 **Divergências relevantes:** GitHub `AUTOFLOW_DB_USERNAME/PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD` e `AUTOFLOW_PUBLIC_TOKEN_SECRET` são nomes de transporte; chaves reais do Secret Kubernetes usam `SPRING_DATASOURCE_USERNAME/PASSWORD`, `JWT_SECRET`, `MAIL_PASSWORD`, `APP_PUBLIC_TOKEN_SECRET`. Não confundir `AWS_TF_STATE_KEY` da aplicação com keys de outros roots.
 
-**Fontes:** `.github/workflows/pipeline.yml`, `.github/workflows/pr-automatico.yaml`, `.github/CI-CD-AWS.md`, `infra/vars.tf`, `application.properties`, `docker-compose.yml`, `k8s/` e `scripts/apply_k8s_secret.py`.
+**Observação operacional:** AWS e Secrets de runtime listados acima são configuração do futuro fluxo privado, não requisitos do workflow atual. A documentação operacional em [.github/CI-CD-AWS.md](../.github/CI-CD-AWS.md) descreve os bloqueios e os passos necessários antes de habilitar Terraform.
+
+**Fontes:** `.github/workflows/pipeline.yml`, `.github/CI-CD-AWS.md`, `infra/vars.tf`, `application.properties`, `docker-compose.yml`, `k8s/` e `scripts/apply_k8s_secret.py`.
