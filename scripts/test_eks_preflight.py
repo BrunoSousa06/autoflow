@@ -85,7 +85,7 @@ class PreflightTests(unittest.TestCase):
         plan = content.split("  deploy-plan:", 1)[1].split("  deploy-apply:", 1)[0]
         apply = content.split("  deploy-apply:", 1)[1]
         self.assertIn("runs-on: ubuntu-latest", plan)
-        self.assertIn("environment: homolog-plan", plan)
+        self.assertNotIn("environment:", plan)
         self.assertIn("github.event_name == 'push'", plan)
         self.assertIn("EKS_LEASE_KEY: ci/eks-endpoint-lease.json", plan)
         self.assertIn("eks_endpoint_access.py authorize", plan)
@@ -97,6 +97,7 @@ class PreflightTests(unittest.TestCase):
         self.assertIn("plan_sha256", plan)
         self.assertIn("runs-on: ubuntu-latest", apply)
         self.assertIn("environment: homolog", apply)
+        self.assertIn("select(.type == \"required_reviewers\")", apply)
         self.assertIn("github.event_name == 'push'", apply)
         self.assertIn("actions/download-artifact@v4", apply)
         self.assertIn("sha256sum --check --status", apply)

@@ -10,11 +10,11 @@ O endpoint EKS `eks-autoflow` tem acesso público e privado habilitados. Cada jo
 
 ### Autorização temporária dos runners hospedados pelo GitHub
 
-Plan e Apply usam `ubuntu-latest`; não dependem de EC2 self-hosted, GitHub App, PAT ou Secrets Manager de runner. A pipeline usa a role/sessão AWS já configurada nos Environments e precisa das permissões para atualizar o endpoint EKS, consultar status da atualização e ler/escrever/remover o lease no prefixo S3 configurado. Consulte [o guia](../../autoflow-infra/docs/github-runner.md) para detalhes do mecanismo.
+Plan e Apply usam `ubuntu-latest`; não dependem de EC2 self-hosted, GitHub App, PAT ou Secrets Manager de runner. Ambos consomem a mesma sessão AWS definida em Repository Secrets. A role precisa das permissões para atualizar o endpoint EKS, consultar status da atualização e ler/escrever/remover o lease no prefixo S3 configurado. Consulte [o guia](../../autoflow-infra/docs/github-runner.md) para detalhes do mecanismo.
 
-O código da pipeline está implementado localmente, mas não foi executado contra AWS/GitHub nesta alteração. `homolog-plan` gera `infra.tfplan`, verifica exclusões/substituições e envia o arquivo criptografado como artifact da execução com retenção de um dia. O artifact contém ciphertext e metadados; `TF_PLAN_ENCRYPTION_KEY` (mínimo de 32 caracteres aleatórios) é secret e não integra o artifact. Hashes e metadados vinculam o plan ao commit, Terraform, providers, backend e configuração.
+O Plan roda sem Environment e usa Repository Secrets/Variables. Ele gera `infra.tfplan`, verifica exclusões/substituições e publica o arquivo criptografado como artifact da execução com retenção de um dia. O artifact contém ciphertext e metadados; `TF_PLAN_ENCRYPTION_KEY` (mínimo de 32 caracteres aleatórios) é Repository Secret e não integra o artifact. Hashes e metadados vinculam o plan ao commit, Terraform, providers, backend e configuração.
 
-O job `homolog` exige Required reviewers efetivos e baixa o artifact da mesma execução. Confere hashes, commit, versão Terraform, lockfile, fingerprint de `TF_VAR_*` e backend; reaplica guards destrutivos e consome exatamente o `.tfplan` baixado, sem gerar novo plan. O Environment `homolog-plan` precisa de branch `develop`, credenciais AWS e chave de criptografia, sem required reviewers. `homolog` precisa de branch `develop`, reviewers reais, credenciais, mesma chave e secrets Kubernetes. A pipeline consulta a API do GitHub para confirmar reviewers; `TERRAFORM_APPLY_APPROVAL_CONFIGURED=true` é um guard adicional.
+Somente o job Apply usa o Environment `homolog`, que exige Required reviewers efetivos. Ele baixa o artifact da mesma execução, confere hashes, commit, versão Terraform, lockfile, fingerprint de `TF_VAR_*` e backend; reaplica guards destrutivos e consome exatamente o `.tfplan` baixado, sem gerar outro plan. Configure credenciais AWS, chave de criptografia, variáveis Terraform e secrets Kubernetes como Repository Secrets/Variables. Não duplique esses valores no Environment `homolog`: mantenha nele a proteção Required reviewers, de modo que Plan e Apply consumam os mesmos valores de repositório. A pipeline consulta a API do GitHub para confirmar reviewers; `TERRAFORM_APPLY_APPROVAL_CONFIGURED=true` é um guard adicional.
 
 **Produção permanece desabilitada.** Os roots atuais não demonstram isolamento completo de produção: há nomes fixos de recursos, um único conjunto de keys/variáveis de RDS e workloads Kubernetes com nomes/namespace compartilhados. Não habilitar despacho em `main` nem criar o Environment `production` para esses workflows até concluir o plano de segregação abaixo, implementar roots/estados independentes e validar os planos sem aplicar.
 
@@ -40,30 +40,30 @@ Cada root Terraform usa state S3 exclusivo por ambiente e lock file. Keys consum
 
 ## GitHub Secrets
 
-Configurar por repositório e Environment `homolog`; criar segredos independentes para `production` somente quando o plano de produção for aprovado e a infraestrutura estiver isolada:
+Configurar os secrets operacionais como Repository Secrets; criar segredos independentes para `production` somente quando o plano de produção for aprovado e a infraestrutura estiver isolada:
 
 | Secret | Uso |
 | --- | --- |
 | `DOCKERHUB_PASSWORD` | Repository secret usado na publicação automática de imagens em push `develop` |
 | `SONAR_TOKEN`, `SNYK_TOKEN` | Análises existentes de qualidade e segurança |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Credenciais AWS usadas nos Environments `homolog-plan` e `homolog`; renovar juntas antes da expiração |
-| `TF_PLAN_ENCRYPTION_KEY` | Chave aleatória com ao menos 32 caracteres para criptografar/descriptografar o `.tfplan`; configurar nos dois Environments |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Repository Secrets com credenciais AWS temporárias; renovar juntas antes da expiração |
+| `TF_PLAN_ENCRYPTION_KEY` | Repository Secret, chave aleatória com ao menos 32 caracteres para criptografar/descriptografar o `.tfplan` |
 | `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD`, `AUTOFLOW_PUBLIC_TOKEN_SECRET` | Secrets de runtime aplicados ao Secret Kubernetes no job aprovado `homolog` |
 | `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Secrets de smoke tests, se esses testes forem habilitados |
 
 ## GitHub Variables
 
-Configurar por Environment; não depender de defaults para conta, região ou state. Os valores de produção devem ser próprios e distintos dos de homologação:
+Configurar como Repository Variables; não depender de defaults para conta, região ou state. Os valores de produção devem ser próprios e distintos dos de homologação:
 
 | Variable | Uso |
 | --- | --- |
 | `DOCKERHUB_USERNAME` | Namespace Docker Hub, obrigatório para publicação SHA |
-| `AWS_REGION`, `AWS_EXPECTED_ACCOUNT_ID` | Região e conta esperadas; duplicar nos Environments `homolog-plan` e `homolog` |
-| `AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY`, `AWS_RDS_STATE_KEY` | Bucket e keys `application/autoflow/terraform.tfstate` e `rds/terraform.tfstate`; duplicar nos dois Environments |
-| `EKS_CLUSTER_NAME`, `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Cluster e origens; CORS deve ser array JSON, por exemplo `[]`; duplicar nos dois Environments |
+| `AWS_REGION`, `AWS_EXPECTED_ACCOUNT_ID` | Repository Variables de região e conta esperadas |
+| `AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY`, `AWS_RDS_STATE_KEY` | Repository Variables do bucket e keys `application/autoflow/terraform.tfstate` e `rds/terraform.tfstate` |
+| `EKS_CLUSTER_NAME`, `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Repository Variables do cluster e origens; CORS deve ser array JSON, por exemplo `[]` |
 | `AWS_TERRAFORM_STATE_BUCKET` | Inclui prefixo `ci/eks-endpoint-lease.json`, usado como registro durável de CIDR temporário; a role precisa de `s3:GetObject`, `s3:PutObject` e `s3:DeleteObject` nesse objeto |
-| `DOCKERHUB_USERNAME` | Namespace Docker Hub usado nas imagens; disponibilizar nos dois Environments |
-| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | Guard adicional em `homolog`; não substitui Required reviewers efetivos |
+| `DOCKERHUB_USERNAME` | Repository Variable do namespace Docker Hub usado nas imagens |
+| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | Repository Variable guard adicional em `homolog`; não substitui Required reviewers efetivos |
 
 ## AWS Academy Learner Lab
 

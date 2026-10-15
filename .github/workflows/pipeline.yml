@@ -175,7 +175,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend-build, frontend-build, terraform-static, docker-publish]
     if: always() && github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.backend-build.result == 'success' && needs.frontend-build.result == 'success' && needs.terraform-static.result == 'success' && needs.docker-publish.result == 'success'
-    environment: homolog-plan
     outputs:
       plan_sha256: ${{ steps.package.outputs.plan_sha256 }}
       metadata_sha256: ${{ steps.package.outputs.metadata_sha256 }}

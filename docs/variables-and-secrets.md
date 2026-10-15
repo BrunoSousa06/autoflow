@@ -4,7 +4,7 @@ Catálogo observado no código e configuração deste repositório. Push em `dev
 
 ## GitHub Actions
 
-Os jobs de PR não publicam imagens. Push em `develop` requer acesso ao Docker Hub para publicar tags SHA. `SONAR_TOKEN` e `SNYK_TOKEN` são usados pelos scans. Plan/Apply usam GitHub-hosted runners, credenciais AWS e secrets de runtime somente nos Environments configurados; Apply aguarda reviewers efetivos.
+Os jobs de PR não publicam imagens. Push em `develop` requer acesso ao Docker Hub para publicar tags SHA. `SONAR_TOKEN` e `SNYK_TOKEN` são usados pelos scans. Plan e Apply usam GitHub-hosted runners e os mesmos Repository Secrets/Variables; somente Apply usa o Environment `homolog` e aguarda reviewers efetivos. Não configure cópias dos valores operacionais no Environment, onde poderiam sobrepor as configurações de repositório.
 
 ### Secrets
 
@@ -13,26 +13,26 @@ Os jobs de PR não publicam imagens. Push em `develop` requer acesso ao Docker H
 | `SONAR_TOKEN` | Secret; autenticação SonarQube | GitHub Repository secret; token emitido pelo SonarQube | CI condicional | Não aplicável | `.github/workflows/pipeline.yml`; step não roda em PR de fork, mas quando roda sem token a análise pode falhar. |
 | `SNYK_TOKEN` | Secret; autenticação Snyk | GitHub Repository secret; token Snyk | CI condicional | Não aplicável | `pipeline.yml`; scan em push `develop` ou dispatch com `publish_images=true`; sem valor, scan falha. |
 | `DOCKERHUB_PASSWORD` | Secret; autenticação para publicar imagem | GitHub Repository secret; token Docker Hub de publicação | Push `develop` | Não aplicável | `pipeline.yml`; obrigatório no job de publicação. |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Secrets; credenciais temporárias AWS da mesma sessão | Environments `homolog-plan` e `homolog`; sessão AWS Academy Learner Lab | CD | Não aplicável | `pipeline.yml`; obrigatórios nos dois jobs de deploy; renovar juntos antes do despacho conforme validade da sessão. |
-| `TF_PLAN_ENCRYPTION_KEY` | Secret; chave para cifrar o plan binário antes do upload | Environments `homolog-plan` e `homolog`; gerar valor aleatório com no mínimo 32 caracteres | Plan/Apply | Não aplicável | `pipeline.yml`; mesmo valor nos dois ambientes; nunca publicar em logs/artifact. |
-| `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD` | Secrets; credenciais de banco do Secret Kubernetes | Environment `homolog`; credenciais do banco de homolog | CD | Não aplicável | `pipeline.yml` → `scripts/apply_k8s_secret.py`; requeridos no deploy; sem defaults. |
-| `AUTOFLOW_JWT_SECRET` | Secret; assinatura JWT da aplicação | Environment `homolog`; segredo compatível com autenticação da aplicação | CD | Não aplicável | Mesmo workflow/script; requerido no deploy; sem default. |
-| `AUTOFLOW_MAIL_PASSWORD` | Secret; autenticação SMTP | Environment `homolog`; credencial SMTP de homolog | CD | Não aplicável | Mesmo workflow/script; requerido no deploy; sem default. |
-| `AUTOFLOW_PUBLIC_TOKEN_SECRET` | Secret; tokens públicos de orçamento | Environment `homolog`; segredo de homolog | CD | Não aplicável | Mesmo workflow/script; requerido no deploy; sem default. |
-| `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Secrets opcionais para smoke test autenticado | Environment `homolog`; conta de teste sintética | Opcional | Não aplicável | `smoke_api_gateway.py`; smoke autenticado só roda com ambos presentes. Não usar dados reais. |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Secrets; credenciais temporárias AWS da mesma sessão | Repository Secrets; sessão AWS Academy Learner Lab | CD | Não aplicável | `pipeline.yml`; usados por Plan e Apply; renovar juntos conforme validade da sessão. |
+| `TF_PLAN_ENCRYPTION_KEY` | Secret; chave para cifrar o plan binário antes do upload | Repository Secret; gerar valor aleatório com no mínimo 32 caracteres | Plan/Apply | Não aplicável | `pipeline.yml`; mesmo valor nos dois jobs; nunca publicar em logs/artifact. |
+| `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD` | Secrets; credenciais de banco do Secret Kubernetes | Repository Secrets; credenciais do banco de homolog | CD | Não aplicável | `pipeline.yml` → `scripts/apply_k8s_secret.py`; usados somente no Apply; sem defaults. |
+| `AUTOFLOW_JWT_SECRET` | Secret; assinatura JWT da aplicação | Repository Secret; segredo compatível com autenticação da aplicação | CD | Não aplicável | Mesmo workflow/script; usado somente no Apply; sem default. |
+| `AUTOFLOW_MAIL_PASSWORD` | Secret; autenticação SMTP | Repository Secret; credencial SMTP de homolog | CD | Não aplicável | Mesmo workflow/script; usado somente no Apply; sem default. |
+| `AUTOFLOW_PUBLIC_TOKEN_SECRET` | Secret; tokens públicos de orçamento | Repository Secret; segredo de homolog | CD | Não aplicável | Mesmo workflow/script; usado somente no Apply; sem default. |
+| `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Secrets opcionais para smoke test autenticado | Repository Secrets; conta de teste sintética | Opcional | Não aplicável | `smoke_api_gateway.py`; smoke autenticado só roda com ambos presentes. Não usar dados reais. |
 | `GITHUB_TOKEN` | Secret automático do GitHub para abrir PRs | Gerado pelo Actions; não cadastrar | CI/CD automático de PR | Não aplicável | `pipeline.yml` e `pr-automatico.yaml`; `secrets.GITHUB_TOKEN`; sem cadastro manual. |
 
 ### Variables
 
 | Nome | Tipo / finalidade | Onde; origem | CI / CD | Exemplo seguro | Consumidor; default/ausência |
 |---|---|---|---|---|---|
-| `AWS_REGION` | Variable; região AWS | Environments `homolog-plan` e `homolog`; região aprovada | CD | `us-east-1` | `pipeline.yml`; obrigatória, sem default. |
-| `AWS_EXPECTED_ACCOUNT_ID` | Variable; conta permitida pelo guard | Environments `homolog-plan` e `homolog`; ID da conta alvo | CD | `123456789012` | Workflow/script guard; obrigatória, sem default. |
-| `AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY` | Variables; bucket S3 e state da aplicação | Environments `homolog-plan` e `homolog`; bucket/key existentes | CD | `autoflow-tfstate-homolog-exemplo`, `application/autoflow/terraform.tfstate` | Workflow/Terraform; obrigatórias, sem defaults. |
+| `AWS_REGION` | Variable; região AWS | Repository Variable; região aprovada | CD | `us-east-1` | `pipeline.yml`; obrigatória, sem default. |
+| `AWS_EXPECTED_ACCOUNT_ID` | Variable; conta permitida pelo guard | Repository Variable; ID da conta alvo | CD | `123456789012` | Workflow/script guard; obrigatória, sem default. |
+| `AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY` | Variables; bucket S3 e state da aplicação | Repository Variables; bucket/key existentes | CD | `autoflow-tfstate-homolog-exemplo`, `application/autoflow/terraform.tfstate` | Workflow/Terraform; obrigatórias, sem defaults. |
 | `DOCKERHUB_USERNAME` | Variable; namespace Docker Hub | GitHub Repository variable | Push `develop` | `usuario-exemplo` | Namespace das imagens; sem default. Tags são sempre `${{ github.sha }}`. |
-| `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Variables; origem e CORS do gateway | Environments `homolog-plan` e `homolog`; URL e lista JSON exatas | CD | `https://api.example.invalid`, `[]` | Workflow/Terraform; obrigatórias; CORS deve ser array JSON. |
-| `EKS_CLUSTER_NAME` | Variable; nome do cluster | Environments `homolog-plan` e `homolog`; nome real | CD | `eks-autoflow` | Workflow; deve corresponder ao cluster implantado. |
-| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | Variable; guard suplementar de aprovação | Environment `homolog`; `true` somente após configurar Required reviewers | CD | `true` | Workflow; ausente/diferente bloqueia Apply. Não substitui a proteção do Environment. |
+| `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Variables; origem e CORS do gateway | Repository Variables; URL e lista JSON exatas | CD | `https://api.example.invalid`, `[]` | Workflow/Terraform; obrigatórias; CORS deve ser array JSON. |
+| `EKS_CLUSTER_NAME` | Variable; nome do cluster | Repository Variable; nome real | CD | `eks-autoflow` | Workflow; deve corresponder ao cluster implantado. |
+| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | Variable; guard suplementar de aprovação | Repository Variable; `true` somente após configurar Required reviewers no Environment `homolog` | CD | `true` | Workflow; ausente/diferente bloqueia Apply. Não substitui a proteção do Environment. |
 
 ## Terraform inputs
 
