@@ -6,13 +6,15 @@ O inventário por nome de secrets, variables, inputs Terraform e configuração 
 
 CI executa em Pull Requests e pushes para `develop` e `main`, incluindo testes, builds, análise de segurança e validações estáticas. Pull Requests não publicam imagens. Push aprovado em `develop` publica backend e frontend no Docker Hub com a tag imutável do SHA do commit. O workflow encerra intencionalmente o caminho de deploy em um guard bloqueante antes de qualquer acesso Kubernetes/Terraform.
 
-O deploy de homolog está bloqueado. O endpoint Kubernetes do EKS `eks-autoflow` não tem conectividade validada a partir de `ubuntu-latest`; `aws eks update-kubeconfig` configura autenticação, mas não cria rota de rede. O provider Terraform `kubernetes` e o provider `kubectl` consultam a API durante operações Terraform, inclusive no Plan. Não executar Plan/Apply ou `kubectl` em runner hospedado, nem abrir o endpoint a `0.0.0.0/0`.
+O endpoint Kubernetes do EKS `eks-autoflow` não tem conectividade a partir de `ubuntu-latest`; `aws eks update-kubeconfig` configura autenticação, mas não cria rota de rede. O provider Terraform `kubernetes` e o provider `kubectl` consultam a API durante operações Terraform, inclusive no Plan. Por isso Plan/Apply e `kubectl` rodam somente na EC2 runner privada; o endpoint não é aberto a `0.0.0.0/0`.
 
 ### Arquitetura de acesso privado proposta
 
-Usar um runner GitHub Actions efêmero em sub-rede privada da VPC já existente, criado por uma solução de runner-controller/scale-set com ciclo de vida por job. A instância/pod deve ter saída HTTPS controlada para GitHub, Docker Hub e endpoints AWS necessários (preferencialmente via VPC endpoints/NAT já aprovado), sem IP público e sem exposição do endpoint EKS. Conceder IAM mínimo via role associada ao runner (sem access keys estáticas), com `eks:DescribeCluster`, acesso ao state S3/lock e permissões AWS requeridas pelo root. O mapeamento de acesso EKS/RBAC deve ser explícito e limitado aos recursos Kubernetes geridos pela aplicação. Validar em sessão de teste: sub-rede/VPC e DNS, conectividade TCP/TLS ao endpoint privado EKS, identidade AWS, `kubectl get nodes`, leitura dos states, `terraform init/validate/plan` sem apply e limpeza do runner após o job.
+O root `autoflow-infra/infra` provisiona uma EC2 dedicada em subnet privada existente, sem IP público, com IMDSv2, disco criptografado, sem entrada de rede e saída HTTPS via NAT já existente. A EC2 não altera nós existentes. Uma regra dedicada permite apenas HTTPS do Security Group do runner ao Security Group usado pelo control plane EKS. O bootstrap usa uma GitHub App instalada somente no repositório `autoflow`, guarda sua chave em Secrets Manager e obtém registration tokens curtos; o serviço systemd registra o runner como efêmero para um job por vez. Consulte [o guia do runner](../../autoflow-infra/docs/github-runner.md) para inputs, pré-requisitos e ativação.
 
-Essa solução exige recursos/configuração no repositório de infraestrutura e autorização do owner da VPC; não está implementada nem validada neste repositório. SSM em instância existente não é adotado: não há instância/SSM documentados e um comando SSM remoto não fornece de forma segura/operável o ciclo de artifacts/plan/aprovação e execução idempotente necessário. Não habilitar apply até existir runner privado validado. Após isso, planejar no push de `develop`, guardar plan binário fora de logs/artifacts públicos com acesso restrito e hash SHA-256, revalidar hash no job aprovado pelo Environment `homolog`, e aplicar somente o mesmo plan após required reviewers efetivos. Plano Terraform pode conter dados sensíveis; proteger retenção, acesso e descarte.
+O código do provisionamento e da pipeline está implementado localmente, mas ainda não foi aplicado nem validado em AWS/GitHub. O workflow publica imagens por push em `develop`; para implantar, o operador dispara manualmente em `develop`. `homolog-plan` gera `infra.tfplan`, verifica exclusões/substituições e envia o arquivo criptografado como artifact da execução com retenção de um dia. O artifact contém apenas o ciphertext do plan e metadados sem valores de variáveis Terraform; a chave `TF_PLAN_ENCRYPTION_KEY` (mínimo de 32 caracteres aleatórios) é secret, duplicada nos dois Environments e nunca incluída no artifact. O job publica hashes de integridade como outputs da execução.
+
+O job `homolog` mantém Required reviewers reais e baixa o artifact nomeado com `run_id` e `run_attempt` da mesma execução. Antes de qualquer mutação Kubernetes, verifica os hashes, commit, versão Terraform, hash de `.terraform.lock.hcl`, fingerprint de todas as `TF_VAR_*` e backend; então descriptografa e reaplica os guards de exclusão/substituição. Não executa outro `terraform plan`: `terraform apply` consome exatamente `infra.tfplan` baixado. A saída detalhada de `terraform plan` e o JSON completo são gravados temporariamente em arquivos locais e removidos; o job summary contém somente endereços e ações, sem atributos ou valores. O Environment `homolog-plan` precisa ter branch `develop`, secrets de credenciais e de criptografia, sem required reviewers; `homolog` precisa de branch `develop`, Required reviewers reais, mesmas variables/segredos de criptografia e secrets de deploy. Proteger o runner contra jobs de forks e workflows não confiáveis.
 
 **Produção permanece desabilitada.** Os roots atuais não demonstram isolamento completo de produção: há nomes fixos de recursos, um único conjunto de keys/variáveis de RDS e workloads Kubernetes com nomes/namespace compartilhados. Não habilitar despacho em `main` nem criar o Environment `production` para esses workflows até concluir o plano de segregação abaixo, implementar roots/estados independentes e validar os planos sem aplicar.
 
@@ -44,8 +46,10 @@ Configurar por repositório e Environment `homolog`; criar segredos independente
 | --- | --- |
 | `DOCKERHUB_PASSWORD` | Repository secret usado na publicação automática de imagens em push `develop` |
 | `SONAR_TOKEN`, `SNYK_TOKEN` | Análises existentes de qualidade e segurança |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Não consumidos pelo workflow atualmente bloqueado; credenciais temporárias Learner Lab podem ser necessárias apenas na transição enquanto runner privado/IAM role não for autorizado. Nunca usar após migração para role |
-| `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD`, `AUTOFLOW_PUBLIC_TOKEN_SECRET`, `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Segredos runtime/smoke, necessários somente ao habilitar o fluxo privado e pós-deploy |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Credenciais temporárias Learner Lab usadas nos Environments `homolog-plan` e `homolog`; renovar juntas antes da expiração |
+| `TF_PLAN_ENCRYPTION_KEY` | Chave aleatória com ao menos 32 caracteres para criptografar/descriptografar o `.tfplan`; configurar como secret nos dois Environments |
+| `AUTOFLOW_DB_USERNAME`, `AUTOFLOW_DB_PASSWORD`, `AUTOFLOW_JWT_SECRET`, `AUTOFLOW_MAIL_PASSWORD`, `AUTOFLOW_PUBLIC_TOKEN_SECRET` | Secrets de runtime aplicados ao Secret Kubernetes no job aprovado `homolog` |
+| `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Secrets de smoke tests, se esses testes forem habilitados |
 
 ## GitHub Variables
 
@@ -54,13 +58,14 @@ Configurar por Environment; não depender de defaults para conta, região ou sta
 | Variable | Uso |
 | --- | --- |
 | `DOCKERHUB_USERNAME` | Namespace Docker Hub, obrigatório para publicação SHA |
-| `AWS_REGION`, `AWS_EXPECTED_ACCOUNT_ID` | Futuro job privado; `us-east-1` e conta Learner Lab explicitamente conferidos |
-| `AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY`, `AWS_RDS_STATE_KEY` | Futuro job privado; usar bucket informado e keys `application/autoflow/terraform.tfstate` e `rds/terraform.tfstate` |
-| `EKS_CLUSTER_NAME`, `EKS_NODEGROUP_NAME`, `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Futuro preflight e validação de homolog |
-| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | Guard adicional futuro; não substitui required reviewers reais do Environment |
+| `AWS_REGION`, `AWS_EXPECTED_ACCOUNT_ID` | Região e conta esperadas; duplicar nos Environments `homolog-plan` e `homolog` |
+| `AWS_TERRAFORM_STATE_BUCKET`, `AWS_TF_STATE_KEY`, `AWS_RDS_STATE_KEY` | Bucket e keys `application/autoflow/terraform.tfstate` e `rds/terraform.tfstate`; duplicar nos dois Environments |
+| `EKS_CLUSTER_NAME`, `API_GATEWAY_ORIGIN`, `API_GATEWAY_CORS_ORIGINS` | Cluster e origens; CORS deve ser array JSON, por exemplo `[]`; duplicar nos dois Environments |
+| `DOCKERHUB_USERNAME` | Namespace Docker Hub usado nas imagens; disponibilizar nos dois Environments |
+| `TERRAFORM_APPLY_APPROVAL_CONFIGURED` | Guard adicional em `homolog`; não substitui Required reviewers efetivos |
 
 ## AWS Academy Learner Lab
 
-Não presumir OIDC ou access keys permanentes no Learner Lab. O workflow atual não chama AWS nem executa Terraform porque a conectividade privada não está disponível. Antes de habilitar CD, priorizar role IAM no runner privado; caso o modelo Learner Lab obrigue credenciais temporárias, atualizar os três valores juntos antes do Plan. Não registrar credenciais, valores de Secret Kubernetes ou planos Terraform em logs/artifacts. Hash SHA-256 sozinho não protege confidencialidade: o plano precisa de armazenamento e acesso restritos.
+Não presumir OIDC ou access keys permanentes no Learner Lab. O pipeline usa secrets temporários AWS fornecidos pelo operador; atualize os três valores juntos antes do Plan. O artifact de uma execução é baixável por usuários com acesso ao repositório, mas seu `.tfplan` está criptografado com AES-256-CBC/PBKDF2; a chave permanece em GitHub Secrets. O plan em claro existe temporariamente no disco do runner e é removido após empacotamento/aplicação. O summary restrito exibe apenas endereços e ações, nunca valores do plan.
 
 O updater do Secret Kubernetes envia os valores por stdin, captura a saida de `kubectl`, relê o objeto e compara chaves/valores em memoria sem imprimir os valores.
