@@ -78,23 +78,26 @@ class PreflightTests(unittest.TestCase):
             with self.assertRaisesRegex(eks_preflight.PreflightError, "Contexto kubectl incorreto"):
                 eks_preflight.main()
 
-    def test_pipeline_plans_then_applies_only_on_private_runner_after_gate(self):
+    def test_pipeline_plans_then_applies_on_hosted_runner_after_environment_gate(self):
         from pathlib import Path
         workflow = Path(__file__).parents[1] / ".github" / "workflows" / "pipeline.yml"
         content = workflow.read_text(encoding="utf-8")
         plan = content.split("  deploy-plan:", 1)[1].split("  deploy-apply:", 1)[0]
         apply = content.split("  deploy-apply:", 1)[1]
-        self.assertIn("runs-on: [self-hosted, linux, x64, autoflow-eks]", plan)
+        self.assertIn("runs-on: ubuntu-latest", plan)
         self.assertIn("environment: homolog-plan", plan)
-        self.assertIn("github.event_name == 'workflow_dispatch'", plan)
+        self.assertIn("github.event_name == 'push'", plan)
+        self.assertIn("EKS_LEASE_KEY: ci/eks-endpoint-lease.json", plan)
+        self.assertIn("eks_endpoint_access.py authorize", plan)
         self.assertIn("terraform plan -input=false -no-color -out=infra.tfplan", plan)
         self.assertIn("python ../scripts/review_terraform_plan.py", plan)
         self.assertIn("actions/upload-artifact@v4", plan)
         self.assertIn("retention-days: 1", plan)
         self.assertIn("openssl enc -aes-256-cbc", plan)
         self.assertIn("plan_sha256", plan)
-        self.assertIn("runs-on: [self-hosted, linux, x64, autoflow-eks]", apply)
+        self.assertIn("runs-on: ubuntu-latest", apply)
         self.assertIn("environment: homolog", apply)
+        self.assertIn("github.event_name == 'push'", apply)
         self.assertIn("actions/download-artifact@v4", apply)
         self.assertIn("sha256sum --check --status", apply)
         self.assertIn("cmp --silent", apply)
@@ -104,6 +107,8 @@ class PreflightTests(unittest.TestCase):
         self.assertIn("allow_destructive", content)
         self.assertIn("review_terraform_plan.py", apply)
         self.assertIn("kubectl rollout status deployment/autoflow-backend", apply)
+        self.assertIn("smoke_api_gateway.py", apply)
+        self.assertIn("eks_endpoint_access.py cleanup", apply)
         self.assertIn("kubectl rollout status deployment/autoflow-frontend", apply)
         self.assertNotIn("deployment-blocked-private-eks:", content)
         self.assertIn("ref: ${{ github.sha }}", plan)

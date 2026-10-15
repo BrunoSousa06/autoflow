@@ -1,10 +1,10 @@
 # Variables e secrets
 
-Catálogo observado no código e configuração deste repositório. A publicação de imagens ocorre em push para `develop`; o deploy é manual na branch `develop`, com Plan no Environment `homolog-plan` e Apply protegido pelo Environment `homolog`. Produção não integra este catálogo.
+Catálogo observado no código e configuração deste repositório. Push em `develop` publica imagens, inicia Plan e, após aprovação do Environment `homolog`, executa Apply/rollout/smoke tests. `workflow_dispatch` é uma alternativa manual; Pull Requests e `main` não fazem deploy. Produção não integra este catálogo.
 
 ## GitHub Actions
 
-Os jobs de PR não publicam imagens. Push em `develop` requer acesso ao Docker Hub para publicar tags SHA. `SONAR_TOKEN` e `SNYK_TOKEN` são usados pelos scans. Os jobs de deploy recebem credenciais AWS temporárias e secrets de runtime somente nos Environments configurados.
+Os jobs de PR não publicam imagens. Push em `develop` requer acesso ao Docker Hub para publicar tags SHA. `SONAR_TOKEN` e `SNYK_TOKEN` são usados pelos scans. Plan/Apply usam GitHub-hosted runners, credenciais AWS e secrets de runtime somente nos Environments configurados; Apply aguarda reviewers efetivos.
 
 ### Secrets
 
@@ -19,7 +19,7 @@ Os jobs de PR não publicam imagens. Push em `develop` requer acesso ao Docker H
 | `AUTOFLOW_JWT_SECRET` | Secret; assinatura JWT da aplicação | Environment `homolog`; segredo compatível com autenticação da aplicação | CD | Não aplicável | Mesmo workflow/script; requerido no deploy; sem default. |
 | `AUTOFLOW_MAIL_PASSWORD` | Secret; autenticação SMTP | Environment `homolog`; credencial SMTP de homolog | CD | Não aplicável | Mesmo workflow/script; requerido no deploy; sem default. |
 | `AUTOFLOW_PUBLIC_TOKEN_SECRET` | Secret; tokens públicos de orçamento | Environment `homolog`; segredo de homolog | CD | Não aplicável | Mesmo workflow/script; requerido no deploy; sem default. |
-| `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Secrets opcionais para smoke test autenticado | Environment `homolog`; conta de teste sintética | Não consumidos pelo fluxo atual | Não aplicável | Nenhum job atual os consome. Não usar dados reais. |
+| `AUTOFLOW_TEST_CPF_CNPJ`, `AUTOFLOW_TEST_PASSWORD` | Secrets opcionais para smoke test autenticado | Environment `homolog`; conta de teste sintética | Opcional | Não aplicável | `smoke_api_gateway.py`; smoke autenticado só roda com ambos presentes. Não usar dados reais. |
 | `GITHUB_TOKEN` | Secret automático do GitHub para abrir PRs | Gerado pelo Actions; não cadastrar | CI/CD automático de PR | Não aplicável | `pipeline.yml` e `pr-automatico.yaml`; `secrets.GITHUB_TOKEN`; sem cadastro manual. |
 
 ### Variables

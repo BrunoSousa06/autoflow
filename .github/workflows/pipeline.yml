@@ -16,6 +16,11 @@ on:
 
 permissions:
   contents: read
+  actions: read
+
+concurrency:
+  group: autoflow-application-develop
+  cancel-in-progress: false
 
 jobs:
   backend-build:
@@ -138,7 +143,7 @@ jobs:
     name: Publish immutable images to Docker Hub
     runs-on: ubuntu-latest
     needs: [backend-build, frontend-build, terraform-static]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v3
@@ -166,21 +171,18 @@ jobs:
           cache-to: type=gha,mode=max,scope=frontend
 
   deploy-plan:
-    name: Plan de homologação no runner privado
-    runs-on: [self-hosted, linux, x64, autoflow-eks]
-    needs: [backend-build, frontend-build, terraform-static]
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop'
+    name: Plan de homologação no GitHub-hosted runner
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build, terraform-static, docker-publish]
+    if: always() && github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.backend-build.result == 'success' && needs.frontend-build.result == 'success' && needs.terraform-static.result == 'success' && needs.docker-publish.result == 'success'
     environment: homolog-plan
     outputs:
       plan_sha256: ${{ steps.package.outputs.plan_sha256 }}
       metadata_sha256: ${{ steps.package.outputs.metadata_sha256 }}
       artifact_name: ${{ steps.package.outputs.artifact_name }}
-    concurrency:
-      group: autoflow-application-develop
-      cancel-in-progress: false
     env:
       PLAN_ARTIFACT_NAME: autoflow-terraform-plan-${{ github.run_id }}-${{ github.run_attempt }}
-      ALLOW_DESTRUCTIVE: ${{ inputs.allow_destructive }}
+      ALLOW_DESTRUCTIVE: ${{ inputs.allow_destructive || 'false' }}
       AWS_REGION: ${{ vars.AWS_REGION }}
       TF_STATE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
       TF_STATE_KEY: ${{ vars.AWS_TF_STATE_KEY }}
@@ -193,6 +195,8 @@ jobs:
       TF_VAR_aws_allowed_account_ids: '["${{ vars.AWS_EXPECTED_ACCOUNT_ID }}"]'
       TF_VAR_region_default: ${{ vars.AWS_REGION }}
       TF_VAR_cluster_name: ${{ vars.EKS_CLUSTER_NAME }}
+      EKS_LEASE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      EKS_LEASE_KEY: ci/eks-endpoint-lease.json
     steps:
       - uses: actions/checkout@v4
         with:
@@ -223,6 +227,15 @@ jobs:
         env:
           AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
         run: python scripts/verify_aws_account.py
+      - name: Registrar autorização temporária para reconciliação
+        run: python scripts/eks_endpoint_access.py reconcile
+      - name: Autorizar somente o IP público deste runner no EKS
+        id: runner-ip
+        run: |
+          set -euo pipefail
+          IP="$(curl -4fsS https://checkip.amazonaws.com | tr -d '\n')"
+          echo "ip=$IP" >> "$GITHUB_OUTPUT"
+          python scripts/eks_endpoint_access.py authorize --ip "$IP" --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
       - name: Preparar Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -288,22 +301,21 @@ jobs:
           compression-level: 0
       - name: Limpar cópias locais temporárias do plan
         if: always()
-        run: rm -rf "$RUNNER_TEMP/autoflow-plan" "$RUNNER_TEMP/plan-metadata.json" infra/infra.tfplan
+        run: |
+          rm -rf "$RUNNER_TEMP/autoflow-plan" "$RUNNER_TEMP/plan-metadata.json" infra/infra.tfplan
+          python scripts/eks_endpoint_access.py cleanup --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
 
   deploy-apply:
     name: Aprovação, Apply e rollout de homologação
-    runs-on: [self-hosted, linux, x64, autoflow-eks]
+    runs-on: ubuntu-latest
     needs: deploy-plan
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop'
     environment: homolog
-    concurrency:
-      group: autoflow-application-develop
-      cancel-in-progress: false
     env:
       PLAN_ARTIFACT_NAME: ${{ needs.deploy-plan.outputs.artifact_name }}
       EXPECTED_PLAN_SHA256: ${{ needs.deploy-plan.outputs.plan_sha256 }}
       EXPECTED_METADATA_SHA256: ${{ needs.deploy-plan.outputs.metadata_sha256 }}
-      ALLOW_DESTRUCTIVE: ${{ inputs.allow_destructive }}
+      ALLOW_DESTRUCTIVE: ${{ inputs.allow_destructive || 'false' }}
       AWS_REGION: ${{ vars.AWS_REGION }}
       TF_STATE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
       TF_STATE_KEY: ${{ vars.AWS_TF_STATE_KEY }}
@@ -316,6 +328,8 @@ jobs:
       TF_VAR_aws_allowed_account_ids: '["${{ vars.AWS_EXPECTED_ACCOUNT_ID }}"]'
       TF_VAR_region_default: ${{ vars.AWS_REGION }}
       TF_VAR_cluster_name: ${{ vars.EKS_CLUSTER_NAME }}
+      EKS_LEASE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      EKS_LEASE_KEY: ci/eks-endpoint-lease.json
     steps:
       - uses: actions/checkout@v4
         with:
@@ -330,9 +344,20 @@ jobs:
       - name: Verificar conta AWS e sinalizador de proteção
         env:
           AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           python scripts/verify_aws_account.py
           test "${{ vars.TERRAFORM_APPLY_APPROVAL_CONFIGURED }}" = true
+          REVIEWERS=$(gh api "repos/$GITHUB_REPOSITORY/environments/homolog" --jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]?] | length')
+          test "$REVIEWERS" -gt 0
+      - name: Reconciliar autorização órfã anterior
+        run: python scripts/eks_endpoint_access.py reconcile --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
+      - name: Autorizar somente o IP público deste runner no EKS
+        run: |
+          set -euo pipefail
+          IP="$(curl -4fsS https://checkip.amazonaws.com | tr -d '\n')"
+          python scripts/eks_endpoint_access.py authorize --ip "$IP" --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.16.5"
@@ -403,6 +428,14 @@ jobs:
         run: |
           kubectl rollout status deployment/autoflow-backend --timeout=5m
           kubectl rollout status deployment/autoflow-frontend --timeout=5m
+      - name: Executar smoke tests pós-rollout
+        env:
+          API_GATEWAY_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
+          API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+          AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+        run: python scripts/smoke_api_gateway.py "$API_GATEWAY_ORIGIN" --region "$AWS_REGION" --account "$AWS_EXPECTED_ACCOUNT_ID" --cors-origin "$API_GATEWAY_CORS_ORIGIN"
       - name: Limpar arquivos locais sensíveis do plan
         if: always()
-        run: rm -rf infra/infra.tfplan "$RUNNER_TEMP/autoflow-plan" "$RUNNER_TEMP/current-plan-metadata.json" "$RUNNER_TEMP/terraform-plan.json" "$RUNNER_TEMP/terraform-plan-summary.md"
+        run: |
+          rm -rf infra/infra.tfplan "$RUNNER_TEMP/autoflow-plan" "$RUNNER_TEMP/current-plan-metadata.json" "$RUNNER_TEMP/terraform-plan.json" "$RUNNER_TEMP/terraform-plan-summary.md"
+          python scripts/eks_endpoint_access.py cleanup --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
