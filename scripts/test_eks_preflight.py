@@ -95,9 +95,24 @@ class PreflightTests(unittest.TestCase):
         publish = content.split("  docker-publish:", 1)[1].split("  deployment-blocked-private-eks:", 1)[0]
         self.assertIn("github.event_name == 'push'", publish)
         self.assertIn("refs/heads/develop", publish)
+        self.assertIn("needs: [backend-build, frontend-build, terraform-static]", publish)
+        self.assertNotIn("snyk-scan", publish)
+        self.assertNotIn("environment:", publish)
         self.assertIn("${{ github.sha }}", publish)
+        self.assertIn("username: ${{ vars.DOCKERHUB_USERNAME }}", publish)
+        self.assertIn("password: ${{ secrets.DOCKERHUB_PASSWORD }}", publish)
         self.assertNotIn("pull_request", publish)
         self.assertNotIn(":latest", content)
+
+    def test_snyk_failures_are_non_blocking_and_uploaded_as_alerts(self):
+        from pathlib import Path
+        workflow = Path(__file__).parents[1] / ".github" / "workflows" / "pipeline.yml"
+        content = workflow.read_text(encoding="utf-8")
+        snyk_job = content.split("  snyk-scan:", 1)[1].split("  docker-publish:", 1)[0]
+        self.assertEqual(snyk_job.count("continue-on-error: true"), 2)
+        self.assertIn("snyk-open-source.sarif", snyk_job)
+        self.assertIn("snyk-container.sarif", snyk_job)
+        self.assertIn("github/codeql-action/upload-sarif@v3", snyk_job)
 
 
 if __name__ == "__main__":
