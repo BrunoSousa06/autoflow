@@ -7,9 +7,20 @@ on:
     types: [opened, synchronize, reopened]
     branches: [develop, main]
   workflow_dispatch:
+    inputs:
+      allow_destructive:
+        description: "Autorizar exclusões/substituições somente após revisar o resumo do plan"
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
+  actions: read
+
+concurrency:
+  group: autoflow-application-develop
+  cancel-in-progress: false
 
 jobs:
   backend-build:
@@ -132,7 +143,7 @@ jobs:
     name: Publish immutable images to Docker Hub
     runs-on: ubuntu-latest
     needs: [backend-build, frontend-build, terraform-static]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v3
@@ -159,15 +170,281 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-  deployment-blocked-private-eks:
-    name: Homologação bloqueada — acesso privado ao EKS
+  deploy-plan:
+    name: Plan de homologação no GitHub-hosted runner
     runs-on: ubuntu-latest
-    needs: [docker-publish]
-    if: always() && github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: [backend-build, frontend-build, terraform-static, docker-publish]
+    if: always() && github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.backend-build.result == 'success' && needs.frontend-build.result == 'success' && needs.terraform-static.result == 'success' && needs.docker-publish.result == 'success'
+    outputs:
+      plan_sha256: ${{ steps.package.outputs.plan_sha256 }}
+      metadata_sha256: ${{ steps.package.outputs.metadata_sha256 }}
+      artifact_name: ${{ steps.package.outputs.artifact_name }}
+    env:
+      PLAN_ARTIFACT_NAME: autoflow-terraform-plan-${{ github.run_id }}-${{ github.run_attempt }}
+      ALLOW_DESTRUCTIVE: 'false'
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TF_STATE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      TF_STATE_KEY: ${{ vars.AWS_TF_STATE_KEY }}
+      TF_VAR_terraform_state_bucket: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      TF_VAR_dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+      TF_VAR_backend_image_tag: ${{ github.sha }}
+      TF_VAR_frontend_image_tag: ${{ github.sha }}
+      TF_VAR_gateway_public_origin: ${{ vars.API_GATEWAY_ORIGIN }}
+      TF_VAR_gateway_cors_origins: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+      TF_VAR_aws_allowed_account_ids: '["${{ vars.AWS_EXPECTED_ACCOUNT_ID }}"]'
+      TF_VAR_region_default: ${{ vars.AWS_REGION }}
+      TF_VAR_cluster_name: ${{ vars.EKS_CLUSTER_NAME }}
+      EKS_LEASE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      EKS_LEASE_KEY: ci/eks-endpoint-lease.json
     steps:
-      - name: Bloquear antes de Terraform/Kubernetes
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Validar configuração e credenciais AWS temporárias
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         run: |
-          echo "Deploy bloqueado com segurança: o runner GitHub-hosted não tem rota de rede autorizada para a API Kubernetes privada/restrita do EKS eks-autoflow."
-          echo "Não executar terraform plan/apply nem kubectl neste runner. update-kubeconfig apenas configura credenciais e não cria conectividade de rede."
-          echo "Consulte .github/CI-CD-AWS.md para provisionar e validar um runner efêmero privado antes de habilitar o gate."
-          exit 1
+          set -euo pipefail
+          test -n "$AWS_ACCESS_KEY_ID"
+          test -n "$AWS_SECRET_ACCESS_KEY"
+          test -n "$AWS_SESSION_TOKEN"
+          test -n "$TF_STATE_BUCKET"
+          test -n "$TF_STATE_KEY"
+          test -n "$TF_VAR_aws_allowed_account_ids"
+          test -n "$TF_VAR_gateway_public_origin"
+          test -n "$TF_VAR_gateway_cors_origins"
+          test -n "$TF_VAR_cluster_name"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Verificar conta AWS esperada
+        env:
+          AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+        run: python scripts/verify_aws_account.py
+      - name: Registrar autorização temporária para reconciliação
+        run: python scripts/eks_endpoint_access.py reconcile
+      - name: Autorizar somente o IP público deste runner no EKS
+        id: runner-ip
+        run: |
+          set -euo pipefail
+          IP="$(curl -4fsS https://checkip.amazonaws.com | tr -d '\n')"
+          echo "ip=$IP" >> "$GITHUB_OUTPUT"
+          python scripts/eks_endpoint_access.py authorize --ip "$IP" --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
+      - name: Rejeitar recursos Kubernetes sem Terraform State
+        run: |
+          set -euo pipefail
+          aws eks update-kubeconfig --name "$TF_VAR_cluster_name" --region "$AWS_REGION"
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get deployment autoflow-backend -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get deployment autoflow-frontend -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-backend -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-frontend -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get configmap autoflow-config -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-backend-gateway -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-frontend-gateway -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get configmap autoflow-gateway-nginx -o name
+      - name: Preparar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+      - name: Confirmar states existentes e inicializar backend
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          aws s3api head-bucket --bucket "$TF_STATE_BUCKET"
+          terraform init -input=false -reconfigure \
+            -lockfile=readonly \
+            -backend-config="bucket=$TF_STATE_BUCKET" \
+            -backend-config="key=$TF_STATE_KEY" \
+            -backend-config="region=$AWS_REGION" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+          terraform validate
+      - name: Vincular configuração a commit, Terraform, providers e backend
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: python scripts/terraform_plan_metadata.py --lock-file infra/.terraform.lock.hcl --output "$RUNNER_TEMP/plan-metadata.json"
+      - name: Criar plan sem imprimir conteúdo sensível
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          trap 'status=$?; rm -f "$RUNNER_TEMP/terraform-plan.log" "$RUNNER_TEMP/terraform-plan.json"; if [ "$status" -ne 0 ]; then rm -f infra.tfplan; fi; exit "$status"' EXIT
+          terraform plan -input=false -no-color -out=infra.tfplan > "$RUNNER_TEMP/terraform-plan.log"
+          terraform show -json infra.tfplan > "$RUNNER_TEMP/terraform-plan.json"
+          python ../scripts/review_terraform_plan.py \
+            --plan-json "$RUNNER_TEMP/terraform-plan.json" \
+            --allow-destructive "$ALLOW_DESTRUCTIVE" >> "$GITHUB_STEP_SUMMARY"
+      - name: Criptografar plan e calcular hashes de integridade
+        id: package
+        env:
+          TF_PLAN_ENCRYPTION_KEY: ${{ secrets.TF_PLAN_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          trap 'rm -f infra/infra.tfplan' EXIT
+          test -n "$TF_PLAN_ENCRYPTION_KEY"
+          python -c 'import os; assert len(os.environ["TF_PLAN_ENCRYPTION_KEY"]) >= 32, "TF_PLAN_ENCRYPTION_KEY precisa ter ao menos 32 caracteres"'
+          mkdir -p "$RUNNER_TEMP/autoflow-plan"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+            -in infra/infra.tfplan \
+            -out "$RUNNER_TEMP/autoflow-plan/infra.tfplan.enc" \
+            -pass env:TF_PLAN_ENCRYPTION_KEY
+          cp "$RUNNER_TEMP/plan-metadata.json" "$RUNNER_TEMP/autoflow-plan/plan-metadata.json"
+          {
+            echo "plan_sha256=$(sha256sum "$RUNNER_TEMP/autoflow-plan/infra.tfplan.enc" | cut -d ' ' -f 1)"
+            echo "metadata_sha256=$(sha256sum "$RUNNER_TEMP/autoflow-plan/plan-metadata.json" | cut -d ' ' -f 1)"
+            echo "artifact_name=$PLAN_ARTIFACT_NAME"
+          } >> "$GITHUB_OUTPUT"
+      - name: Armazenar artifact criptografado com retenção mínima
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PLAN_ARTIFACT_NAME }}
+          path: |
+            ${{ runner.temp }}/autoflow-plan/infra.tfplan.enc
+            ${{ runner.temp }}/autoflow-plan/plan-metadata.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+      - name: Limpar cópias locais temporárias do plan
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/autoflow-plan" "$RUNNER_TEMP/plan-metadata.json" infra/infra.tfplan
+          python scripts/eks_endpoint_access.py cleanup --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
+
+  deploy-apply:
+    name: Aprovação, Apply e rollout de homologação
+    runs-on: ubuntu-latest
+    needs: deploy-plan
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop'
+    environment: homolog
+    env:
+      PLAN_ARTIFACT_NAME: ${{ needs.deploy-plan.outputs.artifact_name }}
+      EXPECTED_PLAN_SHA256: ${{ needs.deploy-plan.outputs.plan_sha256 }}
+      EXPECTED_METADATA_SHA256: ${{ needs.deploy-plan.outputs.metadata_sha256 }}
+      ALLOW_DESTRUCTIVE: 'false'
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TF_STATE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      TF_STATE_KEY: ${{ vars.AWS_TF_STATE_KEY }}
+      TF_VAR_terraform_state_bucket: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      TF_VAR_dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+      TF_VAR_backend_image_tag: ${{ github.sha }}
+      TF_VAR_frontend_image_tag: ${{ github.sha }}
+      TF_VAR_gateway_public_origin: ${{ vars.API_GATEWAY_ORIGIN }}
+      TF_VAR_gateway_cors_origins: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+      TF_VAR_aws_allowed_account_ids: '["${{ vars.AWS_EXPECTED_ACCOUNT_ID }}"]'
+      TF_VAR_region_default: ${{ vars.AWS_REGION }}
+      TF_VAR_cluster_name: ${{ vars.EKS_CLUSTER_NAME }}
+      EKS_LEASE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
+      EKS_LEASE_KEY: ci/eks-endpoint-lease.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Configurar credenciais temporárias AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Verificar conta AWS e sinalizador de proteção
+        env:
+          AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python scripts/verify_aws_account.py
+          test "${{ vars.TERRAFORM_APPLY_APPROVAL_CONFIGURED }}" = true
+          REVIEWERS=$(gh api "repos/$GITHUB_REPOSITORY/environments/homolog" --jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]?] | length')
+          test "$REVIEWERS" -gt 0
+      - name: Reconciliar autorização órfã anterior
+        run: python scripts/eks_endpoint_access.py reconcile --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
+      - name: Autorizar somente o IP público deste runner no EKS
+        run: |
+          set -euo pipefail
+          IP="$(curl -4fsS https://checkip.amazonaws.com | tr -d '\n')"
+          python scripts/eks_endpoint_access.py authorize --ip "$IP" --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+      - name: Baixar artifact de plan desta execução
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PLAN_ARTIFACT_NAME }}
+          path: ${{ runner.temp }}/autoflow-plan
+      - name: Inicializar mesmo backend e verificar versão/configuração do plan
+        working-directory: infra
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          aws s3api head-bucket --bucket "$TF_STATE_BUCKET"
+          terraform init -input=false -reconfigure -lockfile=readonly \
+            -backend-config="bucket=$TF_STATE_BUCKET" \
+            -backend-config="key=$TF_STATE_KEY" \
+            -backend-config="region=$AWS_REGION" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+          terraform validate
+      - name: Verificar integridade e igualdade da configuração; descriptografar plan
+        working-directory: infra
+        env:
+          TF_PLAN_ENCRYPTION_KEY: ${{ secrets.TF_PLAN_ENCRYPTION_KEY }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_PLAN_SHA256"
+          test -n "$EXPECTED_METADATA_SHA256"
+          test -n "$TF_PLAN_ENCRYPTION_KEY"
+          python -c 'import os; assert len(os.environ["TF_PLAN_ENCRYPTION_KEY"]) >= 32, "TF_PLAN_ENCRYPTION_KEY precisa ter ao menos 32 caracteres"'
+          printf '%s  %s\n' "$EXPECTED_PLAN_SHA256" "$RUNNER_TEMP/autoflow-plan/infra.tfplan.enc" | sha256sum --check --status
+          printf '%s  %s\n' "$EXPECTED_METADATA_SHA256" "$RUNNER_TEMP/autoflow-plan/plan-metadata.json" | sha256sum --check --status
+          python ../scripts/terraform_plan_metadata.py --lock-file .terraform.lock.hcl --output "$RUNNER_TEMP/current-plan-metadata.json"
+          cmp --silent "$RUNNER_TEMP/current-plan-metadata.json" "$RUNNER_TEMP/autoflow-plan/plan-metadata.json"
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+            -in "$RUNNER_TEMP/autoflow-plan/infra.tfplan.enc" \
+            -out infra.tfplan \
+            -pass env:TF_PLAN_ENCRYPTION_KEY
+          terraform show -json infra.tfplan > "$RUNNER_TEMP/terraform-plan.json"
+          python ../scripts/review_terraform_plan.py \
+            --plan-json "$RUNNER_TEMP/terraform-plan.json" \
+            --allow-destructive "$ALLOW_DESTRUCTIVE" > "$RUNNER_TEMP/terraform-plan-summary.md"
+      - name: Preparar kubeconfig e validar acesso ao cluster privado
+        run: |
+          aws eks update-kubeconfig --name "$TF_VAR_cluster_name" --region "$AWS_REGION"
+          kubectl get nodes
+      - name: Aplicar Secret Kubernetes protegido
+        env:
+          AUTOFLOW_DB_USERNAME: ${{ secrets.AUTOFLOW_DB_USERNAME }}
+          AUTOFLOW_DB_PASSWORD: ${{ secrets.AUTOFLOW_DB_PASSWORD }}
+          AUTOFLOW_JWT_SECRET: ${{ secrets.AUTOFLOW_JWT_SECRET }}
+          AUTOFLOW_MAIL_PASSWORD: ${{ secrets.AUTOFLOW_MAIL_PASSWORD }}
+          AUTOFLOW_PUBLIC_TOKEN_SECRET: ${{ secrets.AUTOFLOW_PUBLIC_TOKEN_SECRET }}
+        run: python scripts/apply_k8s_secret.py
+      - name: Aplicar exatamente o plan aprovado e validado
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          trap 'rm -f infra.tfplan "$RUNNER_TEMP/terraform-plan.json" "$RUNNER_TEMP/terraform-plan-summary.md" "$RUNNER_TEMP/terraform-apply.log"' EXIT
+          terraform apply -input=false infra.tfplan > "$RUNNER_TEMP/terraform-apply.log"
+      - name: Aguardar rollout e verificar saúde do backend e frontend
+        run: |
+          kubectl rollout status deployment/autoflow-backend --timeout=5m
+          kubectl rollout status deployment/autoflow-frontend --timeout=5m
+      - name: Executar smoke tests pós-rollout
+        env:
+          API_GATEWAY_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
+          API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+          AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+        run: python scripts/smoke_api_gateway.py "$API_GATEWAY_ORIGIN" --region "$AWS_REGION" --account "$AWS_EXPECTED_ACCOUNT_ID" --cors-origin "$API_GATEWAY_CORS_ORIGIN"
+      - name: Limpar arquivos locais sensíveis do plan
+        if: always()
+        run: |
+          rm -rf infra/infra.tfplan "$RUNNER_TEMP/autoflow-plan" "$RUNNER_TEMP/current-plan-metadata.json" "$RUNNER_TEMP/terraform-plan.json" "$RUNNER_TEMP/terraform-plan-summary.md"
+          python scripts/eks_endpoint_access.py cleanup --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"

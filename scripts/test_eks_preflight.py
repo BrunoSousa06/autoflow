@@ -78,21 +78,61 @@ class PreflightTests(unittest.TestCase):
             with self.assertRaisesRegex(eks_preflight.PreflightError, "Contexto kubectl incorreto"):
                 eks_preflight.main()
 
-    def test_pipeline_blocks_terraform_and_kubectl_on_hosted_runner(self):
+    def test_pipeline_plans_then_applies_on_hosted_runner_after_environment_gate(self):
         from pathlib import Path
         workflow = Path(__file__).parents[1] / ".github" / "workflows" / "pipeline.yml"
         content = workflow.read_text(encoding="utf-8")
-        blocked_job = content.split("  deployment-blocked-private-eks:", 1)[1]
-        self.assertIn("runs-on: ubuntu-latest", blocked_job)
-        self.assertIn("exit 1", blocked_job)
-        self.assertNotRegex(content, r"(?m)^\s+run:.*terraform\s+(?:plan|apply)")
-        self.assertNotRegex(content, r"(?m)^\s+run:.*kubectl\s")
+        plan = content.split("  deploy-plan:", 1)[1].split("  deploy-apply:", 1)[0]
+        apply = content.split("  deploy-apply:", 1)[1]
+        self.assertIn("runs-on: ubuntu-latest", plan)
+        self.assertNotIn("environment:", plan)
+        self.assertIn("github.event_name == 'push'", plan)
+        self.assertIn("EKS_LEASE_KEY: ci/eks-endpoint-lease.json", plan)
+        self.assertIn("eks_endpoint_access.py authorize", plan)
+        for orphaned_resource in (
+            "kubectl get deployment autoflow-backend",
+            "kubectl get deployment autoflow-frontend",
+            "kubectl get service autoflow-backend",
+            "kubectl get service autoflow-frontend",
+            "kubectl get configmap autoflow-config",
+            "kubectl get service autoflow-backend-gateway",
+            "kubectl get service autoflow-frontend-gateway",
+            "kubectl get configmap autoflow-gateway-nginx",
+        ):
+            self.assertIn(orphaned_resource, plan)
+        self.assertIn("terraform plan -input=false -no-color -out=infra.tfplan", plan)
+        self.assertIn("python ../scripts/review_terraform_plan.py", plan)
+        self.assertIn("actions/upload-artifact@v4", plan)
+        self.assertIn("retention-days: 1", plan)
+        self.assertIn("openssl enc -aes-256-cbc", plan)
+        self.assertIn("plan_sha256", plan)
+        self.assertIn("runs-on: ubuntu-latest", apply)
+        self.assertIn("environment: homolog", apply)
+        self.assertIn("select(.type == \"required_reviewers\")", apply)
+        self.assertIn("github.event_name == 'push'", apply)
+        self.assertIn("actions/download-artifact@v4", apply)
+        self.assertIn("sha256sum --check --status", apply)
+        self.assertIn("cmp --silent", apply)
+        self.assertIn("openssl enc -d -aes-256-cbc", apply)
+        self.assertIn("terraform apply -input=false infra.tfplan", apply)
+        self.assertNotIn("terraform plan", apply)
+        self.assertIn("allow_destructive", content)
+        self.assertIn("review_terraform_plan.py", apply)
+        self.assertIn("kubectl rollout status deployment/autoflow-backend", apply)
+        self.assertIn("smoke_api_gateway.py", apply)
+        self.assertIn("eks_endpoint_access.py cleanup", apply)
+        self.assertIn("kubectl rollout status deployment/autoflow-frontend", apply)
+        self.assertNotIn("deployment-blocked-private-eks:", content)
+        self.assertIn("ref: ${{ github.sha }}", plan)
+        self.assertIn("ref: ${{ github.sha }}", apply)
+        self.assertIn("terraform_plan_metadata.py", plan)
+        self.assertIn("terraform_plan_metadata.py", apply)
 
     def test_images_are_published_only_from_develop_push_with_commit_sha(self):
         from pathlib import Path
         workflow = Path(__file__).parents[1] / ".github" / "workflows" / "pipeline.yml"
         content = workflow.read_text(encoding="utf-8")
-        publish = content.split("  docker-publish:", 1)[1].split("  deployment-blocked-private-eks:", 1)[0]
+        publish = content.split("  docker-publish:", 1)[1].split("  deploy-plan:", 1)[0]
         self.assertIn("github.event_name == 'push'", publish)
         self.assertIn("refs/heads/develop", publish)
         self.assertIn("needs: [backend-build, frontend-build, terraform-static]", publish)

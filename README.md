@@ -202,16 +202,18 @@ Testes automatizados e análises de qualidade e segurança usam JUnit, SonarQube
 
 ## Fluxo do CI/CD
 
-O [workflow do GitHub Actions](.github/workflows/pipeline.yml) executa CI em Pull Requests e pushes para `develop` e `main`; apenas push em `develop` publica as imagens usando o SHA do commit. O deployment está bloqueado antes de Terraform/Kubernetes até ser provisionado e validado runner efêmero dentro da VPC. `update-kubeconfig` não fornece conectividade de rede. Veja [Operação de CI/CD](.github/CI-CD-AWS.md) para arquitetura proposta e critérios de habilitação.
+O [workflow do GitHub Actions](.github/workflows/pipeline.yml) executa CI em Pull Requests e pushes para `develop` e `main`. Todo push em `develop` publica imagens pelo SHA, executa Terraform Plan e aguarda aprovação humana efetiva no Environment `homolog` antes do Apply, rollout e smoke tests. Plan/Apply usam `ubuntu-latest` com autorização temporária do IP de saída ao endpoint EKS. `workflow_dispatch` continua disponível para reexecução manual. Veja [Operação de CI/CD](.github/CI-CD-AWS.md) para pré-requisitos e ativação.
 
 ```mermaid
 flowchart TD
   A[PR ou push em develop/main] --> B[CI: testes, builds, análises e Terraform estático]
   A --> C{Push em develop?}
   C -->|Sim| D[Publicação Docker Hub com tags SHA]
-  D --> E[Guard bloqueia Terraform e kubectl]
+  D --> P[Plan no ubuntu-latest]
+  P --> G{Aprovação do Environment homolog}
+  G -->|Aprovado| T[Apply e rollout]
+  G -->|Rejeitado| X[Deploy interrompido]
   C -->|Não| F[Sem publicação/deploy]
-  E --> G[Habilitar somente após runner privado validado]
 ```
 
 ---
