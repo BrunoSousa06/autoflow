@@ -83,7 +83,7 @@ class PreflightTests(unittest.TestCase):
         workflow = Path(__file__).parents[1] / ".github" / "workflows" / "pipeline.yml"
         content = workflow.read_text(encoding="utf-8")
         plan = content.split("  deploy-plan:", 1)[1].split("  deploy-apply:", 1)[0]
-        apply = content.split("  deploy-apply:", 1)[1]
+        apply = content.split("  deploy-apply:", 1)[1].split("  smoke-tests:", 1)[0]
         self.assertIn("runs-on: ubuntu-latest", plan)
         self.assertNotIn("environment:", plan)
         self.assertIn("github.event_name == 'push'", plan)
@@ -122,9 +122,13 @@ class PreflightTests(unittest.TestCase):
         self.assertIn(push_authorization, apply)
         self.assertIn("review_terraform_plan.py", apply)
         self.assertIn("kubectl rollout status deployment/autoflow-backend", apply)
-        self.assertIn("smoke_api_gateway.py", apply)
-        smoke = apply.split("- name: Executar smoke tests pós-rollout", 1)[1].split("- name:", 1)[0]
-        self.assertIn("API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}", smoke)
+        self.assertNotIn("smoke_api_gateway.py", apply)
+        smoke = content.split("  smoke-tests:", 1)[1]
+        self.assertIn("needs: deploy-apply", smoke)
+        self.assertIn("runs-on: ubuntu-latest", smoke)
+        self.assertIn("smoke_api_gateway.py", smoke)
+        self.assertIn("inputs.smoke_tests_only", smoke)
+        self.assertIn("API_GATEWAY_CORS_ORIGINS: ${{ vars.API_GATEWAY_CORS_ORIGINS }}", smoke)
         self.assertIn("eks_endpoint_access.py cleanup", apply)
         self.assertIn("kubectl rollout status deployment/autoflow-frontend", apply)
         self.assertNotIn("deployment-blocked-private-eks:", content)

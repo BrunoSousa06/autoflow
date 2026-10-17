@@ -28,6 +28,16 @@ def check(condition, label):
     print("OK: " + label)
 
 
+def parse_cors_origins(value):
+    try:
+        origins = json.loads(value)
+    except (TypeError, json.JSONDecodeError) as error:
+        raise ValueError("API_GATEWAY_CORS_ORIGINS deve ser um array JSON válido") from error
+    if not isinstance(origins, list) or any(not isinstance(origin, str) or not origin.strip() for origin in origins):
+        raise ValueError("API_GATEWAY_CORS_ORIGINS deve ser um array JSON de origens não vazias")
+    return origins
+
+
 def aws(*args):
     result = subprocess.run(["aws", *args, "--output", "json"], capture_output=True, text=True)
     if result.returncode:
@@ -59,7 +69,7 @@ def infrastructure(api_id, region, account):
         check(not db["PubliclyAccessible"] and db["StorageEncrypted"], "RDS privado e criptografado")
 
 
-def smoke(base, cors_origin=None, login_only=False):
+def smoke(base, cors_origins=None, login_only=False):
     check(base.startswith("https://") and not base.endswith("/"), "URL HTTPS sem barra final")
     status, headers, body = request(base, "/auth/login", "POST", {"cpf_cnpj": "52998224725", "senha": "senha-teste-invalida"})
     check(status == 401 and json.loads(body) == {"message": "CPF/CNPJ ou senha inválidos."}, "login inválido consulta Lambda/RDS e retorna 401 sanitizado")
@@ -88,9 +98,9 @@ def smoke(base, cors_origin=None, login_only=False):
         check(not urllib.parse.urlsplit(asset).netloc, "bundle same-origin")
         status, headers, data = request(base, "/" + asset.lstrip("/"))
         check(status == 200 and b"<app-root" not in data, "bundle servido pelo Nginx: " + asset)
-    if cors_origin:
+    for cors_origin in cors_origins or []:
         status, headers, _ = request(base, "/auth/login", "OPTIONS", headers={"Origin": cors_origin, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"})
-        check(status in (200, 204) and headers.get("Access-Control-Allow-Origin") == cors_origin, "preflight para origem autorizada")
+        check(status in (200, 204) and headers.get("Access-Control-Allow-Origin") == cors_origin, "preflight para origem autorizada: " + cors_origin)
     _, headers, _ = request(base, "/auth/login", "OPTIONS", headers={"Origin": "https://origem-nao-autorizada.invalid", "Access-Control-Request-Method": "POST"})
     check(headers.get("Access-Control-Allow-Origin") not in ("*", "https://origem-nao-autorizada.invalid"), "origem externa não autorizada sem CORS")
     document = os.getenv("AUTOFLOW_TEST_CPF_CNPJ")
@@ -111,7 +121,7 @@ if __name__ == "__main__":
     parser.add_argument("--api-id")
     parser.add_argument("--region", default=os.getenv("AWS_REGION", "us-east-1"))
     parser.add_argument("--account", default=os.getenv("AWS_EXPECTED_ACCOUNT_ID"))
-    parser.add_argument("--cors-origin")
+    parser.add_argument("--cors-origins", default=os.getenv("API_GATEWAY_CORS_ORIGINS", "[]"))
     parser.add_argument("--login-only", action="store_true", help="Homologa somente rotas de autenticação antes do Apply Kubernetes.")
     parser.add_argument("--require-authenticated", action="store_true")
     args = parser.parse_args()
@@ -121,4 +131,8 @@ if __name__ == "__main__":
         if not args.account:
             parser.error("--account é obrigatório para consultar infraestrutura")
         infrastructure(args.api_id, args.region, args.account)
-    smoke(args.base, args.cors_origin, args.login_only)
+    try:
+        cors_origins = parse_cors_origins(args.cors_origins)
+    except ValueError as error:
+        parser.error(str(error))
+    smoke(args.base, cors_origins, args.login_only)

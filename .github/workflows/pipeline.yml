@@ -8,6 +8,10 @@ on:
     branches: [develop, main]
   workflow_dispatch:
     inputs:
+      smoke_tests_only:
+        description: Executar somente smoke tests
+        type: boolean
+        default: false
       allow_destructive:
         description: "Autorizar exclusões/substituições somente após revisar o resumo do plan"
         type: boolean
@@ -25,6 +29,7 @@ concurrency:
 jobs:
   backend-build:
     name: Backend tests, build and SonarQube
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.smoke_tests_only }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +63,7 @@ jobs:
 
   frontend-build:
     name: Frontend tests and build
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.smoke_tests_only }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,6 +91,7 @@ jobs:
 
   terraform-static:
     name: Terraform formatting and static validation
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.smoke_tests_only }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -174,7 +181,7 @@ jobs:
     name: Plan de homologação no GitHub-hosted runner
     runs-on: ubuntu-latest
     needs: [backend-build, frontend-build, terraform-static, docker-publish]
-    if: always() && github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.backend-build.result == 'success' && needs.frontend-build.result == 'success' && needs.terraform-static.result == 'success' && needs.docker-publish.result == 'success'
+    if: always() && !(github.event_name == 'workflow_dispatch' && inputs.smoke_tests_only) && github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.backend-build.result == 'success' && needs.frontend-build.result == 'success' && needs.terraform-static.result == 'success' && needs.docker-publish.result == 'success'
     outputs:
       plan_sha256: ${{ steps.package.outputs.plan_sha256 }}
       metadata_sha256: ${{ steps.package.outputs.metadata_sha256 }}
@@ -319,7 +326,7 @@ jobs:
     name: Aprovação, Apply e rollout de homologação
     runs-on: ubuntu-latest
     needs: deploy-plan
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop'
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.smoke_tests_only) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/develop' }}
     environment: homolog
     env:
       PLAN_ARTIFACT_NAME: ${{ needs.deploy-plan.outputs.artifact_name }}
@@ -437,14 +444,34 @@ jobs:
         run: |
           kubectl rollout status deployment/autoflow-backend --timeout=5m
           kubectl rollout status deployment/autoflow-frontend --timeout=5m
-      - name: Executar smoke tests pós-rollout
-        env:
-          API_GATEWAY_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
-          API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
-          AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
-        run: python scripts/smoke_api_gateway.py "$API_GATEWAY_ORIGIN" --region "$AWS_REGION" --account "$AWS_EXPECTED_ACCOUNT_ID" --cors-origin "$API_GATEWAY_CORS_ORIGIN"
       - name: Limpar arquivos locais sensíveis do plan
         if: always()
         run: |
           rm -rf infra/infra.tfplan "$RUNNER_TEMP/autoflow-plan" "$RUNNER_TEMP/current-plan-metadata.json" "$RUNNER_TEMP/terraform-plan.json" "$RUNNER_TEMP/terraform-plan-summary.md"
           python scripts/eks_endpoint_access.py cleanup --region "$AWS_REGION" --cluster "$TF_VAR_cluster_name"
+
+  smoke-tests:
+    name: API Gateway smoke tests
+    runs-on: ubuntu-latest
+    needs: deploy-apply
+    if: always() && ((github.event_name == 'workflow_dispatch' && inputs.smoke_tests_only) || (needs.deploy-apply.result == 'success' && github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')))
+    permissions:
+      contents: read
+    env:
+      API_GATEWAY_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
+      API_GATEWAY_CORS_ORIGINS: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Validar configuração dos smoke tests
+        run: |
+          set -euo pipefail
+          test -n "$API_GATEWAY_ORIGIN" || { echo "API_GATEWAY_ORIGIN não está configurada" >&2; exit 1; }
+          test -n "$AWS_REGION" || { echo "AWS_REGION não está configurada" >&2; exit 1; }
+          test -n "$AWS_EXPECTED_ACCOUNT_ID" || { echo "AWS_EXPECTED_ACCOUNT_ID não está configurada" >&2; exit 1; }
+          python -c 'import json, os; v=json.loads(os.environ["API_GATEWAY_CORS_ORIGINS"]); assert isinstance(v, list) and all(isinstance(x, str) and x.strip() for x in v), "API_GATEWAY_CORS_ORIGINS deve ser um array JSON de origens não vazias"'
+      - name: Executar smoke tests
+        run: python scripts/smoke_api_gateway.py "$API_GATEWAY_ORIGIN" --region "$AWS_REGION" --account "$AWS_EXPECTED_ACCOUNT_ID" --cors-origins "$API_GATEWAY_CORS_ORIGINS"
