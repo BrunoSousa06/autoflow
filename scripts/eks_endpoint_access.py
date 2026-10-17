@@ -10,7 +10,16 @@ import time
 
 
 def aws(*args):
-    result = subprocess.run(["aws", *args, "--output", "json"], check=True, capture_output=True, text=True)
+    try:
+        result = subprocess.run(["aws", *args, "--output", "json"], check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as error:
+        output = error.stderr or error.stdout or ""
+        detail = next((line.strip() for line in output.splitlines()
+                       if "An error occurred (" in line or "aws: [ERROR]:" in line), "")
+        operation = " ".join(args[:2])
+        if detail:
+            raise RuntimeError(f"Comando AWS '{operation}' falhou: {detail}") from None
+        raise RuntimeError(f"Comando AWS '{operation}' falhou (exit {error.returncode}; detalhe omitido).") from None
     return json.loads(result.stdout or "{}")
 
 
@@ -108,4 +117,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as error:
+        import sys
+        print(f"Falha ao atualizar acesso temporário ao EKS: {error}", file=sys.stderr)
+        raise SystemExit(1) from None

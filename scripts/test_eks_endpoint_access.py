@@ -1,10 +1,22 @@
 import unittest
+import subprocess
 from unittest.mock import patch
 
 import eks_endpoint_access as endpoint
 
 
 class EndpointTests(unittest.TestCase):
+    def test_aws_update_failure_reports_service_error_without_traceback(self):
+        self.aws_patch.stop()
+        failure = subprocess.CalledProcessError(
+            254,
+            ["aws", "eks", "update-cluster-config"],
+            stderr="aws: [ERROR]: An error occurred (ResourceInUseException) when calling the UpdateClusterConfig operation: update in progress",
+        )
+        with patch("eks_endpoint_access.subprocess.run", side_effect=failure):
+            with self.assertRaisesRegex(RuntimeError, "ResourceInUseException.*update in progress"):
+                endpoint.aws("eks", "update-cluster-config", "--name", "eks-autoflow")
+
     def setUp(self):
         self.cidrs = {"189.6.8.245/32", "203.0.113.9/32"}
         self.calls = []
