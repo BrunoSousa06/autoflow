@@ -89,6 +89,17 @@ class PreflightTests(unittest.TestCase):
         self.assertIn("github.event_name == 'push'", plan)
         self.assertIn("EKS_LEASE_KEY: ci/eks-endpoint-lease.json", plan)
         self.assertIn("eks_endpoint_access.py authorize", plan)
+        for orphaned_resource in (
+            "kubectl get deployment autoflow-backend",
+            "kubectl get deployment autoflow-frontend",
+            "kubectl get service autoflow-backend",
+            "kubectl get service autoflow-frontend",
+            "kubectl get configmap autoflow-config",
+            "kubectl get service autoflow-backend-gateway",
+            "kubectl get service autoflow-frontend-gateway",
+            "kubectl get configmap autoflow-gateway-nginx",
+        ):
+            self.assertIn(orphaned_resource, plan)
         self.assertIn("terraform plan -input=false -no-color -out=infra.tfplan", plan)
         self.assertIn("python ../scripts/review_terraform_plan.py", plan)
         self.assertIn("actions/upload-artifact@v4", plan)

@@ -244,6 +244,9 @@ jobs:
           python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-backend -o name
           python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-frontend -o name
           python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get configmap autoflow-config -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-backend-gateway -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get service autoflow-frontend-gateway -o name
+          python scripts/state_resource_guard.py --bucket "$TF_STATE_BUCKET" --key "$TF_STATE_KEY" -- kubectl get configmap autoflow-gateway-nginx -o name
       - name: Preparar Terraform
         uses: hashicorp/setup-terraform@v3
         with:

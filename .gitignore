@@ -42,6 +42,7 @@ backend/.m2
 *.terraform/
 *terraform/
 */terraform*
+!infra/.terraform.lock.hcl
 !docs/terraform.md
 
 /docs/*
