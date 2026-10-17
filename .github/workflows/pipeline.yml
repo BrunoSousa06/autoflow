@@ -181,7 +181,7 @@ jobs:
       artifact_name: ${{ steps.package.outputs.artifact_name }}
     env:
       PLAN_ARTIFACT_NAME: autoflow-terraform-plan-${{ github.run_id }}-${{ github.run_attempt }}
-      ALLOW_DESTRUCTIVE: 'false'
+      ALLOW_DESTRUCTIVE: ${{ github.event_name == 'push' && 'true' || (github.event_name == 'workflow_dispatch' && inputs.allow_destructive && 'true' || 'false') }}
       AWS_REGION: ${{ vars.AWS_REGION }}
       TF_STATE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
       TF_STATE_KEY: ${{ vars.AWS_TF_STATE_KEY }}
@@ -325,7 +325,7 @@ jobs:
       PLAN_ARTIFACT_NAME: ${{ needs.deploy-plan.outputs.artifact_name }}
       EXPECTED_PLAN_SHA256: ${{ needs.deploy-plan.outputs.plan_sha256 }}
       EXPECTED_METADATA_SHA256: ${{ needs.deploy-plan.outputs.metadata_sha256 }}
-      ALLOW_DESTRUCTIVE: 'false'
+      ALLOW_DESTRUCTIVE: ${{ github.event_name == 'push' && 'true' || (github.event_name == 'workflow_dispatch' && inputs.allow_destructive && 'true' || 'false') }}
       AWS_REGION: ${{ vars.AWS_REGION }}
       TF_STATE_BUCKET: ${{ vars.AWS_TERRAFORM_STATE_BUCKET }}
       TF_STATE_KEY: ${{ vars.AWS_TF_STATE_KEY }}
@@ -440,7 +440,7 @@ jobs:
       - name: Executar smoke tests pós-rollout
         env:
           API_GATEWAY_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
-          API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+          API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
           AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
         run: python scripts/smoke_api_gateway.py "$API_GATEWAY_ORIGIN" --region "$AWS_REGION" --account "$AWS_EXPECTED_ACCOUNT_ID" --cors-origin "$API_GATEWAY_CORS_ORIGIN"
       - name: Limpar arquivos locais sensíveis do plan

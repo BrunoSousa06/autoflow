@@ -117,9 +117,14 @@ class PreflightTests(unittest.TestCase):
         self.assertIn("terraform apply -input=false infra.tfplan", apply)
         self.assertNotIn("terraform plan", apply)
         self.assertIn("allow_destructive", content)
+        push_authorization = "ALLOW_DESTRUCTIVE: ${{ github.event_name == 'push' && 'true' || (github.event_name == 'workflow_dispatch' && inputs.allow_destructive && 'true' || 'false') }}"
+        self.assertIn(push_authorization, plan)
+        self.assertIn(push_authorization, apply)
         self.assertIn("review_terraform_plan.py", apply)
         self.assertIn("kubectl rollout status deployment/autoflow-backend", apply)
         self.assertIn("smoke_api_gateway.py", apply)
+        smoke = apply.split("- name: Executar smoke tests pós-rollout", 1)[1].split("- name:", 1)[0]
+        self.assertIn("API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}", smoke)
         self.assertIn("eks_endpoint_access.py cleanup", apply)
         self.assertIn("kubectl rollout status deployment/autoflow-frontend", apply)
         self.assertNotIn("deployment-blocked-private-eks:", content)
