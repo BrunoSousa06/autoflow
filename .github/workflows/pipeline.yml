@@ -440,7 +440,7 @@ jobs:
       - name: Executar smoke tests pós-rollout
         env:
           API_GATEWAY_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
-          API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_CORS_ORIGINS }}
+          API_GATEWAY_CORS_ORIGIN: ${{ vars.API_GATEWAY_ORIGIN }}
           AWS_EXPECTED_ACCOUNT_ID: ${{ vars.AWS_EXPECTED_ACCOUNT_ID }}
         run: python scripts/smoke_api_gateway.py "$API_GATEWAY_ORIGIN" --region "$AWS_REGION" --account "$AWS_EXPECTED_ACCOUNT_ID" --cors-origin "$API_GATEWAY_CORS_ORIGIN"
       - name: Limpar arquivos locais sensíveis do plan
